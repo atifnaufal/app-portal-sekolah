@@ -17,13 +17,42 @@ class AdminController extends Controller
     public function dashboard(): View
     {
         $today = today();
-        return view('admin.dashboard', ['totalGuru' => User::where('role', 'guru')->count(), 'totalSiswa' => User::where('role', 'siswa')->count(), 'totalKelas' => Kelas::count(), 'sppKurang' => Spp::where('status', 'belum_lunas')->count(), 'sppTotal' => Spp::count(), 'sppTerbayar' => Spp::sum('dibayar'), 'sppTagihan' => Spp::sum('nominal'), 'sppByMonth' => Spp::selectRaw('tahun, bulan, SUM(nominal) as tagihan, SUM(dibayar) as terbayar')->groupBy('tahun', 'bulan')->orderByDesc('tahun')->orderByDesc('bulan')->take(6)->get(), 'kelasSummaries' => Kelas::with(['users' => fn ($query) => $query->whereIn('role', ['guru', 'siswa'])->orderBy('role')->orderBy('name')])->withCount(['users as guru_count' => fn ($query) => $query->where('role', 'guru'), 'users as siswa_count' => fn ($query) => $query->where('role', 'siswa')])->orderBy('tingkat')->orderBy('nama')->get(), 'recentUsers' => User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get(), 'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false)]);
+        $data = [
+            'totalGuru' => User::where('role', 'guru')->count(),
+            'totalSiswa' => User::where('role', 'siswa')->count(),
+            'totalKelas' => Kelas::count(),
+            'sppKurang' => Spp::where('status', 'belum_lunas')->count(),
+            'sppTotal' => Spp::count(),
+            'sppTerbayar' => Spp::sum('dibayar'),
+            'sppTagihan' => Spp::sum('nominal'),
+            'sppByMonth' => Spp::selectRaw('tahun, bulan, SUM(nominal) as tagihan, SUM(dibayar) as terbayar')->groupBy('tahun', 'bulan')->orderByDesc('tahun')->orderByDesc('bulan')->take(6)->get(),
+            'kelasSummaries' => Kelas::with(['users' => fn ($query) => $query->whereIn('role', ['guru', 'siswa'])->orderBy('role')->orderBy('name')])->withCount(['users as guru_count' => fn ($query) => $query->where('role', 'guru'), 'users as siswa_count' => fn ($query) => $query->where('role', 'siswa')])->orderBy('tingkat')->orderBy('nama')->get(),
+            'recentUsers' => User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get(),
+            'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false)
+        ];
+
+        // Deteksi apakah akses dari mobile/aplikasi
+        $userAgent = request()->header('User-Agent');
+        $isMobile = preg_match('/(android|iphone|ipad|mobile)/i', $userAgent);
+
+        if ($isMobile) {
+            return view('mobile.admin-dashboard', $data);
+        }
+
+        return view('admin.dashboard', $data);
     }
 
     public function users(Request $request): View
     {
         $users = User::with('kelas')->whereIn('role', ['guru', 'siswa'])->when($request->search, fn ($query, $search) => $query->where(fn ($q) => $q->where('name', 'like', "%$search%")->orWhere('nik', 'like', "%$search%")->orWhere('email', 'like', "%$search%")))->latest()->get();
-        return view('admin.users', ['users' => $users, 'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(), 'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false)]);
+
+        $data = ['users' => $users, 'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(), 'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false)];
+
+        if (preg_match('/(android|iphone|ipad|mobile)/i', request()->header('User-Agent'))) {
+            return view('mobile.admin-users', $data);
+        }
+
+        return view('admin.users', $data);
     }
 
     public function updateUser(Request $request, User $user): RedirectResponse
@@ -50,13 +79,19 @@ class AdminController extends Controller
 
     public function settings(): View
     {
-        return view('admin.settings', [
+        $data = [
             'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false),
             'attendanceActive' => (bool) Setting::getValue('attendance_active', false),
             'startTime' => Setting::getValue('attendance_start_time', '07:00'),
             'endTime' => Setting::getValue('attendance_end_time', '15:00'),
             'lateTime' => Setting::getValue('attendance_late_time', '07:30'),
-        ]);
+        ];
+
+        if (preg_match('/(android|iphone|ipad|mobile)/i', request()->header('User-Agent'))) {
+            return view('mobile.admin-settings', $data);
+        }
+
+        return view('admin.settings', $data);
     }
 
     public function updateSettings(Request $request): RedirectResponse
