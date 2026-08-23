@@ -3,6 +3,12 @@
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Admin | App Mahasiswa' }}</title>
+    <meta name="theme-color" content="#14213d">
+    <meta name="description" content="Platform digital manajemen sekolah">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/icon-192x192.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root{--navy:#14213d;--blue:#246bfe;--surface:#f4f7fb;--muted:#6d7a90}
@@ -12,5 +18,10 @@
 <body>
 <nav class="navbar navbar-expand-lg admin-nav navbar-dark"><div class="container admin-container"><a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ route('dashboard') }}"><span class="brand-mark">A</span><span>App Mahasiswa</span></a><button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminMenu" aria-controls="adminMenu" aria-expanded="false" aria-label="Buka menu"><span class="navbar-toggler-icon"></span></button><div class="collapse navbar-collapse" id="adminMenu"><div class="navbar-nav ms-lg-4 me-auto">@if(session('user_role') === 'admin')<a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a><a class="nav-link {{ request()->routeIs('pengumuman.*') ? 'active' : '' }}" href="{{ route('pengumuman.index') }}">Pengumuman</a><a class="nav-link {{ request()->routeIs('spp.*') ? 'active' : '' }}" href="{{ route('spp.index') }}">SPP</a><a class="nav-link {{ request()->routeIs('kelas.*') ? 'active' : '' }}" href="{{ route('kelas.index') }}">Kelas</a><a class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}">Akun</a><a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}">Pengaturan</a>@else<a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a><a class="nav-link" href="{{ route('pengumuman.index') }}">Pengumuman</a><a class="nav-link" href="{{ route('tugas.index') }}">Tugas</a>@endif</div><div class="d-flex align-items-center gap-3 mt-3 mt-lg-0"><span class="text-white small">{{ session('admin_name') }}</span><form method="POST" action="{{ route('logout') }}">@csrf<button class="btn btn-sm btn-outline-light">Keluar</button></form></div></div></div></nav>
 <main class="container admin-container py-4">@if(session('success'))<div class="alert alert-success border-0">{{ session('success') }}</div>@endif @if(session('error'))<div class="alert alert-danger border-0">{{ session('error') }}</div>@endif @if($errors->any())<div class="alert alert-danger border-0"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif @yield('content')</main><footer class="container admin-container pb-4 admin-footer">App Mahasiswa · Panel administrasi sekolah</footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js').catch(err => console.log('SW registration failed:', err));
+  }
+</script>
 </body>
 </html>

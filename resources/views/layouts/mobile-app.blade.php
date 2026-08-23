@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ $title ?? 'Portal Sekolah' }}</title>
+    <meta name="theme-color" content="#14213d">
+    <meta name="description" content="Platform digital manajemen sekolah">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icons/icon-192x192.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root{--ink:#14213d;--muted:#738097;--blue:#246bfe;--surface:#f5f7fb;--danger:#d94b61}
@@ -143,6 +149,11 @@
         window.addEventListener('pageshow', function() {
             document.getElementById('page-loader').style.display = 'none';
         });
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js').catch(err => console.log('SW registration failed:', err));
+      }
     </script>
 </body>
 </html>
