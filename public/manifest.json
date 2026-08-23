@@ -1,0 +1,28 @@
+{
+  "background_color": "#c50f0f",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "appsekolah",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "AppPortalSekolah",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "https://app-portal-sekolah-production.up.railway.app/favicon.ico",
+      "type": "image/x-icon",
+      "isSquare": false,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    }
+  ],
+  "id": "app-portal-sekolah",
+  "iarc_rating_id": "appsekolah",
+  "prefer_related_applications": true
+}
