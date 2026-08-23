@@ -1,0 +1,9 @@
+{
+  "appId": "com.sekolah.app",
+  "appName": "App Portal Sekolah",
+  "webDir": "public",
+  "server": {
+    "url": "http://192.168.1.65:8000",
+    "cleartext": true
+  }
+}

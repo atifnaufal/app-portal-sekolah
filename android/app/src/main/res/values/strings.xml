@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">App Portal Sekolah</string>
+    <string name="title_activity_main">App Portal Sekolah</string>
+    <string name="package_name">com.sekolah.app</string>
+    <string name="custom_url_scheme">com.sekolah.app</string>
+</resources>
