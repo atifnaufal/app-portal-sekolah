@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ $title ?? 'Portal Sekolah' }}</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#246bfe">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root{--ink:#14213d;--muted:#738097;--blue:#246bfe;--surface:#f5f7fb;--danger:#d94b61}
@@ -143,6 +147,16 @@
         window.addEventListener('pageshow', function() {
             document.getElementById('page-loader').style.display = 'none';
         });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('SW registered');
+                }).catch(err => {
+                    console.log('SW failed', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
