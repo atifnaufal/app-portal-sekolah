@@ -8,7 +8,9 @@
     <meta name="theme-color" content="#246bfe">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    @vite(['resources/js/app.js'])
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         :root{--ink:#14213d;--muted:#738097;--blue:#246bfe;--surface:#f5f7fb;--danger:#d94b61}
         *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
@@ -28,20 +30,50 @@
 
         /* Mengizinkan input tetap bisa diketik */
         input, textarea { user-select: text; -webkit-user-select: text; }
-        .mobile-shell{max-width:680px;margin:auto}.mobile-hero{background:linear-gradient(140deg,#14213d,#246bfe);color:#fff;border-radius:0 0 30px 30px;padding:24px 20px 30px}.eyebrow{font-size:11px;letter-spacing:.13em;opacity:.75;font-weight:800}.hero-title{font-size:26px;font-weight:800;letter-spacing:-.02em}.avatar{width:48px;height:48px;border-radius:17px;background:#ffffff2b;display:grid;place-items:center;font-weight:800;font-size:18px}.class-pill{display:inline-block;background:#ffffff20;border:1px solid #ffffff42;border-radius:99px;padding:6px 12px;font-size:12px}.mobile-content{padding:20px}.section-title{font-size:17px;font-weight:800}.mobile-card{border:0;border-radius:20px;box-shadow:0 8px 24px #14213d12;animation:rise .45s both}.mobile-card:nth-child(2){animation-delay:.08s}.mobile-card:nth-child(3){animation-delay:.16s}.tap-card{transition:transform .2s,box-shadow .2s}.tap-card:hover,.tap-card:active{transform:translateY(-3px);box-shadow:0 13px 28px #14213d1c}.icon-box{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:#e8efff;color:var(--blue)}.bottom-nav{position:fixed;z-index:5;bottom:0;left:0;right:0;background:#fffffff2;border-top:1px solid #e8ecf3;backdrop-filter:blur(14px);padding:10px max(18px,calc((100% - 680px)/2 + 18px)) calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-around}.bottom-nav a{color:var(--muted);text-align:center;text-decoration:none;font-size:11px;font-weight:700;min-width:58px;transition:color .2s,transform .2s}.bottom-nav a:hover,.bottom-nav a.active{color:var(--blue)}.bottom-nav a:active{transform:scale(.92)}.nav-icon{display:block;font-size:21px;line-height:23px;margin-bottom:2px}.bottom-nav a.active .nav-icon{transform:translateY(-2px)}.profile-action{border-radius:14px}.logout-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid #f1d8dd;background:#fff5f6;border-radius:20px;padding:16px}.logout-panel .btn{border-radius:12px;white-space:nowrap}.stagger>*{animation:rise .45s both}.stagger>*:nth-child(2){animation-delay:.08s}.stagger>*:nth-child(3){animation-delay:.16s}@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}@media(min-width:681px){body{padding-top:20px}.mobile-hero{border-radius:30px 30px 0 0}}
+        .mobile-shell{max-width:680px;margin:auto}.mobile-hero{background:linear-gradient(140deg,#14213d,#246bfe);color:#fff;border-radius:0 0 30px 30px;padding:24px 20px 30px}.eyebrow{font-size:11px;letter-spacing:.13em;opacity:.75;font-weight:800}.hero-title{font-size:26px;font-weight:800;letter-spacing:-.02em}.avatar{width:48px;height:48px;border-radius:17px;background:#ffffff2b;display:grid;place-items:center;font-weight:800;font-size:18px}.class-pill{display:inline-block;background:#ffffff20;border:1px solid #ffffff42;border-radius:99px;padding:6px 12px;font-size:12px}.mobile-content{padding:20px}.section-title{font-size:17px;font-weight:800}.mobile-card{border:0;border-radius:20px;box-shadow:0 8px 24px #14213d12;animation:rise .45s both; position: relative; overflow: hidden; }
+        .mobile-card::after {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: skeleton 1.5s infinite;
+        }
+        @keyframes skeleton {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+        .mobile-card > * { position: relative; z-index: 1; }
+        .mobile-card:nth-child(2){animation-delay:.08s}.mobile-card:nth-child(3){animation-delay:.16s}
+
+        /* Haptic feedback for native feel */
+        .btn, .bottom-nav a, .tap-card {
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.1s;
+        }
+        .btn:active, .bottom-nav a:active, .tap-card:active {
+            transform: scale(0.96);
+        }
+
+        #offline-indicator {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: #d94b61; color: white;
+            text-align: center; font-size: 11px; font-weight: bold;
+            padding: 4px; z-index: 10001; display: none;
+        }.tap-card{transition:transform .2s,box-shadow .2s}.tap-card:hover,.tap-card:active{transform:translateY(-3px);box-shadow:0 13px 28px #14213d1c}.icon-box{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:#e8efff;color:var(--blue)}.bottom-nav{position:fixed;z-index:5;bottom:0;left:0;right:0;background:#fffffff2;border-top:1px solid #e8ecf3;backdrop-filter:blur(14px);padding:10px max(18px,calc((100% - 680px)/2 + 18px)) calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-around}.bottom-nav a{color:var(--muted);text-align:center;text-decoration:none;font-size:11px;font-weight:700;min-width:58px;transition:color .2s,transform .2s}.bottom-nav a:hover,.bottom-nav a.active{color:var(--blue)}.bottom-nav a:active{transform:scale(.92)}.nav-icon{display:block;font-size:21px;line-height:23px;margin-bottom:2px}.bottom-nav a.active .nav-icon{transform:translateY(-2px)}.profile-action{border-radius:14px}.logout-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid #f1d8dd;background:#fff5f6;border-radius:20px;padding:16px}.logout-panel .btn{border-radius:12px;white-space:nowrap}.stagger>*{animation:rise .45s both}.stagger>*:nth-child(2){animation-delay:.08s}.stagger>*:nth-child(3){animation-delay:.16s}@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}@media(min-width:681px){body{padding-top:20px}.mobile-hero{border-radius:30px 30px 0 0}}
         .avatar{width:48px!important;min-width:48px;max-width:48px;height:48px!important;min-height:48px;max-height:48px;flex:0 0 48px;aspect-ratio:1/1;overflow:hidden;display:grid;place-items:center;flex-shrink:0}.avatar img{display:block;width:100%!important;height:100%!important;max-width:none;max-height:none;object-fit:cover}
 
         #page-loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9);
-            display: none;
+            background: white;
+            display: flex; /* Show by default */
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10000;
+            transition: opacity 0.5s;
         }
-        .loader-logo { width: 80px; height: auto; animation: pulse 2s infinite; }
+        .loader-logo { width: 100px; height: auto; animation: pulse 2s infinite; }
 
         #app-lock-screen {
             position: fixed;
@@ -59,6 +91,7 @@
     </style>
 </head>
 <body>
+    <div id="offline-indicator">Koneksi Terputus - Mode Offline</div>
     <div id="page-loader">
         <img src="https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png" class="loader-logo" alt="Logo">
     </div>
@@ -82,9 +115,14 @@
 
     <script src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
     <script>
-        const { App } = window.Capacitor ? window.Capacitor.Plugins : {};
+        const { App, SplashScreen } = window.Capacitor ? window.Capacitor.Plugins : {};
 
-        // Cek apakah user sedang login (dari session Laravel ke JS)
+        // Sembunyikan Splash Native jika ada
+        if (window.Capacitor && SplashScreen) {
+            SplashScreen.hide();
+        }
+
+        // Cek apakah user sedang login
         const isLoggedIn = {{ session()->has('user_id') ? 'true' : 'false' }};
 
         function showLockScreen() {
@@ -96,13 +134,9 @@
 
         async function startBiometricAuth() {
             if (!window.Capacitor) return;
-
             try {
                 const NativeBiometric = window.Capacitor.Plugins.NativeBiometric;
-                if (!NativeBiometric) {
-                    console.warn("Plugin Biometric tidak terdeteksi.");
-                    return;
-                }
+                if (!NativeBiometric) return;
 
                 const result = await NativeBiometric.isAvailable();
                 if (result.isAvailable) {
@@ -116,47 +150,112 @@
                 }
             } catch (error) {
                 console.error("Biometric failed", error);
-                alert("Gagal memverifikasi. Silakan coba lagi.");
             }
         }
 
         if (window.Capacitor) {
-            // Deteksi saat aplikasi dibuka kembali dari background
             App.addListener('appStateChange', ({ isActive }) => {
-                if (isActive) {
-                    showLockScreen();
-                }
+                if (isActive) showLockScreen();
             });
-
-            // Simpan status login di mobile untuk session persist
-            if (isLoggedIn) {
-                localStorage.setItem('portal_session_active', 'true');
-            } else {
-                localStorage.removeItem('portal_session_active');
-            }
         }
+
+        // Loader logic
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('page-loader');
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }, 800);
+        });
+
+        // Offline detection
+        window.addEventListener('online', () => document.getElementById('offline-indicator').style.display = 'none');
+        window.addEventListener('offline', () => document.getElementById('offline-indicator').style.display = 'block');
+        if (!navigator.onLine) document.getElementById('offline-indicator').style.display = 'block';
 
         document.querySelectorAll('.bottom-nav a, .tap-card, .btn-primary').forEach(link => {
             link.addEventListener('click', function(e) {
-                if (this.tagName === 'A' && this.getAttribute('href') !== '#' && !this.getAttribute('href').startsWith('javascript')) {
+                if (this.tagName === 'A' && !this.getAttribute('href').startsWith('#') && !this.getAttribute('href').startsWith('javascript')) {
                     document.getElementById('page-loader').style.display = 'flex';
+                    document.getElementById('page-loader').style.opacity = '1';
                 }
             });
         });
 
-        window.addEventListener('pageshow', function() {
-            document.getElementById('page-loader').style.display = 'none';
-        });
-
+        // PWA & Push Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(registration => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
                     console.log('SW registered');
-                }).catch(err => {
-                    console.log('SW failed', err);
+
+                    // Request notification permission with native-like prompt
+                    if (Notification.permission === 'default' && isLoggedIn) {
+                         setTimeout(() => {
+                             if(confirm("Izinkan Portal mengirim notifikasi pengumuman & tugas?")) {
+                                 Notification.requestPermission();
+                             }
+                         }, 3000);
+                    }
                 });
             });
         }
+    </script>
+
+    <!-- Global Notification UI -->
+    <div id="portal-toast" class="animate__animated animate__fadeInDown" style="display:none; position:fixed; top:20px; left:20px; right:20px; z-index:10000; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-left: 5px solid #246bfe; padding: 15px;">
+        <div class="d-flex align-items-center gap-3">
+            <div id="toast-icon" style="width: 40px; height: 40px; background: #e8f0fe; border-radius: 10px; display: grid; place-items: center; color: #246bfe;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/></svg>
+            </div>
+            <div style="flex: 1;">
+                <div id="toast-title" class="fw-bold text-dark" style="font-size: 14px;">Notifikasi</div>
+                <div id="toast-msg" class="text-muted" style="font-size: 13px;">Ada pesan baru untuk Anda.</div>
+            </div>
+            <button onclick="document.getElementById('portal-toast').style.display='none'" class="btn-close btn-close-sm"></button>
+        </div>
+    </div>
+
+    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+    <script>
+        function showNotification(title, message) {
+            const toast = document.getElementById('portal-toast');
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-msg').innerText = message;
+            document.getElementById('notif-sound').play().catch(e => console.log("Sound interaction required"));
+
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.classList.remove('animate__fadeInDown');
+                toast.classList.add('animate__fadeOutUp');
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                    toast.classList.remove('animate__fadeOutUp');
+                    toast.classList.add('animate__fadeInDown');
+                }, 500);
+            }, 5000);
+        }
+
+        // Simulating Real-time for now without Reverb server complexity if not started
+        // But if Echo is available, we use it
+        window.addEventListener('load', () => {
+            if (window.Echo) {
+                window.Echo.channel('portal-notifications')
+                    .listen('.new-notification', (e) => {
+                        showNotification(e.title, e.message);
+
+                        // Auto-refresh logic with professional UI feedback
+                        if (window.location.pathname.includes('pengumuman') || window.location.pathname.includes('tugas')) {
+                             const refreshBar = document.createElement('div');
+                             refreshBar.className = 'animate__animated animate__slideInUp';
+                             refreshBar.style = 'position:fixed; bottom:110px; left:20px; right:20px; background:#14213d; color:white; padding:12px; border-radius:12px; z-index:9; text-align:center; font-size:13px; cursor:pointer;';
+                             refreshBar.innerHTML = 'Data baru tersedia. <b>Ketuk untuk Segarkan</b>';
+                             refreshBar.onclick = () => window.location.reload();
+                             document.body.appendChild(refreshBar);
+                        }
+                    });
+            }
+        });
     </script>
 </body>
 </html>

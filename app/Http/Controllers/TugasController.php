@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\PengumpulanTugas;
 use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Storage;
+use App\Events\NotificationEvent;
 
 class TugasController extends Controller
 {
@@ -46,7 +47,10 @@ class TugasController extends Controller
         $data['user_id'] = $request->session()->get('user_id');
         $data['kelas_id'] = $request->session()->get('user_kelas_id') ?: $data['kelas_id'];
         if ($request->hasFile('lampiran')) { $data['lampiran'] = $request->file('lampiran')->store('tugas', 'public'); $data['lampiran_nama'] = $request->file('lampiran')->getClientOriginalName(); }
-        Tugas::create($data);
+        $tugas = Tugas::create($data);
+
+        event(new NotificationEvent('Tugas Baru', $tugas->judul, 'task'));
+
         return redirect()->route('tugas.index')->with('success', 'Tugas berhasil dibuat.');
     }
 
@@ -68,6 +72,9 @@ class TugasController extends Controller
         if ($request->hasFile('jawaban_file')) { $data['jawaban_file'] = $request->file('jawaban_file')->store('jawaban', 'public'); $data['jawaban_nama'] = $request->file('jawaban_file')->getClientOriginalName(); }
         $submission = PengumpulanTugas::updateOrCreate(['tugas_id' => $tugas->id, 'siswa_id' => $user->id], array_merge($data, ['status' => 'terkirim', 'revisi_aktif' => false, 'dikumpulkan_pada' => now()]));
         Notifikasi::create(['user_id' => $tugas->user_id, 'judul' => 'Jawaban tugas baru', 'pesan' => $user->name.' mengirim jawaban untuk tugas '.$tugas->judul, 'url' => route('tugas.show', $tugas)]);
+
+        event(new NotificationEvent('Jawaban Tugas', $user->name.' mengirim jawaban.', 'task'));
+
         return back()->with('success', 'Jawaban berhasil dikirim ke guru.');
     }
 
@@ -82,6 +89,9 @@ class TugasController extends Controller
         $data['dinilai_pada'] = now();
         $pengumpulan->update($data);
         Notifikasi::create(['user_id' => $pengumpulan->siswa_id, 'judul' => $data['revisi_aktif'] ? 'Tugas perlu direvisi' : 'Tugas sudah dinilai', 'pesan' => 'Guru memberi nilai '.$data['nilai'].' untuk tugas '.$pengumpulan->tugas->judul.'.', 'url' => route('tugas.show', $pengumpulan->tugas)]);
+
+        event(new NotificationEvent('Tugas Dinilai', 'Nilai Anda: '.$data['nilai'], 'task'));
+
         return back()->with('success', 'Penilaian tersimpan.');
     }
 }

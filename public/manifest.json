@@ -1,17 +1,25 @@
 {
     "name": "App Portal Sekolah",
     "short_name": "PortalSekolah",
+    "description": "Sistem Akademik Sekolah Terintegrasi",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#14213d",
     "theme_color": "#246bfe",
     "orientation": "portrait",
+    "categories": ["education", "productivity"],
     "icons": [
+        {
+            "src": "https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
         {
             "src": "https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "maskable"
         }
     ]
 }

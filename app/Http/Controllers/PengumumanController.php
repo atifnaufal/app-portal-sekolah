@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
+use App\Events\NotificationEvent;
 
 class PengumumanController extends Controller
 {
@@ -36,7 +37,10 @@ class PengumumanController extends Controller
         $data['publik'] = true;
         $data['is_landing'] = $request->boolean('is_landing');
         if ($request->hasFile('gambar')) { $data['gambar'] = $request->file('gambar')->store('pengumuman', 'public'); $data['gambar_nama'] = $request->file('gambar')->getClientOriginalName(); }
-        Pengumuman::create($data);
+        $pengumuman = Pengumuman::create($data);
+
+        event(new NotificationEvent('Pengumuman Baru', $pengumuman->judul, 'announcement'));
+
         return redirect()->route('pengumuman.index')->with('success', 'Pengumuman berhasil dibuat.');
     }
 
