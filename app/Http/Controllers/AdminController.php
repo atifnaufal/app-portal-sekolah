@@ -47,4 +47,32 @@ class AdminController extends Controller
         Setting::setValue('registration_enabled', $enabled ? '1' : '0');
         return back()->with('success', $enabled ? 'Registrasi siswa/guru diaktifkan.' : 'Registrasi siswa/guru dinonaktifkan.');
     }
+
+    public function settings(): View
+    {
+        return view('admin.settings', [
+            'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false),
+            'attendanceActive' => (bool) Setting::getValue('attendance_active', false),
+            'startTime' => Setting::getValue('attendance_start_time', '07:00'),
+            'endTime' => Setting::getValue('attendance_end_time', '15:00'),
+            'lateTime' => Setting::getValue('attendance_late_time', '07:30'),
+        ]);
+    }
+
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'attendance_active' => 'required|boolean',
+            'attendance_start_time' => 'required',
+            'attendance_end_time' => 'required',
+            'attendance_late_time' => 'required',
+            'registration_enabled' => 'required|boolean',
+        ]);
+
+        foreach ($data as $key => $value) {
+            Setting::setValue($key, $value);
+        }
+
+        return back()->with('success', 'Pengaturan berhasil diperbarui.');
+    }
 }

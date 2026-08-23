@@ -10,16 +10,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+use Laravel\Sanctum\HasApiTokens;
+
 #[Fillable(['name', 'email', 'password', 'role', 'kelas_id', 'foto', 'foto_posisi_x', 'foto_posisi_y', 'nik', 'no_hp', 'aktif'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     public function kelas(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Kelas::class);
+    }
+
+    public function absensi(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Absensi::class);
     }
 
     /**

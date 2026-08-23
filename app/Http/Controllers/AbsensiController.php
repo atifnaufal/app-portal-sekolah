@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Absensi;
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Storage;
 
 class AbsensiController extends Controller
 {
@@ -14,26 +16,91 @@ class AbsensiController extends Controller
     {
         $role = $request->session()->get('user_role');
         $userId = $request->session()->get('user_id');
-        $kelasId = $request->session()->get('user_kelas_id');
+        $user = User::with('kelas')->findOrFail($userId);
         $today = now()->toDateString();
-        $query = Absensi::with(['user', 'kelas'])->whereDate('tanggal', $today)->latest('waktu');
-        if ($role === 'guru') $query->where('kelas_id', $kelasId)->whereHas('user', fn ($q) => $q->where('role', 'siswa'));
-        if ($role === 'siswa') $query->where('user_id', $userId);
-        return view($role === 'admin' ? 'absensi.admin' : 'mobile.absensi', [
-            'absensis' => $query->get(),
-            'todayAttendance' => Absensi::where('user_id', $userId)->whereDate('tanggal', $today)->first(),
-            'user' => User::with('kelas')->findOrFail($userId),
-            'isAdmin' => $role === 'admin',
+
+        $attendanceActive = (bool) Setting::getValue('attendance_active', false);
+        $startTime = Setting::getValue('attendance_start_time', '07:00');
+        $endTime = Setting::getValue('attendance_end_time', '15:00');
+
+        $myAttendance = Absensi::where('user_id', $userId)->whereDate('tanggal', $today)->first();
+
+        if ($role === 'guru') {
+            // Guru melihat siswa di kelasnya
+            $students = User::where('role', 'siswa')
+                ->where('kelas_id', $user->kelas_id)
+                ->with(['absensi' => fn($q) => $q->whereDate('tanggal', $today)])
+                ->get();
+
+            return view('mobile.absensi-monitoring', [
+                'students' => $students,
+                'user' => $user,
+                'today' => $today
+            ]);
+        }
+
+        return view('mobile.absensi', [
+            'myAttendance' => $myAttendance,
+            'user' => $user,
+            'attendanceActive' => $attendanceActive,
+            'startTime' => $startTime,
+            'endTime' => $endTime,
+            'isWithinTime' => now()->between(now()->setTimeFromTimeString($startTime), now()->setTimeFromTimeString($endTime))
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $user = User::findOrFail($request->session()->get('user_id'));
-        if ($user->role === 'admin') return back()->with('error', 'Admin tidak perlu melakukan absensi.');
-        if (Absensi::where('user_id', $user->id)->whereDate('tanggal', now())->exists()) return back()->with('error', 'Anda sudah absen hari ini.');
-        Absensi::create(['user_id' => $user->id, 'kelas_id' => $user->kelas_id, 'tanggal' => now()->toDateString(), 'waktu' => now()->format('H:i:s'), 'status' => 'hadir']);
-        return back()->with('success', 'Absensi kedatangan berhasil dicatat.');
+        $userId = $request->session()->get('user_id');
+        $user = User::findOrFail($userId);
+
+        if (!Setting::getValue('attendance_active', false)) {
+            return back()->with('error', 'Absensi saat ini dinonaktifkan oleh Admin.');
+        }
+
+        $today = now()->toDateString();
+        $now = now();
+        $attendance = Absensi::firstOrNew(['user_id' => $user->id, 'tanggal' => $today]);
+
+        $request->validate([
+            'foto' => 'required|image|max:2048',
+            'lat' => 'nullable|numeric',
+            'long' => 'nullable|numeric',
+            'tipe' => 'required|in:masuk,pulang'
+        ]);
+
+        $path = $request->file('foto')->store('absensi/'.$today, 'public');
+
+        if ($request->tipe === 'masuk') {
+            if ($attendance->waktu_masuk) return back()->with('error', 'Anda sudah absen masuk hari ini.');
+
+            $lateTime = Setting::getValue('attendance_late_time', '07:30');
+            $status = $now->gt(now()->setTimeFromTimeString($lateTime)) ? 'terlambat' : 'hadir';
+
+            $attendance->fill([
+                'kelas_id' => $user->kelas_id,
+                'waktu_masuk' => $now->format('H:i:s'),
+                'foto_masuk' => $path,
+                'lat_masuk' => $request->lat,
+                'long_masuk' => $request->long,
+                'status' => $status
+            ]);
+            $attendance->save();
+
+            return back()->with('success', 'Absensi masuk berhasil dicatat. Status: ' . ucfirst($status));
+        } else {
+            if (!$attendance->waktu_masuk) return back()->with('error', 'Anda harus absen masuk terlebih dahulu.');
+            if ($attendance->waktu_pulang) return back()->with('error', 'Anda sudah absen pulang hari ini.');
+
+            $attendance->update([
+                'waktu_pulang' => $now->format('H:i:s'),
+                'foto_pulang' => $path,
+                'lat_pulang' => $request->lat,
+                'long_pulang' => $request->long
+            ]);
+
+            return back()->with('success', 'Absensi pulang berhasil dicatat.');
+        }
     }
 
     public function notifications(): View

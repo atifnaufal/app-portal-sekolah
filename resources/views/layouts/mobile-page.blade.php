@@ -12,10 +12,98 @@
         .page-header{position:fixed;z-index:30;top:0;left:0;right:0;height:var(--top-height);background:#fffffff5;border-bottom:1px solid #e8ecf3;backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center}
         .page-header-inner{width:min(680px,100%);padding:0 20px;display:flex;align-items:center;justify-content:space-between}.page-title{font-size:13px;font-weight:800;color:var(--ink);letter-spacing:.02em}.page-back{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 17px;background:var(--danger);color:#fff;text-decoration:none;font-size:12px;font-weight:800;border-radius:999px;box-shadow:0 7px 17px #d63f5538;transition:transform .2s,box-shadow .2s}.page-back:hover,.page-back:active{color:#fff;transform:translateY(-2px);box-shadow:0 11px 22px #d63f5555}
         .mobile-hero{background:linear-gradient(140deg,#14213d,#246bfe);color:#fff;border-radius:0 0 30px 30px;padding:24px 20px 30px}.eyebrow{font-size:11px;letter-spacing:.13em;opacity:.75;font-weight:800}.hero-title{font-size:26px;font-weight:800;letter-spacing:-.02em}.avatar{width:48px!important;min-width:48px;max-width:48px;height:48px!important;min-height:48px;max-height:48px;flex:0 0 48px;aspect-ratio:1/1;overflow:hidden;display:grid;place-items:center;flex-shrink:0;border-radius:17px;background:#ffffff2b;font-weight:800;font-size:18px}.avatar img{display:block;width:100%!important;height:100%!important;max-width:none;max-height:none;object-fit:cover}.class-pill{display:inline-block;background:#ffffff20;border:1px solid #ffffff42;border-radius:99px;padding:6px 12px;font-size:12px}.mobile-content{padding:20px}.section-title{font-size:17px;font-weight:800}.mobile-card{border:0;border-radius:20px;box-shadow:0 8px 24px #14213d12;animation:rise .45s both}.tap-card{transition:transform .2s,box-shadow .2s}.tap-card:hover,.tap-card:active{transform:translateY(-3px);box-shadow:0 13px 28px #14213d1c}.icon-box{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:#e8efff;color:var(--blue)}.profile-action{border-radius:14px}.submission-progress{border-radius:12px}.chat-bubble{max-width:86%;padding:10px 13px;border-radius:16px 16px 16px 5px;background:#fff;box-shadow:0 5px 16px #14213d0d;font-size:13px}.chat-bubble.mine{background:#246bfe;color:#fff;border-radius:16px 16px 5px}.chat-composer{position:fixed;z-index:40;left:50%;bottom:var(--bottom-height);transform:translateX(-50%);width:min(680px,100%);background:#f5f7fb;padding:8px 20px;border-top:1px solid #e8ecf3}.chat-composer .form-control{border:0;box-shadow:0 5px 16px #14213d12}.chat-composer .btn{border-radius:12px}.emoji-button{border:0}.emoji-pick{font-size:16px;padding:0 4px}.logout-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid #f1d8dd;background:#fff5f6;border-radius:20px;padding:16px}.logout-panel .btn{border-radius:12px;white-space:nowrap}.stagger>*{animation:rise .45s both}.stagger>*:nth-child(2){animation-delay:.08s}.stagger>*:nth-child(3){animation-delay:.16s}@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}@media(min-width:681px){.mobile-shell{height:calc(100vh - 40px);margin-top:20px}.page-header{top:20px}.page-footer{bottom:20px}}
+
+        #page-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        .loader-logo { width: 80px; height: auto; animation: pulse 2s infinite; }
+
+        #app-lock-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #14213d, #246bfe);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20000;
+            color: white;
+            text-align: center;
+        }
+        .lock-icon { font-size: 60px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
+    <div id="page-loader">
+        <img src="https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png" class="loader-logo" alt="Logo">
+    </div>
+
+    <div id="app-lock-screen">
+        <div class="lock-icon">&#128274;</div>
+        <h3>Portal Terkunci</h3>
+        <p class="px-4 opacity-75">Gunakan sidik jari atau wajah untuk membuka aplikasi.</p>
+        <button onclick="startBiometricAuth()" class="btn btn-light mt-3 px-4 rounded-pill">Buka Sekarang</button>
+    </div>
+
     <header class="page-header"><div class="page-header-inner"><a href="{{ route('dashboard') }}" class="page-back">&larr; Beranda</a><span class="page-title">APP MAHASISWA</span></div></header>
     <main class="mobile-shell">@yield('content')</main>
+
+    <script src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
+    <script>
+        const { App } = window.Capacitor ? window.Capacitor.Plugins : {};
+        const isLoggedIn = {{ session()->has('user_id') ? 'true' : 'false' }};
+
+        function showLockScreen() {
+            if (window.Capacitor && isLoggedIn) {
+                document.getElementById('app-lock-screen').style.display = 'flex';
+                startBiometricAuth();
+            }
+        }
+
+        async function startBiometricAuth() {
+            if (!window.Capacitor) return;
+            try {
+                const NativeBiometric = window.Capacitor.Plugins.NativeBiometric;
+                if (!NativeBiometric) return;
+                const result = await NativeBiometric.isAvailable();
+                if (result.isAvailable) {
+                    await NativeBiometric.verifyIdentity({
+                        reason: "Buka portal sekolah dengan sidik jari/wajah",
+                        title: "Verifikasi Keamanan",
+                        subtitle: "Masuk Kembali",
+                        description: "Pastikan ini adalah Anda."
+                    });
+                    document.getElementById('app-lock-screen').style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Biometric failed", error);
+            }
+        }
+
+        if (window.Capacitor) {
+            App.addListener('appStateChange', ({ isActive }) => {
+                if (isActive) showLockScreen();
+            });
+        }
+
+        document.querySelectorAll('.btn-primary, .teacher-action').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.type === 'submit') {
+                    document.getElementById('page-loader').style.display = 'flex';
+                }
+            });
+        });
+
+        window.addEventListener('pageshow', function() {
+            document.getElementById('page-loader').style.display = 'none';
+        });
+    </script>
 </body>
 </html>

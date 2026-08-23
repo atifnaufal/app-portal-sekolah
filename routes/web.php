@@ -46,6 +46,8 @@ Route::middleware('role:admin')->group(function () {
     Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.user.update');
     Route::patch('/admin/users/{user}/toggle', [AdminController::class, 'toggleUser'])->name('admin.user.toggle');
     Route::patch('/admin/registration/toggle', [AdminController::class, 'toggleRegistration'])->name('admin.registration.toggle');
+    Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
+    Route::post('/admin/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
     Route::resource('jurusan', JurusanController::class)->except('show');
     Route::resource('kelas', KelasController::class)->except('show');
     Route::resource('pengumuman', PengumumanController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);

@@ -1,5 +1,13 @@
 @extends('layouts.mobile-page')
 @section('content')
 <header class="mobile-hero"><div class="eyebrow">AKUN SAYA</div><div class="d-flex align-items-center gap-3 mt-3"><div class="avatar">@if($user->foto)<img src="{{ asset('storage/'.$user->foto) }}" alt="Foto profil" style="width:100%;height:100%;object-fit:cover;object-position:{{ $user->foto_posisi_x }}% {{ $user->foto_posisi_y }}%;border-radius:inherit">@else{{ strtoupper(substr($user->name,0,1)) }}@endif</div><div><div class="hero-title">Profil</div><div class="class-pill mt-2">{{ ucfirst($user->role) }}</div></div></div></header>
-<main class="mobile-content"><div class="card mobile-card mb-3"><div class="card-body p-4"><div class="text-secondary small">Nama lengkap</div><div class="fw-bold mt-1">{{ $user->name }}</div><hr><div class="text-secondary small">Email</div><div class="fw-bold mt-1">{{ $user->email }}</div><hr><div class="text-secondary small">Kelas</div><div class="fw-bold mt-1">{{ $user->kelas?->nama ?? 'Belum ditentukan' }}</div></div></div><a href="{{ route('profile.edit') }}" class="btn btn-primary w-100 py-3 profile-action">Edit profil</a><div class="logout-panel mt-4"><div><div class="fw-bold">Keluar dari akun?</div><div class="small text-secondary mt-1">Sesi akan diakhiri di perangkat ini.</div></div><form method="POST" action="{{ route('logout') }}">@csrf<button class="btn btn-outline-danger">Keluar</button></form></div></main>
+<main class="mobile-content"><div class="card mobile-card mb-3"><div class="card-body p-4"><div class="text-secondary small">Nama lengkap</div><div class="fw-bold mt-1">{{ $user->name }}</div><hr><div class="text-secondary small">Email</div><div class="fw-bold mt-1">{{ $user->email }}</div><hr><div class="text-secondary small">Kelas</div><div class="fw-bold mt-1">{{ $user->kelas?->nama ?? 'Belum ditentukan' }}</div></div></div><a href="{{ route('profile.edit') }}" class="btn btn-primary w-100 py-3 profile-action">Edit profil</a>
+
+@if($user->role === 'admin')
+    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-primary w-100 py-3 mt-3 profile-action">
+        &#9881; Buka Panel Admin Web
+    </a>
+@endif
+
+<div class="logout-panel mt-4"><div><div class="fw-bold">Keluar dari akun?</div><div class="small text-secondary mt-1">Sesi akan diakhiri di perangkat ini.</div></div><form method="POST" action="{{ route('logout') }}">@csrf<button class="btn btn-outline-danger">Keluar</button></form></div></main>
 @endsection
