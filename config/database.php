@@ -3,6 +3,44 @@
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
+/*
+|--------------------------------------------------------------------------
+| Railway MySQL Connection (DATABASE_URL)
+|--------------------------------------------------------------------------
+|
+| Railway injects a DATABASE_URL (or MYSQL_URL aliased to DATABASE_URL)
+| environment variable when a MySQL service is attached to this app.
+| We parse that DSN here and require it to be present and valid so the
+| app fails fast and clearly instead of silently falling back to a
+| localhost connection that will never succeed in production.
+|
+*/
+
+$databaseUrl = env('DATABASE_URL');
+
+if (empty($databaseUrl)) {
+    throw new Exception(
+        'DATABASE_URL environment variable is required but was not set. '.
+        'Attach a MySQL service on Railway and ensure DATABASE_URL (e.g. DATABASE_URL=${{MySQL.MYSQL_URL}}) is available to this service.'
+    );
+}
+
+$parsedDatabaseUrl = parse_url($databaseUrl);
+
+if ($parsedDatabaseUrl === false || ! isset($parsedDatabaseUrl['host'])) {
+    throw new Exception('DATABASE_URL environment variable is invalid and could not be parsed. Expected a DSN like mysql://user:pass@host:port/database.');
+}
+
+$mysqlHost = $parsedDatabaseUrl['host'];
+$mysqlPort = $parsedDatabaseUrl['port'] ?? '3306';
+$mysqlDatabase = isset($parsedDatabaseUrl['path']) ? ltrim($parsedDatabaseUrl['path'], '/') : '';
+$mysqlUsername = isset($parsedDatabaseUrl['user']) ? rawurldecode($parsedDatabaseUrl['user']) : null;
+$mysqlPassword = isset($parsedDatabaseUrl['pass']) ? rawurldecode($parsedDatabaseUrl['pass']) : null;
+
+if (empty($mysqlDatabase)) {
+    throw new Exception('DATABASE_URL environment variable is missing a database name (path component).');
+}
+
 return [
 
     /*
@@ -46,12 +84,12 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
+            'url' => null,
+            'host' => $mysqlHost,
+            'port' => $mysqlPort,
+            'database' => $mysqlDatabase,
+            'username' => $mysqlUsername,
+            'password' => $mysqlPassword,
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
