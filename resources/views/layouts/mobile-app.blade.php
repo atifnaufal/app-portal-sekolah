@@ -21,31 +21,17 @@
             color:var(--ink);
             font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
             padding-bottom:92px;
-            /* Mencegah seleksi teks dan zoom agar terasa seperti native app */
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
             overscroll-behavior-y: contain;
         }
 
-        /* Mengizinkan input tetap bisa diketik */
         input, textarea { user-select: text; -webkit-user-select: text; }
-        .mobile-shell{max-width:680px;margin:auto}.mobile-hero{background:linear-gradient(140deg,#14213d,#246bfe);color:#fff;border-radius:0 0 30px 30px;padding:24px 20px 30px}.eyebrow{font-size:11px;letter-spacing:.13em;opacity:.75;font-weight:800}.hero-title{font-size:26px;font-weight:800;letter-spacing:-.02em}.avatar{width:48px;height:48px;border-radius:17px;background:#ffffff2b;display:grid;place-items:center;font-weight:800;font-size:18px}.class-pill{display:inline-block;background:#ffffff20;border:1px solid #ffffff42;border-radius:99px;padding:6px 12px;font-size:12px}.mobile-content{padding:20px}.section-title{font-size:17px;font-weight:800}.mobile-card{border:0;border-radius:20px;box-shadow:0 8px 24px #14213d12;animation:rise .45s both; position: relative; overflow: hidden; }
-        .mobile-card::after {
-            content: "";
-            position: absolute;
-            top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: skeleton 1.5s infinite;
-        }
-        @keyframes skeleton {
-            0% { left: -100%; }
-            100% { left: 200%; }
-        }
-        .mobile-card > * { position: relative; z-index: 1; }
-        .mobile-card:nth-child(2){animation-delay:.08s}.mobile-card:nth-child(3){animation-delay:.16s}
+        .mobile-shell{max-width:680px;margin:auto}.mobile-hero{background:linear-gradient(140deg,#14213d,#246bfe);color:#fff;border-radius:0 0 30px 30px;padding:24px 20px 30px}.eyebrow{font-size:11px;letter-spacing:.13em;opacity:.75;font-weight:800}.hero-title{font-size:26px;font-weight:800;letter-spacing:-.02em}.avatar{width:48px;height:48px;border-radius:17px;background:#ffffff2b;display:grid;place-items:center;font-weight:800;font-size:18px}.class-pill{display:inline-block;background:#ffffff20;border:1px solid #ffffff42;border-radius:99px;padding:6px 12px;font-size:12px}.mobile-content{padding:20px}.section-title{font-size:17px;font-weight:800}.mobile-card{border:0;border-radius:20px;box-shadow:0 8px 24px #14213d12;animation:rise .45s both; position: relative; overflow: hidden; }.mobile-card:nth-child(2){animation-delay:.08s}.mobile-card:nth-child(3){animation-delay:.16s}
 
-        /* Haptic feedback for native feel */
+        .mobile-card > * { position: relative; z-index: 1; }
+
         .btn, .bottom-nav a, .tap-card {
             -webkit-tap-highlight-color: transparent;
             transition: transform 0.1s;
@@ -66,7 +52,7 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: white;
-            display: none; /* Sembunyikan secara default */
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -112,18 +98,15 @@
         <a class="{{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.show') }}"><span class="nav-icon">&#9786;</span>Profil</a>
     </nav>
 
-    <script src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
     <script>
-        // Cek apakah berjalan di dalam native APK (Capacitor)
-        const isNative = window.hasOwnProperty('Capacitor');
-        const { App, SplashScreen } = isNative ? window.Capacitor.Plugins : {};
+        // Safety check for Capacitor
+        const isNative = typeof Capacitor !== 'undefined';
+        const { App, SplashScreen } = isNative ? Capacitor.Plugins : {};
 
-        // Sembunyikan Splash Native jika ada
         if (isNative && SplashScreen) {
             SplashScreen.hide().catch(() => {});
         }
 
-        // Cek apakah user sedang login
         const isLoggedIn = {{ session()->has('user_id') ? 'true' : 'false' }};
 
         function showLockScreen() {
@@ -136,9 +119,8 @@
         async function startBiometricAuth() {
             if (!isNative) return;
             try {
-                const NativeBiometric = window.Capacitor.Plugins.NativeBiometric;
+                const NativeBiometric = Capacitor.Plugins.NativeBiometric;
                 if (!NativeBiometric) return;
-
                 const result = await NativeBiometric.isAvailable();
                 if (result.isAvailable) {
                     await NativeBiometric.verifyIdentity({
@@ -150,56 +132,38 @@
                         document.getElementById('app-lock-screen').style.display = 'none';
                     });
                 }
-            } catch (error) {
-                console.error("Biometric failed", error);
-            }
+            } catch (error) { console.error(error); }
         }
 
         if (isNative && App) {
-            App.addListener('appStateChange', ({ isActive }) => {
-                if (isActive) showLockScreen();
-            });
+            App.addListener('appStateChange', ({ isActive }) => { if (isActive) showLockScreen(); });
         }
 
-        // Loader logic
-        window.addEventListener('load', () => {
-            const loader = document.getElementById('page-loader');
-            loader.style.display = 'none';
-        });
+        window.addEventListener('load', () => { document.getElementById('page-loader').style.display = 'none'; });
 
-        // Offline detection
         window.addEventListener('online', () => document.getElementById('offline-indicator').style.display = 'none');
         window.addEventListener('offline', () => document.getElementById('offline-indicator').style.display = 'block');
-        if (!navigator.onLine) document.getElementById('offline-indicator').style.display = 'block';
 
         document.querySelectorAll('.bottom-nav a, .tap-card, .btn-primary').forEach(link => {
             link.addEventListener('click', function(e) {
-                if (this.tagName === 'A' && !this.getAttribute('href').startsWith('#') && !this.getAttribute('href').startsWith('javascript')) {
+                const href = this.getAttribute('href');
+                if (href && !href.startsWith('#') && !href.startsWith('javascript')) {
                     document.getElementById('page-loader').style.display = 'flex';
                 }
             });
         });
 
-        // PWA & Push Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').then(reg => {
-                    console.log('SW registered');
-
-                    // Request notification permission with native-like prompt
                     if (Notification.permission === 'default' && isLoggedIn) {
-                         setTimeout(() => {
-                             if(confirm("Izinkan Portal mengirim notifikasi pengumuman & tugas?")) {
-                                 Notification.requestPermission();
-                             }
-                         }, 3000);
+                         setTimeout(() => { if(confirm("Izinkan Notifikasi?")) Notification.requestPermission(); }, 3000);
                     }
                 });
             });
         }
     </script>
 
-    <!-- Global Notification UI -->
     <div id="portal-toast" class="animate__animated animate__fadeInDown" style="display:none; position:fixed; top:20px; left:20px; right:20px; z-index:10000; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-left: 5px solid #246bfe; padding: 15px;">
         <div class="d-flex align-items-center gap-3">
             <div id="toast-icon" style="width: 40px; height: 40px; background: #e8f0fe; border-radius: 10px; display: grid; place-items: center; color: #246bfe;">
@@ -220,34 +184,20 @@
             const toast = document.getElementById('portal-toast');
             document.getElementById('toast-title').innerText = title;
             document.getElementById('toast-msg').innerText = message;
-            document.getElementById('notif-sound').play().catch(e => console.log("Sound interaction required"));
-
+            document.getElementById('notif-sound').play().catch(() => {});
             toast.style.display = 'block';
-            setTimeout(() => {
-                toast.classList.remove('animate__fadeInDown');
-                toast.classList.add('animate__fadeOutUp');
-                setTimeout(() => {
-                    toast.style.display = 'none';
-                    toast.classList.remove('animate__fadeOutUp');
-                    toast.classList.add('animate__fadeInDown');
-                }, 500);
-            }, 5000);
+            setTimeout(() => { toast.style.display = 'none'; }, 5000);
         }
 
-        // Simulating Real-time for now without Reverb server complexity if not started
-        // But if Echo is available, we use it
         window.addEventListener('load', () => {
             if (window.Echo) {
                 window.Echo.channel('portal-notifications')
                     .listen('.new-notification', (e) => {
                         showNotification(e.title, e.message);
-
-                        // Auto-refresh logic with professional UI feedback
                         if (window.location.pathname.includes('pengumuman') || window.location.pathname.includes('tugas')) {
                              const refreshBar = document.createElement('div');
-                             refreshBar.className = 'animate__animated animate__slideInUp';
                              refreshBar.style = 'position:fixed; bottom:110px; left:20px; right:20px; background:#14213d; color:white; padding:12px; border-radius:12px; z-index:9; text-align:center; font-size:13px; cursor:pointer;';
-                             refreshBar.innerHTML = 'Data baru tersedia. <b>Ketuk untuk Segarkan</b>';
+                             refreshBar.innerHTML = 'Data baru tersedia. <b>Segarkan</b>';
                              refreshBar.onclick = () => window.location.reload();
                              document.body.appendChild(refreshBar);
                         }
