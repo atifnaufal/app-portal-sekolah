@@ -18,7 +18,10 @@ export default defineConfig({
     ],
     server: {
         watch: {
-            ignored: ['**/storage/framework/views/**'],
+            // Files in public/ (including service-worker.js and manifest.json)
+            // are served as static assets and must never be processed/bundled
+            // by Vite - they need to stay byte-for-byte as authored.
+            ignored: ['**/storage/framework/views/**', 'public/service-worker.js', 'public/manifest.json'],
         },
     },
 });
