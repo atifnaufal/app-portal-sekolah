@@ -66,14 +66,13 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: white;
-            display: flex; /* Show by default */
+            display: none; /* Sembunyikan secara default */
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10000;
-            transition: opacity 0.5s;
         }
-        .loader-logo { width: 100px; height: auto; animation: pulse 2s infinite; }
+        .loader-logo { width: 80px; height: auto; animation: pulse 2s infinite; }
 
         #app-lock-screen {
             position: fixed;
@@ -162,10 +161,7 @@
         // Loader logic
         window.addEventListener('load', () => {
             const loader = document.getElementById('page-loader');
-            setTimeout(() => {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
-            }, 800);
+            loader.style.display = 'none';
         });
 
         // Offline detection
@@ -177,7 +173,6 @@
             link.addEventListener('click', function(e) {
                 if (this.tagName === 'A' && !this.getAttribute('href').startsWith('#') && !this.getAttribute('href').startsWith('javascript')) {
                     document.getElementById('page-loader').style.display = 'flex';
-                    document.getElementById('page-loader').style.opacity = '1';
                 }
             });
         });
