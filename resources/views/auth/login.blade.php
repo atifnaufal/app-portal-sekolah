@@ -1,5 +1,10 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Masuk | App Mahasiswa</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><style>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Masuk | App Mahasiswa</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d6efd">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><style>
     body{min-height:100vh;background:linear-gradient(135deg,#0d6efd,#14213d)}
     .login-card{max-width:420px;border:0;border-radius:16px}
     .desktop-label{display:none}
@@ -61,13 +66,56 @@
             @if(\App\Models\Setting::getValue('registration_enabled', false))
                 <a href="{{ route('register') }}" class="btn btn-outline-primary w-100 mt-3">Daftar akun guru / siswa</a>
             @endif
+
+            <div id="install-area" style="display: none;">
+                <hr class="my-4">
+                <button id="btn-install" class="btn btn-success w-100 py-2">
+                    <span>&#128229;</span> Unduh Aplikasi Portal
+                </button>
+                <p class="text-center small text-muted mt-2">Instal untuk akses lebih cepat dan fitur offline.</p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+    let deferredPrompt;
+    const installArea = document.getElementById('install-area');
+    const btnInstall = document.getElementById('btn-install');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Mencegah mini-infobar muncul di mobile
+        e.preventDefault();
+        // Simpan event agar bisa dipicu nanti
+        deferredPrompt = e;
+        // Tampilkan tombol instal
+        installArea.style.display = 'block';
+    });
+
+    btnInstall.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            deferredPrompt = null;
+            installArea.style.display = 'none';
+        }
+    });
+
+    window.addEventListener('appinstalled', () => {
+        installArea.style.display = 'none';
+        console.log('PWA was installed');
+    });
+
     document.getElementById('loginForm').addEventListener('submit', function() {
         document.getElementById('web-splash').style.display = 'flex';
     });
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js');
+        });
+    }
 </script>
 </body></html>
