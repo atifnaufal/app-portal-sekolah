@@ -2,6 +2,7 @@
 cmds = ["composer install --no-dev --optimize-autoloader", "npm install", "npm run build"]
 
 [phases.deploy]
-cmds = ["php artisan migrate --force", "php artisan db:seed --force", "php artisan config:cache", "php artisan route:cache", "php artisan view:cache"]
+cmds = ["php artisan migrate --force", "php artisan db:seed --force"]
 
-# Biarkan Railway/Nixpacks menggunakan settingan default PHP (Nginx) yang lebih stabil daripada artisan serve
+[start]
+cmd = "node_modules/.bin/vite build && php artisan serve --host 0.0.0.0 --port $PORT"
