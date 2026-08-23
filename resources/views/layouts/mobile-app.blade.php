@@ -114,25 +114,27 @@
 
     <script src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
     <script>
-        const { App, SplashScreen } = window.Capacitor ? window.Capacitor.Plugins : {};
+        // Cek apakah berjalan di dalam native APK (Capacitor)
+        const isNative = window.hasOwnProperty('Capacitor');
+        const { App, SplashScreen } = isNative ? window.Capacitor.Plugins : {};
 
         // Sembunyikan Splash Native jika ada
-        if (window.Capacitor && SplashScreen) {
-            SplashScreen.hide();
+        if (isNative && SplashScreen) {
+            SplashScreen.hide().catch(() => {});
         }
 
         // Cek apakah user sedang login
         const isLoggedIn = {{ session()->has('user_id') ? 'true' : 'false' }};
 
         function showLockScreen() {
-            if (window.Capacitor && isLoggedIn) {
+            if (isNative && isLoggedIn) {
                 document.getElementById('app-lock-screen').style.display = 'flex';
                 startBiometricAuth();
             }
         }
 
         async function startBiometricAuth() {
-            if (!window.Capacitor) return;
+            if (!isNative) return;
             try {
                 const NativeBiometric = window.Capacitor.Plugins.NativeBiometric;
                 if (!NativeBiometric) return;
@@ -144,15 +146,16 @@
                         title: "Verifikasi Keamanan",
                         subtitle: "Masuk Kembali",
                         description: "Pastikan ini adalah Anda."
+                    }).then(() => {
+                        document.getElementById('app-lock-screen').style.display = 'none';
                     });
-                    document.getElementById('app-lock-screen').style.display = 'none';
                 }
             } catch (error) {
                 console.error("Biometric failed", error);
             }
         }
 
-        if (window.Capacitor) {
+        if (isNative && App) {
             App.addListener('appStateChange', ({ isActive }) => {
                 if (isActive) showLockScreen();
             });
