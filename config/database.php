@@ -3,6 +3,21 @@
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
+/*
+|--------------------------------------------------------------------------
+| Railway MYSQL_URL Parsing
+|--------------------------------------------------------------------------
+|
+| Railway injects a MYSQL_URL (or DATABASE_URL) variable containing a DSN
+| in the form mysql://username:password@host:port/database. We parse it
+| here so the mysql connection below can use the individual pieces as
+| fallbacks when the discrete DB_* variables are not explicitly set.
+|
+*/
+
+$mysqlUrl = env('MYSQL_URL', env('DATABASE_URL'));
+$mysqlUrlParts = $mysqlUrl ? parse_url($mysqlUrl) : [];
+
 return [
 
     /*
@@ -47,11 +62,11 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
+            'host' => env('DB_HOST', $mysqlUrlParts['host'] ?? '127.0.0.1'),
+            'port' => env('DB_PORT', $mysqlUrlParts['port'] ?? '3306'),
+            'database' => env('DB_DATABASE', isset($mysqlUrlParts['path']) ? ltrim($mysqlUrlParts['path'], '/') : 'laravel'),
+            'username' => env('DB_USERNAME', $mysqlUrlParts['user'] ?? 'root'),
+            'password' => env('DB_PASSWORD', $mysqlUrlParts['pass'] ?? ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
