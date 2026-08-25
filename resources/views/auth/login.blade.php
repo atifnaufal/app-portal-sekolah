@@ -69,33 +69,23 @@
             @endif
 
             <div id="download-app-area">
-    <hr class="my-4">
+                <hr class="my-4">
+                <div class="text-center mb-3">
+                    <div class="fw-bold">📱 Aplikasi Android (APK)</div>
+                    <div class="small text-muted">Versi Terbaru • Akses Stabil</div>
+                </div>
 
-    <div class="text-center mb-3">
-        <div class="fw-bold">
-            📱 Aplikasi Android
-        </div>
+                <a href="{{ asset('downloads/app-portal-sekolah.apk') }}" class="btn btn-success w-100 py-2 fw-semibold" download>
+                    📥 Unduh File APK
+                </a>
 
-       <div class="small text-muted">
-            Versi {{ env('APP_ANDROID_VERSION', '1.0.0') }} • Android
-        </div>
-    </div>
-
-    <a
-        href="https://github.com/atifnaufal/app-portal-sekolah/releases/latest/download/app-portal-sekolah.apk"
-        class="btn btn-success w-100 py-2 fw-semibold"
-        download
-    >
-        📥 Download APK
-    </a>
-
-    <p class="text-center small text-muted mt-2 mb-0">
-        Download aplikasi Portal Sekolah untuk Android
-    </p>
-</div>
+                <p class="text-center small text-muted mt-2 mb-0">
+                    Instal langsung di perangkat Android Anda.
+                </p>
+            </div>
 
 
-            
+
         </div>
     </div>
 </div>
