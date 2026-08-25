@@ -109,18 +109,26 @@
 
         const isLoggedIn = {{ session()->has('user_id') ? 'true' : 'false' }};
 
+        let isAuthenticating = false;
+
         function showLockScreen() {
-            if (isNative && isLoggedIn) {
-                document.getElementById('app-lock-screen').style.display = 'flex';
+            const biometricEnabled = localStorage.getItem('biometric_enabled') === 'true';
+            const lockScreen = document.getElementById('app-lock-screen');
+            if (isNative && isLoggedIn && biometricEnabled && !isAuthenticating && lockScreen.style.display !== 'flex') {
+                lockScreen.style.display = 'flex';
                 startBiometricAuth();
             }
         }
 
         async function startBiometricAuth() {
-            if (!isNative) return;
+            if (!isNative || isAuthenticating) return;
+            isAuthenticating = true;
             try {
                 const NativeBiometric = Capacitor.Plugins.NativeBiometric;
-                if (!NativeBiometric) return;
+                if (!NativeBiometric) {
+                    isAuthenticating = false;
+                    return;
+                }
                 const result = await NativeBiometric.isAvailable();
                 if (result.isAvailable) {
                     await NativeBiometric.verifyIdentity({
@@ -128,11 +136,14 @@
                         title: "Verifikasi Keamanan",
                         subtitle: "Masuk Kembali",
                         description: "Pastikan ini adalah Anda."
-                    }).then(() => {
-                        document.getElementById('app-lock-screen').style.display = 'none';
                     });
+                    document.getElementById('app-lock-screen').style.display = 'none';
                 }
-            } catch (error) { console.error(error); }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                isAuthenticating = false;
+            }
         }
 
         if (isNative && App) {

@@ -60,18 +60,26 @@
         const { App } = window.Capacitor ? window.Capacitor.Plugins : {};
         const isLoggedIn = {{ session()->has('user_id') ? 'true' : 'false' }};
 
+        let isAuthenticating = false;
+
         function showLockScreen() {
-            if (window.Capacitor && isLoggedIn) {
-                document.getElementById('app-lock-screen').style.display = 'flex';
+            const biometricEnabled = localStorage.getItem('biometric_enabled') === 'true';
+            const lockScreen = document.getElementById('app-lock-screen');
+            if (window.Capacitor && isLoggedIn && biometricEnabled && !isAuthenticating && lockScreen.style.display !== 'flex') {
+                lockScreen.style.display = 'flex';
                 startBiometricAuth();
             }
         }
 
         async function startBiometricAuth() {
-            if (!window.Capacitor) return;
+            if (!window.Capacitor || isAuthenticating) return;
+            isAuthenticating = true;
             try {
                 const NativeBiometric = window.Capacitor.Plugins.NativeBiometric;
-                if (!NativeBiometric) return;
+                if (!NativeBiometric) {
+                    isAuthenticating = false;
+                    return;
+                }
                 const result = await NativeBiometric.isAvailable();
                 if (result.isAvailable) {
                     await NativeBiometric.verifyIdentity({
@@ -84,6 +92,8 @@
                 }
             } catch (error) {
                 console.error("Biometric failed", error);
+            } finally {
+                isAuthenticating = false;
             }
         }
 
