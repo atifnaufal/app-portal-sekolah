@@ -36,6 +36,19 @@
                 </div>
             </div>
         </div>
+        <div class="col-12">
+            <div class="card mobile-card bg-primary text-white border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="small opacity-75 fw-bold">PROGRES SPP BULAN INI</div>
+                        <div class="small fw-bold">{{ $sppTagihan > 0 ? round(($sppTerbayar/$sppTagihan)*100) : 0 }}%</div>
+                    </div>
+                    <div class="progress bg-white bg-opacity-25" style="height: 8px;">
+                        <div class="progress-bar bg-white" style="width: {{ $sppTagihan > 0 ? min(100,($sppTerbayar/$sppTagihan)*100) : 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-3">

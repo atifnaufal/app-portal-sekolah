@@ -31,10 +31,16 @@
                                 <div class="small text-secondary">{{ ucfirst($user->role) }} · {{ $user->kelas?->nama ?? '-' }}</div>
                             </div>
                         </div>
-                        <div class="form-check form-switch">
-                            <form action="{{ route('admin.user.toggle', $user) }}" method="POST" id="toggle-{{ $user->id }}">
-                                @csrf @method('PATCH')
-                                <input class="form-check-input" type="checkbox" onchange="document.getElementById('toggle-{{ $user->id }}').submit()" {{ $user->aktif ? 'checked' : '' }}>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="form-check form-switch me-1">
+                                <form action="{{ route('admin.user.toggle', $user) }}" method="POST" id="toggle-{{ $user->id }}">
+                                    @csrf @method('PATCH')
+                                    <input class="form-check-input" type="checkbox" onchange="document.getElementById('toggle-{{ $user->id }}').submit()" {{ $user->aktif ? 'checked' : '' }}>
+                                </form>
+                            </div>
+                            <form action="{{ route('admin.user.destroy', $user) }}" method="POST" onsubmit="return confirm('Hapus akun ini?')">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-sm btn-outline-danger border-0 px-2" type="submit">&#128465;</button>
                             </form>
                         </div>
                     </div>

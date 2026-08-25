@@ -17,6 +17,19 @@ class AdminController extends Controller
     public function dashboard(): View
     {
         $today = today();
+
+        // Data for SPP Chart (Last 6 Months)
+        $sppData = Spp::selectRaw('tahun, bulan, SUM(nominal) as tagihan, SUM(dibayar) as terbayar')
+            ->groupBy('tahun', 'bulan')
+            ->orderBy('tahun', 'asc')
+            ->orderBy('bulan', 'asc')
+            ->take(6)
+            ->get();
+
+        $chartLabels = $sppData->map(fn($item) => "$item->bulan/$item->tahun");
+        $chartTagihan = $sppData->map(fn($item) => $item->tagihan);
+        $chartTerbayar = $sppData->map(fn($item) => $item->terbayar);
+
         $data = [
             'totalGuru' => User::where('role', 'guru')->count(),
             'totalSiswa' => User::where('role', 'siswa')->count(),
@@ -25,7 +38,10 @@ class AdminController extends Controller
             'sppTotal' => Spp::count(),
             'sppTerbayar' => Spp::sum('dibayar'),
             'sppTagihan' => Spp::sum('nominal'),
-            'sppByMonth' => Spp::selectRaw('tahun, bulan, SUM(nominal) as tagihan, SUM(dibayar) as terbayar')->groupBy('tahun', 'bulan')->orderByDesc('tahun')->orderByDesc('bulan')->take(6)->get(),
+            'sppByMonth' => $sppData->reverse(),
+            'chartLabels' => $chartLabels,
+            'chartTagihan' => $chartTagihan,
+            'chartTerbayar' => $chartTerbayar,
             'kelasSummaries' => Kelas::with(['users' => fn ($query) => $query->whereIn('role', ['guru', 'siswa'])->orderBy('role')->orderBy('name')])->withCount(['users as guru_count' => fn ($query) => $query->where('role', 'guru'), 'users as siswa_count' => fn ($query) => $query->where('role', 'siswa')])->orderBy('tingkat')->orderBy('nama')->get(),
             'recentUsers' => User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get(),
             'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false)
@@ -68,6 +84,13 @@ class AdminController extends Controller
         abort_unless(in_array($user->role, ['guru', 'siswa'], true), 404);
         $user->update(['aktif' => ! $user->aktif]);
         return back()->with('success', 'Status akun berhasil diubah.');
+    }
+
+    public function destroyUser(User $user): RedirectResponse
+    {
+        abort_unless(in_array($user->role, ['guru', 'siswa'], true), 404);
+        $user->delete();
+        return back()->with('success', 'Akun berhasil dihapus permanen.');
     }
 
     public function toggleRegistration(): RedirectResponse
