@@ -76,8 +76,8 @@
             📱 Aplikasi Android
         </div>
 
-        <div class="small text-muted">
-            Versi 1.0.0 • Android
+       <div class="small text-muted">
+            Versi {{ env('APP_ANDROID_VERSION', '1.0.0') }} • Android
         </div>
     </div>
 
@@ -101,33 +101,6 @@
 </div>
 
 <script>
-    let deferredPrompt;
-    const installArea = document.getElementById('install-area');
-    const btnInstall = document.getElementById('btn-install');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        // Mencegah mini-infobar muncul di mobile
-        e.preventDefault();
-        // Simpan event agar bisa dipicu nanti
-        deferredPrompt = e;
-        // Tampilkan tombol instal
-        installArea.style.display = 'block';
-    });
-
-    btnInstall.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
-            deferredPrompt = null;
-            installArea.style.display = 'none';
-        }
-    });
-
-    window.addEventListener('appinstalled', () => {
-        installArea.style.display = 'none';
-        console.log('PWA was installed');
-    });
 
     document.getElementById('loginForm').addEventListener('submit', function() {
         document.getElementById('web-splash').style.display = 'flex';
