@@ -68,13 +68,34 @@
                 <a href="{{ route('register') }}" class="btn btn-outline-primary w-100 mt-3">Daftar akun guru / siswa</a>
             @endif
 
-            <div id="install-area" style="display: none;">
-                <hr class="my-4">
-                <button id="btn-install" class="btn btn-success w-100 py-2">
-                    <span>&#128229;</span> Unduh Aplikasi Portal
-                </button>
-                <p class="text-center small text-muted mt-2">Instal untuk akses lebih cepat dan fitur offline.</p>
-            </div>
+            <div id="download-app-area">
+    <hr class="my-4">
+
+    <div class="text-center mb-3">
+        <div class="fw-bold">
+            📱 Aplikasi Android
+        </div>
+
+        <div class="small text-muted">
+            Versi 1.0.0 • Android
+        </div>
+    </div>
+
+    <a
+        href="https://github.com/atifnaufal/app-portal-sekolah/releases/latest/download/app-portal-sekolah.apk"
+        class="btn btn-success w-100 py-2 fw-semibold"
+        download
+    >
+        📥 Download APK
+    </a>
+
+    <p class="text-center small text-muted mt-2 mb-0">
+        Download aplikasi Portal Sekolah untuk Android
+    </p>
+</div>
+
+
+            
         </div>
     </div>
 </div>
