@@ -3,7 +3,7 @@
   "appName": "App Portal Sekolah",
   "webDir": "public",
   "server": {
-    "url": "https://app-portal-sekolah-production.up.railway.app/login",
+    "url": "https://app-portal-sekolah-production.up.railway.app/",
     "cleartext": false
   }
 }
