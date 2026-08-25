@@ -51,6 +51,8 @@ class AbsensiController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        \Illuminate\Support\Facades\Log::info('Absensi submission started', $request->all());
+
         $userId = $request->session()->get('user_id');
         $user = User::findOrFail($userId);
 
@@ -62,12 +64,22 @@ class AbsensiController extends Controller
         $now = now();
         $attendance = Absensi::firstOrNew(['user_id' => $user->id, 'tanggal' => $today]);
 
-        $request->validate([
-            'foto' => 'required|image|max:2048',
-            'lat' => 'nullable|numeric',
-            'long' => 'nullable|numeric',
-            'tipe' => 'required|in:masuk,pulang'
-        ]);
+        if (!$request->hasFile('foto')) {
+             \Illuminate\Support\Facades\Log::error('Absensi failed: Foto is missing in request');
+             return back()->with('error', 'Foto verifikasi tidak terdeteksi. Silakan coba lagi.');
+        }
+
+        try {
+            $request->validate([
+                'foto' => 'required|image|max:2048',
+                'lat' => 'nullable|numeric',
+                'long' => 'nullable|numeric',
+                'tipe' => 'required|in:masuk,pulang'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Absensi validation failed', ['errors' => $e->errors()]);
+            throw $e;
+        }
 
         $path = $request->file('foto')->store('absensi/'.$today, 'public');
 
