@@ -1,17 +1,17 @@
-package com.sekolah.app;
+public function handle(Request $request, Closure $next, ...$roles): Response
+{
+    $userId = $request->session()->get('user_id');
+    $userRole = $request->session()->get('user_role');
 
-import android.os.Bundle;
-import androidx.core.splashscreen.SplashScreen;
-import com.getcapacitor.BridgeActivity;
-
-public class MainActivity extends BridgeActivity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
-        super.onCreate(savedInstanceState);
-
-        // Keep the splash screen on-screen for 5 seconds
-        final long startTime = System.currentTimeMillis();
-        splashScreen.setKeepOnScreenCondition(() -> System.currentTimeMillis() - startTime < 5000);
+    if (! $userId) {
+        return redirect()
+            ->route('login')
+            ->with('error', 'Silakan login terlebih dahulu.');
     }
+
+    if (! in_array($userRole, $roles, true)) {
+        abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+    }
+
+    return $next($request);
 }
