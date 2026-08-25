@@ -23,7 +23,7 @@
                     </div>
                 </div>
 
-                <div class="row g-2">
+                <div class="row g-2 mb-4">
                     <div class="col-6">
                         <div class="p-3 border rounded-4 {{ $myAttendance && $myAttendance->waktu_masuk ? 'bg-success-subtle border-success' : '' }}">
                             <div class="small text-secondary">Masuk</div>
@@ -39,10 +39,10 @@
                 </div>
 
                 @if(session('success'))
-                    <div class="alert alert-success border-0 mt-4 mb-0 small">{{ session('success') }}</div>
+                    <div class="alert alert-success border-0 mt-2 mb-3 small">{{ session('success') }}</div>
                 @endif
                 @if(session('error'))
-                    <div class="alert alert-danger border-0 mt-4 mb-0 small">{{ session('error') }}</div>
+                    <div class="alert alert-danger border-0 mt-2 mb-3 small">{{ session('error') }}</div>
                 @endif
 
                 @php
@@ -51,24 +51,41 @@
                 @endphp
 
                 @if($canMasuk || $canPulang)
-                    <div class="mt-4 border-top pt-4">
-                        <form method="POST" action="{{ route('absensi.store') }}" enctype="multipart/form-data" id="absensiForm">
-                            @csrf
-                            <input type="hidden" name="tipe" value="{{ $canMasuk ? 'masuk' : 'pulang' }}">
-                            <input type="hidden" name="lat" id="lat">
-                            <input type="hidden" name="long" id="long">
+                    <div id="camera-container" class="position-relative overflow-hidden rounded-4 shadow-lg mb-3 d-none" style="aspect-ratio: 3/4; background: #000;">
+                        <video id="video" autoplay muted playsinline class="w-100 h-100" style="object-fit: cover;"></video>
 
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">Verifikasi Muka (Vermuk)</label>
-                                <input type="file" name="foto" accept="image/*" capture="user" class="form-control form-control-lg rounded-4" required>
-                                <div class="form-text small">Ambil foto selfie untuk verifikasi.</div>
-                            </div>
+                        <!-- Scanning Animation Overlays -->
+                        <div class="face-scanner"></div>
+                        <div class="scanner-line"></div>
+                        <div class="corner-border tl"></div>
+                        <div class="corner-border tr"></div>
+                        <div class="corner-border bl"></div>
+                        <div class="corner-border br"></div>
 
-                            <button type="submit" class="btn btn-primary w-100 py-3 rounded-4 shadow-sm fw-bold">
-                                Absen {{ $canMasuk ? 'Masuk' : 'Pulang' }} Sekarang
-                            </button>
-                        </form>
+                        <div class="position-absolute bottom-0 start-0 w-100 p-3 text-center text-white bg-dark bg-opacity-50">
+                            <div id="camera-status" class="small fw-bold">Memuat Kamera...</div>
+                        </div>
                     </div>
+
+                    <button id="open-camera-btn" type="button" class="btn btn-primary w-100 py-3 rounded-4 shadow-sm fw-bold">
+                        Buka Kamera Vermuk
+                    </button>
+
+                    <form method="POST" action="{{ route('absensi.store') }}" enctype="multipart/form-data" id="absensiForm" class="d-none">
+                        @csrf
+                        <input type="hidden" name="tipe" value="{{ $canMasuk ? 'masuk' : 'pulang' }}">
+                        <input type="hidden" name="lat" id="lat">
+                        <input type="hidden" name="long" id="long">
+                        <input type="file" name="foto" id="foto-input" class="d-none">
+
+                        <div class="alert alert-info border-0 rounded-4 x-small mt-3">
+                            <i class="opacity-75">Pastikan wajah berada di tengah area deteksi.</i>
+                        </div>
+
+                        <button id="capture-btn" type="button" class="btn btn-success w-100 py-3 rounded-4 shadow-sm fw-bold mt-2" disabled>
+                            Konfirmasi & Absen
+                        </button>
+                    </form>
                 @else
                     <div class="alert alert-info border-0 mt-4 mb-0 small text-center rounded-4">
                         Selamat! Anda sudah menyelesaikan absensi hari ini.
@@ -79,7 +96,52 @@
     @endif
 </main>
 
+<style>
+    /* Professional Scanner UI */
+    .face-scanner {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 280px; height: 280px;
+        border-radius: 50%;
+        border: 2px dashed rgba(255,255,255,0.5);
+        box-shadow: 0 0 0 1000px rgba(0,0,0,0.4);
+        pointer-events: none;
+    }
+    .scanner-line {
+        position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+        background: linear-gradient(to right, transparent, #246bfe, transparent);
+        box-shadow: 0 0 15px #246bfe;
+        animation: scan 3s infinite ease-in-out;
+        z-index: 10;
+    }
+    .corner-border {
+        position: absolute; width: 40px; height: 40px;
+        border: 4px solid #246bfe; z-index: 20;
+    }
+    .tl { top: 20px; left: 20px; border-right: 0; border-bottom: 0; border-top-left-radius: 12px; }
+    .tr { top: 20px; right: 20px; border-left: 0; border-bottom: 0; border-top-right-radius: 12px; }
+    .bl { bottom: 20px; left: 20px; border-right: 0; border-top: 0; border-bottom-left-radius: 12px; }
+    .br { bottom: 20px; right: 20px; border-left: 0; border-top: 0; border-bottom-right-radius: 12px; }
+
+    @keyframes scan { 0% { top: 0% } 50% { top: 100% } 100% { top: 0% } }
+    .ls-tight { letter-spacing: -0.5px; }
+    .x-small { font-size: 11px; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+
 <script>
+    let model;
+    let stream;
+    const video = document.getElementById('video');
+    const captureBtn = document.getElementById('capture-btn');
+    const openCameraBtn = document.getElementById('open-camera-btn');
+    const cameraContainer = document.getElementById('camera-container');
+    const absensiForm = document.getElementById('absensiForm');
+    const statusText = document.getElementById('camera-status');
+
+    // Load Geolocation
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
             document.getElementById('lat').value = position.coords.latitude;
@@ -87,9 +149,77 @@
         });
     }
 
-    document.getElementById('absensiForm')?.addEventListener('submit', function() {
-        // Tampilkan loader transisi yang sudah kita buat sebelumnya
-        document.getElementById('page-loader').style.display = 'flex';
+    async function setupCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: 640, height: 480 },
+                audio: false
+            });
+            video.srcObject = stream;
+            return new Promise((resolve) => {
+                video.onloadedmetadata = () => resolve(video);
+            });
+        } catch (err) {
+            alert("Gagal mengakses kamera: " + err.message);
+        }
+    }
+
+    async function detectFace() {
+        if (!model || !video.srcObject) return;
+
+        const predictions = await model.estimateFaces(video, false);
+
+        if (predictions.length > 0) {
+            statusText.innerText = "WAJAH TERDETEKSI";
+            statusText.className = "small fw-bold text-success";
+            captureBtn.disabled = false;
+        } else {
+            statusText.innerText = "POSISIKAN WAJAH DI TENGAH";
+            statusText.className = "small fw-bold text-warning";
+            captureBtn.disabled = true;
+        }
+
+        requestAnimationFrame(detectFace);
+    }
+
+    openCameraBtn.addEventListener('click', async () => {
+        openCameraBtn.innerText = "Memuat AI... Mohon Tunggu";
+        openCameraBtn.disabled = true;
+
+        await setupCamera();
+        model = await blazeface.load();
+
+        cameraContainer.classList.remove('d-none');
+        absensiForm.classList.remove('d-none');
+        openCameraBtn.classList.add('d-none');
+
+        detectFace();
+    });
+
+    captureBtn.addEventListener('click', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        canvas.toBlob((blob) => {
+            const file = new File([blob], "absensi.jpg", { type: "image/jpeg" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById('foto-input').files = dataTransfer.files;
+
+            // Success Vibration (if supported)
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            // Submit form
+            document.getElementById('page-loader').style.display = 'flex';
+            absensiForm.submit();
+        }, 'image/jpeg', 0.9);
+    });
+
+    // Clean up camera on page hide
+    window.addEventListener('pagehide', () => {
+        if (stream) stream.getTracks().forEach(track => track.stop());
     });
 </script>
 @endsection

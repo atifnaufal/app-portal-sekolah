@@ -81,13 +81,6 @@
         <img src="https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png" class="loader-logo" alt="Logo">
     </div>
 
-    <div id="app-lock-screen">
-        <div class="lock-icon">&#128274;</div>
-        <h3>Portal Terkunci</h3>
-        <p class="px-4 opacity-75">Gunakan sidik jari atau wajah untuk membuka aplikasi.</p>
-        <button onclick="startBiometricAuth()" class="btn btn-light mt-3 px-4 rounded-pill">Buka Sekarang</button>
-    </div>
-
     <div class="mobile-shell">@yield('content')</div>
     <nav class="bottom-nav" aria-label="Navigasi utama">
         <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span class="nav-icon">&#8962;</span>Beranda</a>
@@ -108,47 +101,6 @@
         }
 
         const isLoggedIn = {{ session()->has('user_id') ? 'true' : 'false' }};
-
-        let isAuthenticating = false;
-
-        function showLockScreen() {
-            const biometricEnabled = localStorage.getItem('biometric_enabled') === 'true';
-            const lockScreen = document.getElementById('app-lock-screen');
-            if (isNative && isLoggedIn && biometricEnabled && !isAuthenticating && lockScreen.style.display !== 'flex') {
-                lockScreen.style.display = 'flex';
-                startBiometricAuth();
-            }
-        }
-
-        async function startBiometricAuth() {
-            if (!isNative || isAuthenticating) return;
-            isAuthenticating = true;
-            try {
-                const NativeBiometric = Capacitor.Plugins.NativeBiometric;
-                if (!NativeBiometric) {
-                    isAuthenticating = false;
-                    return;
-                }
-                const result = await NativeBiometric.isAvailable();
-                if (result.isAvailable) {
-                    await NativeBiometric.verifyIdentity({
-                        reason: "Buka portal sekolah dengan sidik jari/wajah",
-                        title: "Verifikasi Keamanan",
-                        subtitle: "Masuk Kembali",
-                        description: "Pastikan ini adalah Anda."
-                    });
-                    document.getElementById('app-lock-screen').style.display = 'none';
-                }
-            } catch (error) {
-                console.error(error);
-            } finally {
-                isAuthenticating = false;
-            }
-        }
-
-        if (isNative && App) {
-            App.addListener('appStateChange', ({ isActive }) => { if (isActive) showLockScreen(); });
-        }
 
         window.addEventListener('load', () => { document.getElementById('page-loader').style.display = 'none'; });
 

@@ -45,13 +45,6 @@
         <img src="https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png" class="loader-logo" alt="Logo">
     </div>
 
-    <div id="app-lock-screen">
-        <div class="lock-icon">&#128274;</div>
-        <h3>Portal Terkunci</h3>
-        <p class="px-4 opacity-75">Gunakan sidik jari atau wajah untuk membuka aplikasi.</p>
-        <button onclick="startBiometricAuth()" class="btn btn-light mt-3 px-4 rounded-pill">Buka Sekarang</button>
-    </div>
-
     <header class="page-header"><div class="page-header-inner"><a href="{{ route('dashboard') }}" class="page-back">&larr; Beranda</a><span class="page-title">APP MAHASISWA</span></div></header>
     <main class="mobile-shell">@yield('content')</main>
 
@@ -59,49 +52,6 @@
     <script>
         const { App } = window.Capacitor ? window.Capacitor.Plugins : {};
         const isLoggedIn = {{ session()->has('user_id') ? 'true' : 'false' }};
-
-        let isAuthenticating = false;
-
-        function showLockScreen() {
-            const biometricEnabled = localStorage.getItem('biometric_enabled') === 'true';
-            const lockScreen = document.getElementById('app-lock-screen');
-            if (window.Capacitor && isLoggedIn && biometricEnabled && !isAuthenticating && lockScreen.style.display !== 'flex') {
-                lockScreen.style.display = 'flex';
-                startBiometricAuth();
-            }
-        }
-
-        async function startBiometricAuth() {
-            if (!window.Capacitor || isAuthenticating) return;
-            isAuthenticating = true;
-            try {
-                const NativeBiometric = window.Capacitor.Plugins.NativeBiometric;
-                if (!NativeBiometric) {
-                    isAuthenticating = false;
-                    return;
-                }
-                const result = await NativeBiometric.isAvailable();
-                if (result.isAvailable) {
-                    await NativeBiometric.verifyIdentity({
-                        reason: "Buka portal sekolah dengan sidik jari/wajah",
-                        title: "Verifikasi Keamanan",
-                        subtitle: "Masuk Kembali",
-                        description: "Pastikan ini adalah Anda."
-                    });
-                    document.getElementById('app-lock-screen').style.display = 'none';
-                }
-            } catch (error) {
-                console.error("Biometric failed", error);
-            } finally {
-                isAuthenticating = false;
-            }
-        }
-
-        if (window.Capacitor) {
-            App.addListener('appStateChange', ({ isActive }) => {
-                if (isActive) showLockScreen();
-            });
-        }
 
         document.querySelectorAll('.btn-primary, .teacher-action').forEach(btn => {
             btn.addEventListener('click', function() {
