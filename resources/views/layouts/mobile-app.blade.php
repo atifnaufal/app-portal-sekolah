@@ -95,7 +95,7 @@
             transform: translateY(-4px) scale(1.1);
         }
 
-        /* Page Loading UI - Overlay transparan, hanya logo melayang */
+        /* Page Loading UI - Transparan, hanya logo melayang */
         #page-loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -107,19 +107,11 @@
             z-index: 10000;
             pointer-events: none;
         }
-        .loader-logo-wrap {
-            width: 96px; height: 96px; border-radius: 28px;
-            overflow: hidden;
-            background: linear-gradient(135deg, #0f172a, #1e3a5f);
-            box-shadow: 0 10px 30px rgba(15,23,42,0.28);
-            display: flex; align-items: center; justify-content: center;
-        }
         .loader-logo {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            mix-blend-mode: screen;
+            width: 70px;
+            height: auto;
             animation: floating 2s infinite ease-in-out;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.12));
         }
 
         @keyframes floating {
@@ -149,9 +141,7 @@
 <body>
     <div id="offline-indicator">Koneksi Terputus - Mode Offline</div>
     <div id="page-loader">
-        <div class="loader-logo-wrap">
-            <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.parentElement.style.display='none'">
-        </div>
+        <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.style.display='none'">
     </div>
 
     <div class="mobile-shell animate__animated animate__fadeIn">

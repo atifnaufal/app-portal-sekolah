@@ -12,8 +12,8 @@
         .form-control { border-radius: 14px; padding: 12px 18px; border: 1.5px solid #e2e8f0; background: #fbfcfe; }
         .form-control:focus { box-shadow: 0 0 0 3px rgba(36,107,254,0.1); border-color: #246bfe; }
         .btn-recovery { background: linear-gradient(135deg, #246bfe, #1d59d4); border: none; border-radius: 14px; padding: 14px; font-weight: 700; color: #fff; width: 100%; }
-        .logo-tile { width: 64px; height: 64px; border-radius: 20px; margin: 0 auto 14px; overflow: hidden; background: linear-gradient(135deg, #0f172a, #1e3a5f); display: flex; align-items: center; justify-content: center; }
-        .logo-tile img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; }
+        .logo-tile { width: 64px; height: 64px; border-radius: 20px; margin: 0 auto 14px; overflow: hidden; background: #fff; box-shadow: 0 4px 14px rgba(15,23,42,0.10); display: flex; align-items: center; justify-content: center; }
+        .logo-tile img { width: 100%; height: 100%; object-fit: contain; }
     </style>
 </head>
 <body>
