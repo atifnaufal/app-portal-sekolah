@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -35,6 +36,9 @@ class ProfileController extends Controller
         if ($request->hasFile('foto')) $data['foto'] = $request->file('foto')->store('profile', 'public');
         $user->update($data);
         $request->session()->put('admin_name', $user->name);
+
+        NotificationHelper::send($user->id, 'Profil Diperbarui', 'Data profil Anda berhasil diperbarui.', route('profile.show'), 'profile');
+
         return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui.');
     }
 }

@@ -29,6 +29,11 @@ class User extends Authenticatable
         return $this->hasMany(Absensi::class);
     }
 
+    public function notifikasi(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Notifikasi::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

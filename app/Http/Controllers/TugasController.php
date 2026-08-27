@@ -12,6 +12,7 @@ use App\Models\PengumpulanTugas;
 use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Storage;
 use App\Events\NotificationEvent;
+use App\Helpers\NotificationHelper;
 
 class TugasController extends Controller
 {
@@ -49,7 +50,7 @@ class TugasController extends Controller
         if ($request->hasFile('lampiran')) { $data['lampiran'] = $request->file('lampiran')->store('tugas', 'public'); $data['lampiran_nama'] = $request->file('lampiran')->getClientOriginalName(); }
         $tugas = Tugas::create($data);
 
-        event(new NotificationEvent('Tugas Baru', $tugas->judul, 'task'));
+        NotificationHelper::sendToClass($tugas->kelas_id, 'Tugas Baru: ' . $tugas->judul, 'Guru telah menambahkan tugas baru di kelas Anda.', route('tugas.show', $tugas), 'task');
 
         return redirect()->route('tugas.index')->with('success', 'Tugas berhasil dibuat.');
     }
@@ -71,9 +72,8 @@ class TugasController extends Controller
         $data = $request->validate(['catatan' => ['required', 'string'], 'jawaban_file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,zip', 'max:10240']]);
         if ($request->hasFile('jawaban_file')) { $data['jawaban_file'] = $request->file('jawaban_file')->store('jawaban', 'public'); $data['jawaban_nama'] = $request->file('jawaban_file')->getClientOriginalName(); }
         $submission = PengumpulanTugas::updateOrCreate(['tugas_id' => $tugas->id, 'siswa_id' => $user->id], array_merge($data, ['status' => 'terkirim', 'revisi_aktif' => false, 'dikumpulkan_pada' => now()]));
-        Notifikasi::create(['user_id' => $tugas->user_id, 'judul' => 'Jawaban tugas baru', 'pesan' => $user->name.' mengirim jawaban untuk tugas '.$tugas->judul, 'url' => route('tugas.show', $tugas)]);
 
-        event(new NotificationEvent('Jawaban Tugas', $user->name.' mengirim jawaban.', 'task'));
+        NotificationHelper::send($tugas->user_id, 'Jawaban Tugas Baru', $user->name . ' mengirim jawaban untuk tugas ' . $tugas->judul, route('tugas.show', $tugas), 'task');
 
         return back()->with('success', 'Jawaban berhasil dikirim ke guru.');
     }
@@ -88,9 +88,11 @@ class TugasController extends Controller
         $data['revisi_aktif'] = $request->boolean('revisi_aktif');
         $data['dinilai_pada'] = now();
         $pengumpulan->update($data);
-        Notifikasi::create(['user_id' => $pengumpulan->siswa_id, 'judul' => $data['revisi_aktif'] ? 'Tugas perlu direvisi' : 'Tugas sudah dinilai', 'pesan' => 'Guru memberi nilai '.$data['nilai'].' untuk tugas '.$pengumpulan->tugas->judul.'.', 'url' => route('tugas.show', $pengumpulan->tugas)]);
 
-        event(new NotificationEvent('Tugas Dinilai', 'Nilai Anda: '.$data['nilai'], 'task'));
+        $judulNotif = $data['revisi_aktif'] ? 'Tugas Perlu Revisi' : 'Tugas Sudah Dinilai';
+        $pesanNotif = 'Guru memberi nilai ' . $data['nilai'] . ' untuk tugas ' . $pengumpulan->tugas->judul . '.';
+
+        NotificationHelper::send($pengumpulan->siswa_id, $judulNotif, $pesanNotif, route('tugas.show', $pengumpulan->tugas), 'task');
 
         return back()->with('success', 'Penilaian tersimpan.');
     }

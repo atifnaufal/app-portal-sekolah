@@ -74,7 +74,12 @@ Route::middleware('role:admin')->group(function () {
 });
 
 Route::middleware('role:guru,siswa')->group(function () {
-    Route::get('/notifikasi-saya', function () { return view('mobile.notifications', ['notifications' => Notifikasi::where('user_id', session('user_id'))->latest()->get()]); })->name('notifications.index');
+    Route::get('/notifikasi-saya', function () {
+        $userId = session('user_id');
+        $notifications = Notifikasi::where('user_id', $userId)->latest()->get();
+        Notifikasi::where('user_id', $userId)->whereNull('dibaca_pada')->update(['dibaca_pada' => now()]);
+        return view('mobile.notifications', ['notifications' => $notifications]);
+    })->name('notifications.index');
 });
 
 Route::middleware('role:siswa')->group(function () {

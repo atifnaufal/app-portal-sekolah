@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Absensi;
 use App\Models\User;
 use App\Models\Setting;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -98,6 +99,14 @@ class AbsensiController extends Controller
                 'status' => $status
             ]);
             $attendance->save();
+
+            if ($status === 'terlambat') {
+                // Cari guru kelas ini
+                $guru = User::where('role', 'guru')->where('kelas_id', $user->kelas_id)->first();
+                if ($guru) {
+                    NotificationHelper::send($guru->id, 'Siswa Terlambat', $user->name . ' terlambat masuk hari ini.', route('absensi.index'), 'attendance');
+                }
+            }
 
             return back()->with('success', 'Absensi masuk berhasil dicatat. Status: ' . ucfirst($status));
         } else {

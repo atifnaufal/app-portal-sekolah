@@ -22,6 +22,7 @@ class DashboardController extends Controller
             return view('mobile.dashboard', [
                 'user' => $user,
                 'notifications' => Notifikasi::where('user_id', $user->id)->latest()->take(5)->get(),
+                'unreadNotificationsCount' => Notifikasi::where('user_id', $user->id)->whereNull('dibaca_pada')->count(),
                 'publicPengumumans' => Pengumuman::where('publik', true)->latest()->take(3)->get(),
                 'pengumumans' => Pengumuman::with('user')->where(function ($query) use ($user) {
                     $query->whereNull('kelas_id')->orWhere('kelas_id', $user->kelas_id);
