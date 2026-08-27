@@ -76,12 +76,20 @@ public function login(Request $request): RedirectResponse
     {
         $request->validate(['email' => ['required', 'email']]);
 
-        $status = \Illuminate\Support\Facades\Password::sendResetLink($request->only('email'));
+        try {
+            $status = \Illuminate\Support\Facades\Password::sendResetLink($request->only('email'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengirim email reset password: ' . $e->getMessage());
+
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', 'Gagal mengirim email reset. Silakan coba beberapa saat lagi atau hubungi admin IT sekolah.');
+        }
 
         return $status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT
-            ? back()->with('status', __($status))
+            ? back()->with('status', 'Link reset sudah dikirim ke email Anda.')
             : back()->withInput($request->only('email'))
-                ->withErrors(['email' => __($status)]);
+                ->withErrors(['email' => 'Email tersebut tidak terdaftar di sistem kami.']);
     }
 
     public function showResetForm(Request $request, string $token): View
