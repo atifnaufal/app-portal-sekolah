@@ -32,9 +32,11 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+  // config/session.php
+    'lifetime' => env('SESSION_LIFETIME', 525600), // 525600 menit = 1 tahun
+    
+    'expire_on_close' => false,
 
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*
     |--------------------------------------------------------------------------
