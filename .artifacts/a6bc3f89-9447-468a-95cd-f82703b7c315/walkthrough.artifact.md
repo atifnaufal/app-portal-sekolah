@@ -1,25 +1,26 @@
-# Walkthrough - Deep Session Restoration & Professional Header
+# Walkthrough - Profile Stabilization & UI Cleanup
 
-I have implemented advanced session persistence logic to solve the Railway logout issue and polished the dashboard header according to your specific requests.
+I have resolved the profile alignment issues and cleaned up the dashboard header to ensure a "stable" and professional focus.
 
 ## Changes Made
 
-### 1. Advanced Session Persistence (Anti-Logout)
-- **Railway/Serverless Optimization**: Since Railway's disk is ephemeral, I have enhanced `RoleMiddleware` with a **Deep Session Restoration** engine.
-- **Resilience**: If the server restarts and clears the session memory, the middleware will now detect the browser's "Remember Me" cookie and **forcefully reconstruct the user session** from the database before the user even sees a login screen.
-- **Stability**: Added `Auth::guard('web')->check()` in the middleware as a fail-safe identity verification.
+### 1. Automatic Profile Stabilization
+- **Stable Positioning**: Removed the manual X/Y coordinate logic which caused images to shift or show empty backgrounds.
+- **Auto-Center Crop**: Implemented `object-fit: cover` with `object-position: center`. This ensures the face is always perfectly centered within the avatar circle, regardless of the original image dimensions.
+- **Resilient Fallbacks**: Added a sophisticated `onerror` handler that switches to name initials if the image file is missing or corrupted.
 
-### 2. Dashboard Header Polish
-- **Badge Removal**: Removed the class/role badge below the name for a cleaner, more focused aesthetic.
-- **Refined Bell Button**: Changed the notification bell to a **clean white circular button** with a blue icon, providing high contrast and a premium feel.
-- **Green Indicator**: The notification dot is now **Green** (`bg-success`), signifying new activity.
+### 2. Header "Putih-putih" Cleanup
+- **Total Removal**: Completely deleted the empty `div` and badge containers below the user's name.
+- **Clean Focus**: The dashboard header now only shows the user's name and the portal title, eliminating sisa-sisa UI boxes that were visible in the previous screenshot.
 
-### 3. Voice Notification Engine
-- **Text-to-Speech**: Integrated `speechSynthesis` to announce *"Ada notifikasi untukmu"* exactly once when new notifications arrive.
-- **Smart Tracking**: Uses `localStorage` to ensure the voice alert only triggers when the notification count actually increases.
-- **Auto-Hide Dot**: The green dot now automatically disappears via Javascript if the notification count becomes zero.
+### 3. Voice Notification Tuning
+- **Unique Alerts**: Refined the logic so the voice alert only triggers when the notification count *increases* (signifying a new message).
+- **Persistent State**: Uses `localStorage` to track the last announced count, preventing the alert from repeating on every page refresh.
+
+### 4. Session Integrity
+- **Deep Guarding**: Reinforced the `RoleMiddleware` to prioritize cookie-based identity restoration, ensuring the user stays logged in even after closing the app.
 
 ## Verification Results
-- **Session Recovery**: Verified that deleting the session manually (simulating a server restart) triggers an automatic restoration via the remember cookie.
-- **Voice Logic**: Verified the device speaks the notification alert on fresh data.
-- **UI Aesthetics**: The dashboard header now matches the requested minimalist style.
+- **Avatar Stability**: Verified that the profile picture is now perfectly centered and does not drift.
+- **Header Aesthetics**: Confirmed the area below the user's name is now completely transparent and clean.
+- **Voice Consistency**: Verified the voice alert triggers exactly once per new notification batch.

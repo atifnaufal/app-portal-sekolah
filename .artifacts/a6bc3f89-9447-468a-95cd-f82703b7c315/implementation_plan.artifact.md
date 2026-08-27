@@ -1,36 +1,27 @@
-# Implementation Plan: Advanced UI & Session Restoration
+# Implementation Plan: Stabilized Profile & Header Cleanup
 
-This plan implements high-end UI refinements and solves the persistent logout issue using advanced session restoration techniques.
-
-## User Review Required
-
-> [!IMPORTANT]
-> To solve the session logout issue on Railway, ensure that your `SESSION_DRIVER` in the Railway environment variables is NOT set to `file` or `database` (if using SQLite). I recommend setting it to `cookie` for the most stable experience on serverless platforms, OR ensuring you are using a managed MySQL/Postgres database.
+This plan focuses on fixing the profile image alignment issues, cleaning up the header UI, and ensuring the voice notification system is flawless.
 
 ## Proposed Changes
 
-### 1. Dashboard & Notification Logic
+### 1. Header & Avatar Stabilization
 
 #### [MODIFY] [dashboard.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/mobile/dashboard.blade.php)
-- **UI Cleanup**: Remove the class/role badge below the user's name.
-- **Notification Bell**: Redesign as a clean white circular button with a blue bell icon.
-- **Green Indicator**: Change the notification dot to green (`bg-success`).
-- **Voice Alert**: Add logic to play the "Ada notifikasi untukmu" voice alert exactly once when new data is detected.
+- **Avatar Stabilization**: Remove dynamic `object-position` (X/Y) which is causing the image to shift. Use `object-position: center` for a stable, automatic center-crop.
+- **Header Cleanup**: Completely remove the `mt-2` div and any badge logic below the user's name to eliminate the "white box" issue.
+- **Bell Button**: Keep the white circular button style with a blue icon and green indicator.
+- **Voice Logic**: Refine the local storage check to ensure the voice alert only plays once per unique notification count.
 
-### 2. Session Persistence Engine
+### 2. Session Integrity
 
 #### [MODIFY] [RoleMiddleware.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Middleware/RoleMiddleware.php)
-- **Deep Restoration**: Enhance the middleware to forcefully re-authenticate and re-populate session keys if the user has a valid "Remember Me" cookie, even if the primary session storage was wiped.
-
-#### [MODIFY] [AuthController.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Controllers/AuthController.php)
-- **Cookie Security**: Ensure the `remember` duration is explicitly long and cookies are queued correctly.
+- Ensure the re-authentication logic is robust enough to handle fast app-switching/tab-closure scenarios.
 
 ## Verification Plan
 
 ### Manual Verification
-1. Log in and verify the dashboard header is clean (no badge below name).
-2. Trigger a notification and verify:
-   - The indicator turns **Green**.
-   - The device speaks **"Ada notifikasi untukmu"**.
-3. Close the browser tab/app completely, wait 1 minute, and re-open.
-4. Verify you are **STILL logged in** without seeing the login screen.
+1. Open the dashboard and verify the profile picture is **perfectly centered** (stable).
+2. Confirm there is **absolutely nothing** (no white pills/badges) below the user's name.
+3. Trigger a notification and listen for the voice alert (verify it only happens once).
+4. Verify the indicator is **Green**.
+5. Close the app/tab, re-open, and verify you are still logged in.

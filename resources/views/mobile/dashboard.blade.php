@@ -5,7 +5,7 @@
         <div>
             <div class="eyebrow" style="opacity: 0.9; letter-spacing: 2.5px; font-weight: 900; color: rgba(255,255,255,0.85);">PORTAL AKADEMIK</div>
             <div class="hero-title mt-1" style="font-size: 28px; color: #fff;">Halo, {{ $user->name }}!</div>
-            <!-- Badge dihapus sesuai permintaan -->
+            <!-- Seluruh badge dan div mt-2 di bawah nama dihapus total agar bersih -->
         </div>
         <div class="d-flex align-items-center gap-3">
             <a href="{{ route('notifications.index') }}" class="btn bg-white shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center position-relative" style="width: 48px; height: 48px; color: #246bfe; border: none;">
@@ -14,39 +14,19 @@
                     <span id="notif-dot" class="position-absolute top-0 start-100 translate-middle p-2 bg-success border border-2 border-white rounded-circle" style="box-shadow: 0 0 15px rgba(25, 135, 84, 0.6);"></span>
                 @endif
             </a>
-            <a href="{{ route('profile.show') }}" class="avatar border border-3 border-white border-opacity-30 shadow-sm" style="width: 52px; height: 52px; border-radius: 18px; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);">
+            <a href="{{ route('profile.show') }}" class="avatar border border-3 border-white border-opacity-30 shadow-sm" style="width: 52px; height: 52px; border-radius: 18px; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px); overflow: hidden; display: flex; align-items: center; justify-content: center;">
                 @if($user->foto)
-                    <img src="{{ asset('storage/'.$user->foto) }}" alt="P" onerror="this.parentElement.innerHTML='<span class=\"h5 mb-0 fw-bold text-white\">{{ strtoupper(substr($user->name,0,1)) }}</span>'" style="object-position:{{ $user->foto_posisi_x }}% {{ $user->foto_posisi_y }}%;">
+                    <img src="{{ asset('storage/'.$user->foto) }}" alt="P"
+                         style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span class="h5 mb-0 fw-bold text-white w-100 h-100 d-none align-items-center justify-content-center">{{ strtoupper(substr($user->name,0,1)) }}</span>
                 @else
-                    <span class="h5 mb-0 fw-bold text-white">{{ strtoupper(substr($user->name,0,1)) }}</span>
+                    <span class="h5 mb-0 fw-bold text-white w-100 h-100 d-flex align-items-center justify-content-center">{{ strtoupper(substr($user->name,0,1)) }}</span>
                 @endif
             </a>
         </div>
     </div>
 </header>
-
-<script>
-    // Fitur Suara Notifikasi Canggih
-    const unreadCount = {{ $unreadNotificationsCount }};
-    const hasSpoken = localStorage.getItem('last_notif_spoken');
-
-    // Dot Hijau Logic
-    const notifDot = document.getElementById('notif-dot');
-
-    if (unreadCount > 0) {
-        if (hasSpoken != unreadCount) {
-            const msg = new SpeechSynthesisUtterance();
-            msg.text = "Ada notifikasi untukmu";
-            msg.lang = 'id-ID';
-            msg.rate = 1.0;
-            window.speechSynthesis.speak(msg);
-            localStorage.setItem('last_notif_spoken', unreadCount);
-        }
-    } else {
-        localStorage.setItem('last_notif_spoken', 0);
-        if (notifDot) notifDot.style.display = 'none';
-    }
-</script>
 
 <main class="mobile-content" style="margin-top: -30px;">
     <!-- Widgets Grid -->
@@ -113,4 +93,28 @@
         @endforelse
     </div>
 </main>
+
+<script>
+    // Fitur Suara Notifikasi Canggih
+    const unreadCount = {{ $unreadNotificationsCount }};
+    const lastSpoken = localStorage.getItem('last_notif_spoken');
+
+    // Dot Hijau Logic
+    const notifDot = document.getElementById('notif-dot');
+
+    if (unreadCount > 0) {
+        // Hanya bersuara jika jumlah notifikasi bertambah (data baru)
+        if (unreadCount > (parseInt(lastSpoken) || 0)) {
+            const msg = new SpeechSynthesisUtterance();
+            msg.text = "Ada notifikasi untukmu";
+            msg.lang = 'id-ID';
+            msg.rate = 1.0;
+            window.speechSynthesis.speak(msg);
+        }
+        localStorage.setItem('last_notif_spoken', unreadCount);
+    } else {
+        localStorage.setItem('last_notif_spoken', 0);
+        if (notifDot) notifDot.style.display = 'none';
+    }
+</script>
 @endsection

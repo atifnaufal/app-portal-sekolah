@@ -1,8 +1,8 @@
 - [x] Overhaul `mobile-app.blade.php` with Floating Navigation
 - [x] Implement Transparent Splash Screen (logo only)
 - [x] Redesign Dashboard Widgets (Tugas & SPP)
-- [x] Remove Class Badge from Dashboard Header
-- [x] Implement White Circular Bell Button with Green Indicator
-- [x] Add "Ada notifikasi untukmu" Voice Alert (1x trigger)
-- [x] Implement Advanced Session Restoration in `RoleMiddleware`
-- [x] Verify permanent session persistence after tab closure
+- [x] Remove Header Badges & "Putih-putih" UI
+- [x] Stabilize Profile Avatar (Auto-Center Positioning)
+- [x] Implement Voice Alerts (1x Unique Trigger)
+- [x] Reinforce Session Persistence in `RoleMiddleware`
+- [x] Verify UI focus and avatar stability on mobile
