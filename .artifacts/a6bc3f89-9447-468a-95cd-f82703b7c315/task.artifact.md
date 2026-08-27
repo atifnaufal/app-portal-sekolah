@@ -1,0 +1,6 @@
+- [x] Update `AbsensiController.php` (column consistency)
+- [x] Update `DashboardController.php` (column consistency)
+- [x] Update `resources/views/absensi/admin.blade.php` (column consistency)
+- [x] Update `resources/views/notifikasi/index.blade.php` (column consistency)
+- [x] Update `resources/views/dashboard.blade.php` (column consistency)
+- [x] Enhance `resources/views/mobile/absensi.blade.php` (Vermuk UI)

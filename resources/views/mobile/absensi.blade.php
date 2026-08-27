@@ -186,17 +186,29 @@
         openCameraBtn.innerText = "Memuat AI... Mohon Tunggu";
         openCameraBtn.disabled = true;
 
-        await setupCamera();
-        model = await blazeface.load();
+        try {
+            await setupCamera();
+            model = await blazeface.load();
 
-        cameraContainer.classList.remove('d-none');
-        absensiForm.classList.remove('d-none');
-        openCameraBtn.classList.add('d-none');
+            cameraContainer.classList.remove('d-none');
+            absensiForm.classList.remove('d-none');
+            openCameraBtn.classList.add('d-none');
 
-        detectFace();
+            detectFace();
+        } catch (err) {
+            console.error("AI Load Error:", err);
+            alert("Gagal memuat AI Deteksi Wajah. Pastikan koneksi internet stabil.");
+            openCameraBtn.innerText = "Buka Kamera Vermuk";
+            openCameraBtn.disabled = false;
+        }
     });
 
     captureBtn.addEventListener('click', () => {
+        // Visual feedback
+        cameraContainer.style.filter = 'brightness(2)';
+        captureBtn.innerText = "MENGIRIM...";
+        captureBtn.disabled = true;
+
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;

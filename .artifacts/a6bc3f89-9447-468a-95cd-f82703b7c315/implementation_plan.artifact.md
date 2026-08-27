@@ -1,30 +1,50 @@
-# Persistent Login Session Implementation
+# Bug Fix: Face Verification (Vermuk) and Attendance Analysis
 
-The goal is to ensure that students and teachers stay logged in even after closing the application. The session should only end when the user explicitly logs out from their profile settings.
+This plan addresses the bug in the attendance analysis ("analist absen") and face verification ("vermuk") system. The primary cause appears to be inconsistent column names after a database migration and potentially missing database support for face verification results.
+
+## User Review Required
+
+> [!IMPORTANT]
+> The attendance table was migrated to use `waktu_masuk` instead of `waktu`. Several views and controller queries still reference the old `waktu` column, which likely causes the "bug" (SQL errors).
 
 ## Proposed Changes
 
-### 1. Authentication Controller
+### Database Layer
 
-#### [MODIFY] [AuthController.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Controllers/AuthController.php)
-- Update the `login` method to use `Auth::login($user, true)`. The `true` parameter enables the "Remember Me" functionality, which uses a persistent cookie.
-- Update the `logout` method to call `Auth::logout()` alongside session invalidation to ensure the "Remember Me" token is also cleared.
+#### [MODIFY] [AbsensiController.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Controllers/AbsensiController.php)
+- Update `notifications()` to use `latest('waktu_masuk')` instead of `latest('waktu')`.
+- Ensure `store()` correctly handles the new columns.
 
-### 2. Role Middleware
+#### [MODIFY] [DashboardController.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Controllers/DashboardController.php)
+- Update the `absensiHariIni` query to use `latest('waktu_masuk')`.
 
-#### [MODIFY] [RoleMiddleware.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Middleware/RoleMiddleware.php)
-- Add logic to automatically re-populate custom session keys (`user_id`, `user_role`, etc.) if the user is authenticated via the "Remember Me" cookie but the session has expired. This ensures compatibility with the existing code that relies on these session keys.
+---
 
-### 3. Environment Configuration
+### UI / Presentation Layer
 
-#### [MODIFY] [.env](file:///C:/laragon/www/app-portal-sekolah/.env)
-- Increase `SESSION_LIFETIME` to a much larger value (e.g., 30 days) to provide a better user experience even without the "Remember Me" token.
+#### [MODIFY] [admin.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/absensi/admin.blade.php)
+- Update table column from `$absensi->waktu` to `$absensi->waktu_masuk`.
+
+#### [MODIFY] [index.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/notifikasi/index.blade.php)
+- Update activity log from `$absensi->waktu` to `$absensi->waktu_masuk`.
+
+#### [MODIFY] [dashboard.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/dashboard.blade.php)
+- Update "Kedatangan terbaru" list to use `$absensi->waktu_masuk`.
+
+---
+
+### Face Verification (Vermuk) Enhancement
+
+#### [MODIFY] [absensi.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/mobile/absensi.blade.php)
+- Add a visual confirmation that the face has been captured.
+- Improve error handling if the AI model fails to load.
 
 ## Verification Plan
 
+### Automated Tests
+- N/A (Unit tests not requested, but manual SQL check will be performed).
+
 ### Manual Verification
-- Log in as a student or teacher.
-- Close the application (simulate app kill).
-- Re-open the application and verify it goes directly to the dashboard without requiring a new login.
-- Go to the profile settings and click logout.
-- Verify that the user is redirected to the login screen and subsequent app openings require login.
+1. Log in as Admin and check "Log kedatangan" and "Notifikasi" for any SQL errors.
+2. Log in as Student, perform "Vermuk" (face verification), and verify the data is saved in `foto_masuk` and `waktu_masuk`.
+3. Check the Dashboard for "Kedatangan terbaru" accuracy.

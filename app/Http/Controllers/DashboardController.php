@@ -35,7 +35,7 @@ class DashboardController extends Controller
             'totalJurusan' => Jurusan::count(),
             'totalKelas' => Kelas::count(),
             'mahasiswaTerbaru' => Mahasiswa::with(['jurusan', 'kelas'])->latest()->take(5)->get(),
-            'absensiHariIni' => Absensi::with('user')->whereDate('tanggal', today())->latest('waktu')->take(5)->get(),
+            'absensiHariIni' => Absensi::with('user')->whereDate('tanggal', today())->latest('waktu_masuk')->take(5)->get(),
             'totalHadirHariIni' => Absensi::whereDate('tanggal', today())->count(),
             'guruHadirHariIni' => Absensi::whereDate('tanggal', today())->whereHas('user', fn ($query) => $query->where('role', 'guru'))->count(),
             'siswaHadirHariIni' => Absensi::whereDate('tanggal', today())->whereHas('user', fn ($query) => $query->where('role', 'siswa'))->count(),
