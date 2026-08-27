@@ -10,8 +10,8 @@ use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\TugasController;
 use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\ProfileController;
-use App\Models\Notifikasi;
 use App\Http\Controllers\SppController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\RegisterController;
@@ -37,9 +37,12 @@ Route::post('/email/verification-notification', function (Request $request) {
     return back()->with('message', 'Link verifikasi baru telah dikirim!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
-// Email Simulator (Developer Tool)
-Route::get('/dev/email-simulator', [App\Http\Controllers\EmailSimulatorController::class, 'index'])->name('email.simulator');
-Route::post('/dev/email-simulator/{user}', [App\Http\Controllers\EmailSimulatorController::class, 'instantVerify'])->name('email.simulator.verify');
+// Email Simulator (Developer Tool) — hanya bisa diakses di lingkungan local oleh admin.
+// Di produksi middleware local-only mengembalikan 404 sehingga endpoint tidak terekspos.
+Route::middleware(['local-only', 'role:admin'])->group(function () {
+    Route::get('/dev/email-simulator', [App\Http\Controllers\EmailSimulatorController::class, 'index'])->name('email.simulator');
+    Route::post('/dev/email-simulator/{user}', [App\Http\Controllers\EmailSimulatorController::class, 'instantVerify'])->name('email.simulator.verify');
+});
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.store');
@@ -80,14 +83,14 @@ Route::middleware('role:admin')->group(function () {
     Route::resource('jurusan', JurusanController::class)->except('show');
     Route::resource('kelas', KelasController::class)->except('show');
     Route::resource('pengumuman', PengumumanController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
-    Route::get('/notifikasi', [AbsensiController::class, 'notifications'])->name('notifikasi.index');
+    Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
 });
 
 Route::middleware(['role:guru', 'verified_except_admin'])->group(function () {
     Route::resource('tugas', TugasController::class)->except(['index', 'show']);
     Route::get('/tugas/{tugas}/export', [TugasController::class, 'exportGrades'])->name('tugas.export');
     Route::post('/pengumpulan/{pengumpulan}/review', [TugasController::class, 'review'])->name('tugas.review');
-    Route::get('/tugas-notifikasi', function () { return view('mobile.tugas-notifikasi', ['notifikasis' => Notifikasi::where('user_id', session('user_id'))->latest()->get()]); })->name('tugas.notifikasi');
+    Route::get('/tugas-notifikasi', [NotifikasiController::class, 'tugas'])->name('tugas.notifikasi');
     Route::post('/spp/{spp}/remind', [SppController::class, 'remind'])->name('spp.remind');
 });
 
@@ -103,12 +106,7 @@ Route::middleware(['role:admin', 'verified_except_admin'])->group(function () {
 });
 
 Route::middleware(['role:guru,siswa', 'verified_except_admin'])->group(function () {
-    Route::get('/notifikasi-saya', function () {
-        $userId = session('user_id');
-        $notifications = Notifikasi::where('user_id', $userId)->latest()->get();
-        Notifikasi::where('user_id', $userId)->whereNull('dibaca_pada')->update(['dibaca_pada' => now()]);
-        return view('mobile.notifications', ['notifications' => $notifications]);
-    })->name('notifications.index');
+    Route::get('/notifikasi-saya', [NotifikasiController::class, 'mine'])->name('notifications.index');
 });
 
 Route::middleware(['role:siswa', 'verified_except_admin'])->group(function () {

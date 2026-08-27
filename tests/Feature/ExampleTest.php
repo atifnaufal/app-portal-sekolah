@@ -2,18 +2,23 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
     /**
-     * A basic test example.
+     * Halaman root meneruskan pengunjung ke dashboard.
      */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_root_redirects_to_dashboard(): void
     {
-        $response = $this->get('/');
+        $this->get('/')->assertRedirect('/dashboard');
+    }
 
-        $response->assertStatus(200);
+    /**
+     * Health check Railway tetap dapat diakses tanpa autentikasi.
+     */
+    public function test_health_check_endpoint_is_available(): void
+    {
+        $this->get('/up')->assertOk();
     }
 }

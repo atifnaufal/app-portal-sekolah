@@ -123,16 +123,4 @@ class AbsensiController extends Controller
             return back()->with('success', 'Absensi pulang berhasil dicatat.');
         }
     }
-
-    public function notifications(): View
-    {
-        abort_unless(session('user_role') === 'admin', 403);
-        $today = now()->toDateString();
-        return view('notifikasi.index', [
-            'latest' => Absensi::with(['user', 'kelas'])->latest('waktu_masuk')->take(20)->get(),
-            'todayCount' => Absensi::whereDate('tanggal', $today)->count(),
-            'teacherCount' => Absensi::whereDate('tanggal', $today)->whereHas('user', fn ($q) => $q->where('role', 'guru'))->count(),
-            'studentCount' => Absensi::whereDate('tanggal', $today)->whereHas('user', fn ($q) => $q->where('role', 'siswa'))->count(),
-        ]);
-    }
 }
