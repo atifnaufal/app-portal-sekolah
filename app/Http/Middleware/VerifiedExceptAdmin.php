@@ -15,15 +15,17 @@ class VerifiedExceptAdmin
     {
         $user = $request->user();
 
-        // 1. Jika User adalah Admin atau Guru, bypass verifikasi email
+        if (! $user && $request->session()->has('user_id')) {
+            $user = \App\Models\User::find($request->session()->get('user_id'));
+        }
+
         if ($user && in_array($user->role, ['admin', 'guru'], true)) {
             return $next($request);
         }
 
-        // 2. Jika bukan admin/guru (yakni siswa), lakukan pengecekan standar verifikasi
-        if (!$user ||
+        if (! $user ||
             ($user instanceof MustVerifyEmail &&
-            !$user->hasVerifiedEmail())) {
+            ! $user->hasVerifiedEmail())) {
             return $request->expectsJson()
                 ? abort(403, 'Your email address is not verified.')
                 : Redirect::guest(URL::route($redirectToRoute ?: 'verification.notice'));

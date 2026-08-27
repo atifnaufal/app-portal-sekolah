@@ -154,6 +154,9 @@
     </a>
     <div class="fw-bold flex-grow-1" style="font-size: 17px;">Detail Tugas</div>
     @if($isGuru)
+        <button type="button" onclick="document.getElementById('deleteModal').classList.add('open')" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; color: #d94b61;">
+            <i class="bi bi-trash3" style="font-size:15px;"></i>
+        </button>
         <a href="{{ route('tugas.edit', $tugas) }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
             <i class="bi bi-pencil-square" style="font-size:16px;"></i>
         </a>
@@ -713,4 +716,33 @@
         });
     });
 </script>
+
+@if($isGuru)
+<style>
+    #deleteModal { position:fixed;inset:0;z-index:2000;display:none;align-items:flex-end;justify-content:center;background:rgba(15,23,42,.45); }
+    #deleteModal.open { display:flex; }
+</style>
+<div id="deleteModal" onclick="if(event.target===this)this.classList.remove('open')">
+    <div style="width:100%;max-width:680px;background:#fff;border-radius:28px 28px 0 0;padding:24px 20px 32px;">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:#fff5f6;color:#d94b61;">
+                <i class="bi bi-trash3 h4 mb-0"></i>
+            </div>
+            <div>
+                <div class="fw-bold">Hapus tugas ini?</div>
+                <div class="small text-secondary">Tindakan ini tidak dapat dibatalkan.</div>
+            </div>
+        </div>
+        <div class="p-3 rounded-4 mb-3" style="background:#f8fafc;">
+            <div class="fw-bold">{{ $tugas->judul }}</div>
+            <div class="small text-danger mt-1">{{ $tugas->pengumpulan->count() }} pengumpulan siswa akan ikut terhapus.</div>
+        </div>
+        <form method="POST" action="{{ route('tugas.destroy', $tugas) }}">
+            @csrf @method('DELETE')
+            <button class="btn btn-danger w-100 py-2 rounded-pill fw-bold mb-2">Hapus Permanen</button>
+            <button type="button" class="btn btn-light w-100 py-2 rounded-pill" onclick="document.getElementById('deleteModal').classList.remove('open')">Batal</button>
+        </form>
+    </div>
+</div>
+@endif
 @endsection

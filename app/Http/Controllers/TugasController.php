@@ -228,7 +228,7 @@ class TugasController extends Controller
     public function exportGrades(Tugas $tugas)
     {
         $request = request();
-        abort_unless($tugas->user_id === $request->session()->get('user_id'), 403);
+        abort_unless((int) $tugas->user_id === (int) $request->session()->get('user_id'), 403);
 
         $submissions = PengumpulanTugas::with('siswa')
             ->where('tugas_id', $tugas->id)
@@ -363,7 +363,7 @@ class TugasController extends Controller
 
     private function assertOwner(Request $request, Tugas $tugas): void
     {
-        abort_unless($tugas->user_id === $request->session()->get('user_id'), 403);
+        abort_unless((int) $tugas->user_id === (int) $request->session()->get('user_id'), 403);
     }
 
     private function validatedTugasPayload(Request $request): array
