@@ -88,8 +88,8 @@
     .db-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
     .db-menu-item {
         display: flex; flex-direction: column; align-items: center;
-        padding: 12px 4px; border-radius: 16px; text-decoration: none;
-        transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+        padding: 12px 4px; border-radius: 14px; text-decoration: none;
+        transition: all 0.13s; -webkit-tap-highlight-color: transparent;
     }
     .db-menu-item:active { transform: scale(0.93); background: #f8fafc; }
     .db-menu-icon {
@@ -210,15 +210,16 @@
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#7c3aed;"><i class="bi bi-chat-dots-fill"></i></div>
                 <div class="db-menu-label">Chat</div>
             </a>
-            <a href="{{ route('pengumuman.index') }}" class="db-menu-item">
+            <!-- <a href="{{ route('pengumuman.index') }}" class="db-menu-item">
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#dc2626;"><i class="bi bi-megaphone-fill"></i></div>
                 <div class="db-menu-label">Info</div>
             </a>
-            <a href="{{ route('mahasiswa.index') }}" class="db-menu-item">
+         
+            @if($isGuru)
+               <a href="{{ route('mahasiswa.index') }}" class="db-menu-item">
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#cffafe,#a5f3fc);color:#0891b2;"><i class="bi bi-people-fill"></i></div>
                 <div class="db-menu-label">Siswa</div>
-            </a>
-            @if($isGuru)
+                </a>
                 <a href="{{ route('tugas.create') }}" class="db-menu-item">
                     <div class="db-menu-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#059669;"><i class="bi bi-plus-circle-fill"></i></div>
                     <div class="db-menu-label">Buat Tugas</div>
@@ -227,7 +228,8 @@
             <a href="{{ route('profile.show') }}" class="db-menu-item">
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0);color:#64748b;"><i class="bi bi-gear-fill"></i></div>
                 <div class="db-menu-label">Profil</div>
-            </a>
+            </a> -->
+            
         </div>
     </div>
 
