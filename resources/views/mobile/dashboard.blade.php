@@ -5,18 +5,13 @@
         <div>
             <div class="eyebrow" style="opacity: 0.9; letter-spacing: 2.5px; font-weight: 900; color: rgba(255,255,255,0.85);">PORTAL AKADEMIK</div>
             <div class="hero-title mt-1" style="font-size: 28px; color: #fff;">Halo, {{ $user->name }}!</div>
-            <div class="mt-2">
-                <span class="badge bg-white bg-opacity-20 rounded-pill px-3 py-2 fw-medium text-white" style="font-size: 11px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.25); display: inline-flex; align-items: center; gap: 5px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8.21 13.89L7 14.95 5.79 13.89C2.46 10.87 0 8.64 0 6A6 6 0 0 1 6 0a6 6 0 0 1 6 6c0 2.64-2.46 4.87-5.79 7.89zM11 6A5 5 0 0 0 1 6c0 2.11 2.21 4.09 5 6.63 2.79-2.54 5-4.52 5-6.63z"/><path d="M4.847 1.444c.125-.301.454-.533.89-.533.437 0 .766.232.89.533a.5.5 0 0 1-.923.385.18.18 0 0 0-.153-.1c-.066 0-.12.036-.153.1a.5.5 0 1 1-.923-.385zM7.5 7a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1 0-1h1a.5.5 0 0 1 .5.5z"/></svg>
-                    {{ $user->kelas?->nama ?? 'Staf Sekolah' }}
-                </span>
-            </div>
+            <!-- Badge dihapus sesuai permintaan -->
         </div>
         <div class="d-flex align-items-center gap-3">
-            <a href="{{ route('notifications.index') }}" class="btn bg-white bg-opacity-20 rounded-circle p-0 d-flex align-items-center justify-content-center position-relative" style="width: 48px; height: 48px; color: #fff; border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(8px);">
+            <a href="{{ route('notifications.index') }}" class="btn bg-white shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center position-relative" style="width: 48px; height: 48px; color: #246bfe; border: none;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917z"/></svg>
                 @if($unreadNotificationsCount > 0)
-                    <span class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-2 border-white rounded-circle" style="box-shadow: 0 0 15px rgba(220, 53, 69, 0.6);"></span>
+                    <span id="notif-dot" class="position-absolute top-0 start-100 translate-middle p-2 bg-success border border-2 border-white rounded-circle" style="box-shadow: 0 0 15px rgba(25, 135, 84, 0.6);"></span>
                 @endif
             </a>
             <a href="{{ route('profile.show') }}" class="avatar border border-3 border-white border-opacity-30 shadow-sm" style="width: 52px; height: 52px; border-radius: 18px; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);">
@@ -29,6 +24,29 @@
         </div>
     </div>
 </header>
+
+<script>
+    // Fitur Suara Notifikasi Canggih
+    const unreadCount = {{ $unreadNotificationsCount }};
+    const hasSpoken = localStorage.getItem('last_notif_spoken');
+
+    // Dot Hijau Logic
+    const notifDot = document.getElementById('notif-dot');
+
+    if (unreadCount > 0) {
+        if (hasSpoken != unreadCount) {
+            const msg = new SpeechSynthesisUtterance();
+            msg.text = "Ada notifikasi untukmu";
+            msg.lang = 'id-ID';
+            msg.rate = 1.0;
+            window.speechSynthesis.speak(msg);
+            localStorage.setItem('last_notif_spoken', unreadCount);
+        }
+    } else {
+        localStorage.setItem('last_notif_spoken', 0);
+        if (notifDot) notifDot.style.display = 'none';
+    }
+</script>
 
 <main class="mobile-content" style="margin-top: -30px;">
     <!-- Widgets Grid -->

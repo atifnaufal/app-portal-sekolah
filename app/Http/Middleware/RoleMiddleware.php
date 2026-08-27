@@ -11,42 +11,33 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // 1. Jika session kosong tapi user ter-autentikasi (via remember me), restorasi session
-        if (!$request->session()->has('user_id') && Auth::check()) {
-            $user = Auth::user();
+        // 1. Ultimate Session Restoration (Logika Anti-Logout Railway)
+        if (!$request->session()->has('user_id')) {
+            // Cek apakah ada cookie 'remember' yang valid via guard web
+            if (Auth::guard('web')->check()) {
+                $user = Auth::guard('web')->user();
 
-            // Restorasi data penting ke session
-            $request->session()->put([
-                'user_id' => $user->id,
-                'user_role' => $user->role,
-                'user_kelas_id' => $user->kelas_id,
-                'admin_name' => $user->name,
-            ]);
-        }
-
-        $userId = $request->session()->get('user_id');
-        $userRole = $request->session()->get('user_role');
-
-        // 2. Jika masih tidak ada userId di session
-        if (!$userId) {
-            // Cek sekali lagi via Auth guard untuk memastikan (siapa tahu sesi baru saja ter-autentikasi)
-            if (Auth::check()) {
-                $user = Auth::user();
-                $userId = $user->id;
-                $userRole = $user->role;
-
-                // Isi kembali session agar request berikutnya lancar
+                // Paksa isi ulang sesi jika identitas ditemukan di database via cookie
                 $request->session()->put([
                     'user_id' => $user->id,
                     'user_role' => $user->role,
                     'user_kelas_id' => $user->kelas_id,
                     'admin_name' => $user->name,
                 ]);
-            } else {
-                return redirect()
-                    ->route('login')
-                    ->with('error', 'Silakan login terlebih dahulu.');
+
+                // Pastikan sesi disimpan ke store
+                $request->session()->save();
             }
+        }
+
+        $userId = $request->session()->get('user_id');
+        $userRole = $request->session()->get('user_role');
+
+        // 2. Fallback terakhir jika sesi benar-benar tidak bisa dipulihkan
+        if (!$userId) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'Sesi berakhir. Silakan login kembali.');
         }
 
         if (!in_array($userRole, $roles, true)) {
