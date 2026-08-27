@@ -21,7 +21,7 @@
     }
 
     .ad-stat {
-        background:#fff; border-radius:20px; padding:22px; height:100%;
+        background:#fff; border-radius:20px; padding:22px;
         box-shadow:0 4px 20px rgba(15,23,42,0.05); border:1px solid #f1f5f9;
         position:relative; overflow:hidden;
     }
@@ -34,7 +34,7 @@
     .ad-stat-lbl { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em; }
 
     .ad-card {
-        background:#fff; border-radius:20px; height:100%;
+        background:#fff; border-radius:20px;
         box-shadow:0 4px 20px rgba(15,23,42,0.05); border:1px solid #f1f5f9; overflow:hidden;
     }
     .ad-card-head { padding:20px 24px; border-bottom:1px solid #f1f5f9; }
@@ -58,7 +58,7 @@
 </style>
 
 {{-- Hero --}}
-<div class="ad-hero">
+<div class="ad-hero" style="background:#1e3a5f;background-image:linear-gradient(135deg,#0f172a 0%,#1e3a5f 45%,#1d4ed8 100%);border-radius:24px;padding:28px 30px;color:#fff;position:relative;overflow:hidden;margin-bottom:24px;margin-top:4px;box-shadow:0 16px 40px rgba(15,23,42,0.25);">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
             <div style="font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;opacity:0.6;">Administrator Control Panel</div>
@@ -142,7 +142,7 @@
 {{-- Charts --}}
 <div class="row g-4 mb-4">
     <div class="col-lg-8">
-        <div class="ad-card h-100">
+        <div class="ad-card">
             <div class="ad-card-head d-flex justify-content-between align-items-center">
                 <h2 class="ad-card-title"><i class="bi bi-graph-up-arrow" style="color:#246bfe;"></i> Tren Pembayaran SPP</h2>
                 <span style="font-size:12px;color:#94a3b8;font-weight:600;">6 bulan terakhir</span>
@@ -153,7 +153,7 @@
         </div>
     </div>
     <div class="col-lg-4">
-        <div class="ad-card h-100">
+        <div class="ad-card">
             <div class="ad-card-head"><h2 class="ad-card-title"><i class="bi bi-pie-chart-fill" style="color:#7c3aed;"></i> Status Keuangan</h2></div>
             <div class="ad-card-body">
                 <div style="position:relative;height:170px;margin-bottom:18px;">
@@ -183,7 +183,7 @@
 {{-- Akun terbaru + Kapasitas kelas --}}
 <div class="row g-4">
     <div class="col-lg-6">
-        <div class="ad-card h-100">
+        <div class="ad-card">
             <div class="ad-card-head d-flex justify-content-between align-items-center">
                 <h2 class="ad-card-title"><i class="bi bi-person-plus-fill" style="color:#2563eb;"></i> Akun Terbaru</h2>
                 <a href="{{ route('admin.users') }}" class="btn btn-sm btn-light rounded-pill px-3">Semua Akun</a>
@@ -214,7 +214,7 @@
     </div>
 
     <div class="col-lg-6">
-        <div class="ad-card h-100">
+        <div class="ad-card">
             <div class="ad-card-head d-flex justify-content-between align-items-center">
                 <h2 class="ad-card-title"><i class="bi bi-bar-chart-fill" style="color:#d97706;"></i> Kapasitas Kelas</h2>
                 <a href="{{ route('kelas.index') }}" class="btn btn-sm btn-light rounded-pill px-3">Kelola Kelas</a>
