@@ -46,8 +46,7 @@
         .welcome-logo {
             width: 100px; height: 100px; border-radius: 30px;
             margin: 0 auto 24px;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid rgba(255,255,255,0.15);
+            background: transparent;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
         }

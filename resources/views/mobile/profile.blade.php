@@ -16,8 +16,7 @@
 
     .pf-avatar {
         width: 90px; height: 90px; border-radius: 28px; margin: 0 auto 12px;
-        overflow: hidden; background: rgba(255,255,255,0.15);
-        border: 3px solid rgba(255,255,255,0.3);
+        overflow: hidden; background: transparent;
         display: flex; align-items: center; justify-content: center;
         position: relative;
     }

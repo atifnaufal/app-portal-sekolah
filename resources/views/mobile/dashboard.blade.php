@@ -47,8 +47,7 @@
 
     .db-hero-avatar {
         width: 50px; height: 50px; border-radius: 18px; overflow: hidden;
-        border: 2px solid rgba(255,255,255,0.25);
-        background: rgba(255,255,255,0.1);
+        background: transparent;
         display: flex; align-items: center; justify-content: center;
         font-size: 20px; font-weight: 800; flex-shrink: 0;
     }
