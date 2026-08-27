@@ -95,11 +95,11 @@
             transform: translateY(-4px) scale(1.1);
         }
 
-        /* Page Loading UI - Dark overlay agar logo (bg hitam) menyatu */
+        /* Page Loading UI - Overlay transparan, hanya logo melayang */
         #page-loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0f172a, #1e3a5f);
+            background: transparent;
             display: none;
             flex-direction: column;
             justify-content: center;
@@ -107,11 +107,19 @@
             z-index: 10000;
             pointer-events: none;
         }
+        .loader-logo-wrap {
+            width: 96px; height: 96px; border-radius: 28px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f172a, #1e3a5f);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.28);
+            display: flex; align-items: center; justify-content: center;
+        }
         .loader-logo {
-            width: 70px;
-            height: auto;
-            animation: floating 2s infinite ease-in-out;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             mix-blend-mode: screen;
+            animation: floating 2s infinite ease-in-out;
         }
 
         @keyframes floating {
@@ -141,7 +149,9 @@
 <body>
     <div id="offline-indicator">Koneksi Terputus - Mode Offline</div>
     <div id="page-loader">
-        <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.style.display='none'">
+        <div class="loader-logo-wrap">
+            <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.parentElement.style.display='none'">
+        </div>
     </div>
 
     <div class="mobile-shell animate__animated animate__fadeIn">
