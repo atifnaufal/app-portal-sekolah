@@ -35,17 +35,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Send the email verification notification using a queue for better response.
-     * Menggunakan sistem antrean jika dikonfigurasi, jika tidak kirim langsung.
+     * Send the email verification notification.
+     * Kita gunakan pengiriman langsung (sync) agar error SMTP terlihat di log Railway.
      */
     public function sendEmailVerificationNotification(): void
     {
         try {
-            // Jika di Railway belum ada worker, kita gunakan pengiriman langsung sementara
-            // atau tetap gunakan Queued untuk kecepatan UI jika worker sudah jalan
-            $this->notify(new \App\Notifications\QueuedVerifyEmail);
+            // Menggunakan class bawaan Laravel (Illuminate\Auth\Notifications\VerifyEmail)
+            // agar dikirim secara sinkron (langsung)
+            $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
         } catch (\Exception $e) {
-            // Log error jika pengiriman gagal
             \Illuminate\Support\Facades\Log::error("Gagal mengirim email verifikasi: " . $e->getMessage());
         }
     }
