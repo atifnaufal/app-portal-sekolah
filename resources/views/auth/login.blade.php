@@ -39,13 +39,13 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.12);
             border-radius: 32px;
-            padding: 40px 28px 32px;
+            padding: 52px 32px 40px;
             text-align: center;
             color: #fff;
         }
         .welcome-logo {
-            width: 90px; height: 90px; border-radius: 28px;
-            margin: 0 auto 20px;
+            width: 100px; height: 100px; border-radius: 30px;
+            margin: 0 auto 24px;
             background: rgba(255,255,255,0.1);
             border: 2px solid rgba(255,255,255,0.15);
             display: flex; align-items: center; justify-content: center;
@@ -54,21 +54,21 @@
         }
         .welcome-logo img { width: 100%; height: 100%; object-fit: contain; }
         .welcome-title {
-            font-size: 26px; font-weight: 800; letter-spacing: -0.02em;
-            margin-bottom: 6px;
+            font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
+            margin-bottom: 8px;
         }
         .welcome-sub {
-            font-size: 13px; opacity: 0.6; line-height: 1.5;
-            margin-bottom: 28px;
+            font-size: 14px; opacity: 0.6; line-height: 1.5;
+            margin-bottom: 36px;
         }
         .welcome-features {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            margin-bottom: 28px; text-align: left;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            margin-bottom: 36px; text-align: left;
         }
         .welcome-feature {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 16px; padding: 14px;
+            border-radius: 18px; padding: 16px;
         }
         .welcome-feature-icon {
             width: 32px; height: 32px; border-radius: 10px;
@@ -103,13 +103,13 @@
         }
         .login-header {
             background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
-            padding: 28px 28px 20px;
+            padding: 36px 32px 28px;
             text-align: center;
             position: relative;
         }
         .login-header-logo {
-            width: 56px; height: 56px; border-radius: 18px;
-            margin: 0 auto 10px; overflow: hidden;
+            width: 64px; height: 64px; border-radius: 20px;
+            margin: 0 auto 14px; overflow: hidden;
             background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             display: flex; align-items: center; justify-content: center;
         }
@@ -117,7 +117,7 @@
         .login-header h1 { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0; }
         .login-header p { font-size: 12px; color: #64748b; margin: 4px 0 0; }
 
-        .login-body { padding: 24px 28px 28px; }
+        .login-body { padding: 28px 32px 32px; }
 
         .form-control {
             border-radius: 14px; padding: 12px 16px;
