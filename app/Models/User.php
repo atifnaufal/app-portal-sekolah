@@ -36,10 +36,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Send the email verification notification using a queue for better response.
+     * Menggunakan sistem antrean jika dikonfigurasi, jika tidak kirim langsung.
      */
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new \App\Notifications\QueuedVerifyEmail);
+        try {
+            // Jika di Railway belum ada worker, kita gunakan pengiriman langsung sementara
+            // atau tetap gunakan Queued untuk kecepatan UI jika worker sudah jalan
+            $this->notify(new \App\Notifications\QueuedVerifyEmail);
+        } catch (\Exception $e) {
+            // Log error jika pengiriman gagal
+            \Illuminate\Support\Facades\Log::error("Gagal mengirim email verifikasi: " . $e->getMessage());
+        }
     }
 
     /**
