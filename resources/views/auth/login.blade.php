@@ -49,6 +49,7 @@
             background: transparent;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
+            filter: drop-shadow(0 6px 16px rgba(0,0,0,0.18));
         }
         .welcome-logo img { width: 100%; height: 100%; object-fit: contain; }
         .welcome-title {
@@ -110,6 +111,7 @@
             margin: 0 auto 14px; overflow: hidden;
             background: #fff;
             display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
         }
         .login-header-logo img { width: 100%; height: 100%; object-fit: contain; }
         .login-header h1 { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0; }

@@ -19,6 +19,7 @@
         overflow: hidden; background: transparent;
         display: flex; align-items: center; justify-content: center;
         position: relative;
+        filter: drop-shadow(0 5px 14px rgba(0,0,0,0.18));
     }
     .pf-avatar img {
         width: 100%; height: 100%; object-fit: cover;

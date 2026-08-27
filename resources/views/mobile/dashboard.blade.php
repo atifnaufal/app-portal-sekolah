@@ -50,6 +50,7 @@
         background: transparent;
         display: flex; align-items: center; justify-content: center;
         font-size: 20px; font-weight: 800; flex-shrink: 0;
+        filter: drop-shadow(0 3px 8px rgba(0,0,0,0.2));
     }
     .db-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
