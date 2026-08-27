@@ -81,6 +81,8 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::get('/profil', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profil/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profil/foto', [ProfileController::class, 'uploadFoto'])->name('profile.foto.upload');
+    Route::patch('/profil/foto-posisi', [ProfileController::class, 'updateFotoPosisi'])->name('profile.foto.posisi');
     Route::get('/chat', [ChatController::class, 'index'])->middleware('verified_except_admin')->name('chat.index');
     Route::post('/chat', [ChatController::class, 'store'])->middleware('verified_except_admin')->name('chat.store');
 });

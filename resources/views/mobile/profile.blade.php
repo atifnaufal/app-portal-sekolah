@@ -1,90 +1,157 @@
+@php $hideNav = true; @endphp
 @extends('layouts.mobile-app')
+
 @section('content')
-<header class="mobile-hero" style="border-radius: 0 0 35px 35px;">
-    <div class="eyebrow">PENGATURAN AKUN</div>
-    <div class="d-flex align-items-center gap-3 mt-3">
-        <div class="avatar shadow-sm border border-3 border-white border-opacity-30" style="width: 65px; height: 65px; border-radius: 22px;">
+<style>
+    .pf-page { padding: 0 16px 48px; max-width: 640px; margin: 0 auto; }
+
+    .pf-hero {
+        background: linear-gradient(135deg, #1e293b, #246bfe);
+        border-radius: 28px; padding: 28px 20px; margin-bottom: 16px;
+        color: #fff; text-align: center; position: relative; overflow: hidden;
+    }
+    .pf-hero::before {
+        content:''; position:absolute; top:-30px; right:-30px;
+        width:100px; height:100px; border-radius:50%; background:rgba(255,255,255,0.06);
+    }
+
+    .pf-avatar {
+        width: 90px; height: 90px; border-radius: 28px; margin: 0 auto 12px;
+        overflow: hidden; background: rgba(255,255,255,0.15);
+        border: 3px solid rgba(255,255,255,0.3);
+        display: flex; align-items: center; justify-content: center;
+        position: relative;
+    }
+    .pf-avatar img {
+        width: 100%; height: 100%; object-fit: cover;
+    }
+    .pf-avatar .initial {
+        font-size: 32px; font-weight: 800; color: rgba(255,255,255,0.8);
+    }
+
+    .pf-info-card {
+        background: #fff; border-radius: 20px; padding: 18px;
+        margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .pf-info-row {
+        display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    }
+    .pf-info-row + .pf-info-row { border-top: 1px solid #f1f5f9; }
+    .pf-info-icon {
+        width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 15px;
+    }
+    .pf-info-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+    .pf-info-value { font-size: 14px; font-weight: 700; color: #1e293b; }
+
+    .pf-toast {
+        position: fixed; top: 16px; left: 16px; right: 16px; z-index: 9999;
+        background: #fff; border-radius: 14px; padding: 12px 16px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12); display: none;
+        max-width: 640px; margin: 0 auto;
+    }
+    .pf-toast.show { display: flex; animation: fadeDown 0.3s ease; }
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+</style>
+
+<div id="pfToast" class="pf-toast">
+    <i class="bi bi-check-circle-fill" style="color:#16a34a;font-size:18px;"></i>
+    <span id="pfToastMsg" style="flex:1;font-size:13px;font-weight:600;margin-left:8px;"></span>
+</div>
+
+<div class="pf-page" style="padding-top:16px;">
+    {{-- Hero --}}
+    <div class="pf-hero">
+        <div class="pf-avatar" id="avatarDisplay">
             @if($user->foto)
-                <img src="{{ asset('storage/'.$user->foto) }}" alt="Foto" style="width:100%;height:100%;object-fit:cover;object-position:center;">
+                <img src="{{ asset('storage/'.$user->foto) }}" id="avatarImg" style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
             @else
-                <span class="h4 mb-0 fw-bold">{{ strtoupper(substr($user->name,0,1)) }}</span>
+                <span class="initial" id="avatarInitial">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                <img id="avatarImg" style="display:none;">
             @endif
         </div>
-        <div>
-            <div class="hero-title" style="font-size: 24px;">{{ explode(' ', $user->name)[0] }}</div>
-            <div class="class-pill mt-1" style="font-size: 10px;">AKUN {{ strtoupper($user->role) }}</div>
+        <div style="font-size:22px;font-weight:800;" id="nameDisplay">{{ $user->name }}</div>
+        <div style="font-size:11px;opacity:0.7;margin-top:4px;">
+            <span style="background:rgba(255,255,255,0.15);padding:3px 10px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">{{ $user->role }}</span>
+            @if($user->kelas)
+                <span style="margin-left:4px;">{{ $user->kelas->nama }}</span>
+            @endif
         </div>
     </div>
-</header>
 
-<main class="mobile-content">
-    {{-- Verifikasi email hanya relevan untuk siswa: guru & admin dibuat/dibatasi langsung oleh admin sehingga melewati verifikasi. --}}
-    @if($user->role === 'siswa' && !$user->hasVerifiedEmail())
-        <div class="alert alert-warning border-0 rounded-4 p-3 mb-4 d-flex align-items-start gap-3">
-            <i class="bi bi-exclamation-octagon-fill h4 mb-0"></i>
+    {{-- Info Cards --}}
+    <div class="pf-info-card">
+        <div class="pf-info-row">
+            <div class="pf-info-icon" style="background:#eef4ff;color:#246bfe;"><i class="bi bi-person-badge"></i></div>
             <div>
-                <div class="fw-bold small">Email Belum Diverifikasi</div>
-                <p class="x-small mb-2 opacity-75">Beberapa fitur mungkin dibatasi hingga Anda melakukan konfirmasi email.</p>
-                <form method="POST" action="{{ route('verification.send') }}">
-                    @csrf
-                    <button class="btn btn-warning btn-sm fw-bold rounded-pill px-3" style="font-size: 10px;">Kirim Ulang Link</button>
-                </form>
+                <div class="pf-info-label">Nama Lengkap</div>
+                <div class="pf-info-value" id="infoName">{{ $user->name }}</div>
+            </div>
+        </div>
+        <div class="pf-info-row">
+            <div class="pf-info-icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-envelope-at"></i></div>
+            <div>
+                <div class="pf-info-label">Email</div>
+                <div class="pf-info-value">
+                    {{ $user->email }}
+                    @if($user->hasVerifiedEmail())
+                        <i class="bi bi-patch-check-fill" style="color:#16a34a;font-size:12px;"></i>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <div class="pf-info-row">
+            <div class="pf-info-icon" style="background:#ede9fe;color:#7c3aed;"><i class="bi bi-mortarboard"></i></div>
+            <div>
+                <div class="pf-info-label">Kelas / Jabatan</div>
+                <div class="pf-info-value">{{ $user->kelas?->nama ?? 'Staf Sekolah' }}</div>
+            </div>
+        </div>
+    </div>
+
+    @if($user->role === 'siswa' && !$user->hasVerifiedEmail())
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:14px;margin-bottom:12px;">
+            <div style="display:flex;align-items:start;gap:10px;">
+                <i class="bi bi-exclamation-triangle-fill" style="color:#b45309;font-size:18px;flex-shrink:0;margin-top:2px;"></i>
+                <div>
+                    <div style="font-size:13px;font-weight:700;color:#92400e;">Email Belum Diverifikasi</div>
+                    <div style="font-size:11px;color:#b45309;margin-top:2px;">Beberapa fitur mungkin dibatasi.</div>
+                    <form method="POST" action="{{ route('verification.send') }}" class="mt-2">
+                        @csrf
+                        <button style="padding:6px 14px;border-radius:8px;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;border:none;cursor:pointer;">Kirim Ulang Link</button>
+                    </form>
+                </div>
             </div>
         </div>
     @endif
 
-    <div class="card mobile-card mb-4 shadow-sm border-0" style="border-radius: 25px;">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center gap-3 mb-3">
-                <i class="bi bi-person-badge text-primary h5 mb-0"></i>
-                <div class="flex-grow-1">
-                    <div class="text-secondary" style="font-size: 10px; font-weight: 800;">NAMA LENGKAP</div>
-                    <div class="fw-bold text-dark">{{ $user->name }}</div>
-                </div>
-            </div>
-            <hr class="opacity-5 my-3">
-            <div class="d-flex align-items-center gap-3 mb-3">
-                <i class="bi bi-envelope-at text-primary h5 mb-0"></i>
-                <div class="flex-grow-1">
-                    <div class="text-secondary" style="font-size: 10px; font-weight: 800;">ALAMAT EMAIL</div>
-                    <div class="fw-bold text-dark d-flex align-items-center gap-2">
-                        {{ $user->email }}
-                        @if($user->hasVerifiedEmail())
-                            <i class="bi bi-patch-check-fill text-success" title="Terverifikasi"></i>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            <hr class="opacity-5 my-3">
-            <div class="d-flex align-items-center gap-3">
-                <i class="bi bi-mortarboard text-primary h5 mb-0"></i>
-                <div class="flex-grow-1">
-                    <div class="text-secondary" style="font-size: 10px; font-weight: 800;">KELAS / JABATAN</div>
-                    <div class="fw-bold text-dark">{{ $user->kelas?->nama ?? 'Staf Sekolah' }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <a href="{{ route('profile.edit') }}" class="btn btn-primary w-100 py-3 shadow-sm mb-3" style="border-radius: 18px; font-weight: 800;">
-        <i class="bi bi-pencil-square me-2"></i> EDIT PROFIL SAYA
+    {{-- Action Buttons --}}
+    <a href="{{ route('profile.edit') }}" style="display:block;width:100%;padding:14px;border-radius:16px;background:#246bfe;color:#fff;font-weight:700;font-size:14px;text-decoration:none;text-align:center;margin-bottom:10px;">
+        <i class="bi bi-pencil-square"></i> Edit Profil
     </a>
 
-    @if($user->role === 'admin')
-        <a href="{{ route('admin.dashboard') }}" class="btn btn-dark w-100 py-3 mb-3" style="border-radius: 18px; font-weight: 800; background: #1e293b;">
-            <i class="bi bi-cpu me-2"></i> PANEL KONTROL ADMIN
-        </a>
-    @endif
-
-    <div class="logout-panel mt-5 shadow-sm" style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: 20px;">
+    {{-- Logout --}}
+    <div style="background:#fff5f5;border:1px solid #fee2e2;border-radius:16px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
         <div>
-            <div class="fw-bold text-danger">Keluar Akun?</div>
-            <div class="x-small text-secondary mt-1">Hentikan sesi aktif perangkat.</div>
+            <div style="font-size:13px;font-weight:700;color:#dc2626;">Keluar Akun?</div>
+            <div style="font-size:11px;color:#94a3b8;">Hentikan sesi aktif.</div>
         </div>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" style="font-size: 12px;">KELUAR</button>
+            <button style="padding:8px 20px;border-radius:10px;background:#dc2626;color:#fff;font-weight:700;font-size:12px;border:none;cursor:pointer;">KELUAR</button>
         </form>
     </div>
-</main>
+</div>
+
+<script>
+function showToast(msg) {
+    var t = document.getElementById('pfToast');
+    document.getElementById('pfToastMsg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+@if(session('success'))
+showToast(@json(session('success')));
+@endif
+</script>
 @endsection
