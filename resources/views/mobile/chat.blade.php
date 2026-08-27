@@ -248,11 +248,24 @@
         return div.innerHTML;
     }
 
-    // Kirim via fetch tanpa reload halaman
+    // Kirim via fetch tanpa reload halaman (respons JSON cepat, tanpa redirect)
     chatForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const pesan = chatInput.value.trim();
         if (!pesan) return;
+
+        // Tampilkan pesan sendiri seketika (optimistic) sebelum konfirmasi server
+        const preview = {
+            pesan: pesan,
+            nama: '',
+            foto: null,
+            waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+        };
+        appendMessage(preview, true);
+
+        chatInput.value = '';
+        chatInput.focus();
+        lockSend(true);
 
         const body = new URLSearchParams();
         body.append('pesan', pesan);
@@ -260,15 +273,43 @@
 
         fetch(chatForm.action, {
             method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
             body: body
-        }).then(function () {
-            chatInput.value = '';
-            chatInput.focus();
+        }).then(function (r) {
+            // Jika bukan JSON (mis. session expired / redirect login), ikuti normal
+            const ct = r.headers.get('content-type') || '';
+            if (!ct.includes('application/json')) {
+                window.location.href = r.url || chatForm.action;
+                return null;
+            }
+            return r.json();
+        }).then(function (data) {
+            lockSend(false);
+            if (data && data.ok) return;
+            if (data && !data.ok) {
+                showChatError(data.message || 'Gagal mengirim pesan');
+            }
         }).catch(function () {
+            lockSend(false);
             window.location.href = chatForm.action;
         });
     });
+
+    function lockSend(locked) {
+        document.querySelector('.send-btn').disabled = locked;
+        document.querySelector('.send-btn').style.opacity = locked ? '0.6' : '1';
+    }
+
+    function showChatError(msg) {
+        const err = document.createElement('div');
+        err.style.cssText = 'text-align:center;color:#dc2626;font-size:11px;font-weight:600;padding:6px;';
+        err.textContent = msg;
+        msgList.parentElement.insertBefore(err, msgList.nextSibling);
+        setTimeout(() => err.remove(), 2500);
+    }
 
     // Real-time: pesan masuk dari pengguna lain di kelas
     if (window.Echo) {
