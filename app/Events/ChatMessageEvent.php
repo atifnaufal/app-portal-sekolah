@@ -35,12 +35,15 @@ class ChatMessageEvent implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
+        $sender = $this->message->user;
+
         return [
             'id' => $this->message->id,
             'user_id' => $this->message->user_id,
             'kelas_id' => $this->message->kelas_id,
             'pesan' => $this->message->pesan,
-            'nama' => $this->message->user?->name,
+            'nama' => $sender?->name,
+            'foto' => $sender?->foto ? asset('storage/'.$sender->foto) : null,
             'waktu' => $this->message->created_at?->format('H:i'),
         ];
     }

@@ -54,23 +54,31 @@
     }
     .db-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Stat Cards Row */
-    .db-stat-row { display: flex; gap: 10px; margin-bottom: 16px; }
+    /* Premium Stat "Glass Chip" - compact blended tinted tiles */
+    .db-stat-row { display: flex; gap: 8px; margin-bottom: 16px; }
     .db-stat-card {
-        flex: 1; border-radius: 20px; padding: 16px 12px;
+        flex: 1; border-radius: 18px; padding: 13px 10px 12px;
         text-align: center; position: relative; overflow: hidden;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.55));
+        border: 1px solid rgba(15,23,42,0.05);
+        box-shadow: 0 6px 18px rgba(15,23,42,0.05);
+        backdrop-filter: blur(10px);
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.13s;
     }
+    .db-stat-card:active { transform: scale(0.95); }
     .db-stat-card::before {
-        content: ''; position: absolute; top: -12px; right: -12px;
-        width: 50px; height: 50px; border-radius: 50%; opacity: 0.15;
+        content: ''; position: absolute; top: -16px; right: -16px;
+        width: 56px; height: 56px; border-radius: 50%;
+        background: var(--stat-glow, rgba(99,102,241,0.12)); filter: blur(2px);
     }
-    .db-stat-num { font-size: 24px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-    .db-stat-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.03em; margin-top: 4px; opacity: 0.65; }
     .db-stat-icon {
-        width: 36px; height: 36px; border-radius: 12px; margin: 0 auto 8px;
-        display: flex; align-items: center; justify-content: center; font-size: 16px;
+        width: 34px; height: 34px; border-radius: 11px; margin: 0 auto 8px;
+        display: flex; align-items: center; justify-content: center; font-size: 15px;
+        box-shadow: 0 3px 8px rgba(15,23,42,0.06);
     }
+    .db-stat-num { font-size: 21px; font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
+    .db-stat-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 0.03em; margin-top: 4px; opacity: 0.6; }
 
     /* Section Card */
     .db-section {
@@ -85,17 +93,27 @@
     .db-section-link { font-size: 12px; font-weight: 700; color: #6366f1; text-decoration: none; }
 
     /* Quick Menu Grid */
-    .db-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .db-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 6px; }
     .db-menu-item {
         display: flex; flex-direction: column; align-items: center;
-        padding: 12px 4px; border-radius: 14px; text-decoration: none;
-        transition: all 0.13s; -webkit-tap-highlight-color: transparent;
+        padding: 12px 4px 10px; border-radius: 16px; text-decoration: none;
+        transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+        background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
+        border: 1px solid rgba(15,23,42,0.04);
+        box-shadow: 0 4px 14px rgba(15,23,42,0.04);
     }
-    .db-menu-item:active { transform: scale(0.93); background: #f8fafc; }
+    .db-menu-item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,23,42,0.08); }
+    .db-menu-item:active { transform: scale(0.94); }
     .db-menu-icon {
-        width: 48px; height: 48px; border-radius: 16px;
+        width: 46px; height: 46px; border-radius: 15px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 20px; margin-bottom: 6px;
+        font-size: 19px; margin-bottom: 7px; position: relative;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 5px 12px rgba(15,23,42,0.08);
+    }
+    .db-menu-icon::after {
+        content: ''; position: absolute; top: 4px; right: 4px;
+        width: 8px; height: 8px; border-radius: 50%;
+        background: rgba(255,255,255,0.55); filter: blur(1px);
     }
     .db-menu-label { font-size: 10px; font-weight: 700; color: #475569; text-align: center; }
 
@@ -167,24 +185,24 @@
         @endif
     </div>
 
-    {{-- Stat Cards --}}
+    {{-- Stat Cards (premium chips) --}}
     <div class="db-stat-row fade-up" style="animation-delay:0.05s;">
-        <a href="{{ route('tugas.index') }}" class="db-stat-card text-decoration-none" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#1e40af;">
-            <div class="db-stat-icon" style="background:rgba(37,99,235,0.12);color:#2563eb;"><i class="bi bi-journal-check"></i></div>
-            <div class="db-stat-num">{{ $tugasAktif }}</div>
-            <div class="db-stat-lbl">Tugas Aktif</div>
+        <a href="{{ route('tugas.index') }}" class="db-stat-card text-decoration-none" style="--stat-glow:rgba(37,99,235,0.14);">
+            <div class="db-stat-icon" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#2563eb;"><i class="bi bi-journal-check"></i></div>
+            <div class="db-stat-num" style="color:#1e40af;">{{ $tugasAktif }}</div>
+            <div class="db-stat-lbl" style="color:#1e40af;">Tugas Aktif</div>
         </a>
         @if($spp)
-            <a href="{{ route('spp.index') }}" class="db-stat-card text-decoration-none" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);color:#065f46;">
-                <div class="db-stat-icon" style="background:rgba(5,150,105,0.12);color:#059669;"><i class="bi bi-wallet2"></i></div>
-                <div class="db-stat-num">{{ $spp['lunas'] }}<span style="font-size:14px;opacity:0.5;">/{{ $spp['total'] }}</span></div>
-                <div class="db-stat-lbl">SPP Lunas</div>
+            <a href="{{ route('spp.index') }}" class="db-stat-card text-decoration-none" style="--stat-glow:rgba(16,185,129,0.14);">
+                <div class="db-stat-icon" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);color:#059669;"><i class="bi bi-wallet2"></i></div>
+                <div class="db-stat-num" style="color:#065f46;">{{ $spp['lunas'] }}<span style="font-size:12px;opacity:0.5;">/{{ $spp['total'] }}</span></div>
+                <div class="db-stat-lbl" style="color:#065f46;">SPP Lunas</div>
             </a>
         @endif
-        <div class="db-stat-card" style="background:linear-gradient(135deg,#fefce8,#fef3c7);color:#92400e;">
-            <div class="db-stat-icon" style="background:rgba(217,119,6,0.12);color:#d97706;"><i class="bi bi-graph-up-arrow"></i></div>
-            <div class="db-stat-num">{{ $pctHadir }}<span style="font-size:14px;">%</span></div>
-            <div class="db-stat-lbl">Hadir</div>
+        <div class="db-stat-card" style="--stat-glow:rgba(245,158,11,0.15);">
+            <div class="db-stat-icon" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);color:#d97706;"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="db-stat-num" style="color:#92400e;">{{ $pctHadir }}<span style="font-size:12px;">%</span></div>
+            <div class="db-stat-lbl" style="color:#92400e;">Hadir</div>
         </div>
     </div>
 
@@ -195,19 +213,19 @@
         </div>
         <div class="db-menu-grid">
             <a href="{{ route('absensi.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb;"><i class="bi bi-calendar-check-fill"></i></div>
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#4f7cff,#2563eb);color:#fff;"><i class="bi bi-calendar-check-fill"></i></div>
                 <div class="db-menu-label">Absensi</div>
             </a>
             <a href="{{ route('tugas.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#d97706;"><i class="bi bi-journal-check"></i></div>
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;"><i class="bi bi-journal-check"></i></div>
                 <div class="db-menu-label">Tugas</div>
             </a>
             <a href="{{ route('spp.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#059669;"><i class="bi bi-wallet2"></i></div>
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#34d399,#10b981);color:#fff;"><i class="bi bi-wallet2"></i></div>
                 <div class="db-menu-label">SPP</div>
             </a>
             <a href="{{ route('chat.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#7c3aed;"><i class="bi bi-chat-dots-fill"></i></div>
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;"><i class="bi bi-chat-dots-fill"></i></div>
                 <div class="db-menu-label">Chat</div>
             </a>
             <!-- <a href="{{ route('pengumuman.index') }}" class="db-menu-item">

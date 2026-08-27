@@ -5,40 +5,66 @@
     .pf-page { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
 
     .pf-hero {
-        background: linear-gradient(135deg, #1e293b, #246bfe);
-        border-radius: 28px; padding: 28px 20px; margin-bottom: 16px;
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #3730a3 100%);
+        border-radius: 28px; padding: 30px 20px 26px; margin-bottom: 16px;
         color: #fff; text-align: center; position: relative; overflow: hidden;
+        box-shadow: 0 14px 40px rgba(30,27,75,0.3);
     }
     .pf-hero::before {
-        content:''; position:absolute; top:-30px; right:-30px;
-        width:100px; height:100px; border-radius:50%; background:rgba(255,255,255,0.06);
+        content:''; position:absolute; top:-50px; right:-40px;
+        width:170px; height:170px; border-radius:50%;
+        background:radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%);
     }
+    .pf-hero::after {
+        content:''; position:absolute; bottom:-60px; left:-40px;
+        width:200px; height:200px; border-radius:50%;
+        background:radial-gradient(circle, rgba(59,130,246,0.28) 0%, transparent 70%);
+    }
+    .pf-hero > * { position: relative; z-index: 1; }
 
+    .pf-avatar-badge {
+        width: 104px; height: 104px; margin: 0 auto 14px; position: relative;
+    }
     .pf-avatar {
-        width: 90px; height: 90px; border-radius: 28px; margin: 0 auto 12px;
-        overflow: hidden; background: transparent;
-        display: flex; align-items: center; justify-content: center;
-        position: relative;
-        filter: drop-shadow(0 5px 14px rgba(0,0,0,0.18));
+        width: 100%; height: 100%; border-radius: 34px; overflow: hidden;
+        background: transparent; display: flex; align-items: center; justify-content: center;
+        position: relative; cursor: pointer;
+        border: 3px solid rgba(255,255,255,0.22);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.3);
     }
-    .pf-avatar img {
-        width: 100%; height: 100%; object-fit: cover;
+    .pf-avatar img { width: 100%; height: 100%; object-fit: cover; display:block; }
+    .pf-avatar .initial { font-size: 38px; font-weight: 800; color: rgba(255,255,255,0.85); }
+
+    /* Floating camera "ganti foto" badge (bawah kanan avatar) */
+    .pf-cam-badge {
+        position:absolute; right:-7px; bottom:-7px; width:38px; height:38px;
+        border-radius:50%; background:linear-gradient(135deg,#6366f1,#4f46e5);
+        border:3px solid #fff; color:#fff; display:flex; align-items:center;
+        justify-content:center; font-size:16px; cursor:pointer; z-index:2;
+        box-shadow:0 6px 16px rgba(79,70,229,0.45);
+        transition: transform .15s;
     }
-    .pf-avatar .initial {
-        font-size: 32px; font-weight: 800; color: rgba(255,255,255,0.8);
+    .pf-cam-badge:active { transform:scale(0.9); }
+
+    .pf-name { font-size:24px; font-weight:800; letter-spacing:-0.02em; }
+    .pf-badges { margin-top:6px; }
+    .pf-role-pill {
+        background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.18);
+        padding:4px 12px; border-radius:8px; font-weight:700; font-size:11px;
+        text-transform:uppercase; letter-spacing:0.05em; backdrop-filter:blur(6px);
     }
 
     .pf-info-card {
-        background: #fff; border-radius: 20px; padding: 18px;
-        margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        background: #fff; border-radius: 22px; padding: 18px;
+        margin-bottom: 12px; box-shadow: 0 6px 20px rgba(15,23,42,0.05);
+        border: 1px solid rgba(15,23,42,0.03);
     }
-    .pf-info-row {
-        display: flex; align-items: center; gap: 12px; padding: 10px 0;
-    }
+    .pf-info-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
     .pf-info-row + .pf-info-row { border-top: 1px solid #f1f5f9; }
     .pf-info-icon {
-        width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-        display: flex; align-items: center; justify-content: center; font-size: 15px;
+        width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 16px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(15,23,42,0.05);
     }
     .pf-info-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
     .pf-info-value { font-size: 14px; font-weight: 700; color: #1e293b; }
@@ -61,19 +87,25 @@
 <div class="pf-page" style="padding-top:16px;">
     {{-- Hero --}}
     <div class="pf-hero">
-        <div class="pf-avatar" id="avatarDisplay">
-            @if($user->foto)
-                <img src="{{ asset('storage/'.$user->foto) }}" id="avatarImg" style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
-            @else
-                <span class="initial" id="avatarInitial">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
-                <img id="avatarImg" style="display:none;">
-            @endif
+        <div class="pf-avatar-badge">
+            <div class="pf-avatar" id="avatarDisplay" onclick="document.getElementById('pfFotoInput').click()">
+                @if($user->foto)
+                    <img src="{{ asset('storage/'.$user->foto) }}" id="avatarImg" style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
+                @else
+                    <span class="initial" id="avatarInitial">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                    <img id="avatarImg" style="display:none;">
+                @endif
+            </div>
+            <div class="pf-cam-badge" onclick="document.getElementById('pfFotoInput').click()">
+                <i class="bi bi-camera-fill"></i>
+            </div>
+            <input type="file" id="pfFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="pfUploadFoto(this)">
         </div>
-        <div style="font-size:22px;font-weight:800;" id="nameDisplay">{{ $user->name }}</div>
-        <div style="font-size:11px;opacity:0.7;margin-top:4px;">
-            <span style="background:rgba(255,255,255,0.15);padding:3px 10px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">{{ $user->role }}</span>
+        <div class="pf-name" id="nameDisplay">{{ $user->name }}</div>
+        <div class="pf-badges">
+            <span class="pf-role-pill">{{ $user->role }}</span>
             @if($user->kelas)
-                <span style="margin-left:4px;">{{ $user->kelas->nama }}</span>
+                <span style="background:rgba(255,255,255,0.12);padding:4px 12px;border-radius:8px;font-size:11px;font-weight:600;margin-left:6px;">{{ $user->kelas->nama }}</span>
             @endif
         </div>
     </div>
@@ -139,6 +171,83 @@ function showToast(msg, type) {
     t.classList.add('show');
     setTimeout(function() { t.classList.remove('show'); }, 5000);
 }
+
+// --- Ganti foto langsung dari profil (premium camera badge) ---
+var pfCsrf = '{{ csrf_token() }}';
+var pfFotoUrl = @json($user->foto ? asset('storage/'.$user->foto) : null);
+var pfPosX = {{ $user->foto_posisi_x ?? 50 }};
+var pfPosY = {{ $user->foto_posisi_y ?? 50 }};
+
+function pfUploadFoto(input) {
+    if (!input.files || !input.files[0]) return;
+    var file = input.files[0];
+    if (file.size > 2 * 1024 * 1024) { showToast('Ukuran maks 2MB', 'error'); return; }
+
+    var fd = new FormData();
+    fd.append('foto', file);
+    fd.append('_token', pfCsrf);
+
+    fetch('{{ route("profile.foto.upload") }}', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.ok) {
+            pfFotoUrl = data.url;
+            var img = document.getElementById('avatarImg');
+            img.src = data.url;
+            img.style.display = 'block';
+            img.style.objectPosition = '50% 50%';
+            var init = document.getElementById('avatarInitial');
+            if (init) init.style.display = 'none';
+            pfPosX = 50; pfPosY = 50;
+            showToast(data.message || 'Foto berhasil diupload!');
+        } else {
+            showToast(data.message || 'Gagal upload', 'error');
+        }
+    })
+    .catch(function() { showToast('Gagal upload foto', 'error'); });
+}
+
+// Seret untuk atur posisi foto
+var pfWrap = document.getElementById('avatarDisplay');
+var pfDragging = false;
+var pfDragStart = {x:0,y:0};
+var pfPosStart = {x:50,y:50};
+
+pfWrap.addEventListener('mousedown', function(e) { pfStartDrag(e.clientX, e.clientY); e.preventDefault(); });
+pfWrap.addEventListener('touchstart', function(e) { pfStartDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
+document.addEventListener('mousemove', function(e) { if(pfDragging) pfMoveDrag(e.clientX, e.clientY); });
+document.addEventListener('touchmove', function(e) { if(pfDragging) pfMoveDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
+document.addEventListener('mouseup', pfEndDrag);
+document.addEventListener('touchend', pfEndDrag);
+
+function pfStartDrag(x, y) {
+    if (!pfFotoUrl) return;
+    pfDragging = true;
+    pfDragStart = {x:x, y:y};
+    pfPosStart = {x:pfPosX, y:pfPosY};
+}
+function pfMoveDrag(x, y) {
+    var rect = pfWrap.getBoundingClientRect();
+    var dx = ((x - pfDragStart.x) / rect.width) * 100;
+    var dy = ((y - pfDragStart.y) / rect.height) * 100;
+    pfPosX = Math.max(0, Math.min(100, pfPosStart.x - dx));
+    pfPosY = Math.max(0, Math.min(100, pfPosStart.y - dy));
+    document.getElementById('avatarImg').style.objectPosition = pfPosX + '% ' + pfPosY + '%';
+}
+function pfEndDrag() {
+    if (!pfDragging) return;
+    pfDragging = false;
+    var fd = new FormData();
+    fd.append('foto_posisi_x', Math.round(pfPosX));
+    fd.append('foto_posisi_y', Math.round(pfPosY));
+    fd.append('_token', pfCsrf);
+    fetch('{{ route("profile.foto.posisi") }}', {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':pfCsrf,'Accept':'application/json'},
+        body: JSON.stringify({foto_posisi_x: Math.round(pfPosX), foto_posisi_y: Math.round(pfPosY)})
+    }).catch(function(){});
+}
+
 @if(session('success'))
 showToast(@json(session('success')), 'success');
 @endif

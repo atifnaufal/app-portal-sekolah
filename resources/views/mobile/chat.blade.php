@@ -5,44 +5,92 @@
 <style>
     .chat-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: #fff; border-bottom: 1px solid #edf2f7;
-        padding: 12px 15px; display: flex; align-items: center; gap: 15px;
+        background: rgba(255,255,255,0.9); backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+        padding: 12px 15px; display: flex; align-items: center; gap: 13px;
     }
+    .chat-header .back-btn {
+        width: 38px; height: 38px; border-radius: 13px; flex-shrink: 0;
+        background: #f1f5f9; display: flex; align-items: center; justify-content: center;
+        color: #334155; text-decoration: none; font-size: 18px;
+    }
+    .chat-header-avatar {
+        width: 42px; height: 42px; border-radius: 14px; flex-shrink: 0;
+        overflow: hidden; background: linear-gradient(135deg,#4f46e5,#7c3aed);
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-weight:800; font-size:15px;
+        box-shadow: 0 5px 14px rgba(79,70,229,0.3);
+    }
+    .chat-header-avatar img { width:100%; height:100%; object-fit:cover; }
+    .chat-online-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,0.2); }
+
     .chat-container {
-        padding-top: 70px; padding-bottom: 85px; min-height: 100vh;
-        background: #fdfdfd; display: flex; flex-direction: column;
+        padding-top: 74px; padding-bottom: 90px; min-height: 100vh;
+        background:
+            radial-gradient(1200px 400px at 50% -50px, rgba(99,102,241,0.07), transparent 70%),
+            #f7f8fc;
+        display: flex; flex-direction: column;
     }
+    .chat-thread { display: flex; flex-direction: column; padding: 6px 14px; }
+
+    .chat-row { display: flex; align-items: flex-end; gap: 9px; margin-bottom: 10px; }
+    .chat-row.mine { flex-direction: row-reverse; }
+
+    .chat-avatar {
+        width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0;
+        overflow: hidden; background: linear-gradient(135deg,#e0e7ff,#c7d2fe);
+        display:flex; align-items:center; justify-content:center;
+        color:#4f46e5; font-size:12px; font-weight:800;
+    }
+    .chat-avatar img { width:100%; height:100%; object-fit:cover; }
+    .chat-row.mine .chat-avatar { display:none; }
+
+    .chat-bubble-wrap { max-width: 78%; display: flex; flex-direction: column; }
+    .chat-sender {
+        font-size: 10.5px; font-weight: 800; color: #6366f1;
+        margin: 0 4px 4px; letter-spacing: 0.01em;
+    }
+    .chat-row.mine .chat-sender { display:none; }
+
     .chat-bubble {
-        max-width: 85%; padding: 10px 14px; border-radius: 18px;
-        font-size: 14px; line-height: 1.5; margin-bottom: 8px;
-        position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        padding: 10px 14px; font-size: 14px; line-height: 1.5;
+        border-radius: 18px; position: relative; word-break: break-word;
     }
-    .chat-bubble.mine {
-        background: #246bfe; color: #fff; align-self: flex-end;
-        border-bottom-right-radius: 4px;
+    .chat-row.other .chat-bubble {
+        background: #fff; color: #14213d;
+        border-top-left-radius: 6px; border: 1px solid rgba(15,23,42,0.05);
+        box-shadow: 0 4px 14px rgba(15,23,42,0.06);
     }
-    .chat-bubble.other {
-        background: #fff; color: #14213d; align-self: flex-start;
-        border-bottom-left-radius: 4px; border: 1px solid #f0f0f0;
+    .chat-row.mine .chat-bubble {
+        background: linear-gradient(135deg,#4f46e5,#6366f1); color: #fff;
+        border-top-right-radius: 6px;
+        box-shadow: 0 6px 16px rgba(79,70,229,0.35);
     }
+    .chat-time {
+        font-size: 10px; opacity: 0.6; margin-top: 4px; font-weight: 600;
+    }
+    .chat-row.mine .chat-time { text-align: right; }
+
     .chat-footer {
         position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
-        background: #fff; border-top: 1px solid #edf2f7;
+        background: rgba(255,255,255,0.94); backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(15,23,42,0.06);
         padding: 10px 15px; display: flex; flex-direction: column;
     }
     .composer-row { display: flex; align-items: center; gap: 10px; }
     .composer-input {
         flex: 1; border: none; background: #f1f4f9;
-        border-radius: 25px; padding: 10px 18px; font-size: 14px;
+        border-radius: 25px; padding: 12px 18px; font-size: 14px;
+        box-shadow: inset 0 0 0 1px rgba(15,23,42,0.04);
     }
     .composer-input:focus { outline: none; background: #e8ecf3; }
     .action-btn {
-        width: 40px; height: 40px; border-radius: 50%; border: none;
+        width: 42px; height: 42px; border-radius: 50%; border: none;
         background: transparent; color: #64748b; display: grid; place-items: center;
         transition: all 0.2s;
     }
     .action-btn:active { background: #f1f4f9; transform: scale(0.9); }
-    .send-btn { background: #246bfe; color: #fff; }
+    .send-btn { background: linear-gradient(135deg,#4f46e5,#6366f1); color: #fff; box-shadow: 0 6px 14px rgba(79,70,229,0.35); }
 
     /* Emoji & GIF Picker UI */
     #extra-panel {
@@ -55,7 +103,7 @@
     .tab-item {
         padding-bottom: 8px; font-weight: bold; cursor: pointer; color: #64748b;
     }
-    .tab-item.active { color: #246bfe; border-bottom: 2px solid #246bfe; margin-bottom: -2px; }
+    .tab-item.active { color: #4f46e5; border-bottom: 2px solid #4f46e5; margin-bottom: -2px; }
 
     #emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; max-height: 180px; overflow-y: auto; }
     #gif-grid { display: none; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 180px; overflow-y: auto; }
@@ -64,31 +112,49 @@
 </style>
 
 <div class="chat-header">
-    <a href="{{ route('dashboard') }}" class="text-dark">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
-    </a>
-    <div class="d-flex align-items-center gap-2">
-        <div class="avatar" style="width:36px; height:36px; font-size: 14px; background: var(--blue); color: #fff;">GC</div>
-        <div>
-            <div class="fw-bold" style="font-size: 15px;">Grup Chat</div>
-            <div class="text-success small fw-bold" style="font-size: 11px;">{{ $user->kelas->nama }} · Aktif</div>
+    <a href="{{ route('dashboard') }}" class="back-btn"><i class="bi bi-chevron-left"></i></a>
+    <div class="chat-header-avatar" id="chatHeaderAvatar">
+        @if($user->foto)
+            <img src="{{ asset('storage/'.$user->foto) }}">
+        @else
+            {{ strtoupper(substr($user->name, 0, 1)) }}
+        @endif
+    </div>
+    <div>
+        <div class="fw-bold" style="font-size: 15px;">Grup {{ $user->kelas->nama }}</div>
+        <div class="d-flex align-items-center gap-2" style="font-size: 11px; color:#7c8794;font-weight:600;">
+            <span class="chat-online-dot"></span> Online
         </div>
     </div>
 </div>
 
-<div class="chat-container px-3">
+<div class="chat-container">
     <div class="text-center py-4">
-        <span class="badge bg-light text-muted fw-normal rounded-pill px-3 py-2" style="font-size: 10px;">Obrolan Kelas {{ $user->kelas->nama }}</span>
+        <span class="badge rounded-pill px-3 py-2" style="font-size: 10px; background:rgba(15,23,42,0.05); color:#64748b; font-weight:600;">
+            Obrolan Kelas {{ $user->kelas->nama }}
+        </span>
     </div>
 
-    <div class="d-flex flex-column" id="message-list">
+    <div class="chat-thread" id="message-list">
         @forelse($messages as $message)
-            <div class="chat-bubble {{ $message->user_id === $user->id ? 'mine' : 'other' }}">
-                @if($message->user_id !== $user->id)
-                    <div class="fw-bold mb-1" style="font-size: 11px; color: var(--blue);">{{ $message->user->name }}</div>
-                @endif
-                <div style="white-space: pre-wrap;">{{ $message->pesan }}</div>
-                <div class="text-end mt-1" style="font-size: 10px; opacity: 0.6;">{{ $message->created_at->format('H:i') }}</div>
+            @php $isMine = $message->user_id === $user->id; @endphp
+            <div class="chat-row {{ $isMine ? 'mine' : 'other' }}">
+                <div class="chat-avatar">
+                    @if($message->user && $message->user->foto)
+                        <img src="{{ asset('storage/'.$message->user->foto) }}">
+                    @else
+                        {{ $message->user ? strtoupper(substr($message->user->name, 0, 1)) : '?' }}
+                    @endif
+                </div>
+                <div class="chat-bubble-wrap">
+                    @if(!$isMine)
+                        <div class="chat-sender">{{ $message->user?->name }}</div>
+                    @endif
+                    <div class="chat-bubble">
+                        <div style="white-space: pre-wrap;">{{ $message->pesan }}</div>
+                        <div class="chat-time">{{ $message->created_at->format('H:i') }}</div>
+                    </div>
+                </div>
             </div>
         @empty
             <div class="text-center py-5 text-muted small">Belum ada percakapan. Mulai obrolan!</div>
@@ -144,19 +210,36 @@
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
     function appendMessage(data, mine) {
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble ' + (mine ? 'mine' : 'other');
+        const row = document.createElement('div');
+        row.className = 'chat-row ' + (mine ? 'mine' : 'other');
+
+        const avatar = document.createElement('div');
+        avatar.className = 'chat-avatar';
+        if (data.foto) {
+            avatar.innerHTML = '<img src="' + escAttr(data.foto) + '">';
+        } else {
+            avatar.textContent = (data.nama || '?').charAt(0).toUpperCase();
+        }
+
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-bubble-wrap';
 
         let inner = '';
         if (!mine) {
-            inner += '<div class="fw-bold mb-1" style="font-size: 11px; color: var(--blue);">' + (data.nama || 'Pengguna') + '</div>';
+            inner += '<div class="chat-sender">' + esc(data.nama || 'Pengguna') + '</div>';
         }
-        inner += '<div style="white-space: pre-wrap;">' + esc(data.pesan) + '</div>';
-        inner += '<div class="text-end mt-1" style="font-size: 10px; opacity: 0.6;">' + (data.waktu || '') + '</div>';
+        inner += '<div class="chat-bubble"><div style="white-space:pre-wrap;">' + esc(data.pesan) + '</div>';
+        inner += '<div class="chat-time">' + (data.waktu || '') + '</div></div>';
+        wrap.innerHTML = inner;
 
-        bubble.innerHTML = inner;
-        msgList.appendChild(bubble);
+        row.appendChild(avatar);
+        row.appendChild(wrap);
+        msgList.appendChild(row);
         msgList.scrollIntoView({ block: 'end' });
+    }
+
+    function escAttr(text) {
+        return String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function esc(text) {
@@ -192,7 +275,7 @@
         window.Echo.private('portal-chat.' + kelasId)
             .listen('.new-message', (e) => {
                 if (e.user_id !== currentUserId) {
-                    appendMessage({ nama: e.nama, pesan: e.pesan, waktu: e.waktu }, false);
+                    appendMessage({ nama: e.nama, foto: e.foto, pesan: e.pesan, waktu: e.waktu }, false);
                 }
             });
     }
