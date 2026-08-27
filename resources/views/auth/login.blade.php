@@ -46,12 +46,11 @@
         .welcome-logo {
             width: 100px; height: 100px; border-radius: 30px;
             margin: 0 auto 24px;
-            background: transparent;
+            background: linear-gradient(135deg, #0b1120, #1e3a5f);
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
-            filter: drop-shadow(0 6px 16px rgba(0,0,0,0.18));
         }
-        .welcome-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .welcome-logo img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; }
         .welcome-title {
             font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
             margin-bottom: 8px;
@@ -109,11 +108,11 @@
         .login-header-logo {
             width: 64px; height: 64px; border-radius: 20px;
             margin: 0 auto 14px; overflow: hidden;
-            background: #fff;
+            background: linear-gradient(135deg, #0f172a, #1e3a5f);
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 14px rgba(15,23,42,0.25);
         }
-        .login-header-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .login-header-logo img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; }
         .login-header h1 { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0; }
         .login-header p { font-size: 12px; color: #64748b; margin: 4px 0 0; }
 
@@ -192,7 +191,7 @@
     <div class="auth-screen active" id="welcomeScreen">
         <div class="welcome-card">
             <div class="welcome-logo">
-                <img src="{{ asset('logo_sekolah.png') }}" alt="Logo" onerror="this.src='https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png'">
+                <img src="{{ asset('logo_sekolah.png') }}" alt="Logo" onerror="this.style.display='none'">
             </div>
             <div class="welcome-title">Portal Sekolah Digital</div>
             <div class="welcome-sub">Portal Akademik Mahasiswa & Guru</div>

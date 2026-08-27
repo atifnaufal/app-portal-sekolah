@@ -95,11 +95,11 @@
             transform: translateY(-4px) scale(1.1);
         }
 
-        /* Page Loading UI - Minimalist Transparent */
+        /* Page Loading UI - Dark overlay agar logo (bg hitam) menyatu */
         #page-loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: transparent;
+            background: linear-gradient(135deg, #0f172a, #1e3a5f);
             display: none;
             flex-direction: column;
             justify-content: center;
@@ -111,7 +111,7 @@
             width: 70px;
             height: auto;
             animation: floating 2s infinite ease-in-out;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+            mix-blend-mode: screen;
         }
 
         @keyframes floating {
@@ -141,7 +141,7 @@
 <body>
     <div id="offline-indicator">Koneksi Terputus - Mode Offline</div>
     <div id="page-loader">
-        <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.src='https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png'">
+        <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.style.display='none'">
     </div>
 
     <div class="mobile-shell animate__animated animate__fadeIn">
