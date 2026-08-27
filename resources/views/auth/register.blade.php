@@ -26,7 +26,7 @@
                 <div class="d-flex gap-2">
                     <i class="bi bi-shield-check" style="color:#2563eb;"></i>
                     <div class="small fw-bold" style="color:#1e3a5f; line-height: 1.5;">
-                        Setelah mendaftar, akun Anda menunggu <strong>persetujuan admin</strong> sebelum bisa dipakai. Tidak ada email verifikasi yang perlu diklik.
+                        Setelah mendaftar, akun Anda menunggu <strong>persetujuan admin</strong> sebelum bisa dipakai.Dan Email Aktif Untuk Menunggu Beberapa Informasi Nantinya
                     </div>
                 </div>
             </div>
