@@ -36,6 +36,7 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = $this->resolveUser($request);
+        $oldEmail = $user->email;
 
         $data = $request->validate([
             'name' => ['required', 'max:255'],
@@ -62,10 +63,20 @@ class ProfileController extends Controller
         $user->update($data);
         $request->session()->put('admin_name', $user->name);
 
+        // Jika email berubah, batalkan verifikasi lama dan kirim link baru
+        if ($user->email !== $oldEmail) {
+            $user->forceFill(['email_verified_at' => null])->save();
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Gagal mengirim email verifikasi setelah ubah email: ' . $e->getMessage());
+            }
+        }
+
         if ($request->expectsJson() || $request->header('Accept') === 'application/json') {
             return response()->json([
                 'ok' => true,
-                'message' => 'Profil berhasil diperbarui.',
+                'message' => 'Profil berhasil diperbarui.' . ($user->email !== $oldEmail ? ' Link verifikasi dikirim ke email baru.' : ''),
                 'user' => [
                     'name' => $user->name,
                     'email' => $user->email,
