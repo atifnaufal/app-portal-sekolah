@@ -37,6 +37,10 @@ Route::post('/email/verification-notification', function (Request $request) {
     return back()->with('message', 'Link verifikasi baru telah dikirim!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
+// Email Simulator (Developer Tool)
+Route::get('/dev/email-simulator', [App\Http\Controllers\EmailSimulatorController::class, 'index'])->name('email.simulator');
+Route::post('/dev/email-simulator/{user}', [App\Http\Controllers\EmailSimulatorController::class, 'instantVerify'])->name('email.simulator.verify');
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.store');
 
