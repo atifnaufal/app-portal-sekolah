@@ -81,11 +81,11 @@
     </a>
     <div style="font-weight:800;font-size:16px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ \Illuminate\Support\Str::limit($tugas->judul, 30) }}</div>
     @if($isGuru)
-        <button type="button" onclick="document.getElementById('delModal').style.display='flex'" style="width:34px;height:34px;border-radius:50%;background:#fff5f6;border:none;color:#d94b61;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-            <i class="bi bi-trash3" style="font-size:14px;"></i>
+        <button type="button" onclick="document.getElementById('delModal').style.display='flex'" style="width:40px;height:40px;border-radius:14px;background:#fff5f6;border:1px solid #fecdd3;color:#d94b61;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;">
+            <i class="bi bi-trash3"></i>
         </button>
-        <a href="{{ route('tugas.edit', $tugas) }}" style="width:34px;height:34px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#475569;">
-            <i class="bi bi-pencil-square" style="font-size:14px;"></i>
+        <a href="{{ route('tugas.edit', $tugas) }}" style="width:40px;height:40px;border-radius:14px;background:#eef4ff;border:1px solid #bfdbfe;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#246bfe;font-size:16px;">
+            <i class="bi bi-pencil-square"></i>
         </a>
     @endif
 </div>
