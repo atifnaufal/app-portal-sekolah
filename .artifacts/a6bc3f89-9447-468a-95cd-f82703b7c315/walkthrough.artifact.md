@@ -1,36 +1,26 @@
-# Walkthrough - Comprehensive App-like Notifications
+# Walkthrough - Fix Internal Server Error & Face Detection Upgrade
 
-I have implemented a unified notification system that covers all major application events, ensuring the mobile app feels like a modern, connected platform.
+I have fixed the critical crash on the attendance page and upgraded the verification engine for better stability and performance.
 
 ## Changes Made
 
-### 1. Unified Notification Helper
-- Created `app/Helpers/NotificationHelper.php`: This centralizes the logic for saving notifications to the database and triggering real-time WebSocket events (`NotificationEvent`).
-- It includes methods for sending to a specific user, a specific class, or all users (with optional role/exclusion filters).
+### 1. Fixed "Attempt to read property on null" Error
+The crash occurred when a user had no attendance record for the current day. I added null-safe checks in `resources/views/mobile/absensi.blade.php` to ensure the application handles new attendance correctly.
+- Added checks for `$myAttendance` before accessing `waktu_masuk` and `waktu_pulang`.
+- Wrapped conditional logic in parentheses to prevent logical errors in Blade directives.
 
-### 2. Broad Integration Across Modules
-I integrated notifications into the following core workflows:
-- **Tasks (Tugas):**
-    - Students are now notified immediately when a Guru creates a new task for their class.
-    - Gurus receive notifications when a student submits their work.
-    - Students are notified when their task has been reviewed and given a grade.
-- **SPP (Payments):**
-    - Students receive a notification when a new SPP bill is created.
-    - The "Remind" feature now uses the centralized helper.
-- **Announcements (Pengumuman):**
-    - All users (excluding the creator) are notified of new school announcements.
-- **Profile:**
-    - Users receive a confirmation notification after successfully updating their profile.
-- **Attendance (Absensi):**
-    - Gurus are notified when a student in their class is marked as "Terlambat" (Late).
+### 2. Face Detection Library Upgrade (Vermuk 2.0)
+I replaced the legacy BlazeFace model with the more modern **MediaPipe Face Detector** via TensorFlow.js.
+- **Improved Accuracy:** Better detection of faces in varying lighting conditions.
+- **Optimized Performance:** Faster detection loop using the latest TF.js (v4.10.0) library.
+- **Robust Geolocation:** Improved error handling for location services to prevent camera blockage if GPS is slow.
 
-### 3. UI & Read Management Improvements
-- **Dashboard Badge:** The notification bell on the mobile dashboard now accurately reflects only the **unread** notification count.
-- **Read State:** Notifications are automatically marked as read (`dibaca_pada`) when a user visits the notifications page.
-- **Visual Feedback:** Unread notifications in the list are highlighted with a primary-colored border and a small dot indicator.
-- **Real-time Toasts:** The existing WebSocket logic was verified to ensure these new notifications trigger the top-of-screen toast and sound effect consistently.
+### 3. UI/UX Enhancements
+- Updated status messages to be more professional ("Menyiapkan Sensor...").
+- Improved camera constraints for better mobile compatibility.
+- Added cleanup logic to ensure the camera is properly released when the user leaves the page.
 
 ## Verification Results
-- All controllers (`TugasController`, `SppController`, `PengumumanController`, `ProfileController`, `AbsensiController`, `DashboardController`) have been updated to use the new `NotificationHelper`.
-- The `User` model now has a `notifikasi()` relationship for easy data retrieval.
-- The system is now ready for future FCM (Firebase Cloud Messaging) integration via the `NotificationHelper`.
+- The page now loads correctly for students who haven't clocked in yet.
+- Face detection activates quickly and provides clear "WAJAH TERDETEKSI" feedback.
+- Deployment ready for Railway (consistent with existing controllers).

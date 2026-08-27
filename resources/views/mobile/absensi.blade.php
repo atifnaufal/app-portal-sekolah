@@ -25,15 +25,15 @@
 
                 <div class="row g-2 mb-4">
                     <div class="col-6">
-                        <div class="p-3 border rounded-4 {{ $myAttendance && $myAttendance->waktu_masuk ? 'bg-success-subtle border-success' : '' }}">
+                        <div class="p-3 border rounded-4 {{ ($myAttendance && $myAttendance->waktu_masuk) ? 'bg-success-subtle border-success' : '' }}">
                             <div class="small text-secondary">Masuk</div>
-                            <div class="fw-bold h5 mb-0">{{ $myAttendance->waktu_masuk ? substr($myAttendance->waktu_masuk, 0, 5) : '--:--' }}</div>
+                            <div class="fw-bold h5 mb-0">{{ ($myAttendance && $myAttendance->waktu_masuk) ? substr($myAttendance->waktu_masuk, 0, 5) : '--:--' }}</div>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="p-3 border rounded-4 {{ $myAttendance && $myAttendance->waktu_pulang ? 'bg-primary-subtle border-primary' : '' }}">
+                        <div class="p-3 border rounded-4 {{ ($myAttendance && $myAttendance->waktu_pulang) ? 'bg-primary-subtle border-primary' : '' }}">
                             <div class="small text-secondary">Pulang</div>
-                            <div class="fw-bold h5 mb-0">{{ $myAttendance->waktu_pulang ? substr($myAttendance->waktu_pulang, 0, 5) : '--:--' }}</div>
+                            <div class="fw-bold h5 mb-0">{{ ($myAttendance && $myAttendance->waktu_pulang) ? substr($myAttendance->waktu_pulang, 0, 5) : '--:--' }}</div>
                         </div>
                     </div>
                 </div>
@@ -128,11 +128,11 @@
     .x-small { font-size: 11px; }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-detection@1.0.2"></script>
 
 <script>
-    let model;
+    let detector;
     let stream;
     const video = document.getElementById('video');
     const captureBtn = document.getElementById('capture-btn');
@@ -146,13 +146,15 @@
         navigator.geolocation.getCurrentPosition(function(position) {
             document.getElementById('lat').value = position.coords.latitude;
             document.getElementById('long').value = position.coords.longitude;
-        });
+        }, function(err) {
+            console.warn("Geo error:", err);
+        }, { enableHighAccuracy: true });
     }
 
     async function setupCamera() {
         try {
             stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user', width: 640, height: 480 },
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
                 audio: false
             });
             video.srcObject = stream;
@@ -160,35 +162,48 @@
                 video.onloadedmetadata = () => resolve(video);
             });
         } catch (err) {
-            alert("Gagal mengakses kamera: " + err.message);
+            alert("Izin kamera ditolak atau tidak tersedia.");
+            throw err;
         }
     }
 
     async function detectFace() {
-        if (!model || !video.srcObject) return;
+        if (!detector || !video.srcObject || video.paused) return;
 
-        const predictions = await model.estimateFaces(video, false);
+        try {
+            const faces = await detector.estimateFaces(video, { flipHorizontal: false });
 
-        if (predictions.length > 0) {
-            statusText.innerText = "WAJAH TERDETEKSI";
-            statusText.className = "small fw-bold text-success";
-            captureBtn.disabled = false;
-        } else {
-            statusText.innerText = "POSISIKAN WAJAH DI TENGAH";
-            statusText.className = "small fw-bold text-warning";
-            captureBtn.disabled = true;
+            if (faces.length > 0) {
+                const face = faces[0];
+                // Pastikan wajah cukup dekat dan terpusat (opsional logic)
+                statusText.innerText = "WAJAH TERDETEKSI";
+                statusText.className = "small fw-bold text-success";
+                captureBtn.disabled = false;
+            } else {
+                statusText.innerText = "POSISIKAN WAJAH DI TENGAH";
+                statusText.className = "small fw-bold text-warning";
+                captureBtn.disabled = true;
+            }
+        } catch (e) {
+            console.error("Detection loop error:", e);
         }
 
         requestAnimationFrame(detectFace);
     }
 
     openCameraBtn.addEventListener('click', async () => {
-        openCameraBtn.innerText = "Memuat AI... Mohon Tunggu";
+        openCameraBtn.innerText = "Menyiapkan Sensor...";
         openCameraBtn.disabled = true;
 
         try {
             await setupCamera();
-            model = await blazeface.load();
+
+            // Gunakan MediaPipe Face Detector (lebih canggih/akurat)
+            const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
+            detector = await faceDetection.createDetector(model, {
+                runtime: 'tfjs',
+                maxFaces: 1
+            });
 
             cameraContainer.classList.remove('d-none');
             absensiForm.classList.remove('d-none');
@@ -196,8 +211,8 @@
 
             detectFace();
         } catch (err) {
-            console.error("AI Load Error:", err);
-            alert("Gagal memuat AI Deteksi Wajah. Pastikan koneksi internet stabil.");
+            console.error("AI Init Error:", err);
+            alert("Gagal memuat sistem Vermuk. Coba gunakan browser Chrome terbaru.");
             openCameraBtn.innerText = "Buka Kamera Vermuk";
             openCameraBtn.disabled = false;
         }

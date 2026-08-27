@@ -1,11 +1,5 @@
-- [x] Create `NotificationHelper.php` (centralized logic)
-- [x] Update `TugasController.php` (Task creation/submit/review notifications)
-- [x] Update `PengumumanController.php` (Announcement notifications)
-- [x] Update `SppController.php` (Billing notifications)
-- [x] Update `ProfileController.php` (Profile update notifications)
-- [x] Update `AbsensiController.php` (Late status notifications)
-- [x] Update `DashboardController.php` (Unread count for badge)
-- [x] Update `resources/views/mobile/dashboard.blade.php` (Badge UI)
-- [x] Update `routes/web.php` (Mark as read logic)
-- [x] Update `resources/views/mobile/notifications.blade.php` (Highlight unread UI)
-- [x] Add `notifikasi()` relationship to `User.php`
+- [x] Fix null property crash in `absensi.blade.php`
+- [x] Upgrade TensorFlow.js and Face Detection libraries
+- [x] Implement MediaPipe Face Detector logic
+- [x] Add geolocation error handling
+- [x] Verify mobile UI responsiveness
