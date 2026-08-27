@@ -48,7 +48,7 @@ Route::get('/register', [RegisterController::class, 'create'])->name('register')
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['role:admin,guru,siswa', 'verified'])->group(function () {
+Route::middleware(['role:admin,guru,siswa', 'verified_except_admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
     Route::get('/spp', [SppController::class, 'index'])->name('spp.index');
@@ -60,8 +60,8 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::get('/profil', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profil/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/chat', [ChatController::class, 'index'])->middleware('verified')->name('chat.index');
-    Route::post('/chat', [ChatController::class, 'store'])->middleware('verified')->name('chat.store');
+    Route::get('/chat', [ChatController::class, 'index'])->middleware('verified_except_admin')->name('chat.index');
+    Route::post('/chat', [ChatController::class, 'store'])->middleware('verified_except_admin')->name('chat.store');
 });
 
 Route::middleware('role:admin')->group(function () {
@@ -79,7 +79,7 @@ Route::middleware('role:admin')->group(function () {
     Route::get('/notifikasi', [AbsensiController::class, 'notifications'])->name('notifikasi.index');
 });
 
-Route::middleware(['role:guru', 'verified'])->group(function () {
+Route::middleware(['role:guru', 'verified_except_admin'])->group(function () {
     Route::resource('tugas', TugasController::class)->except(['index', 'show']);
     Route::get('/tugas/{tugas}/export', [TugasController::class, 'exportGrades'])->name('tugas.export');
     Route::post('/pengumpulan/{pengumpulan}/review', [TugasController::class, 'review'])->name('tugas.review');
@@ -87,18 +87,18 @@ Route::middleware(['role:guru', 'verified'])->group(function () {
     Route::post('/spp/{spp}/remind', [SppController::class, 'remind'])->name('spp.remind');
 });
 
-Route::middleware(['role:admin,guru', 'verified'])->group(function () {
+Route::middleware(['role:admin,guru', 'verified_except_admin'])->group(function () {
     Route::get('/spp/create', [SppController::class, 'create'])->name('spp.create');
     Route::post('/spp', [SppController::class, 'store'])->name('spp.store');
 });
 
-Route::middleware(['role:admin', 'verified'])->group(function () {
+Route::middleware(['role:admin', 'verified_except_admin'])->group(function () {
     Route::get('/spp/{spp}/edit', [SppController::class, 'edit'])->name('spp.edit');
     Route::put('/spp/{spp}', [SppController::class, 'update'])->name('spp.update');
     Route::delete('/spp/{spp}', [SppController::class, 'destroy'])->name('spp.destroy');
 });
 
-Route::middleware(['role:guru,siswa', 'verified'])->group(function () {
+Route::middleware(['role:guru,siswa', 'verified_except_admin'])->group(function () {
     Route::get('/notifikasi-saya', function () {
         $userId = session('user_id');
         $notifications = Notifikasi::where('user_id', $userId)->latest()->get();
@@ -107,11 +107,11 @@ Route::middleware(['role:guru,siswa', 'verified'])->group(function () {
     })->name('notifications.index');
 });
 
-Route::middleware(['role:siswa', 'verified'])->group(function () {
+Route::middleware(['role:siswa', 'verified_except_admin'])->group(function () {
     Route::post('/tugas/{tugas}/submit', [TugasController::class, 'submit'])->name('tugas.submit');
 });
 
-Route::middleware(['role:guru,siswa', 'verified'])->group(function () {
+Route::middleware(['role:guru,siswa', 'verified_except_admin'])->group(function () {
     Route::get('/mahasiswa', [MahasiswaController::class, 'index'])->name('mahasiswa.index');
     Route::get('/tugas', [TugasController::class, 'index'])->name('tugas.index');
     Route::get('/tugas/{tugas}', [TugasController::class, 'show'])->whereNumber('tugas')->name('tugas.show');
