@@ -57,21 +57,21 @@
             right: 20px;
             max-width: 640px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: 24px;
             padding: 12px 10px;
             display: flex;
             justify-content: space-around;
-            box-shadow: 0 10px 30px rgba(20, 33, 61, 0.15);
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 20px rgba(20, 33, 61, 0.1);
+            animation: navFadeIn 0.3s ease;
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes navFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .bottom-nav a {

@@ -1,9 +1,8 @@
-@php $hideNav = true; @endphp
 @extends('layouts.mobile-app')
 
 @section('content')
 <style>
-    .pf-page { padding: 0 16px 48px; max-width: 640px; margin: 0 auto; }
+    .pf-page { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
 
     .pf-hero {
         background: linear-gradient(135deg, #1e293b, #246bfe);

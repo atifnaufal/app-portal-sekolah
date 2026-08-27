@@ -1,9 +1,8 @@
-@php $hideNav = true; @endphp
 @extends('layouts.mobile-app')
 
 @section('content')
 <style>
-    .pe-page { padding: 0 16px 48px; max-width: 640px; margin: 0 auto; }
+    .pe-page { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
 
     .pe-header {
         position:fixed; top:0; left:0; right:0; z-index:1000;
