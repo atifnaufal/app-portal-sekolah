@@ -16,3 +16,10 @@ cmds = [
     "php artisan route:cache",
     "php artisan view:cache"
 ]
+
+# nginx.conf ada di root proyek, jadi Nixpacks memasang nginx + php-fpm.
+# Start command dinyatakan eksplisit supaya TIDAK fallback ke
+# `php artisan serve` (development server single-thread) yang menjadi
+# dugaan penyebab dashboard blank intermiten karena worker kehabisan memori.
+[start]
+cmd = "php-fpm -D && nginx -g 'daemon off;'"
