@@ -204,10 +204,17 @@
                             <i class="bi bi-eye password-toggle" id="togglePassword"></i>
                         </span>
                     </div>
-                    <div class="instruction-box">
+                    <div class="d-flex justify-content-between mt-2">
+                        <a href="{{ route('password.request') }}" class="x-small fw-bold text-decoration-none text-primary">Lupa Password?</a>
+                        <a href="{{ route('email.request') }}" class="x-small fw-bold text-decoration-none text-muted">Lupa Email?</a>
+                    </div>
+                    <div class="instruction-box mt-3">
                         <div class="d-flex gap-2">
                             <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                            <div class="fw-bold" style="color: #92400e;">Email dipastikan aktif dan harus terkonfirmasi dahulu baru bisa masuk sepenuhnya.</div>
+                            <div class="small">
+                                <div class="fw-bold" style="color: #92400e;">Email dipastikan aktif dan harus terkonfirmasi dahulu baru bisa masuk sepenuhnya.</div>
+                                <div class="mt-1 text-muted x-small">Lupa semuanya? Berikan NIK ke Bagian Admin IT Sekolah untuk reset atau aktivasi.</div>
+                            </div>
                         </div>
                     </div>
                 </div>

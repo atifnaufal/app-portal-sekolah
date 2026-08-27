@@ -66,4 +66,32 @@ public function login(Request $request): RedirectResponse
         $request->session()->regenerateToken();
         return redirect()->route('login');
     }
+
+    public function showForgotPassword(): View
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function showForgotEmail(): View
+    {
+        return view('auth.forgot-email');
+    }
+
+    public function findEmail(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'nik' => ['required', 'string'],
+            'no_hp' => ['required', 'string'],
+        ]);
+
+        $user = User::where('nik', $request->nik)
+            ->where('no_hp', $request->no_hp)
+            ->first();
+
+        if (!$user) {
+            return back()->with('error', 'Data tidak ditemukan. Pastikan NIK dan No HP benar.');
+        }
+
+        return back()->with('found_email', $user->email);
+    }
 }

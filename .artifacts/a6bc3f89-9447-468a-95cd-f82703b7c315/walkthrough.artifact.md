@@ -1,33 +1,24 @@
-# Walkthrough - Academic Portal Pro & AI UI
+# Walkthrough - Advanced Account Recovery
 
-I have implemented the "Pro" features for task management, automated grading, and a futuristic AI-inspired UI for students, while significantly enhancing authentication security.
+I have implemented a comprehensive account recovery system that allows users to retrieve forgotten emails or reset passwords, while providing clear manual recovery instructions.
 
 ## Changes Made
 
-### 1. Task Management Pro (Google Forms Style)
-- **Dynamic Form Builder**: Guru can now create tasks with interactive forms (Multiple Choice, Short Answer, Essay).
-- **Dual Mode**: Support for both traditional file uploads (PDF/Word) and modern online forms.
-- **Excel Export**: Guru can download a complete grade report for any task in `.csv` format with one click.
-- **Smart Email Alerts**: Students automatically receive an email notification when a task with a PDF attachment is published.
+### 1. Multi-Channel Recovery Logic
+- **Find My Email**: Users can now recover their registered email address by providing their **NIK** and **Phone Number**. If a match is found, the email is displayed securely.
+- **Forgot Password flow**: Added a dedicated page for requesting password reset links via email.
+- **Manual Admin Recovery**: Integrated a mandatory instruction across all login/recovery pages: *"Berikan NIK ke Bagian Admin IT Sekolah untuk reset atau aktivasi."*
 
-### 2. "Generative AI" Inspired Student UI
-- **Futuristic Aesthetics**: Redesigned the task list and detail pages with glassmorphism, glowing indicators, and clean typography.
-- **Interactive Forms**: Students can complete online form tasks directly within the app with a smooth, stabilized layout.
-- **Stable Avatar**: Profile pictures now use intelligent auto-centering (`object-fit: cover`), ensuring faces are always perfectly positioned without manual adjustment.
+### 2. High-End Recovery UI
+- **Forgot Email View**: Created a clean, mobile-first interface for NIK/Phone verification.
+- **Forgot Password View**: Created an intuitive interface for email-based reset requests.
+- **Login Page Integration**: Added quick links for "Lupa Password?" and "Lupa Email?" directly below the password field for better accessibility.
 
-### 3. Advanced Security & Onboarding
-- **Email Verification Flow**: Implemented a mandatory email verification system. 
-    - Users can register but must verify their email via a unique link before accessing core features (Dashboard, Tasks, Chat).
-    - Added a clear warning on Login and Register pages about email confirmation.
-    - Profile page remains accessible to unverified users to allow resending the verification link.
-- **Header Cleanup**: Completely removed all UI clutter from the dashboard header for a "Stable & Minimalist" look.
-
-### 4. Robust Infrastructure
-- **Schema Updates**: Added JSON support for form data and responses in the database.
-- **Route Protection**: Integrated `verified` middleware across all academic and social routes.
+### 3. Verification & Security
+- **Data Matching**: The "Find Email" feature uses a strict double-match (NIK + No HP) to ensure privacy.
+- **Visual Cues**: Used warning/info icons and distinct color boxes to highlight important instructions.
 
 ## Verification Results
-- **Form Builder**: Verified that dynamic questions are correctly serialized to JSON and saved.
-- **Avatar Stability**: Verified that profile images no longer shift or show empty space.
-- **Verification Notice**: Verified that unverified users are blocked from the dashboard and prompted to check their email.
-- **Excel Report**: Verified the generated CSV contains all student names, NIKs, and grades correctly.
+- **Email Recovery**: Verified that inputting a valid NIK and Phone Number successfully returns the associated email.
+- **Navigation**: Verified that all recovery pages link back to the login screen smoothly.
+- **Instruction Visibility**: Confirmed the NIK manual recovery notice is highly visible and professionally styled.

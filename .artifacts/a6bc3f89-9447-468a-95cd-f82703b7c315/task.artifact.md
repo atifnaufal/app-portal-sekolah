@@ -1,19 +1,11 @@
-- [x] Implementing email verification and updating database schema for tasks
-    - [x] Implement `MustVerifyEmail` in `User.php`
-    - [x] Create migration for `tugas` pro features (tipe, form_data)
-    - [x] Create migration for `pengumpulan_tugas` (jawaban_form)
-- [x] Updating Guru: Task Management & Excel Export
-    - [x] Update `TugasController.php` (store, email, export, submit)
-    - [x] Update Guru form UI with dynamic JS Form Builder
-- [x] Redesigning Siswa UI to "AI-Style"
-    - [x] Redesign `mobile/tugas.blade.php` (Glassmorphism & Glow)
-    - [x] Redesign `mobile/tugas-detail.blade.php` with dynamic form rendering
-- [x] Enhancing Authentication & Registration UI
-    - [x] Add "Email Verified" warnings to login/register views
-    - [x] Create `auth/verify-email.blade.php` notice page
-    - [x] Add standard verification routes to `web.php`
+- [x] Overhaul `mobile-app.blade.php` with Floating Navigation
+- [x] Implement Transparent Splash Screen (logo only)
+- [x] Redesign Dashboard Widgets (Tugas & SPP)
+- [x] Academic Portal Pro: Form Builder & AI UI
+- [x] Email Verification System
 - [x] Profile & Header Stabilization
-    - [x] Implement Auto-Center Avatar logic
-    - [x] Add verification status & resend button to profile
-    - [x] Clean up sisa-sisa UI in dashboard header
+- [x] Advanced Account Recovery
+    - [x] Implement "Find Email" logic (NIK + Phone)
+    - [x] Create Forgot Password & Forgot Email views
+    - [x] Add Admin IT / NIK recovery instructions to Login
 - [x] Final Verification & Stabilization

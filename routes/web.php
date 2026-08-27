@@ -39,6 +39,11 @@ Route::post('/email/verification-notification', function (Request $request) {
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::get('/forgot-email', [AuthController::class, 'showForgotEmail'])->name('email.request');
+Route::post('/forgot-email', [AuthController::class, 'findEmail'])->name('email.find');
+
 Route::get('/register', [RegisterController::class, 'create'])->name('register');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
