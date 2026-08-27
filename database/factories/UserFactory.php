@@ -34,12 +34,12 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Akun belum disetujui admin, sehingga tidak bisa login.
      */
-    public function unverified(): static
+    public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'aktif' => false,
         ]);
     }
 }

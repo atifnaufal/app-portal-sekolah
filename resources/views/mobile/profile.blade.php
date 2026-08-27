@@ -93,9 +93,6 @@
                 <div class="pf-info-label">Email</div>
                 <div class="pf-info-value">
                     {{ $user->email }}
-                    @if($user->hasVerifiedEmail())
-                        <i class="bi bi-patch-check-fill" style="color:#16a34a;font-size:12px;"></i>
-                    @endif
                 </div>
             </div>
         </div>
@@ -108,21 +105,7 @@
         </div>
     </div>
 
-    @if($user->role === 'siswa' && !$user->hasVerifiedEmail())
-        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:14px;margin-bottom:12px;">
-            <div style="display:flex;align-items:start;gap:10px;">
-                <i class="bi bi-exclamation-triangle-fill" style="color:#b45309;font-size:18px;flex-shrink:0;margin-top:2px;"></i>
-                <div>
-                    <div style="font-size:13px;font-weight:700;color:#92400e;">Email Belum Diverifikasi</div>
-                    <div style="font-size:11px;color:#b45309;margin-top:2px;">Beberapa fitur mungkin dibatasi.</div>
-                    <form method="POST" action="{{ route('verification.send') }}" class="mt-2">
-                        @csrf
-                        <button style="padding:6px 14px;border-radius:8px;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;border:none;cursor:pointer;">Kirim Ulang Link</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
+    {{-- Aksi --}}
 
     {{-- Action Buttons --}}
     <a href="{{ route('profile.edit') }}" style="display:block;width:100%;padding:14px;border-radius:16px;background:#246bfe;color:#fff;font-weight:700;font-size:14px;text-decoration:none;text-align:center;margin-bottom:10px;">

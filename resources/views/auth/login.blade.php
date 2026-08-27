@@ -299,8 +299,8 @@
                     <div style="display:flex;gap:8px;align-items:start;">
                         <i class="bi bi-info-circle" style="color:#3b82f6;flex-shrink:0;margin-top:1px;"></i>
                         <div>
-                            <div style="font-weight:600;color:#475569;">Email harus terverifikasi untuk akses penuh.</div>
-                            <div style="margin-top:2px;color:#94a3b8;">Hubungi admin IT jika butuh bantuan aktivasi.</div>
+                            <div style="font-weight:600;color:#475569;">Akun baru perlu disetujui admin sebelum bisa login.</div>
+                            <div style="margin-top:2px;color:#94a3b8;">Butuh bantuan akses? Hubungi Admin IT sekolah.</div>
                         </div>
                     </div>
                 </div>

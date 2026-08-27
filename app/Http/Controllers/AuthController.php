@@ -34,7 +34,7 @@ public function login(Request $request): RedirectResponse
             ->withInput($request->only('email'))
             ->with('error',
                 $user && ! $user->aktif
-                    ? 'Akun sedang dinonaktifkan oleh admin.'
+                    ? 'Akun Anda belum disetujui admin, atau sedang dinonaktifkan. Hubungi admin IT sekolah.'
                     : 'Email atau password salah.'
             );
     }

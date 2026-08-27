@@ -116,9 +116,6 @@
             <div style="margin-bottom:12px;">
                 <label class="pe-label">Email</label>
                 <input name="email" type="email" class="pe-input" value="{{ old('email', $user->email) }}" required>
-                @if($user->role === 'siswa' && !$user->hasVerifiedEmail())
-                    <div style="font-size:11px;color:#b45309;margin-top:4px;"><i class="bi bi-info-circle"></i> Email belum terverifikasi.</div>
-                @endif
             </div>
 
             <div style="background:#f8fafc;border:1px dashed #e2e8f0;border-radius:14px;padding:14px;margin-bottom:14px;">
