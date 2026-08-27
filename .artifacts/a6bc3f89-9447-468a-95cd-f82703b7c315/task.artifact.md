@@ -1,9 +1,8 @@
 - [x] Fix null property crash in `absensi.blade.php`
 - [x] Upgrade TensorFlow.js and Face Detection libraries
 - [x] Implement MediaPipe Face Detector logic
-- [x] Add geolocation error handling
 - [x] Redesign Login Form with Undraw Illustration
 - [x] Add Password Visibility Toggle (Eye Icon)
-- [x] Add Password helper/instruction text
-- [x] Improve Loading/Splash screen on login submit
-- [x] Verify mobile UI responsiveness for login
+- [x] Implement Dynamic Persistent Login (True for Guru/Siswa, False for Admin)
+- [x] Enhance `RoleMiddleware` for aggressive session restoration
+- [x] Verify mobile session persistence on app restart

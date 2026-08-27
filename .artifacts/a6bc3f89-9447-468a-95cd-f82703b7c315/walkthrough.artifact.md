@@ -1,28 +1,23 @@
-# Walkthrough - Modern Login UI & Enhanced Security UX
+# Walkthrough - Persistent Sessions & Admin Exclusion
 
-I have completely redesigned the login page to be more professional, interactive, and aligned with a "school portal" aesthetic.
+I have implemented a robust session management system that ensures Guru and Siswa stay logged in even after closing the app, while keeping Admin sessions secure.
 
 ## Changes Made
 
-### 1. Visual Redesign (Modern School Theme)
-- **Undraw Integration**: Added a high-quality "Back to School" illustration from Undraw to the header.
-- **Card UI**: Replaced the basic card with a high-radius, shadowed modern container.
-- **Iconography**: Integrated Bootstrap Icons (v1.11.1) for better context in form fields.
+### 1. Selective Persistent Login
+In `AuthController.php`, the "Remember Me" logic is now dynamic:
+- **Guru & Siswa**: `remember` is set to `true` automatically. This sets a long-lived cookie (`remember_web_...`) that persists even when the app process is killed.
+- **Admin**: `remember` is set to `false`. Admins will be logged out according to standard session rules (security best practice).
 
-### 2. Password Security & UX
-- **Visibility Toggle (Eye Icon)**: Users can now click the eye icon to see their password, reducing typing errors.
-- **Instructions**: Added a subtle info tooltip explaining that passwords are provided by the admin.
-- **Validation Cues**: Added placeholders and improved field focus states.
+### 2. Aggressive Session Restoration
+In `RoleMiddleware.php`, I enhanced the logic to handle cases where the primary session record is lost but the "Remember Me" cookie is still valid:
+- **Automatic Recovery**: If the session keys are missing but `Auth::check()` is true, the middleware immediately repopulates the session with `user_id`, `role`, and `kelas_id`.
+- **Pre-check Defense**: Added a secondary check before redirection to catch and restore sessions at the last possible moment, preventing unnecessary redirects to the login page.
 
-### 3. Professional Loading Experience
-- **Immersive Splash Screen**: The loading overlay now includes a clean CSS spinner and clearer text ("Memasuki Portal Sekolah...").
-- **Double-Submit Prevention**: The login button now shows a spinner and disables itself upon submission to prevent multiple login attempts.
-
-### 4. Technical Improvements
-- **Standardized Insets**: The UI is now perfectly optimized for the Android App view (Capacitor).
-- **Zero-Dependency Icons**: Loaded via CDN for fast initial paint.
+### 3. Capacitor/Mobile Compatibility
+- By using the built-in Laravel "Remember Me" cookie, we bypass the limitations of session-only cookies which are often cleared by Android WebViews when the app is "swiped away".
 
 ## Verification Results
-- **Eye Toggle**: Functionally tested; toggles between `password` and `text` types correctly.
-- **Loading State**: Appears immediately on form submission.
-- **Responsive Layout**: Verified on simulated mobile widths.
+- **Guru/Siswa Experience**: After logging in once, killing the app and restarting no longer shows the login screen.
+- **Admin Security**: Admin sessions behave normally and are not automatically remembered across app restarts unless the session itself is still active.
+- **Reliability**: Tested with both `database` and `sqlite` session drivers; the `Auth::check()` restoration is successful.

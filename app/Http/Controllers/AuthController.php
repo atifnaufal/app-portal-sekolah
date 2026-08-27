@@ -50,8 +50,9 @@ public function login(Request $request): RedirectResponse
         'admin_name' => $user->name,
     ]);
 
-    // Gunakan Auth::login dengan remember=true untuk sesi persisten
-    Auth::login($user, true);
+    // Persistent login hanya untuk Guru dan Siswa (Kecuali Admin)
+    $remember = ($user->role !== 'admin');
+    Auth::login($user, $remember);
 
     // Pastikan session langsung disimpan
     $request->session()->save();
