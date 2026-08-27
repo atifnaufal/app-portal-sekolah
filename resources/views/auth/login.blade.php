@@ -38,7 +38,7 @@
 
         .card-header-section {
             background: #f0f4ff;
-            padding: 40px 30px 20px;
+            padding: 50px 30px 20px;
             text-align: center;
             border-radius: 28px 28px 0 0;
             position: relative;
@@ -46,31 +46,30 @@
 
         .logo-school-wrapper {
             position: absolute;
-            top: -30px;
+            top: -40px;
             left: 50%;
             transform: translateX(-50%);
-            width: 80px;
-            height: 80px;
-            background: #fff;
-            padding: 10px;
-            border-radius: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            width: 100px;
+            height: 100px;
             z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .logo-school-wrapper img {
             width: 100%;
             height: 100%;
             object-fit: contain;
+            filter: none;
         }
 
         .illustration-img {
             width: 100%;
-            max-width: 240px;
+            max-width: 200px;
             height: auto;
-            margin: 10px auto;
+            margin: 0 auto;
             display: block;
-            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.05));
         }
 
         .form-control {
@@ -170,9 +169,9 @@
         </div>
 
         <div class="card-header-section">
-            <!-- Undraw Illustration -->
-            <img src="https://undraw.co/api/illustrations/undraw_back_to_school_re_8nrc.svg" alt="Illustration" class="illustration-img">
-            <div class="mt-3">
+            <!-- Undraw Illustration (Fallback to direct SVG URL if API fails) -->
+            <img src="https://raw.githubusercontent.com/undraw-co/undraw-co.github.io/master/img/illustrations/undraw_back_to_school_re_8nrc.svg" alt="Illustration" class="illustration-img" onerror="this.src='https://illustrations.popsy.co/blue/studying.svg'">
+            <div class="mt-2">
                 <h1 class="h5 fw-bold mb-1" style="color: var(--dark-blue)">SELAMAT DATANG</h1>
                 <p class="text-secondary small mb-0">Portal Akademik Mahasiswa & Guru</p>
             </div>
