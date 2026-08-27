@@ -1,30 +1,31 @@
-# Walkthrough - Major UI/UX Overhaul (WhatsApp Style)
+# Walkthrough - Full Screen UI & Advanced Chat
 
-I have completely transformed the application into a professional mobile-first experience with floating navigation, persistent menus, and smooth transitions.
+I have upgraded the application to include full-screen focus modes for Chat and Tasks, and fixed notification rendering issues.
 
 ## Changes Made
 
-### 1. Persistent Floating Navigation
-- **Detached Menu**: The bottom menu is now a "floating" bar with high-radius corners (`24px`), detached from the screen edges.
-- **Backdrop Blur**: Added `backdrop-filter: blur(15px)` to the menu for a premium glassmorphism effect.
-- **Interactive States**: Icons now gently translate upwards when active, and the entire bar has a "slide-up" entry animation.
-- **WhatsApp Experience**: The menu stays visible on **all pages** (including sub-pages like chat, tasks, and profile edit), ensuring users never lose their primary navigation context.
+### 1. Advanced "Grup Chat" (Full Screen)
+- **WhatsApp Style Header**: Added a sticky top header with a "Kembali" button, class name, and active status.
+- **Hidden Navigation**: The floating bottom menu is now hidden on the chat page to provide a full-screen immersive experience.
+- **Interactive Emoji Picker**: Integrated a custom emoji panel with a wide selection of school-friendly emojis.
+- **GIF Integration (Mock)**: Added a GIF tab with simulated results that can be sent in messages.
+- **Refined Bubbles**: Updated chat bubbles with distinct colors for "Mine" and "Other" participants.
 
-### 2. Unified Page Transitions
-- **Animated Shell**: All content is now wrapped in an `animate__fadeIn` container. Navigation between tabs feels fluid as pages smoothly fade into view.
-- **Single Layout**: Migrated all 13+ sub-pages from the old `mobile-page` layout to the unified `mobile-app` layout.
-- **Header Cleanup**: Removed the top "APP MAHASISWA" header globally. Sub-pages now feature a minimalist, integrated back button within the content area for a cleaner look.
+### 2. Immersive "Ruang Tugas" (Full Screen)
+- **Full Screen Focus**: Like chat, the Tasks page now hides the bottom navigation to minimize distractions.
+- **Header Integration**: Added a clean top header with a quick back button to the dashboard.
+- **Task Card Polish**: Improved the deadline visibility and status badges (Selesai/Belum Dikumpul).
 
-### 3. Professional Splash Screen
-- **Transparent Background**: Removed the white background/flash from the loader. It now shows only the school logo floating over the current content, similar to the modern login experience.
-- **Animated Branding**: The logo features a smooth "floating" keyframe animation during page loads.
+### 3. Notification Rendering Fix
+- **Entity Repair**: Fixed the issue where icon codes like `&#9993;` were showing as raw text.
+- **Icon Upgrade**: Replaced all HTML entities with modern **Bootstrap Icons** (`bi-chat-left-text`, `bi-wallet2`).
+- **Clean UI**: Removed distracting elements and focused on text readability as requested.
 
-### 4. Dashboard Polish
-- **Modern Hero**: Refined the top hero section with a `Deep Blue` gradient and a larger, more elegant typography.
-- **Profile Badge**: The profile picture now has a double-border ring, and the notification bell uses a clean SVG icon.
-- **Card Systems**: Updated the "Aktivitas Belajar" and "Pengumuman" cards with better spacing, refined shadows, and improved iconography.
+### 4. Framework Enhancements
+- **Dynamic Layout**: The `mobile-app` layout now supports a `hideNav` flag for granular control over navigation visibility.
+- **Icon Library**: Globally integrated Bootstrap Icons (v1.11.1) for consistent high-quality visuals.
 
 ## Verification Results
-- **Navigation Persistence**: Verified that clicking into a task or notification does not hide the floating menu.
-- **Performance**: Transitions are lightweight and do not cause layout shifts.
-- **Compatibility**: Tested with various viewport sizes to ensure the floating nav doesn't overlap important content.
+- **Chat Persistence**: The floating menu correctly disappears on the chat page and reappears on the dashboard.
+- **Emoji/GIF Interaction**: The panels open/close smoothly and append content to the input field correctly.
+- **Notification Clarity**: Verified that icons now render perfectly as intended.

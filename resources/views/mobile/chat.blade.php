@@ -1,11 +1,173 @@
+@php $hideNav = true; @endphp
 @extends('layouts.mobile-app')
+
 @section('content')
-<div class="p-3 pb-0">
-    <a href="javascript:history.back()" class="text-decoration-none text-muted d-inline-flex align-items-center gap-2 small fw-bold">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
-        Kembali
+<style>
+    .chat-header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        background: #fff; border-bottom: 1px solid #edf2f7;
+        padding: 12px 15px; display: flex; align-items: center; gap: 15px;
+    }
+    .chat-container {
+        padding-top: 70px; padding-bottom: 85px; min-height: 100vh;
+        background: #fdfdfd; display: flex; flex-direction: column;
+    }
+    .chat-bubble {
+        max-width: 85%; padding: 10px 14px; border-radius: 18px;
+        font-size: 14px; line-height: 1.5; margin-bottom: 8px;
+        position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+    .chat-bubble.mine {
+        background: #246bfe; color: #fff; align-self: flex-end;
+        border-bottom-right-radius: 4px;
+    }
+    .chat-bubble.other {
+        background: #fff; color: #14213d; align-self: flex-start;
+        border-bottom-left-radius: 4px; border: 1px solid #f0f0f0;
+    }
+    .chat-footer {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+        background: #fff; border-top: 1px solid #edf2f7;
+        padding: 10px 15px; display: flex; flex-direction: column;
+    }
+    .composer-row { display: flex; align-items: center; gap: 10px; }
+    .composer-input {
+        flex: 1; border: none; background: #f1f4f9;
+        border-radius: 25px; padding: 10px 18px; font-size: 14px;
+    }
+    .composer-input:focus { outline: none; background: #e8ecf3; }
+    .action-btn {
+        width: 40px; height: 40px; border-radius: 50%; border: none;
+        background: transparent; color: #64748b; display: grid; place-items: center;
+        transition: all 0.2s;
+    }
+    .action-btn:active { background: #f1f4f9; transform: scale(0.9); }
+    .send-btn { background: #246bfe; color: #fff; }
+
+    /* Emoji & GIF Picker UI */
+    #extra-panel {
+        display: none; padding: 15px; background: #f8fafc;
+        border-radius: 15px 15px 0 0; border-bottom: 1px solid #edf2f7;
+    }
+    .panel-tab {
+        display: flex; gap: 20px; margin-bottom: 15px; border-bottom: 2px solid #edf2f7;
+    }
+    .tab-item {
+        padding-bottom: 8px; font-weight: bold; cursor: pointer; color: #64748b;
+    }
+    .tab-item.active { color: #246bfe; border-bottom: 2px solid #246bfe; margin-bottom: -2px; }
+
+    #emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; max-height: 180px; overflow-y: auto; }
+    #gif-grid { display: none; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 180px; overflow-y: auto; }
+    .gif-item { width: 100%; height: 80px; border-radius: 8px; background: #e2e8f0; object-fit: cover; cursor: pointer; }
+    .emoji-item { font-size: 22px; cursor: pointer; text-align: center; }
+</style>
+
+<div class="chat-header">
+    <a href="{{ route('dashboard') }}" class="text-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
     </a>
+    <div class="d-flex align-items-center gap-2">
+        <div class="avatar" style="width:36px; height:36px; font-size: 14px; background: var(--blue); color: #fff;">GC</div>
+        <div>
+            <div class="fw-bold" style="font-size: 15px;">Grup Chat</div>
+            <div class="text-success small fw-bold" style="font-size: 11px;">{{ $user->kelas->nama }} · Aktif</div>
+        </div>
+    </div>
 </div>
-<header class="mobile-hero"><div class="d-flex justify-content-between align-items-start"><div><div class="eyebrow">RUANG KELAS</div><div class="hero-title mt-2">Chat publik</div><div class="class-pill mt-3">{{ $user->kelas->nama }} · {{ $messages->count() }} pesan</div></div><div class="avatar">{{ $user->foto ? '' : strtoupper(substr($user->name,0,1)) }}@if($user->foto)<img src="{{ asset('storage/'.$user->foto) }}" alt="Foto profil" style="width:100%;height:100%;object-fit:cover;object-position:{{ $user->foto_posisi_x }}% {{ $user->foto_posisi_y }}%;border-radius:inherit">@endif</div></div></header>
-<main class="mobile-content" style="padding-bottom:170px"><div class="alert alert-primary border-0 small">Chat ini hanya untuk guru dan siswa di kelas <strong>{{ $user->kelas->nama }}</strong>. File dan gambar tidak diperbolehkan.</div><div class="chat-list mb-3">@forelse($messages as $message)<div class="d-flex {{ $message->user_id === $user->id ? 'justify-content-end' : '' }} mb-2"><div class="chat-bubble {{ $message->user_id === $user->id ? 'mine' : '' }}"><div class="small fw-bold">{{ $message->user->name }} <span class="opacity-50 fw-normal">· {{ $message->created_at->format('H:i') }}</span></div><div class="mt-1" style="white-space:pre-wrap">{{ $message->pesan }}</div></div></div>@empty<div class="text-center text-secondary small py-5">Belum ada percakapan. Sapa kelasmu!</div>@endforelse</div><form method="POST" action="{{ route('chat.store') }}" class="chat-composer">@csrf<div class="input-group"><button type="button" class="btn btn-light emoji-button" title="Tambahkan emoji">😊</button><input name="pesan" maxlength="1000" class="form-control" placeholder="Tulis pesan untuk kelas..." required><button class="btn btn-primary">Kirim</button></div><div class="small text-secondary mt-2">Emoji cepat: <button type="button" class="emoji-pick border-0 bg-transparent">😊</button><button type="button" class="emoji-pick border-0 bg-transparent">👍</button><button type="button" class="emoji-pick border-0 bg-transparent">🎉</button><button type="button" class="emoji-pick border-0 bg-transparent">📚</button></div></form></main><script>document.querySelectorAll('.emoji-pick').forEach(function(button){button.addEventListener('click',function(){const input=document.querySelector('[name=pesan]');input.value+=button.textContent;input.focus()})});document.querySelector('.emoji-button').addEventListener('click',function(){document.querySelector('[name=pesan]').value+='😊';document.querySelector('[name=pesan]').focus()});</script>
+
+<div class="chat-container px-3">
+    <div class="text-center py-4">
+        <span class="badge bg-light text-muted fw-normal rounded-pill px-3 py-2" style="font-size: 10px;">Obrolan Kelas {{ $user->kelas->nama }}</span>
+    </div>
+
+    <div class="d-flex flex-column" id="message-list">
+        @forelse($messages as $message)
+            <div class="chat-bubble {{ $message->user_id === $user->id ? 'mine' : 'other' }}">
+                @if($message->user_id !== $user->id)
+                    <div class="fw-bold mb-1" style="font-size: 11px; color: var(--blue);">{{ $message->user->name }}</div>
+                @endif
+                <div style="white-space: pre-wrap;">{{ $message->pesan }}</div>
+                <div class="text-end mt-1" style="font-size: 10px; opacity: 0.6;">{{ $message->created_at->format('H:i') }}</div>
+            </div>
+        @empty
+            <div class="text-center py-5 text-muted small">Belum ada percakapan. Mulai obrolan!</div>
+        @endforelse
+    </div>
+</div>
+
+<form method="POST" action="{{ route('chat.store') }}" class="chat-footer" id="chatForm">
+    @csrf
+    <div id="extra-panel">
+        <div class="panel-tab">
+            <div class="tab-item active" id="tab-emoji">EMOJI</div>
+            <div class="tab-item" id="tab-gif">GIF</div>
+        </div>
+        <div id="emoji-grid">
+            @php $emojis = ['😊','😂','❤️','👍','🙌','🔥','👏','✨','🎉','🤔','😢','😍','😎','🙏','💯','📍','🚀','💡','📚','🎓','🎨','⚽','🍕','☕','🌈','🌟','🍦','🍩','🍔','🍟','🧁','🎂']; @endphp
+            @foreach($emojis as $emoji)
+                <div class="emoji-item">{{ $emoji }}</div>
+            @endforeach
+        </div>
+        <div id="gif-grid">
+            <!-- Simulated GIFs -->
+            <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqJmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpx4gWlWGA5a/giphy.gif" class="gif-item">
+            <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqJmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/l0MYEqEzwMWFCg8rm/giphy.gif" class="gif-item">
+            <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqJmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif" class="gif-item">
+            <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqbzJqJmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/xT9IgzoKnwFNmISR8I/giphy.gif" class="gif-item">
+        </div>
+    </div>
+
+    <div class="composer-row">
+        <button type="button" class="action-btn" id="extra-toggle"><i class="bi bi-plus-lg h5 mb-0"></i></button>
+        <input name="pesan" id="chatInput" autocomplete="off" class="composer-input" placeholder="Ketik pesan..." required>
+        <button type="submit" class="action-btn send-btn"><i class="bi bi-send-fill"></i></button>
+    </div>
+</form>
+
+<script>
+    // Scroll to bottom
+    window.scrollTo(0, document.body.scrollHeight);
+
+    const extraPanel = document.getElementById('extra-panel');
+    const extraToggle = document.getElementById('extra-toggle');
+    const chatInput = document.getElementById('chatInput');
+    const tabEmoji = document.getElementById('tab-emoji');
+    const tabGif = document.getElementById('tab-gif');
+    const emojiGrid = document.getElementById('emoji-grid');
+    const gifGrid = document.getElementById('gif-grid');
+
+    extraToggle.addEventListener('click', () => {
+        extraPanel.style.display = extraPanel.style.display === 'block' ? 'none' : 'block';
+    });
+
+    tabEmoji.addEventListener('click', () => {
+        tabEmoji.classList.add('active');
+        tabGif.classList.remove('active');
+        emojiGrid.style.display = 'grid';
+        gifGrid.style.display = 'none';
+    });
+
+    tabGif.addEventListener('click', () => {
+        tabGif.classList.add('active');
+        tabEmoji.classList.remove('active');
+        emojiGrid.style.display = 'none';
+        gifGrid.style.display = 'grid';
+    });
+
+    document.querySelectorAll('.emoji-item').forEach(item => {
+        item.addEventListener('click', () => {
+            chatInput.value += item.innerText;
+            chatInput.focus();
+        });
+    });
+
+    document.querySelectorAll('.gif-item').forEach(item => {
+        item.addEventListener('click', () => {
+            chatInput.value += "[GIF: " + item.src + "]";
+            chatInput.focus();
+            extraPanel.style.display = 'none';
+        });
+    });
+</script>
 @endsection

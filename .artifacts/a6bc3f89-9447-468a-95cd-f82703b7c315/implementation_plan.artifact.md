@@ -1,32 +1,38 @@
-# Implementation Plan: App-Like UI/UX Overhaul
+# Implementation Plan: Full-Screen Overhaul & Notification Fix
 
-This plan transforms the mobile web experience into a professional, fluid application with persistent floating navigation, integrated transitions, and a clean minimalist aesthetic.
+This plan addresses the final UI refinements: full-screen focus modes for Chat and Tasks, and fixing notification icon rendering issues.
 
 ## Proposed Changes
 
-### 1. Layout & Navigation (Unified Framework)
+### 1. Layout & Framework
 
 #### [MODIFY] [mobile-app.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/layouts/mobile-app.blade.php)
-- **Floating Menu**: Redesign `.bottom-nav` to be a floating bar (rounded corners, detached from bottom, backdrop-blur).
-- **Splash Screen**: Update `#page-loader` to be transparent (removing the white background) and center the school logo.
-- **Header Removal**: Remove all top-level headers and "APP MAHASISWA" text.
-- **Fluid Transitions**: Wrap the content area in an `animate.css` container (e.g., `animate__fadeIn`) to make page loads feel like app transitions.
+- Add support for hiding the bottom navigation menu via a `$hideNav` variable.
+- Integrate Bootstrap Icons globally.
 
-#### [DELETE] [mobile-page.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/layouts/mobile-page.blade.php)
-- This layout will be deprecated in favor of a single unified `mobile-app` layout to ensure the floating menu is always visible.
+### 2. Chat & Tasks Overhaul
 
-### 2. View Migration (Standardizing UI)
+#### [MODIFY] [chat.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/mobile/chat.blade.php)
+- Rename to "Grup Chat".
+- Hide bottom navigation.
+- Add sticky top header with "Kembali" button.
+- Implement an interactive Emoji and GIF picker UI.
 
-#### [MODIFY] Multiple Files in `resources/views/mobile/`
-- All pages currently using `layouts.mobile-page` will be migrated to `layouts.mobile-app`.
-- Impacted files: `absensi.blade.php`, `chat.blade.php`, `notifications.blade.php`, `profile.blade.php`, `spp.blade.php`, `tugas.blade.php`, and more.
-- Sub-pages will have a slim, integrated "Back" button added to the content area since the global header is being removed.
+#### [MODIFY] [tugas.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/mobile/tugas.blade.php)
+- Hide bottom navigation for full-screen focus.
+- Add sticky top header with "Kembali" button.
+
+### 3. Notification Cleanup
+
+#### [MODIFY] [notifications.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/mobile/notifications.blade.php)
+- Fix broken entity rendering (remove `&#9993;` and `&#8364;`).
+- Replace with professional Bootstrap Icons.
+- Simplify the layout to focus on text as requested.
 
 ## Verification Plan
 
 ### Manual Verification
-1. Log in and verify the new **Floating Bottom Nav**.
-2. Navigate between tabs (Dashboard, Absensi, etc.) and verify the menu stays visible and pages slide/fade in smoothly.
-3. Verify that the **Splash Screen** no longer has a white background flash.
-4. Open a sub-page (e.g., Notification details or Profile edit) and verify the floating menu is still there and a back button is available.
-5. Check for any "Internal Server Errors" or layout breaks on all screens.
+1. Open **Grup Chat** and verify the bottom menu is gone and the top header is visible.
+2. Test the **Emoji Picker** and verify emojis are added to the text input.
+3. Open **Tugas** and verify it is full screen.
+4. Open **Notifikasi** and verify all icons render correctly without broken text codes.

@@ -10,6 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     @vite(['resources/js/app.js'])
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         :root{--ink:#14213d;--muted:#64748b;--blue:#246bfe;--surface:#f8fafc;--danger:#d94b61}
@@ -20,7 +21,7 @@
             background:var(--surface);
             color:var(--ink);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            padding-bottom:100px; /* Space for floating nav */
+            padding-bottom: {{ (isset($hideNav) && $hideNav) ? '0' : '100px' }}; /* Dynamic space */
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
@@ -147,6 +148,7 @@
         @yield('content')
     </div>
 
+    @if(!isset($hideNav) || !$hideNav)
     <nav class="bottom-nav" aria-label="Navigasi utama">
         <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
             <span class="nav-icon">
@@ -179,6 +181,7 @@
             Profil
         </a>
     </nav>
+    @endif
 
     <script>
         window.addEventListener('load', () => {

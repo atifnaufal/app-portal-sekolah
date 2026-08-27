@@ -1,9 +1,9 @@
 - [x] Overhaul `mobile-app.blade.php` with Floating Navigation
 - [x] Implement Transparent Splash Screen (logo only)
-- [x] Remove top global header and "APP MAHASISWA" text
-- [x] Migrate all sub-pages to the unified `mobile-app` layout
-- [x] Add integrated back buttons to sub-pages
-- [x] Implement `animate.css` page transitions
-- [x] Polish Dashboard UI for a more professional look
-- [x] Deprecate and delete `mobile-page.blade.php`
-- [x] Verify consistent navigation across all app sections
+- [x] Redesign Grup Chat as Full Screen
+- [x] Add Emoji Picker and GIF UI to Chat
+- [x] Redesign Tugas as Full Screen
+- [x] Add Sticky Headers with Back Buttons to Chat & Tugas
+- [x] Fix Notification icon rendering (Remove `&#9993;`)
+- [x] Integrate Bootstrap Icons globally
+- [x] Verify mobile UI responsiveness for all new layouts
