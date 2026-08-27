@@ -1,4 +1,4 @@
-@extends('layouts.mobile-page')
+@extends('layouts.mobile-app')
 @section('content')
 <header class="mobile-hero">
     <div class="eyebrow">KEHADIRAN HARI INI</div>

@@ -1,5 +1,11 @@
-@extends('layouts.mobile-page')
+@extends('layouts.mobile-app')
 @section('content')
+<div class="p-3 pb-0">
+    <a href="javascript:history.back()" class="text-decoration-none text-muted d-inline-flex align-items-center gap-2 small fw-bold">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
+        Kembali
+    </a>
+</div>
 <header class="mobile-hero"><div class="eyebrow">KEUANGAN SEKOLAH</div><div class="hero-title mt-2">SPP</div><div class="class-pill mt-3">{{ $user->kelas?->nama ?? 'Kelas belum dipilih' }}</div></header>
 <main class="mobile-content"><div class="d-flex justify-content-between align-items-center mb-4"><div><div class="section-title">Status pembayaran</div><div class="small text-secondary">Informasi SPP kelasmu.</div></div>@if($user->role === 'guru')<a href="{{ route('spp.create') }}" class="btn btn-sm btn-primary">+ Catat</a>@endif</div>
 @forelse($spps as $spp)<div class="card mobile-card mb-3"><div class="card-body"><div class="d-flex justify-content-between"><div><div class="small text-secondary">{{ $spp->siswa->name }}</div><h2 class="h6 fw-bold mt-1 mb-0">Bulan {{ $spp->bulan }}/{{ $spp->tahun }}</h2></div><span class="badge rounded-pill {{ $spp->status === 'lunas' ? 'text-bg-success' : 'text-bg-warning' }}">{{ $spp->status === 'lunas' ? 'Lunas' : 'Belum lunas' }}</span></div><div class="progress mt-3" style="height:7px"><div class="progress-bar {{ $spp->status === 'lunas' ? 'bg-success' : 'bg-warning' }}" style="width:{{ min(100, ((float)$spp->dibayar/(float)$spp->nominal)*100) }}%"></div></div><div class="d-flex justify-content-between small mt-2"><span>Terbayar Rp {{ number_format($spp->dibayar,0,',','.') }}</span><strong>Kekurangan Rp {{ number_format($spp->kekurangan,0,',','.') }}</strong></div>@if($user->role === 'guru' && $spp->status !== 'lunas')<form method="POST" action="{{ route('spp.remind',$spp) }}" class="mt-3">@csrf<button class="btn btn-outline-warning btn-sm w-100">Kirim pengingat ke siswa</button></form>@endif</div></div>@empty<div class="card mobile-card"><div class="card-body text-secondary">Belum ada data SPP.</div></div>@endforelse</main>@endsection

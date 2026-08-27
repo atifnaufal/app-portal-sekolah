@@ -1,5 +1,11 @@
-@extends('layouts.mobile-page')
+@extends('layouts.mobile-app')
 @section('content')
+<div class="p-3 pb-0">
+    <a href="javascript:history.back()" class="text-decoration-none text-muted d-inline-flex align-items-center gap-2 small fw-bold">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
+        Kembali
+    </a>
+</div>
 <header class="mobile-hero"><div class="eyebrow">PEMBERITAHUAN</div><div class="hero-title mt-2">Notifikasi</div><div class="class-pill mt-3">Info penting untukmu</div></header>
 <main class="mobile-content"><div class="stagger">@forelse($notifications as $notification)<a href="{{ $notification->url ?: route('dashboard') }}" class="card mobile-card tap-card text-decoration-none text-dark mb-3 {{ is_null($notification->dibaca_pada) ? 'border-start border-4 border-primary' : '' }}">
     <div class="card-body d-flex gap-3 align-items-start">

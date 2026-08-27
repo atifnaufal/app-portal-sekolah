@@ -1,4 +1,4 @@
-@extends('layouts.mobile-page')
+@extends('layouts.mobile-app')
 @section('content')
 <header class="mobile-hero"><div class="eyebrow">AKUN SAYA</div><div class="d-flex align-items-center gap-3 mt-3"><div class="avatar">@if($user->foto)<img src="{{ asset('storage/'.$user->foto) }}" alt="Foto profil" style="width:100%;height:100%;object-fit:cover;object-position:{{ $user->foto_posisi_x }}% {{ $user->foto_posisi_y }}%;border-radius:inherit">@else{{ strtoupper(substr($user->name,0,1)) }}@endif</div><div><div class="hero-title">Profil</div><div class="class-pill mt-2">{{ ucfirst($user->role) }}</div></div></div></header>
 <main class="mobile-content">

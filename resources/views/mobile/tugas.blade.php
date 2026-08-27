@@ -1,4 +1,4 @@
-@extends('layouts.mobile-page')
+@extends('layouts.mobile-app')
 
 @section('content')
 <header class="mobile-hero"><div class="eyebrow">RUANG BELAJAR</div><div class="hero-title mt-2">Tugas sekolah</div><div class="class-pill mt-3">{{ $user->kelas?->nama ?? 'Belum ada kelas' }}</div></header>

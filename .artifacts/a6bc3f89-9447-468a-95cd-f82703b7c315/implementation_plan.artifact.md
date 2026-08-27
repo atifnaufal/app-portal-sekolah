@@ -1,31 +1,32 @@
-# Persistent Login Sessions (Guru & Siswa)
+# Implementation Plan: App-Like UI/UX Overhaul
 
-This plan implements a truly persistent login experience for Teachers (Guru) and Students (Siswa), while maintaining standard session security for Administrators.
-
-## User Review Required
-
-> [!IMPORTANT]
-> The "Remember Me" functionality will be automatically enabled for Teachers and Students to prevent forced logouts when the app is closed. For Administrators, the session will remain standard (requires re-login after session expiry/app close) as requested.
+This plan transforms the mobile web experience into a professional, fluid application with persistent floating navigation, integrated transitions, and a clean minimalist aesthetic.
 
 ## Proposed Changes
 
-### Authentication & Middleware Layer
+### 1. Layout & Navigation (Unified Framework)
 
-#### [MODIFY] [AuthController.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Controllers/AuthController.php)
-- Update `login` method to automatically set the `remember` flag to `true` for Guru and Siswa roles.
-- Set `remember` to `false` for the Admin role to ensure standard session behavior.
+#### [MODIFY] [mobile-app.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/layouts/mobile-app.blade.php)
+- **Floating Menu**: Redesign `.bottom-nav` to be a floating bar (rounded corners, detached from bottom, backdrop-blur).
+- **Splash Screen**: Update `#page-loader` to be transparent (removing the white background) and center the school logo.
+- **Header Removal**: Remove all top-level headers and "APP MAHASISWA" text.
+- **Fluid Transitions**: Wrap the content area in an `animate.css` container (e.g., `animate__fadeIn`) to make page loads feel like app transitions.
 
-#### [MODIFY] [RoleMiddleware.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Middleware/RoleMiddleware.php)
-- Refine the session restoration logic to be more aggressive and reliable.
-- Ensure that if a user is authenticated via a "Remember Me" cookie, their session keys (`user_id`, `role`, etc.) are immediately repopulated.
+#### [DELETE] [mobile-page.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/layouts/mobile-page.blade.php)
+- This layout will be deprecated in favor of a single unified `mobile-app` layout to ensure the floating menu is always visible.
+
+### 2. View Migration (Standardizing UI)
+
+#### [MODIFY] Multiple Files in `resources/views/mobile/`
+- All pages currently using `layouts.mobile-page` will be migrated to `layouts.mobile-app`.
+- Impacted files: `absensi.blade.php`, `chat.blade.php`, `notifications.blade.php`, `profile.blade.php`, `spp.blade.php`, `tugas.blade.php`, and more.
+- Sub-pages will have a slim, integrated "Back" button added to the content area since the global header is being removed.
 
 ## Verification Plan
 
 ### Manual Verification
-1. Log in as a **Student** or **Teacher**.
-2. Close the application (swipe away from recent apps/task switcher).
-3. Re-open the application.
-4. Verify that you are **NOT** redirected to the login page and can see the dashboard immediately.
-5. Log in as an **Admin**.
-6. Close the application and re-open.
-7. Verify that for Admin, it follows standard behavior (should require login if the session cookie expired).
+1. Log in and verify the new **Floating Bottom Nav**.
+2. Navigate between tabs (Dashboard, Absensi, etc.) and verify the menu stays visible and pages slide/fade in smoothly.
+3. Verify that the **Splash Screen** no longer has a white background flash.
+4. Open a sub-page (e.g., Notification details or Profile edit) and verify the floating menu is still there and a back button is available.
+5. Check for any "Internal Server Errors" or layout breaks on all screens.

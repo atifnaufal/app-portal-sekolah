@@ -1,8 +1,9 @@
-- [x] Fix null property crash in `absensi.blade.php`
-- [x] Upgrade TensorFlow.js and Face Detection libraries
-- [x] Implement MediaPipe Face Detector logic
-- [x] Redesign Login Form with Undraw Illustration
-- [x] Add Password Visibility Toggle (Eye Icon)
-- [x] Implement Dynamic Persistent Login (True for Guru/Siswa, False for Admin)
-- [x] Enhance `RoleMiddleware` for aggressive session restoration
-- [x] Verify mobile session persistence on app restart
+- [x] Overhaul `mobile-app.blade.php` with Floating Navigation
+- [x] Implement Transparent Splash Screen (logo only)
+- [x] Remove top global header and "APP MAHASISWA" text
+- [x] Migrate all sub-pages to the unified `mobile-app` layout
+- [x] Add integrated back buttons to sub-pages
+- [x] Implement `animate.css` page transitions
+- [x] Polish Dashboard UI for a more professional look
+- [x] Deprecate and delete `mobile-page.blade.php`
+- [x] Verify consistent navigation across all app sections
