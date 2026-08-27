@@ -4,7 +4,6 @@ namespace App\Helpers;
 
 use App\Models\Notifikasi;
 use App\Models\User;
-use App\Events\NotificationEvent;
 
 class NotificationHelper
 {
@@ -20,9 +19,6 @@ class NotificationHelper
             'url' => $url,
             'dibaca_pada' => null
         ]);
-
-        // Trigger real-time event
-        event(new NotificationEvent($title, $message, $type));
     }
 
     /**

@@ -318,12 +318,4 @@
     @endif
 </div>
 
-<script>
-    var unreadCount = {{ $unreadNotificationsCount }};
-    var lastSpoken = localStorage.getItem('last_notif_spoken');
-    if (unreadCount > 0 && unreadCount > (parseInt(lastSpoken) || 0)) {
-        try { var msg = new SpeechSynthesisUtterance(); msg.text = "Ada notifikasi untukmu"; msg.lang = 'id-ID'; msg.rate = 1.0; window.speechSynthesis.speak(msg); } catch(e) {}
-    }
-    localStorage.setItem('last_notif_spoken', unreadCount || 0);
-</script>
 @endsection

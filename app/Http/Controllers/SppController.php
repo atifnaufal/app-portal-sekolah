@@ -141,11 +141,7 @@ class SppController extends Controller
 
         $siswas = User::where('role', 'siswa')->with('kelas')->orderBy('name')->get();
 
-        if ($role === 'admin') {
-            return view('admin.spp-form', ['spp' => $spp, 'siswas' => $siswas]);
-        }
-
-        return view('mobile.spp-form', ['spp' => $spp, 'siswas' => $siswas]);
+        return view('admin.spp-form', ['spp' => $spp, 'siswas' => $siswas]);
     }
 
     public function update(Request $request, Spp $spp): RedirectResponse

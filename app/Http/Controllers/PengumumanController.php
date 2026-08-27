@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
-use App\Events\NotificationEvent;
 use App\Helpers\NotificationHelper;
 
 class PengumumanController extends Controller
