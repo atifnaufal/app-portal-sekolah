@@ -141,7 +141,7 @@
 <body>
     <div id="offline-indicator">Koneksi Terputus - Mode Offline</div>
     <div id="page-loader">
-        <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.src='https://illustrations.popsy.co/blue/studying.svg'">
+        <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.src='https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png'">
     </div>
 
     <div class="mobile-shell animate__animated animate__fadeIn">

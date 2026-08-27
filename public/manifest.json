@@ -10,13 +10,13 @@
     "categories": ["education", "productivity"],
     "icons": [
         {
-            "src": "https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png",
+            "src": "/logo_sekolah.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png",
+            "src": "/logo_sekolah.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"

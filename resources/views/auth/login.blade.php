@@ -165,7 +165,7 @@
 <div class="container">
     <div class="card login-card mx-auto">
         <div class="logo-school-wrapper">
-            <img src="{{ asset('logo_sekolah.png') }}" alt="Logo Sekolah" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2940/2940651.png'">
+            <img src="{{ asset('logo_sekolah.png') }}" alt="Logo Sekolah" onerror="this.src='https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png'">
         </div>
 
         <div class="card-header-section">
