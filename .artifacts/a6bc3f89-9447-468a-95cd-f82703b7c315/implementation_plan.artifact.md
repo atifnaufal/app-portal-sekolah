@@ -1,27 +1,39 @@
-# Implementation Plan: Stabilized Profile & Header Cleanup
+# Implementation Plan: Advanced Account Recovery
 
-This plan focuses on fixing the profile image alignment issues, cleaning up the header UI, and ensuring the voice notification system is flawless.
+This plan implements account recovery features including password reset via email, email recovery via phone number, and clear instructions for NIK-based manual recovery.
 
 ## Proposed Changes
 
-### 1. Header & Avatar Stabilization
+### 1. Authentication Controller
 
-#### [MODIFY] [dashboard.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/mobile/dashboard.blade.php)
-- **Avatar Stabilization**: Remove dynamic `object-position` (X/Y) which is causing the image to shift. Use `object-position: center` for a stable, automatic center-crop.
-- **Header Cleanup**: Completely remove the `mt-2` div and any badge logic below the user's name to eliminate the "white box" issue.
-- **Bell Button**: Keep the white circular button style with a blue icon and green indicator.
-- **Voice Logic**: Refine the local storage check to ensure the voice alert only plays once per unique notification count.
+#### [MODIFY] [AuthController.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Controllers/AuthController.php)
+- Add `forgotPassword` view method.
+- Add `forgotEmail` view method.
+- Add `findEmail` logic (search by NIK and Phone Number).
+- (Optional) Use Laravel's built-in password reset or a simplified custom version if email setup is pending.
 
-### 2. Session Integrity
+### 2. Routes
 
-#### [MODIFY] [RoleMiddleware.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Middleware/RoleMiddleware.php)
-- Ensure the re-authentication logic is robust enough to handle fast app-switching/tab-closure scenarios.
+#### [MODIFY] [web.php](file:///C:/laragon/www/app-portal-sekolah/routes/web.php)
+- Add `/forgot-password` (GET/POST).
+- Add `/forgot-email` (GET/POST).
+
+### 3. Views
+
+#### [NEW] [forgot-password.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/auth/forgot-password.blade.php)
+- High-end mobile UI for email-based reset.
+
+#### [NEW] [forgot-email.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/auth/forgot-email.blade.php)
+- High-end mobile UI for recovery via Phone Number & NIK.
+
+#### [MODIFY] [login.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/auth/login.blade.php)
+- Add links to recovery pages.
+- Add the mandatory NIK instruction: "Lupa semuanya? Berikan NIK ke Bagian Admin IT Sekolah untuk reset atau aktivasi."
 
 ## Verification Plan
 
 ### Manual Verification
-1. Open the dashboard and verify the profile picture is **perfectly centered** (stable).
-2. Confirm there is **absolutely nothing** (no white pills/badges) below the user's name.
-3. Trigger a notification and listen for the voice alert (verify it only happens once).
-4. Verify the indicator is **Green**.
-5. Close the app/tab, re-open, and verify you are still logged in.
+1. Open login page, verify recovery links and NIK instructions are visible.
+2. Test "Lupa Email": Input NIK and Phone, verify it displays the registered email.
+3. Test "Lupa Password": Input email, verify it triggers the reset flow.
+4. Verify the UI remains stable and high-end across all recovery steps.

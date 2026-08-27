@@ -1,26 +1,33 @@
-# Walkthrough - Profile Stabilization & UI Cleanup
+# Walkthrough - Academic Portal Pro & AI UI
 
-I have resolved the profile alignment issues and cleaned up the dashboard header to ensure a "stable" and professional focus.
+I have implemented the "Pro" features for task management, automated grading, and a futuristic AI-inspired UI for students, while significantly enhancing authentication security.
 
 ## Changes Made
 
-### 1. Automatic Profile Stabilization
-- **Stable Positioning**: Removed the manual X/Y coordinate logic which caused images to shift or show empty backgrounds.
-- **Auto-Center Crop**: Implemented `object-fit: cover` with `object-position: center`. This ensures the face is always perfectly centered within the avatar circle, regardless of the original image dimensions.
-- **Resilient Fallbacks**: Added a sophisticated `onerror` handler that switches to name initials if the image file is missing or corrupted.
+### 1. Task Management Pro (Google Forms Style)
+- **Dynamic Form Builder**: Guru can now create tasks with interactive forms (Multiple Choice, Short Answer, Essay).
+- **Dual Mode**: Support for both traditional file uploads (PDF/Word) and modern online forms.
+- **Excel Export**: Guru can download a complete grade report for any task in `.csv` format with one click.
+- **Smart Email Alerts**: Students automatically receive an email notification when a task with a PDF attachment is published.
 
-### 2. Header "Putih-putih" Cleanup
-- **Total Removal**: Completely deleted the empty `div` and badge containers below the user's name.
-- **Clean Focus**: The dashboard header now only shows the user's name and the portal title, eliminating sisa-sisa UI boxes that were visible in the previous screenshot.
+### 2. "Generative AI" Inspired Student UI
+- **Futuristic Aesthetics**: Redesigned the task list and detail pages with glassmorphism, glowing indicators, and clean typography.
+- **Interactive Forms**: Students can complete online form tasks directly within the app with a smooth, stabilized layout.
+- **Stable Avatar**: Profile pictures now use intelligent auto-centering (`object-fit: cover`), ensuring faces are always perfectly positioned without manual adjustment.
 
-### 3. Voice Notification Tuning
-- **Unique Alerts**: Refined the logic so the voice alert only triggers when the notification count *increases* (signifying a new message).
-- **Persistent State**: Uses `localStorage` to track the last announced count, preventing the alert from repeating on every page refresh.
+### 3. Advanced Security & Onboarding
+- **Email Verification Flow**: Implemented a mandatory email verification system. 
+    - Users can register but must verify their email via a unique link before accessing core features (Dashboard, Tasks, Chat).
+    - Added a clear warning on Login and Register pages about email confirmation.
+    - Profile page remains accessible to unverified users to allow resending the verification link.
+- **Header Cleanup**: Completely removed all UI clutter from the dashboard header for a "Stable & Minimalist" look.
 
-### 4. Session Integrity
-- **Deep Guarding**: Reinforced the `RoleMiddleware` to prioritize cookie-based identity restoration, ensuring the user stays logged in even after closing the app.
+### 4. Robust Infrastructure
+- **Schema Updates**: Added JSON support for form data and responses in the database.
+- **Route Protection**: Integrated `verified` middleware across all academic and social routes.
 
 ## Verification Results
-- **Avatar Stability**: Verified that the profile picture is now perfectly centered and does not drift.
-- **Header Aesthetics**: Confirmed the area below the user's name is now completely transparent and clean.
-- **Voice Consistency**: Verified the voice alert triggers exactly once per new notification batch.
+- **Form Builder**: Verified that dynamic questions are correctly serialized to JSON and saved.
+- **Avatar Stability**: Verified that profile images no longer shift or show empty space.
+- **Verification Notice**: Verified that unverified users are blocked from the dashboard and prompted to check their email.
+- **Excel Report**: Verified the generated CSV contains all student names, NIKs, and grades correctly.

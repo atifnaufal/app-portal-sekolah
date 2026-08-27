@@ -28,7 +28,10 @@ class RegisterController extends Controller
         ]);
         $data['password'] = Hash::make($data['password']);
         $data['aktif'] = true;
-        User::create($data);
-        return redirect()->route('login')->with('success', 'Registrasi berhasil. Silakan login.');
+        $user = User::create($data);
+
+        event(new \Illuminate\Auth\Events\Registered($user));
+
+        return redirect()->route('login')->with('success', 'Registrasi berhasil. Silakan cek email Anda untuk verifikasi sebelum login.');
     }
 }

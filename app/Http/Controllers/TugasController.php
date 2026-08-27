@@ -44,15 +44,77 @@ class TugasController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate(['judul' => ['required', 'max:255'], 'deskripsi' => ['nullable'], 'batas_pengumpulan' => ['nullable', 'date'], 'kelas_id' => ['required', 'exists:kelas,id'], 'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120']]);
+        $data = $request->validate([
+            'judul' => ['required', 'max:255'],
+            'deskripsi' => ['nullable'],
+            'tipe' => ['required', 'in:file,form'],
+            'form_data' => ['nullable', 'json'],
+            'batas_pengumpulan' => ['nullable', 'date'],
+            'kelas_id' => ['required', 'exists:kelas,id'],
+            'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120']
+        ]);
         $data['user_id'] = $request->session()->get('user_id');
         $data['kelas_id'] = $request->session()->get('user_kelas_id') ?: $data['kelas_id'];
-        if ($request->hasFile('lampiran')) { $data['lampiran'] = $request->file('lampiran')->store('tugas', 'public'); $data['lampiran_nama'] = $request->file('lampiran')->getClientOriginalName(); }
+
+        if ($request->hasFile('lampiran')) {
+            $data['lampiran'] = $request->file('lampiran')->store('tugas', 'public');
+            $data['lampiran_nama'] = $request->file('lampiran')->getClientOriginalName();
+
+            // Send email notification if attachment is PDF
+            if ($request->file('lampiran')->getClientOriginalExtension() === 'pdf') {
+                $students = User::where('kelas_id', $data['kelas_id'])->where('role', 'siswa')->get();
+                foreach ($students as $student) {
+                    if ($student->email) {
+                        \Illuminate\Support\Facades\Mail::to($student->email)->queue(new \App\Mail\TugasBaruMail(new Tugas($data)));
+                    }
+                }
+            }
+        }
+
         $tugas = Tugas::create($data);
 
         NotificationHelper::sendToClass($tugas->kelas_id, 'Tugas Baru: ' . $tugas->judul, 'Guru telah menambahkan tugas baru di kelas Anda.', route('tugas.show', $tugas), 'task');
 
         return redirect()->route('tugas.index')->with('success', 'Tugas berhasil dibuat.');
+    }
+
+    public function exportGrades(Tugas $tugas)
+    {
+        $request = request();
+        abort_unless($tugas->user_id === $request->session()->get('user_id'), 403);
+
+        $submissions = PengumpulanTugas::with('siswa')
+            ->where('tugas_id', $tugas->id)
+            ->get();
+
+        $filename = "nilai_tugas_" . \Illuminate\Support\Str::slug($tugas->judul) . "_" . date('Y-m-d') . ".csv";
+
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function() use ($submissions) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['No', 'Nama Siswa', 'NIK', 'Status', 'Nilai', 'Dikumpulkan Pada']);
+
+            foreach ($submissions as $key => $sub) {
+                fputcsv($file, [
+                    $key + 1,
+                    $sub->siswa->name,
+                    $sub->siswa->nik,
+                    $sub->status,
+                    $sub->nilai ?: 'Belum dinilai',
+                    $sub->dikumpulkan_pada ? $sub->dikumpulkan_pada->format('d/m/Y H:i') : '-'
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function destroy(Request $request, Tugas $tugas): RedirectResponse
@@ -67,11 +129,41 @@ class TugasController extends Controller
         $user = User::findOrFail($request->session()->get('user_id'));
         abort_unless($user->role === 'siswa' && $user->kelas_id === $tugas->kelas_id, 403);
         abort_if($tugas->batas_pengumpulan?->isBefore(today()), 403, 'Batas pengumpulan tugas telah berakhir.');
+
         $existing = PengumpulanTugas::where('tugas_id', $tugas->id)->where('siswa_id', $user->id)->first();
         abort_if($existing && ! $existing->revisi_aktif, 403, 'Tugas ini masih menunggu penilaian guru.');
-        $data = $request->validate(['catatan' => ['required', 'string'], 'jawaban_file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,zip', 'max:10240']]);
-        if ($request->hasFile('jawaban_file')) { $data['jawaban_file'] = $request->file('jawaban_file')->store('jawaban', 'public'); $data['jawaban_nama'] = $request->file('jawaban_file')->getClientOriginalName(); }
-        $submission = PengumpulanTugas::updateOrCreate(['tugas_id' => $tugas->id, 'siswa_id' => $user->id], array_merge($data, ['status' => 'terkirim', 'revisi_aktif' => false, 'dikumpulkan_pada' => now()]));
+
+        $rules = [];
+        if ($tugas->tipe === 'form') {
+            $rules['jawaban'] = ['required', 'array'];
+        } else {
+            $rules['catatan'] = ['required', 'string'];
+            $rules['jawaban_file'] = ['required', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,zip', 'max:10240'];
+        }
+
+        $data = $request->validate($rules);
+
+        $updateData = [
+            'status' => 'terkirim',
+            'revisi_aktif' => false,
+            'dikumpulkan_pada' => now()
+        ];
+
+        if ($tugas->tipe === 'form') {
+            $updateData['jawaban_form'] = $data['jawaban'];
+            $updateData['catatan'] = 'Pengerjaan via formulir online.';
+        } else {
+            $updateData['catatan'] = $data['catatan'];
+            if ($request->hasFile('jawaban_file')) {
+                $updateData['jawaban_file'] = $request->file('jawaban_file')->store('jawaban', 'public');
+                $updateData['jawaban_nama'] = $request->file('jawaban_file')->getClientOriginalName();
+            }
+        }
+
+        $submission = PengumpulanTugas::updateOrCreate(
+            ['tugas_id' => $tugas->id, 'siswa_id' => $user->id],
+            $updateData
+        );
 
         NotificationHelper::send($tugas->user_id, 'Jawaban Tugas Baru', $user->name . ' mengirim jawaban untuk tugas ' . $tugas->judul, route('tugas.show', $tugas), 'task');
 
