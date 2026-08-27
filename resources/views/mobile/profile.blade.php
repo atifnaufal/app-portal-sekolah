@@ -54,7 +54,7 @@
 </style>
 
 <div id="pfToast" class="pf-toast">
-    <i class="bi bi-check-circle-fill" style="color:#16a34a;font-size:18px;"></i>
+    <i id="pfToastIcon" class="bi bi-check-circle-fill" style="color:#16a34a;font-size:18px;"></i>
     <span id="pfToastMsg" style="flex:1;font-size:13px;font-weight:600;margin-left:8px;"></span>
 </div>
 
@@ -143,14 +143,24 @@
 </div>
 
 <script>
-function showToast(msg) {
+function showToast(msg, type) {
     var t = document.getElementById('pfToast');
+    var icon = document.getElementById('pfToastIcon');
+    var isError = type === 'error';
+
     document.getElementById('pfToastMsg').textContent = msg;
+    icon.className = 'bi ' + (isError ? 'bi-exclamation-circle-fill' : 'bi-check-circle-fill');
+    icon.style.color = isError ? '#dc2626' : '#16a34a';
+    t.style.borderLeft = '4px solid ' + (isError ? '#dc2626' : '#16a34a');
+
     t.classList.add('show');
-    setTimeout(function() { t.classList.remove('show'); }, 3000);
+    setTimeout(function() { t.classList.remove('show'); }, 5000);
 }
 @if(session('success'))
-showToast(@json(session('success')));
+showToast(@json(session('success')), 'success');
+@endif
+@if(session('error'))
+showToast(@json(session('error')), 'error');
 @endif
 </script>
 @endsection

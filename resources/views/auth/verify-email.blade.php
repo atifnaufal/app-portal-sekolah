@@ -18,9 +18,9 @@
         </div>
     @endif
 
-    @if (session('message'))
+    @if (session('success'))
         <div class="alert alert-success border-0 rounded-4 small mb-4">
-            {{ session('message') }}
+            {{ session('success') }}
         </div>
     @endif
 
@@ -30,6 +30,11 @@
             Kirim Ulang Link Verifikasi
         </button>
     </form>
+
+    <div class="x-small text-muted mt-3" style="line-height:1.6;">
+        Maksimal 6 kali pengiriman per menit.<br>
+        Tidak menerima email? Cek folder spam, lalu tunggu 1 menit dan coba lagi.
+    </div>
 
     <form method="POST" action="{{ route('logout') }}" class="mt-4">
         @csrf

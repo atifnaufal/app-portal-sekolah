@@ -35,6 +35,10 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
 Route::post('/email/verification-notification', function (Request $request) {
     $user = $request->user();
 
+    if (! $user) {
+        return redirect()->route('login')->with('error', 'Sesi berakhir. Silakan login kembali.');
+    }
+
     // Lewati pengiriman jika email sudah terverifikasi.
     if ($user->hasVerifiedEmail()) {
         return redirect()->route('dashboard')->with('success', 'Email Anda sudah terverifikasi.');
@@ -45,10 +49,12 @@ Route::post('/email/verification-notification', function (Request $request) {
     } catch (\Throwable $e) {
         \Illuminate\Support\Facades\Log::error('Gagal mengirim email verifikasi: ' . $e->getMessage());
 
-        return back()->with('error', 'Gagal mengirim email verifikasi. Silakan coba beberapa saat lagi atau hubungi admin.');
+        return back()->with('error', 'Gagal mengirim email verifikasi: ' . $e->getMessage());
     }
 
-    return back()->with('message', 'Link verifikasi baru telah dikirim ke ' . $user->email . '!');
+    // Kunci 'success' dipakai seragam: halaman profil dan layout mobile
+    // hanya merender session('success')/session('error'), bukan 'message'.
+    return back()->with('success', 'Link verifikasi baru telah dikirim ke ' . $user->email . '. Cek inbox Anda.');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 // Email Simulator (Developer Tool) — hanya bisa diakses di lingkungan local oleh admin.
