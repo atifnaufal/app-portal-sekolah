@@ -2,4 +2,8 @@
 - [x] Upgrade TensorFlow.js and Face Detection libraries
 - [x] Implement MediaPipe Face Detector logic
 - [x] Add geolocation error handling
-- [x] Verify mobile UI responsiveness
+- [x] Redesign Login Form with Undraw Illustration
+- [x] Add Password Visibility Toggle (Eye Icon)
+- [x] Add Password helper/instruction text
+- [x] Improve Loading/Splash screen on login submit
+- [x] Verify mobile UI responsiveness for login
