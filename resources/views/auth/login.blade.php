@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Masuk | Portal Akademik Sekolah</title>
+    <title>Masuk | Portal Sekolah Digital</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1e3a5f">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -194,7 +194,7 @@
             <div class="welcome-logo">
                 <img src="{{ asset('logo_sekolah.png') }}" alt="Logo" onerror="this.src='https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png'">
             </div>
-            <div class="welcome-title">SELAMAT DATANG</div>
+            <div class="welcome-title">Portal Sekolah Digital</div>
             <div class="welcome-sub">Portal Akademik Mahasiswa & Guru</div>
 
             <div class="welcome-features">
@@ -258,7 +258,7 @@
                 <div class="login-header-logo">
                     <img src="{{ asset('logo_sekolah.png') }}" alt="Logo" onerror="this.style.display='none'">
                 </div>
-                <h1>SELAMAT DATANG</h1>
+                <h1>Portal Sekolah Digital</h1>
                 <p>Portal Akademik Mahasiswa & Guru</p>
             </div>
 
