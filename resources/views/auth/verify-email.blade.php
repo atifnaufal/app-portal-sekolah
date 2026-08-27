@@ -7,8 +7,16 @@
 
     <h1 class="h3 fw-bold mb-3">Verifikasi Email Anda</h1>
     <p class="text-secondary mb-4">
-        Email dipastikan aktif dan harus terkonfirmasi dahulu baru bisa mendaftar sepenuhnya. Silakan klik link yang kami kirimkan ke email Anda.
+        Kami telah mengirimkan link verifikasi ke
+        <strong>{{ auth()->user()->email }}</strong>.<br>
+        Silakan klik link tersebut untuk mengaktifkan akun Anda.
     </p>
+
+    @if (session('error'))
+        <div class="alert alert-danger border-0 rounded-4 small mb-4">
+            {{ session('error') }}
+        </div>
+    @endif
 
     @if (session('message'))
         <div class="alert alert-success border-0 rounded-4 small mb-4">

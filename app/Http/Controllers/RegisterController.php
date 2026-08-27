@@ -55,7 +55,13 @@ class RegisterController extends Controller
         $data['aktif'] = true;
         $user = User::create($data);
 
-        event(new \Illuminate\Auth\Events\Registered($user));
+        try {
+            event(new \Illuminate\Auth\Events\Registered($user));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengirim email verifikasi: ' . $e->getMessage());
+
+            return redirect()->route('login')->with('error', 'Registrasi berhasil, namun email verifikasi gagal dikirim. Silakan login terlebih dahulu, lalu gunakan tombol "Kirim Ulang Link Verifikasi".');
+        }
 
         return redirect()->route('login')->with('success', 'Registrasi berhasil. Silakan cek email Anda untuk verifikasi sebelum login.');
     }
