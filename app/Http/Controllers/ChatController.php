@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatMessage;
 use App\Models\User;
+use App\Events\ChatMessageEvent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -24,7 +25,10 @@ class ChatController extends Controller
         abort_unless(in_array($user->role, ['guru', 'siswa'], true), 403);
         abort_unless($user->kelas_id, 403);
         $data = $request->validate(['pesan' => ['required', 'string', 'max:1000']]);
-        ChatMessage::create(['user_id' => $user->id, 'kelas_id' => $user->kelas_id, 'pesan' => $data['pesan']]);
+        $message = ChatMessage::create(['user_id' => $user->id, 'kelas_id' => $user->kelas_id, 'pesan' => $data['pesan']]);
+
+        broadcast(new ChatMessageEvent($message->load('user')));
+
         return back();
     }
 }

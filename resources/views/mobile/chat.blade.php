@@ -127,15 +127,75 @@
 
 <script>
     // Scroll to bottom
-    window.scrollTo(0, document.body.scrollHeight);
+    const msgList = document.getElementById('message-list');
+    msgList.scrollIntoView({ block: 'end' });
 
     const extraPanel = document.getElementById('extra-panel');
     const extraToggle = document.getElementById('extra-toggle');
     const chatInput = document.getElementById('chatInput');
+    const chatForm = document.getElementById('chatForm');
     const tabEmoji = document.getElementById('tab-emoji');
     const tabGif = document.getElementById('tab-gif');
     const emojiGrid = document.getElementById('emoji-grid');
     const gifGrid = document.getElementById('gif-grid');
+
+    const currentUserId = @json((int) $user->id);
+    const kelasId = @json((int) $user->kelas_id);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    function appendMessage(data, mine) {
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ' + (mine ? 'mine' : 'other');
+
+        let inner = '';
+        if (!mine) {
+            inner += '<div class="fw-bold mb-1" style="font-size: 11px; color: var(--blue);">' + (data.nama || 'Pengguna') + '</div>';
+        }
+        inner += '<div style="white-space: pre-wrap;">' + esc(data.pesan) + '</div>';
+        inner += '<div class="text-end mt-1" style="font-size: 10px; opacity: 0.6;">' + (data.waktu || '') + '</div>';
+
+        bubble.innerHTML = inner;
+        msgList.appendChild(bubble);
+        msgList.scrollIntoView({ block: 'end' });
+    }
+
+    function esc(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Kirim via fetch tanpa reload halaman
+    chatForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const pesan = chatInput.value.trim();
+        if (!pesan) return;
+
+        const body = new URLSearchParams();
+        body.append('pesan', pesan);
+        body.append('_token', csrfToken);
+
+        fetch(chatForm.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: body
+        }).then(function () {
+            chatInput.value = '';
+            chatInput.focus();
+        }).catch(function () {
+            window.location.href = chatForm.action;
+        });
+    });
+
+    // Real-time: pesan masuk dari pengguna lain di kelas
+    if (window.Echo) {
+        window.Echo.private('portal-chat.' + kelasId)
+            .listen('.new-message', (e) => {
+                if (e.user_id !== currentUserId) {
+                    appendMessage({ nama: e.nama, pesan: e.pesan, waktu: e.waktu }, false);
+                }
+            });
+    }
 
     extraToggle.addEventListener('click', () => {
         extraPanel.style.display = extraPanel.style.display === 'block' ? 'none' : 'block';

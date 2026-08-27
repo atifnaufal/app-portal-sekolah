@@ -21,8 +21,8 @@ class NotificationHelper
             'dibaca_pada' => null
         ]);
 
-        // Trigger real-time event
-        event(new NotificationEvent($title, $message, $type));
+        // Trigger real-time event (private channel per-user)
+        event(new NotificationEvent($userId, $title, $message, $type));
     }
 
     /**

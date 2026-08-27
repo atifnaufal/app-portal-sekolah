@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Portal Sekolah' }}</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#246bfe">
@@ -239,7 +240,8 @@
 
         window.addEventListener('load', () => {
             if (window.Echo) {
-                window.Echo.channel('portal-notifications')
+                const userId = @json((int) session('user_id'));
+                window.Echo.private('portal-notifications.' + userId)
                     .listen('.new-notification', (e) => {
                         showNotification(e.title, e.message);
                         if (window.location.pathname.includes('pengumuman') || window.location.pathname.includes('tugas')) {

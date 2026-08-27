@@ -2,8 +2,8 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -15,9 +15,11 @@ class NotificationEvent implements ShouldBroadcast
     public $title;
     public $message;
     public $type; // 'announcement' or 'task'
+    public $userId;
 
-    public function __construct($title, $message, $type = 'announcement')
+    public function __construct($userId, $title, $message, $type = 'announcement')
     {
+        $this->userId = $userId;
         $this->title = $title;
         $this->message = $message;
         $this->type = $type;
@@ -26,12 +28,21 @@ class NotificationEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('portal-notifications'),
+            new PrivateChannel('portal-notifications.'.$this->userId),
         ];
     }
 
     public function broadcastAs()
     {
         return 'new-notification';
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'title' => $this->title,
+            'message' => $this->message,
+            'type' => $this->type,
+        ];
     }
 }

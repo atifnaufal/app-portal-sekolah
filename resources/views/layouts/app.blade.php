@@ -53,7 +53,8 @@
 
     window.addEventListener('load', () => {
         if (window.Echo) {
-            window.Echo.channel('portal-notifications')
+            const userId = @json((int) session('user_id'));
+            window.Echo.private('portal-notifications.' + userId)
                 .listen('.new-notification', (e) => {
                     showNotification(e.title, e.message);
 
