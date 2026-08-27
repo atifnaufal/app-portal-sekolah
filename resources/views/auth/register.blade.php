@@ -43,8 +43,12 @@
                     <label class="form-label small fw-bold">Daftar sebagai</label>
                     <select name="role" class="form-select" required>
                         <option value="">Pilih role</option>
-                        <option value="guru" @selected(old('role')==='guru')>Guru</option>
-                        <option value="siswa" @selected(old('role')==='siswa')>Siswa</option>
+                        @if($guruEnabled)
+                            <option value="guru" @selected(old('role')==='guru')>Guru</option>
+                        @endif
+                        @if($siswaEnabled)
+                            <option value="siswa" @selected(old('role')==='siswa')>Siswa</option>
+                        @endif
                     </select>
                 </div>
                 <div class="row g-3">

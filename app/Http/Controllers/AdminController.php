@@ -44,7 +44,8 @@ class AdminController extends Controller
             'chartTerbayar' => $chartTerbayar,
             'kelasSummaries' => Kelas::with(['users' => fn ($query) => $query->whereIn('role', ['guru', 'siswa'])->orderBy('role')->orderBy('name')])->withCount(['users as guru_count' => fn ($query) => $query->where('role', 'guru'), 'users as siswa_count' => fn ($query) => $query->where('role', 'siswa')])->orderBy('tingkat')->orderBy('nama')->get(),
             'recentUsers' => User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get(),
-            'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false)
+            'registrationGuruEnabled' => (bool) Setting::getValue('registration_guru_enabled', false),
+            'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false)
         ];
 
         // Deteksi apakah akses dari mobile/aplikasi
@@ -93,17 +94,23 @@ class AdminController extends Controller
         return back()->with('success', 'Akun berhasil dihapus permanen.');
     }
 
-    public function toggleRegistration(): RedirectResponse
+    public function toggleRegistration(Request $request): RedirectResponse
     {
-        $enabled = ! (bool) Setting::getValue('registration_enabled', false);
-        Setting::setValue('registration_enabled', $enabled ? '1' : '0');
-        return back()->with('success', $enabled ? 'Registrasi siswa/guru diaktifkan.' : 'Registrasi siswa/guru dinonaktifkan.');
+        $role = $request->input('role', 'siswa'); // Default ke siswa jika tidak ada input
+        $key = "registration_{$role}_enabled";
+
+        $enabled = ! (bool) Setting::getValue($key, false);
+        Setting::setValue($key, $enabled ? '1' : '0');
+
+        $roleName = ucfirst($role);
+        return back()->with('success', $enabled ? "Registrasi {$roleName} diaktifkan." : "Registrasi {$roleName} dinonaktifkan.");
     }
 
     public function settings(): View
     {
         $data = [
-            'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false),
+            'registrationGuruEnabled' => (bool) Setting::getValue('registration_guru_enabled', false),
+            'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false),
             'attendanceActive' => (bool) Setting::getValue('attendance_active', false),
             'startTime' => Setting::getValue('attendance_start_time', '07:00'),
             'endTime' => Setting::getValue('attendance_end_time', '15:00'),
@@ -124,7 +131,8 @@ class AdminController extends Controller
             'attendance_start_time' => 'required',
             'attendance_end_time' => 'required',
             'attendance_late_time' => 'required',
-            'registration_enabled' => 'required|boolean',
+            'registration_guru_enabled' => 'required|boolean',
+            'registration_siswa_enabled' => 'required|boolean',
         ]);
 
         foreach ($data as $key => $value) {

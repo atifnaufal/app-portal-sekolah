@@ -1,39 +1,40 @@
-# Implementation Plan: Advanced Account Recovery
+# Implementation Plan: Role-Based Registration & Verification Bypass
 
-This plan implements account recovery features including password reset via email, email recovery via phone number, and clear instructions for NIK-based manual recovery.
+This plan implements separate registration controls for Guru and Siswa, allowing Admin to enable/disable them independently. Additionally, it ensures that Guru accounts bypass email verification, just like Admin accounts.
 
 ## Proposed Changes
 
-### 1. Authentication Controller
+### 1. Middleware: Verification Bypass
 
-#### [MODIFY] [AuthController.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Controllers/AuthController.php)
-- Add `forgotPassword` view method.
-- Add `forgotEmail` view method.
-- Add `findEmail` logic (search by NIK and Phone Number).
-- (Optional) Use Laravel's built-in password reset or a simplified custom version if email setup is pending.
+#### [MODIFY] [VerifiedExceptAdmin.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Middleware/VerifiedExceptAdmin.php)
+- Update logic to bypass verification for both `admin` AND `guru` roles.
 
-### 2. Routes
+### 2. Admin: Granular Registration Control
 
-#### [MODIFY] [web.php](file:///C:/laragon/www/app-portal-sekolah/routes/web.php)
-- Add `/forgot-password` (GET/POST).
-- Add `/forgot-email` (GET/POST).
+#### [MODIFY] [AdminController.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Controllers/AdminController.php)
+- Update `settings` to include `registration_guru_enabled` and `registration_siswa_enabled`.
+- Update `updateSettings` to handle these new granular toggles.
+- Update `dashboard` and `users` view data to reflect new settings.
 
-### 3. Views
+#### [MODIFY] [admin-settings.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/mobile/admin-settings.blade.php)
+- Split the "Registrasi Mandiri" toggle into two separate switches: "Registrasi Guru" and "Registrasi Siswa".
 
-#### [NEW] [forgot-password.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/auth/forgot-password.blade.php)
-- High-end mobile UI for email-based reset.
+### 3. Registration: Granular Logic
 
-#### [NEW] [forgot-email.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/auth/forgot-email.blade.php)
-- High-end mobile UI for recovery via Phone Number & NIK.
+#### [MODIFY] [RegisterController.php](file:///C:/laragon/www/app-portal-sekolah/app/Http/Controllers/RegisterController.php)
+- Update `create` to check for specific role enablement.
+- Update `store` to validate and enforce separate enablement flags.
 
-#### [MODIFY] [login.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/auth/login.blade.php)
-- Add links to recovery pages.
-- Add the mandatory NIK instruction: "Lupa semuanya? Berikan NIK ke Bagian Admin IT Sekolah untuk reset atau aktivasi."
+#### [MODIFY] [register.blade.php](file:///C:/laragon/www/app-portal-sekolah/resources/views/auth/register.blade.php)
+- Dynamic role selection: only show roles that are currently enabled by the Admin.
+- If only one is enabled, hide the select box and force that role.
+- If none are enabled, show a professional "Registration Closed" message.
 
 ## Verification Plan
 
 ### Manual Verification
-1. Open login page, verify recovery links and NIK instructions are visible.
-2. Test "Lupa Email": Input NIK and Phone, verify it displays the registered email.
-3. Test "Lupa Password": Input email, verify it triggers the reset flow.
-4. Verify the UI remains stable and high-end across all recovery steps.
+1. **Admin Control**: Go to Admin Settings. Disable "Registrasi Guru" and keep "Siswa" enabled.
+2. **Register**: Go to the Registration page. Verify only "Siswa" is available in the role selection.
+3. **Guru Login**: Create/Log in as a Guru. Verify they are NOT prompted for email verification.
+4. **Siswa Login**: Log in as a Siswa. Verify they ARE prompted for email verification.
+5. **Security**: Try to register as a Guru via POST request even when disabled. Verify it returns a 404/Error.

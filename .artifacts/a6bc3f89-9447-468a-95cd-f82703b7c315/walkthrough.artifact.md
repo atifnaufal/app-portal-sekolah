@@ -1,30 +1,30 @@
-# Walkthrough - Email Simulator (Developer Bypass)
+# Walkthrough - Granular Registration & Verification Control
 
-I have created an **Email Simulator** tool that allows you to verify users instantly without needing a functioning SMTP/email server. This is a high-performance developer tool to ensure your workflow remains "Supper Response."
+I have implemented independent registration controls for Guru and Siswa, and excluded Guru/Admin roles from the mandatory email verification process.
 
 ## Changes Made
 
-### 1. Email Simulator Controller
-- **Instant Verification**: Created a controller that can manually mark any pending user as "Verified" in the database with a single click.
-- **Auto-Discovery**: The tool automatically finds the latest users who are registered but haven't confirmed their email yet.
+### 1. Guru & Admin Verification Bypass
+- **Middleware Logic**: Updated `VerifiedExceptAdmin` (now functionally *VerifiedExceptStaff*) to bypass email verification for both `admin` and `guru` roles.
+- **Immediate Access**: Guru and Admin accounts can now access all features immediately after login without seeing the "Verify Email" screen.
 
-### 2. High-End Simulation UI
-- **Futuristic Layout**: Built a dedicated dashboard at `/dev/email-simulator` with an AI-modern style, including staggered animations and glassmorphism cards.
-- **One-Tap Action**: Added a "VERIFIKASI INSTAN" button that provides immediate visual feedback and success alerts.
+### 2. Granular Registration Controls
+- **Independent Toggles**: Split the global "Registration Enabled" setting into two specific settings:
+    - `registration_guru_enabled`
+    - `registration_siswa_enabled`
+- **Admin Dashboard Update**:
+    - **Web Admin**: Added two distinct toggle buttons (one for Guru, one for Siswa) on the main dashboard for quick control.
+    - **Mobile Admin**: Updated the settings page with two separate switches.
 
-### 3. Developer Routes
-- **New Access Point**: Added a hidden route to access the simulator. This allows you to skip the "Check Email" step during development and testing.
+### 3. Dynamic Registration Form
+- **Smart Role Selection**: The registration form now dynamically shows only the roles enabled by the Admin. If "Registration Guru" is disabled, the option disappears from the public form.
+- **Server-side Enforcement**: Added strict validation in `RegisterController` to prevent forced registrations via POST manipulation for disabled roles.
 
-## How to Use the Simulator (Bypass Step)
-
-If you are stuck on the "Verifikasi Email" screen:
-
-1.  Open this URL in your browser:
-    `https://app-portal-sekolah-production.up.railway.app/dev/email-simulator`
-2.  You will see a list of users waiting for verification.
-3.  Find your account and click **"VERIFIKASI INSTAN"**.
-4.  You can now log in and access the Dashboard immediately!
+### 4. Technical Improvements
+- **Stable Controller Logic**: Updated `AdminController@toggleRegistration` to accept a `role` parameter, making it future-proof.
+- **Verification Fixes**: Integrated the "Email Simulator" and "Queued Verification" as permanent developer tools to ensure "Supper Response" during testing.
 
 ## Verification Results
-- **Bypass Efficiency**: Verified that clicking the simulator button updates the `email_verified_at` column in the database instantly.
-- **Workflow**: This allows you to continue building features (Tasks, SPP, etc.) without waiting for SMTP configurations.
+- **Bypass**: Verified that a new Guru account can access the dashboard instantly.
+- **Toggles**: Verified that turning off "Siswa Registration" removes the option from the registration page.
+- **Stability**: Verified that the Web Admin dashboard renders correctly with the new dual-toggle buttons.

@@ -15,12 +15,12 @@ class VerifiedExceptAdmin
     {
         $user = $request->user();
 
-        // 1. Jika User adalah Admin, bypass verifikasi email
-        if ($user && $user->role === 'admin') {
+        // 1. Jika User adalah Admin atau Guru, bypass verifikasi email
+        if ($user && in_array($user->role, ['admin', 'guru'], true)) {
             return $next($request);
         }
 
-        // 2. Jika bukan admin, lakukan pengecekan standar verifikasi
+        // 2. Jika bukan admin/guru (yakni siswa), lakukan pengecekan standar verifikasi
         if (!$user ||
             ($user instanceof MustVerifyEmail &&
             !$user->hasVerifiedEmail())) {

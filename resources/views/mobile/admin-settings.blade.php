@@ -35,12 +35,21 @@
                 </div>
             </div>
 
-            <div class="mb-4">
-                <label class="form-label fw-bold">Registrasi Mandiri</label>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Registrasi Guru</label>
                 <div class="form-check form-switch p-3 bg-light rounded-4 border d-flex justify-content-between align-items-center">
-                    <span class="small text-secondary">Izinkan Daftar</span>
-                    <input type="hidden" name="registration_enabled" value="0">
-                    <input class="form-check-input ms-0" type="checkbox" name="registration_enabled" value="1" {{ $registrationEnabled ? 'checked' : '' }} style="transform: scale(1.3)">
+                    <span class="small text-secondary">Izinkan Pendaftaran Guru</span>
+                    <input type="hidden" name="registration_guru_enabled" value="0">
+                    <input class="form-check-input ms-0" type="checkbox" name="registration_guru_enabled" value="1" {{ $registrationGuruEnabled ? 'checked' : '' }} style="transform: scale(1.3)">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Registrasi Siswa</label>
+                <div class="form-check form-switch p-3 bg-light rounded-4 border d-flex justify-content-between align-items-center">
+                    <span class="small text-secondary">Izinkan Pendaftaran Siswa</span>
+                    <input type="hidden" name="registration_siswa_enabled" value="0">
+                    <input class="form-check-input ms-0" type="checkbox" name="registration_siswa_enabled" value="1" {{ $registrationSiswaEnabled ? 'checked' : '' }} style="transform: scale(1.3)">
                 </div>
             </div>
 

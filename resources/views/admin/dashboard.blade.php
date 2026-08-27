@@ -10,11 +10,20 @@
             <p class="text-secondary mb-0">Selamat datang kembali, kelola data sekolah dengan efisien.</p>
         </div>
         <div class="d-flex gap-2">
-            <form method="POST" action="{{ route('admin.registration.toggle') }}">
+            <form method="POST" action="{{ route('admin.registration.toggle') }}" class="d-flex gap-2">
                 @csrf
                 @method('PATCH')
-                <button class="btn {{ $registrationEnabled ? 'btn-outline-danger' : 'btn-outline-success' }} px-4 rounded-pill fw-bold">
-                    {{ $registrationEnabled ? '⛔ Tutup Registrasi' : '✅ Buka Registrasi' }}
+                <input type="hidden" name="role" value="guru">
+                <button class="btn {{ $registrationGuruEnabled ? 'btn-outline-danger' : 'btn-outline-success' }} px-3 rounded-pill fw-bold">
+                    {{ $registrationGuruEnabled ? '⛔ Guru' : '✅ Guru' }}
+                </button>
+            </form>
+            <form method="POST" action="{{ route('admin.registration.toggle') }}" class="d-flex gap-2">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="role" value="siswa">
+                <button class="btn {{ $registrationSiswaEnabled ? 'btn-outline-danger' : 'btn-outline-success' }} px-3 rounded-pill fw-bold">
+                    {{ $registrationSiswaEnabled ? '⛔ Siswa' : '✅ Siswa' }}
                 </button>
             </form>
             <a href="{{ route('pengumuman.create') }}" class="btn btn-primary px-4 rounded-pill fw-bold">+ Pengumuman</a>
