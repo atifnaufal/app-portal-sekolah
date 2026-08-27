@@ -1,5 +1,25 @@
 [phases.build]
-cmds = ["composer install --no-dev --optimize-autoloader", "npm install", "npm run build"]
+cmds = [
+    "composer install --no-dev --optimize-autoloader",
+    "npm ci",
+    "npm run build"
+]
 
+# db:seed sengaja DIHAPUS dari fase deploy: dulu dijalankan tiap cold start
+# sehingga data seed bisa dobel / deploy gagal. Seed cukup dijalankan manual sekali.
+# storage:link diberi || true karena perintah ini exit non-zero bila symlink sudah ada.
 [phases.deploy]
-cmds = ["php artisan migrate --force", "php artisan db:seed --force", "php artisan config:cache", "php artisan route:cache"]
+cmds = [
+    "php artisan migrate --force",
+    "php artisan storage:link || true",
+    "php artisan config:cache",
+    "php artisan route:cache",
+    "php artisan view:cache"
+]
+
+# nginx.conf ada di root proyek, jadi Nixpacks memasang nginx + php-fpm.
+# Start command dinyatakan eksplisit supaya TIDAK fallback ke
+# `php artisan serve` (development server single-thread) yang menjadi
+# dugaan penyebab dashboard blank intermiten karena worker kehabisan memori.
+[start]
+cmd = "php-fpm -D && nginx -g 'daemon off;'"

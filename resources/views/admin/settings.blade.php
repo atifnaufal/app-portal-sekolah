@@ -37,11 +37,20 @@
 
                 <div class="mb-4">
                     <h6 class="fw-bold mb-3">Registrasi Mandiri</h6>
+
+                    <div class="form-check mb-3">
+                        <input type="hidden" name="registration_guru_enabled" value="0">
+                        <input class="form-check-input" type="checkbox" name="registration_guru_enabled" value="1" {{ $registrationGuruEnabled ? 'checked' : '' }} id="regGuruCheck">
+                        <label class="form-check-label small" for="regGuruCheck">
+                            Izinkan <strong>Guru</strong> mendaftar akun baru dari halaman login.
+                        </label>
+                    </div>
+
                     <div class="form-check">
-                        <input type="hidden" name="registration_enabled" value="0">
-                        <input class="form-check-input" type="checkbox" name="registration_enabled" value="1" {{ $registrationEnabled ? 'checked' : '' }} id="regCheck">
-                        <label class="form-check-label small" for="regCheck">
-                            Izinkan pendaftaran akun baru dari halaman login aplikasi.
+                        <input type="hidden" name="registration_siswa_enabled" value="0">
+                        <input class="form-check-input" type="checkbox" name="registration_siswa_enabled" value="1" {{ $registrationSiswaEnabled ? 'checked' : '' }} id="regSiswaCheck">
+                        <label class="form-check-label small" for="regSiswaCheck">
+                            Izinkan <strong>Siswa</strong> mendaftar akun baru dari halaman login.
                         </label>
                     </div>
                 </div>

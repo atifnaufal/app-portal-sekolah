@@ -57,7 +57,7 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertSessionHas('error', 'Akun sedang dinonaktifkan oleh admin.');
+        $response->assertSessionHas('error', 'Akun Anda belum disetujui admin, atau sedang dinonaktifkan. Hubungi admin IT sekolah.');
         $this->assertGuest();
     }
 
@@ -76,16 +76,9 @@ class AuthenticationTest extends TestCase
         $this->get('/dashboard')->assertRedirect(route('login'));
     }
 
-    public function test_unverified_siswa_is_redirected_to_verification_notice(): void
+    public function test_admin_can_access_dashboard(): void
     {
-        $user = User::factory()->unverified()->create(['role' => 'siswa']);
-
-        $this->actingAs($user)->get('/dashboard')->assertRedirect(route('verification.notice'));
-    }
-
-    public function test_admin_can_access_dashboard_without_email_verification(): void
-    {
-        $user = User::factory()->unverified()->create(['role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
 
         $this->actingAs($user)->get('/dashboard')->assertOk();
     }

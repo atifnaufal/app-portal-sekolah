@@ -2,211 +2,388 @@
 @extends('layouts.mobile-app')
 
 @section('content')
-<style>
-    .page-header {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: #fff; border-bottom: 1px solid #edf2f7;
-        padding: 12px 20px; display: flex; align-items: center; gap: 15px;
-    }
-    .page-container { padding-top: 70px; padding-bottom: 40px; }
+@php
+    $isGuru = $user->role === 'guru';
+    $deadline = $tugas->deadlineStatus();
+    $submission = $submission ?? null;
+    $siswaKelas = $siswaKelas ?? collect();
+    $canSubmit = $canSubmit ?? false;
+    $totalSiswa = $isGuru ? $siswaKelas->count() : 0;
+    $totalSubmitted = $tugas->pengumpulan->count();
+    $totalGraded = $tugas->pengumpulan->whereNotNull('nilai')->where('revisi_aktif', false)->count();
+    $totalPending = $tugas->pengumpulan->whereNull('nilai')->where('revisi_aktif', false)->count();
+    $totalRevisi = $tugas->pengumpulan->where('revisi_aktif', true)->count();
+@endphp
 
-    .ai-card {
-        background: #fff; border: none; border-radius: 24px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+<style>
+    * { box-sizing: border-box; }
+    .td-header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
+        border-bottom: 1px solid #e2e8f0;
+        padding: 10px 16px; display: flex; align-items: center; gap: 10px;
     }
-    .form-question {
-        background: #f8fafc; border-radius: 18px; padding: 20px; margin-bottom: 15px;
+    .td-body { padding: 62px 14px 40px; max-width: 640px; margin: 0 auto; }
+
+    .td-card {
+        background: #fff; border-radius: 18px; padding: 16px;
+        margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
     }
+
+    .td-badge {
+        display: inline-flex; align-items: center; gap: 3px;
+        padding: 3px 10px; border-radius: 99px; font-size: 10px; font-weight: 700;
+    }
+
+    .td-progress { height: 6px; border-radius: 99px; background: #eef2f7; overflow: hidden; }
+    .td-progress > span { display: block; height: 100%; border-radius: 99px; }
+
+    .td-submission {
+        background: #fff; border: 1px solid #e8ecf1; border-radius: 16px;
+        padding: 14px; margin-bottom: 10px;
+    }
+
+    .td-grade-input {
+        width: 70px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+        padding: 8px; font-size: 16px; font-weight: 800; text-align: center;
+        -webkit-appearance: none;
+    }
+    .td-grade-input:focus { outline: none; border-color: #246bfe; }
+
+    .td-feedback {
+        width: 100%; border: 1.5px solid #e2e8f0; border-radius: 10px;
+        padding: 8px 10px; font-size: 13px; resize: none;
+        -webkit-appearance: none;
+    }
+    .td-feedback:focus { outline: none; border-color: #246bfe; }
+
+    .td-toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .td-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .td-toggle-bg { position: absolute; inset: 0; background: #e2e8f0; border-radius: 99px; transition: 0.2s; cursor: pointer; }
+    .td-toggle-bg::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+    .td-toggle input:checked + .td-toggle-bg { background: #246bfe; }
+    .td-toggle input:checked + .td-toggle-bg::before { transform: translateX(18px); }
+
+    .td-grade-circle {
+        width: 100px; height: 100px; border-radius: 50%; margin: 0 auto;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .td-grade-circle .num { font-size: 32px; font-weight: 800; line-height: 1; }
+    .td-grade-circle .lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp 0.35s ease both; }
 </style>
 
-<div class="page-header">
-    <a href="{{ route('tugas.index') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-        <i class="bi bi-chevron-left h5 mb-0"></i>
+<div class="td-header">
+    <a href="{{ route('tugas.index') }}" style="width:36px;height:36px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#475569;">
+        <i class="bi bi-chevron-left"></i>
     </a>
-    <div class="fw-bold" style="font-size: 17px;">Detail Tugas</div>
+    <div style="font-weight:800;font-size:16px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ \Illuminate\Support\Str::limit($tugas->judul, 30) }}</div>
+    @if($isGuru)
+        <button type="button" onclick="document.getElementById('delModal').style.display='flex'" style="width:40px;height:40px;border-radius:14px;background:#fff5f6;border:1px solid #fecdd3;color:#d94b61;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;">
+            <i class="bi bi-trash3"></i>
+        </button>
+        <a href="{{ route('tugas.edit', $tugas) }}" style="width:40px;height:40px;border-radius:14px;background:#eef4ff;border:1px solid #bfdbfe;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#246bfe;font-size:16px;">
+            <i class="bi bi-pencil-square"></i>
+        </a>
+    @endif
 </div>
 
-<div class="page-container px-3">
-    <header class="mobile-hero" style="border-radius: 30px; margin-bottom: 25px; background: linear-gradient(135deg, #246bfe, #1e293b);">
-        <div class="eyebrow" style="color: rgba(255,255,255,0.7);">{{ $tugas->tipe === 'form' ? 'FORMULIR ONLINE' : 'PENGIRIMAN FILE' }} · {{ $tugas->kelas->nama }}</div>
-        <div class="hero-title mt-2 text-white" style="font-size: 24px;">{{ $tugas->judul }}</div>
-        <div class="mt-3">
-            <span class="badge bg-white bg-opacity-20 rounded-pill px-3 py-2 fw-normal" style="font-size: 11px;">
-                Batas: {{ $tugas->batas_pengumpulan?->format('d M Y') ?? 'Terbuka' }}
+<div class="td-body">
+    {{-- Info Card --}}
+    <div class="td-card fade-up" style="background:linear-gradient(135deg,#1e293b,#246bfe);color:#fff;">
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            <span style="background:rgba(255,255,255,0.15);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;">
+                <i class="bi {{ $tugas->isForm() ? 'bi-ui-checks-grid' : 'bi-cloud-arrow-up' }}"></i>
+                {{ $tugas->isForm() ? 'FORMULIR' : 'FILE' }}
+            </span>
+            <span style="background:rgba(255,255,255,0.15);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;">
+                <i class="bi bi-people"></i> {{ $tugas->kelas->nama }}
+            </span>
+            <span style="background:rgba(255,255,255,0.15);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;">
+                <i class="bi bi-calendar"></i> {{ $tugas->batas_pengumpulan?->format('d M Y') ?? 'Terbuka' }}
             </span>
         </div>
-    </header>
+        <div style="font-size:18px;font-weight:800;line-height:1.3;margin-bottom:4px;">{{ $tugas->judul }}</div>
+        <div style="font-size:12px;opacity:0.7;">{{ $tugas->user->name }}</div>
 
-    <div class="card ai-card mb-4">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center gap-2 mb-3">
-                <div class="avatar" style="width:30px; height:30px; font-size: 11px;">{{ strtoupper(substr($tugas->user->name,0,1)) }}</div>
-                <div class="small fw-bold">{{ $tugas->user->name }} <span class="text-muted fw-normal">· Pengajar</span></div>
-            </div>
-            <p class="text-secondary small" style="line-height: 1.6; white-space: pre-line;">{{ $tugas->deskripsi ?: 'Baca instruksi dengan teliti sebelum mengerjakan.' }}</p>
-
-            @if($tugas->lampiran)
-                <div class="mt-4 p-3 border rounded-4 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-3">
-                        <i class="bi bi-file-earmark-pdf-fill text-danger h3 mb-0"></i>
-                        <div>
-                            <div class="small fw-bold text-truncate" style="max-width: 150px;">{{ $tugas->lampiran_nama }}</div>
-                            <div class="x-small text-muted uppercase">DOKUMEN PDF</div>
-                        </div>
-                    </div>
-                    <a href="{{ asset('storage/'.$tugas->lampiran) }}" target="_blank" class="btn btn-primary btn-sm rounded-pill px-3">Buka</a>
+        @if($isGuru)
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;">
+                <div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:8px 4px;text-align:center;">
+                    <div style="font-size:18px;font-weight:800;">{{ $totalSiswa }}</div>
+                    <div style="font-size:8px;opacity:0.6;text-transform:uppercase;">Siswa</div>
                 </div>
-            @endif
-        </div>
+                <div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:8px 4px;text-align:center;">
+                    <div style="font-size:18px;font-weight:800;">{{ $totalSubmitted }}</div>
+                    <div style="font-size:8px;opacity:0.6;text-transform:uppercase;">Kumpul</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:8px 4px;text-align:center;">
+                    <div style="font-size:18px;font-weight:800;">{{ $totalGraded }}</div>
+                    <div style="font-size:8px;opacity:0.6;text-transform:uppercase;">Dinilai</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:8px 4px;text-align:center;">
+                    <div style="font-size:18px;font-weight:800;">{{ $totalPending + $totalRevisi }}</div>
+                    <div style="font-size:8px;opacity:0.6;text-transform:uppercase;">Pending</div>
+                </div>
+            </div>
+        @endif
     </div>
 
-    @if($user->role === 'siswa')
-        @if($tugas->tipe === 'form')
+    {{-- Deskripsi & Lampiran --}}
+    <div class="td-card fade-up" style="animation-delay:0.05s;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;"><i class="bi bi-info-circle" style="color:#246bfe;"></i> Instruksi</div>
+        <div style="font-size:13px;color:#475569;line-height:1.6;white-space:pre-line;">{{ $tugas->deskripsi ?: 'Tidak ada deskripsi.' }}</div>
+        @if($tugas->lampiran)
+            <a href="{{ asset('storage/'.$tugas->lampiran) }}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8fafc;border-radius:12px;margin-top:10px;text-decoration:none;color:#1e293b;">
+                <i class="bi bi-file-earmark-fill" style="font-size:20px;color:#246bfe;"></i>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $tugas->lampiran_nama }}</div>
+                    <div style="font-size:10px;color:#94a3b8;">Tap untuk buka</div>
+                </div>
+                <i class="bi bi-box-arrow-up-right" style="font-size:12px;color:#94a3b8;"></i>
+            </a>
+        @endif
+    </div>
+
+    @if($isGuru)
+        {{-- ===== GURU: Monitoring & Review ===== --}}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 10px;">
+            <div style="font-size:14px;font-weight:800;">Pengumpulan Siswa</div>
+            <a href="{{ route('tugas.export', $tugas) }}" style="font-size:11px;font-weight:700;color:#16a34a;text-decoration:none;"><i class="bi bi-download"></i> Export</a>
+        </div>
+
+        {{-- Progress --}}
+        @if($totalSiswa > 0)
+            <div class="td-progress" style="margin-bottom:14px;display:flex;">
+                <span style="width:{{ round(($totalGraded/$totalSiswa)*100) }}%;background:#16a34a;"></span>
+                <span style="width:{{ round(($totalPending/$totalSiswa)*100) }}%;background:#f59e0b;"></span>
+                <span style="width:{{ round(($totalRevisi/$totalSiswa)*100) }}%;background:#d94b61;"></span>
+            </div>
+        @endif
+
+        @forelse($tugas->pengumpulan as $item)
+            <div class="td-submission fade-up">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div style="width:36px;height:36px;border-radius:12px;background:#eef4ff;display:flex;align-items:center;justify-content:center;font-weight:800;color:#246bfe;font-size:13px;flex-shrink:0;">
+                        {{ strtoupper(substr($item->siswa->name ?? '?', 0, 1)) }}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:700;">{{ $item->siswa->name ?? 'Siswa' }}</div>
+                        <div style="font-size:10px;color:#94a3b8;">{{ $item->dikumpulkan_pada?->diffForHumans() ?? 'Baru saja' }}</div>
+                    </div>
+                    @if($item->revisi_aktif)
+                        <span class="td-badge" style="background:#fef3c7;color:#b45309;">Revisi</span>
+                    @elseif($item->nilai !== null)
+                        <span class="td-badge" style="background:#dcfce7;color:#15803d;">{{ $item->nilai }}</span>
+                    @else
+                        <span class="td-badge" style="background:#dbeafe;color:#1d4ed8;">Pending</span>
+                    @endif
+                </div>
+
+                {{-- File jawaban --}}
+                @if($item->jawaban_file)
+                    <a href="{{ asset('storage/'.$item->jawaban_file) }}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8fafc;border-radius:10px;margin-bottom:8px;text-decoration:none;color:#1e293b;">
+                        <i class="bi bi-file-earmark-fill" style="color:#246bfe;"></i>
+                        <span style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">{{ $item->jawaban_nama ?: 'File Jawaban' }}</span>
+                        <i class="bi bi-box-arrow-up-right" style="font-size:10px;color:#94a3b8;"></i>
+                    </a>
+                @endif
+
+                {{-- Jawaban form --}}
+                @if($item->jawaban_form)
+                    @php
+                        $answers = is_array($item->jawaban_form) ? $item->jawaban_form : (json_decode($item->jawaban_form ?: '[]', true) ?: []);
+                        $formData = is_array($tugas->form_data) ? $tugas->form_data : (json_decode($tugas->form_data ?: '[]', true) ?: []);
+                    @endphp
+                    <div style="background:#f8fafc;border-radius:10px;padding:10px;margin-bottom:8px;">
+                        @foreach($formData as $qi => $q)
+                            @php $ans = $answers[$qi] ?? null; @endphp
+                            <div style="margin-bottom:6px;">
+                                <div style="font-size:11px;font-weight:700;color:#1e293b;">{{ $qi+1 }}. {{ $q['text'] ?? '' }}</div>
+                                <div style="font-size:11px;color:#64748b;white-space:pre-line;">{{ is_array($ans) ? implode(', ', array_filter($ans)) : ($ans ?: '--') }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                @if($item->catatan && !$item->jawaban_form)
+                    <div style="font-size:11px;color:#64748b;font-style:italic;margin-bottom:8px;">"{{ $item->catatan }}"</div>
+                @endif
+
+                {{-- Review Form --}}
+                <form method="POST" action="{{ route('tugas.review', $item) }}" style="border-top:1px solid #f1f5f9;padding-top:10px;">
+                    @csrf
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;flex-shrink:0;">Nilai:</label>
+                        <input type="number" name="nilai" class="td-grade-input" min="0" max="100" step="1" value="{{ $item->nilai ?? '' }}" placeholder="0-100" required>
+                    </div>
+                    <textarea name="feedback_guru" class="td-feedback" rows="2" placeholder="Feedback untuk siswa...">{{ $item->feedback_guru }}</textarea>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:11px;color:#64748b;">Minta revisi</span>
+                            <label class="td-toggle">
+                                <input type="checkbox" name="revisi_aktif" value="1" @checked($item->revisi_aktif)>
+                                <span class="td-toggle-bg"></span>
+                            </label>
+                        </div>
+                        <button type="submit" style="padding:8px 20px;border-radius:10px;background:#246bfe;color:#fff;font-weight:700;font-size:12px;border:none;cursor:pointer;">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        @empty
+            <div class="td-card" style="text-align:center;padding:30px;">
+                <i class="bi bi-inbox" style="font-size:32px;color:#cbd5e1;"></i>
+                <div style="font-size:13px;font-weight:600;color:#94a3b8;margin-top:8px;">Belum ada pengumpulan</div>
+            </div>
+        @endforelse
+
+        {{-- Belum mengumpulkan --}}
+        @php $submittedIds = $tugas->pengumpulan->pluck('siswa_id'); $belum = $siswaKelas->whereNotIn('id', $submittedIds); @endphp
+        @if($belum->count() > 0)
+            <div style="margin-top:16px;font-size:12px;font-weight:700;color:#94a3b8;">Belum Mengumpulkan ({{ $belum->count() }})</div>
+            @foreach($belum as $siswa)
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f8fafc;">
+                    <div style="width:28px;height:28px;border-radius:8px;background:#fee2e2;display:flex;align-items:center;justify-content:center;font-weight:700;color:#dc2626;font-size:11px;">{{ strtoupper(substr($siswa->name,0,1)) }}</div>
+                    <span style="font-size:12px;font-weight:600;">{{ $siswa->name }}</span>
+                </div>
+            @endforeach
+        @endif
+
+    @else
+        {{-- ===== SISWA VIEW ===== --}}
+
+        @if($submission && !$submission->revisi_aktif && $submission->nilai !== null)
             @php
-                $formData = is_array($tugas->form_data) ? $tugas->form_data : (json_decode($tugas->form_data ?: '[]', true) ?: []);
+                $gc = $submission->nilai >= 85 ? 'background:linear-gradient(135deg,#f0fdf4,#dcfce7);color:#15803d;' : ($submission->nilai >= 70 ? 'background:linear-gradient(135deg,#eef4ff,#dbeafe);color:#1d4ed8;' : ($submission->nilai >= 55 ? 'background:linear-gradient(135deg,#fefce8,#fef9c3);color:#a16207;' : 'background:linear-gradient(135deg,#fef2f2,#fee2e2);color:#dc2626;'));
+                $ge = $submission->nilai >= 85 ? 'Luar Biasa!' : ($submission->nilai >= 70 ? 'Bagus!' : ($submission->nilai >= 55 ? 'Cukup' : 'Perlu Belajar'));
             @endphp
-            <div class="card ai-card">
-                <div class="card-body p-4">
-                    <h2 class="section-title mb-4" style="font-size: 18px;">Formulir Pengerjaan</h2>
-                    <form method="POST" action="{{ route('tugas.submit', $tugas) }}" id="formTask">
+            <div class="td-card fade-up" style="text-align:center;animation-delay:0.1s;">
+                <div style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:0.08em;margin-bottom:12px;">NILAI KAMU</div>
+                <div class="td-grade-circle" style="{{ $gc }}">
+                    <div class="num">{{ $submission->nilai }}</div>
+                    <div class="lbl">dari 100</div>
+                </div>
+                <div style="font-size:16px;font-weight:800;margin-top:12px;">{{ $ge }}</div>
+                @if($submission->feedback_guru)
+                    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:12px;margin-top:14px;text-align:left;">
+                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                            <div style="width:20px;height:20px;border-radius:6px;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;">{{ strtoupper(substr($tugas->user->name,0,1)) }}</div>
+                            <span style="font-size:12px;font-weight:700;">{{ $tugas->user->name }}</span>
+                        </div>
+                        <div style="font-size:12px;color:#475569;line-height:1.6;white-space:pre-line;">{{ $submission->feedback_guru }}</div>
+                    </div>
+                @endif
+            </div>
+        @elseif($submission && $submission->revisi_aktif)
+            <div class="td-card fade-up" style="border:2px solid #fde68a;animation-delay:0.1s;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div style="width:40px;height:40px;border-radius:12px;background:#fef3c7;color:#b45309;display:flex;align-items:center;justify-content:center;"><i class="bi bi-arrow-repeat" style="font-size:18px;"></i></div>
+                    <div><div style="font-size:14px;font-weight:700;">Perlu Revisi</div><div style="font-size:11px;color:#94a3b8;">Perbaiki jawaban kamu</div></div>
+                </div>
+                @if($submission->feedback_guru)
+                    <div style="background:#fffbeb;border-radius:10px;padding:10px;font-size:12px;line-height:1.6;white-space:pre-line;">{{ $submission->feedback_guru }}</div>
+                @endif
+            </div>
+        @elseif($submission && $submission->nilai === null)
+            <div class="td-card fade-up" style="text-align:center;animation-delay:0.1s;">
+                <div style="width:50px;height:50px;border-radius:16px;background:#dbeafe;color:#2563eb;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;"><i class="bi bi-hourglass-split" style="font-size:22px;"></i></div>
+                <div style="font-size:14px;font-weight:700;">Menunggu Penilaian</div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Dikirim {{ $submission->dikumpulkan_pada?->format('d M Y, H:i') ?? 'baru saja' }}</div>
+            </div>
+        @endif
+
+        @if($canSubmit)
+            @if($tugas->tipe === 'form')
+                @php $formData = is_array($tugas->form_data) ? $tugas->form_data : (json_decode($tugas->form_data ?: '[]', true) ?: []); @endphp
+                <div class="td-card fade-up" style="animation-delay:0.15s;">
+                    <div style="font-size:14px;font-weight:700;margin-bottom:14px;"><i class="bi bi-ui-checks-grid" style="color:#7c3aed;"></i> Formulir</div>
+                    <form method="POST" action="{{ route('tugas.submit', $tugas) }}">
                         @csrf
-                        @foreach($formData as $index => $q)
-                            @php
-                                $isRequired = $q['required'] ?? true;
-                            @endphp
-                            <div class="form-question">
-                                <label class="fw-bold text-dark mb-2 d-block" style="font-size: 14px;" for="q{{ $index }}">
-                                    {{ $index + 1 }}. {{ $q['text'] }}
-                                    @if($isRequired)
-                                        <span class="text-danger fw-bold">*</span>
-                                    @endif
+                        @foreach($formData as $idx => $q)
+                            @php $req = $q['required'] ?? true; @endphp
+                            <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:10px;">
+                                <label style="font-size:13px;font-weight:700;display:block;margin-bottom:8px;">
+                                    {{ $idx+1 }}. {{ $q['text'] }} @if($req)<span style="color:#dc2626;">*</span>@endif
                                 </label>
-                                @if($q['type'] === 'text')
-                                    <input type="text" id="q{{ $index }}" name="jawaban[{{ $index }}]" class="form-control border-0 shadow-sm" style="border-radius: 12px;" placeholder="Jawaban singkat Anda..." @if($isRequired) required @endif>
-                                @elseif($q['type'] === 'essay')
-                                    <textarea id="q{{ $index }}" name="jawaban[{{ $index }}]" rows="3" class="form-control border-0 shadow-sm" style="border-radius: 12px;" placeholder="Tulis jawaban paragraf Anda..." @if($isRequired) required @endif></textarea>
-                                @elseif($q['type'] === 'multiple')
-                                    @foreach($q['options'] ?? [] as $optIndex => $opt)
-                                        <div class="form-check mb-2 ps-0">
-                                            <input class="form-check-input" type="radio" name="jawaban[{{ $index }}]" id="q{{ $index }}_{{ $optIndex }}" value="{{ $opt }}" @if($isRequired) required @endif>
-                                            <label class="form-check-label small" for="q{{ $index }}_{{ $optIndex }}">{{ $opt }}</label>
-                                        </div>
+                                @if($q['type']==='text')
+                                    <input type="text" name="jawaban[{{ $idx }}]" class="pf-input" style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;font-size:13px;" @if($req) required @endif>
+                                @elseif($q['type']==='essay')
+                                    <textarea name="jawaban[{{ $idx }}]" rows="3" class="pf-input" style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;font-size:13px;resize:none;" @if($req) required @endif></textarea>
+                                @elseif($q['type']==='multiple')
+                                    @foreach($q['options'] ?? [] as $oi => $opt)
+                                        <label style="display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border-radius:8px;margin-bottom:4px;font-size:13px;cursor:pointer;">
+                                            <input type="radio" name="jawaban[{{ $idx }}]" value="{{ $opt }}" @if($req) required @endif> {{ $opt }}
+                                        </label>
                                     @endforeach
-                                @elseif($q['type'] === 'checkbox')
-                                    @foreach($q['options'] ?? [] as $optIndex => $opt)
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" name="jawaban[{{ $index }}][]" id="q{{ $index }}_{{ $optIndex }}" value="{{ $opt }}" @if($isRequired) required @endif>
-                                            <label class="form-check-label small" for="q{{ $index }}_{{ $optIndex }}">{{ $opt }}</label>
-                                        </div>
+                                @elseif($q['type']==='checkbox')
+                                    @foreach($q['options'] ?? [] as $oi => $opt)
+                                        <label style="display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border-radius:8px;margin-bottom:4px;font-size:13px;cursor:pointer;">
+                                            <input type="checkbox" name="jawaban[{{ $idx }}][]" value="{{ $opt }}" @if($req) required @endif> {{ $opt }}
+                                        </label>
                                     @endforeach
-                                    <div class="x-small text-secondary mt-1">Centang semua jawaban yang sesuai.</div>
-                                @elseif($q['type'] === 'dropdown')
-                                    <select id="q{{ $index }}" name="jawaban[{{ $index }}]" class="form-select border-0 shadow-sm" style="border-radius: 12px;" @if($isRequired) required @endif>
-                                        <option value="">-- Pilih jawaban --</option>
-                                        @foreach($q['options'] ?? [] as $opt)
-                                            <option value="{{ $opt }}">{{ $opt }}</option>
-                                        @endforeach
+                                @elseif($q['type']==='dropdown')
+                                    <select name="jawaban[{{ $idx }}]" class="pf-input" style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;font-size:13px;" @if($req) required @endif>
+                                        <option value="">-- Pilih --</option>
+                                        @foreach($q['options'] ?? [] as $opt)<option value="{{ $opt }}">{{ $opt }}</option>@endforeach
                                     </select>
                                 @endif
                             </div>
                         @endforeach
-                        <button type="submit" class="btn btn-primary w-100 py-3 mt-3 shadow" style="border-radius: 15px; font-weight: 800;">Kirim Jawaban Formulir</button>
+                        <button type="submit" style="width:100%;padding:14px;border-radius:14px;background:#246bfe;color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;margin-top:4px;">
+                            <i class="bi bi-send-fill"></i> Kirim Jawaban
+                        </button>
                     </form>
                 </div>
-            </div>
-        @else
-            <div class="card ai-card">
-                <div class="card-body p-4">
-                    <h2 class="section-title mb-3" style="font-size: 18px;">Kirim File Jawaban</h2>
-                    @if($submission)
-                        <div class="alert alert-success border-0 rounded-4 x-small d-flex align-items-center gap-2">
-                            <i class="bi bi-check-circle-fill"></i>
-                            Terkirim pada {{ $submission->dikumpulkan_pada?->format('d M Y, H:i') }}
+            @else
+                <div class="td-card fade-up" style="animation-delay:0.15s;">
+                    <div style="font-size:14px;font-weight:700;margin-bottom:12px;"><i class="bi bi-cloud-arrow-up" style="color:#246bfe;"></i> Kirim Jawaban</div>
+                    @if($submission && $submission->jawaban_file)
+                        <div style="display:flex;align-items:center;gap:8px;padding:10px;background:#f0fdf4;border-radius:10px;margin-bottom:10px;">
+                            <i class="bi bi-check-circle-fill" style="color:#16a34a;"></i>
+                            <div style="flex:1;"><div style="font-size:12px;font-weight:600;">Terkirim</div><div style="font-size:10px;color:#94a3b8;">{{ $submission->dikumpulkan_pada?->format('d M Y, H:i') }}</div></div>
                         </div>
                     @endif
                     <form method="POST" action="{{ route('tugas.submit', $tugas) }}" enctype="multipart/form-data">
                         @csrf
-                        <div class="mb-3">
-                            <label class="form-label x-small fw-bold text-muted">CATATAN (WAJIB)</label>
-                            <textarea name="catatan" rows="3" class="form-control border-light" style="border-radius: 15px; background: #fcfcfc;" placeholder="Tulis catatan pengerjaan..." required>{{ $submission?->catatan }}</textarea>
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px;display:block;">CATATAN</label>
+                            <textarea name="catatan" rows="2" class="pf-input" style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px;font-size:13px;resize:none;" placeholder="Catatan pengerjaan..." required>{{ $submission?->catatan }}</textarea>
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label x-small fw-bold text-muted">UNGGAH FILE</label>
-                            <input type="file" name="jawaban_file" class="form-control border-light" style="border-radius: 12px; background: #fcfcfc;" required>
-                            <div class="x-small text-secondary mt-2">PDF, Word, atau Gambar (Max 10MB)</div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px;display:block;">FILE JAWABAN</label>
+                            <input type="file" name="jawaban_file" class="pf-input" style="padding:10px;" {{ $submission && $submission->jawaban_file ? '' : 'required' }} accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx,.csv,.txt,.zip">
+                            <div style="font-size:10px;color:#94a3b8;margin-top:4px;">PDF, Word, Excel, PPT, Gambar, ZIP (Maks 10MB)</div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 py-3 shadow" style="border-radius: 15px; font-weight: 800;">
-                            {{ $submission ? 'Perbarui Jawaban' : 'Kirim Sekarang' }}
+                        <button type="submit" style="width:100%;padding:14px;border-radius:14px;background:#246bfe;color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;">
+                            <i class="bi bi-send-fill"></i> {{ $submission ? 'Perbarui' : 'Kirim' }}
                         </button>
                     </form>
                 </div>
+            @endif
+        @elseif(!$submission && $tugas->isExpired())
+            <div class="td-card fade-up" style="text-align:center;">
+                <i class="bi bi-x-circle" style="font-size:32px;color:#dc2626;"></i>
+                <div style="font-size:14px;font-weight:700;margin-top:8px;">Batas Waktu Terlewat</div>
             </div>
         @endif
-    @else
-        <!-- Guru View Monitoring -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="section-title mb-0" style="font-size: 18px;">Pengumpulan Siswa</h2>
-            <a href="{{ route('tugas.export', $tugas) }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
-                <i class="bi bi-file-earmark-excel me-1"></i> Excel
-            </a>
-        </div>
-
-        @forelse($tugas->pengumpulan as $item)
-            <div class="card ai-card mb-3 border border-light">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div class="fw-bold" style="font-size: 14px;">{{ $item->siswa->name }}</div>
-                        <span class="badge {{ $item->nilai ? 'bg-success' : 'bg-warning' }} rounded-pill x-small px-2">
-                            {{ $item->nilai ? 'Dinilai: '.$item->nilai : 'Menunggu' }}
-                        </span>
-                    </div>
-                    <div class="x-small text-muted mb-3">{{ $item->dikumpulkan_pada?->diffForHumans() }}</div>
-
-                    {{-- Rincian jawaban siswa: tautan file atau jawaban formulir --}}
-                    @if($item->jawaban_file)
-                        <a href="{{ asset('storage/'.$item->jawaban_file) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3 mb-3">
-                            <i class="bi bi-paperclip me-1"></i> {{ \Illuminate\Support\Str::limit($item->jawaban_nama ?: 'Lihat File Jawaban', 25) }}
-                        </a>
-                    @endif
-                    @if($item->jawaban_form)
-                        @php
-                            $answers = is_array($item->jawaban_form) ? $item->jawaban_form : (json_decode($item->jawaban_form ?: '[]', true) ?: []);
-                            $formData = is_array($tugas->form_data) ? $tugas->form_data : (json_decode($tugas->form_data ?: '[]', true) ?: []);
-                        @endphp
-                        <div class="p-3 rounded-4 mb-3" style="background: #f8fafc;">
-                            <div class="x-small fw-bold text-secondary mb-2"><i class="bi bi-ui-checks me-1"></i>JAWABAN FORMULIR SISWA</div>
-                            @foreach($formData as $qi => $q)
-                                @php
-                                    $ans = $answers[$qi] ?? null;
-                                @endphp
-                                <div class="mb-2">
-                                    <div class="x-small fw-bold text-dark">{{ $qi + 1 }}. {{ $q['text'] ?? '' }}</div>
-                                    <div class="x-small text-secondary" style="white-space: pre-line;">{{ is_array($ans) ? (implode(' • ', array_filter($ans)) ?: '— tidak dijawab —') : ($ans && $ans !== '' ? $ans : '— tidak dijawab —') }}</div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                    @if($item->catatan && !$item->jawaban_form)
-                        <div class="x-small text-secondary mb-3 fst-italic">"{{ $item->catatan }}"</div>
-                    @endif
-
-                    <form method="POST" action="{{ route('tugas.review', $item) }}" class="mt-2 pt-2 border-top">
-                        @csrf
-                        <div class="row g-2">
-                            <div class="col-4"><input name="nilai" type="number" step="0.01" class="form-control form-control-sm" placeholder="Nilai" value="{{ $item->nilai }}" required></div>
-                            <div class="col-8"><input name="feedback_guru" class="form-control form-control-sm" placeholder="Catatan/Feedback" value="{{ $item->feedback_guru }}"></div>
-                        </div>
-                        <div class="form-check form-switch mt-2">
-                            <input class="form-check-input" type="checkbox" role="switch" name="revisi_aktif" id="revisi_{{ $item->id }}" value="1" @checked($item->revisi_aktif)>
-                            <label class="form-check-label x-small" for="revisi_{{ $item->id }}">Minta siswa revisi jawaban</label>
-                        </div>
-                        <button class="btn btn-primary btn-sm w-100 mt-2 rounded-pill">Simpan</button>
-                    </form>
-                </div>
-            </div>
-        @empty
-            <div class="text-center py-5 opacity-50">Belum ada pengumpulan.</div>
-        @endforelse
     @endif
 </div>
+
+{{-- Delete Modal (guru only) --}}
+@if($isGuru)
+<div id="delModal" onclick="if(event.target===this)this.style.display='none'" style="position:fixed;inset:0;z-index:2000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.4);">
+    <div style="width:100%;max-width:640px;background:#fff;border-radius:24px 24px 0 0;padding:24px 20px;">
+        <div style="font-size:16px;font-weight:800;margin-bottom:4px;">Hapus tugas?</div>
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;">{{ $tugas->pengumpulan->count() }} pengumpulan akan ikut terhapus.</div>
+        <form method="POST" action="{{ route('tugas.destroy', $tugas) }}">
+            @csrf @method('DELETE')
+            <button type="submit" style="width:100%;padding:12px;border-radius:12px;background:#dc2626;color:#fff;font-weight:700;border:none;cursor:pointer;margin-bottom:8px;">Hapus Permanen</button>
+            <button type="button" onclick="document.getElementById('delModal').style.display='none'" style="width:100%;padding:12px;border-radius:12px;background:#f1f5f9;color:#475569;font-weight:700;border:none;cursor:pointer;">Batal</button>
+        </form>
+    </div>
+</div>
+@endif
 @endsection

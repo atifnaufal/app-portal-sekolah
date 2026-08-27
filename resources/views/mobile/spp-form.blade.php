@@ -1,9 +1,215 @@
+@php $hideNav = true; @endphp
 @extends('layouts.mobile-app')
+
 @section('content')
-<div class="p-3 pb-0">
-    <a href="javascript:history.back()" class="text-decoration-none text-muted d-inline-flex align-items-center gap-2 small fw-bold">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
-        Kembali
+@php
+    $isEdit = isset($spp) && $spp->exists;
+    $namaBulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+@endphp
+
+<style>
+    .page-header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(226,232,240,0.7);
+        padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+    }
+    .page-container { padding-top: 70px; padding-bottom: 48px; }
+
+    .glass-card {
+        background: #fff; border: none; border-radius: 24px;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.04);
+        overflow: hidden; margin-bottom: 16px;
+    }
+
+    .month-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    }
+    .month-btn {
+        border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 12px;
+        padding: 10px 4px; text-align: center; cursor: pointer; transition: all 0.2s;
+        font-size: 11px; font-weight: 700; color: #64748b;
+    }
+    .month-btn:hover { border-color: #246bfe; color: #246bfe; }
+    .month-btn.selected { background: #246bfe; color: #fff; border-color: #246bfe; }
+
+    .currency-input {
+        position: relative;
+    }
+    .currency-input::before {
+        content: 'Rp'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        font-size: 13px; font-weight: 700; color: #64748b; z-index: 1;
+    }
+    .currency-input input {
+        padding-left: 40px !important;
+    }
+
+    .submit-area {
+        position: sticky; bottom: 0; left: 0; right: 0;
+        background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
+        border-top: 1px solid #edf2f7; padding: 16px 20px;
+        z-index: 100;
+    }
+
+    @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .slide-up { animation: slideUp 0.4s ease both; }
+</style>
+
+<div class="page-header">
+    <a href="{{ route('spp.index') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+        <i class="bi bi-chevron-left h5 mb-0"></i>
     </a>
+    <div class="fw-bold" style="font-size: 18px;">{{ $isEdit ? 'Edit SPP' : 'Catat SPP Baru' }}</div>
 </div>
-<header class="mobile-hero"><div class="eyebrow mt-4">DATA PEMBAYARAN</div><div class="hero-title mt-2">Catat SPP siswa</div></header><main class="mobile-content"><div class="card mobile-card"><div class="card-body p-4"><form method="POST" action="{{ route('spp.store') }}">@csrf<div class="mb-3"><label class="form-label fw-semibold">Siswa</label><select name="siswa_id" class="form-select" required><option value="">Pilih siswa</option>@foreach($siswas as $siswa)<option value="{{ $siswa->id }}">{{ $siswa->name }}</option>@endforeach</select></div><div class="row g-3"><div class="col-6"><label class="form-label fw-semibold">Bulan</label><input name="bulan" type="number" min="1" max="12" class="form-control" required></div><div class="col-6"><label class="form-label fw-semibold">Tahun</label><input name="tahun" type="number" min="2020" value="{{ date('Y') }}" class="form-control" required></div><div class="col-6"><label class="form-label fw-semibold">Nominal</label><input name="nominal" type="number" min="0" class="form-control" required></div><div class="col-6"><label class="form-label fw-semibold">Sudah dibayar</label><input name="dibayar" type="number" min="0" value="0" class="form-control"></div></div><div class="mt-3"><label class="form-label fw-semibold">Jatuh tempo</label><input name="jatuh_tempo" type="date" class="form-control"></div><button class="btn btn-primary w-100 py-3 mt-4 profile-action">Simpan data SPP</button></form></div></div></main>@endsection
+
+<div class="page-container px-3 pt-3">
+    <form method="POST" action="{{ $isEdit ? route('spp.update', $spp) : route('spp.store') }}" id="sppForm">
+        @csrf
+        @if($isEdit) @method('PUT') @endif
+
+        {{-- Pilih Siswa --}}
+        <div class="glass-card slide-up">
+            <div class="p-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div style="width:28px;height:28px;border-radius:10px;background:#eef4ff;color:#246bfe;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-person" style="font-size:14px;"></i>
+                    </div>
+                    <span class="fw-bold" style="font-size:14px;">Data Siswa</span>
+                </div>
+                <select name="siswa_id" class="form-select border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;" required>
+                    <option value="">Pilih siswa</option>
+                    @foreach($siswas as $siswa)
+                        <option value="{{ $siswa->id }}" @selected(old('siswa_id', $spp->siswa_id ?? '') == $siswa->id)>
+                            {{ $siswa->kelas?->nama ? $siswa->kelas->nama . ' - ' : '' }}{{ $siswa->name }}
+                            @if($siswa->nik) ({{ $siswa->nik }}) @endif
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        {{-- Periode --}}
+        <div class="glass-card slide-up" style="animation-delay: 0.1s;">
+            <div class="p-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div style="width:28px;height:28px;border-radius:10px;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-calendar3" style="font-size:14px;"></i>
+                    </div>
+                    <span class="fw-bold" style="font-size:14px;">Periode Pembayaran</span>
+                </div>
+
+                <label class="x-small fw-bold text-muted mb-2 d-block">BULAN</label>
+                <input type="hidden" name="bulan" id="bulanInput" value="{{ old('bulan', $spp->bulan ?? '') }}">
+                <div class="month-grid mb-3" id="monthGrid">
+                    @for($m = 1; $m <= 12; $m++)
+                        <div class="month-btn {{ old('bulan', $spp->bulan ?? '') == $m ? 'selected' : '' }}" data-month="{{ $m }}" onclick="selectMonth({{ $m }})">
+                            {{ substr($namaBulan[$m], 0, 3) }}
+                        </div>
+                    @endfor
+                </div>
+
+                <label class="x-small fw-bold text-muted mb-1 d-block">TAHUN</label>
+                <input name="tahun" type="number" min="2020" max="2050" value="{{ old('tahun', $spp->tahun ?? date('Y')) }}" class="form-control border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;" required>
+            </div>
+        </div>
+
+        {{-- Nominal --}}
+        <div class="glass-card slide-up" style="animation-delay: 0.2s;">
+            <div class="p-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div style="width:28px;height:28px;border-radius:10px;background:#f0fdf4;color:#16a34a;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-cash-stack" style="font-size:14px;"></i>
+                    </div>
+                    <span class="fw-bold" style="font-size:14px;">Jumlah Pembayaran</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="x-small fw-bold text-muted mb-1">TAGIHAN</label>
+                        <div class="currency-input">
+                            <input name="nominal" type="number" min="0" id="nominalInput" value="{{ old('nominal', $spp->nominal ?? '') }}" class="form-control border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;" required oninput="updatePreview()">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="x-small fw-bold text-muted mb-1">SUDAH DIBAYAR</label>
+                        <div class="currency-input">
+                            <input name="dibayar" type="number" min="0" id="dibayarInput" value="{{ old('dibayar', $spp->dibayar ?? 0) }}" class="form-control border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;" oninput="updatePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="paymentPreview" class="mt-3 p-3 rounded-4" style="background:#f8fafc;display:none;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Status</span>
+                        <span id="statusPreview" class="fw-bold" style="font-size:13px;"></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <span class="small text-muted">Kekurangan</span>
+                        <span id="kekuranganPreview" class="fw-bold" style="font-size:13px;color:#dc2626;"></span>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label class="x-small fw-bold text-muted mb-1">JATUH TEMPO (OPSIONAL)</label>
+                    <input name="jatuh_tempo" type="date" value="{{ old('jatuh_tempo', $isEdit && $spp->jatuh_tempo ? $spp->jatuh_tempo->format('Y-m-d') : '') }}" class="form-control border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;">
+                </div>
+            </div>
+        </div>
+
+        <div style="height: 80px;"></div>
+    </form>
+</div>
+
+<div class="submit-area">
+    <div class="d-flex gap-2">
+        <a href="{{ route('spp.index') }}" class="btn btn-light rounded-pill px-4 fw-bold">Batal</a>
+        <button type="submit" form="sppForm" class="btn btn-primary rounded-pill flex-grow-1 py-2 fw-bold" style="font-size:15px;">
+            <i class="bi bi-check2-circle me-1"></i> {{ $isEdit ? 'Simpan Perubahan' : 'Simpan SPP' }}
+        </button>
+    </div>
+</div>
+
+<script>
+    function selectMonth(m) {
+        document.getElementById('bulanInput').value = m;
+        document.querySelectorAll('.month-btn').forEach(btn => {
+            btn.classList.toggle('selected', parseInt(btn.dataset.month) === m);
+        });
+    }
+
+    function updatePreview() {
+        const nominal = parseFloat(document.getElementById('nominalInput').value) || 0;
+        const dibayar = parseFloat(document.getElementById('dibayarInput').value) || 0;
+        const preview = document.getElementById('paymentPreview');
+        const status = document.getElementById('statusPreview');
+        const kekurangan = document.getElementById('kekuranganPreview');
+
+        if (nominal > 0) {
+            preview.style.display = 'block';
+            const sisa = Math.max(0, nominal - dibayar);
+            if (sisa <= 0) {
+                status.textContent = 'Lunas';
+                status.style.color = '#16a34a';
+                kekurangan.textContent = 'Rp 0';
+                kekurangan.style.color = '#16a34a';
+            } else {
+                status.textContent = 'Belum Lunas';
+                status.style.color = '#b45309';
+                kekurangan.textContent = 'Rp ' + sisa.toLocaleString('id-ID');
+                kekurangan.style.color = '#dc2626';
+            }
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    document.getElementById('sppForm').addEventListener('submit', function(e) {
+        if (!document.getElementById('bulanInput').value) {
+            e.preventDefault();
+            alert('Pilih bulan pembayaran.');
+        }
+    });
+
+    updatePreview();
+</script>
+@endsection

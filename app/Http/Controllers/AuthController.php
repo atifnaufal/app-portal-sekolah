@@ -34,7 +34,7 @@ public function login(Request $request): RedirectResponse
             ->withInput($request->only('email'))
             ->with('error',
                 $user && ! $user->aktif
-                    ? 'Akun sedang dinonaktifkan oleh admin.'
+                    ? 'Akun Anda belum disetujui admin, atau sedang dinonaktifkan. Hubungi admin IT sekolah.'
                     : 'Email atau password salah.'
             );
     }
@@ -70,6 +70,57 @@ public function login(Request $request): RedirectResponse
     public function showForgotPassword(): View
     {
         return view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request): RedirectResponse
+    {
+        $request->validate(['email' => ['required', 'email']]);
+
+        try {
+            $status = \Illuminate\Support\Facades\Password::sendResetLink($request->only('email'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengirim email reset password: ' . $e->getMessage());
+
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', 'Gagal mengirim email reset. Silakan coba beberapa saat lagi atau hubungi admin IT sekolah.');
+        }
+
+        return $status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT
+            ? back()->with('status', 'Link reset sudah dikirim ke email Anda.')
+            : back()->withInput($request->only('email'))
+                ->withErrors(['email' => 'Email tersebut tidak terdaftar di sistem kami.']);
+    }
+
+    public function showResetForm(Request $request, string $token): View
+    {
+        return view('auth.reset-password', ['token' => $token, 'email' => $request->email]);
+    }
+
+    public function resetPassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        $status = \Illuminate\Support\Facades\Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => null,
+                ])->save();
+            }
+        );
+
+        if ($status !== \Illuminate\Support\Facades\Password::PASSWORD_RESET) {
+            return back()->withInput($request->only('email'))
+                ->withErrors(['email' => __($status)]);
+        }
+
+        return redirect()->route('login')->with('success', 'Password berhasil diganti. Silakan masuk.');
     }
 
     public function showForgotEmail(): View

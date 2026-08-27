@@ -11,40 +11,37 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // 1. Ultimate Session Restoration (Logika Anti-Logout Railway)
-        if (!$request->session()->has('user_id')) {
-            // Cek apakah ada cookie 'remember' yang valid via guard web
-            if (Auth::guard('web')->check()) {
-                $user = Auth::guard('web')->user();
+        $needsRestore = !$request->session()->has('user_id')
+            || !$request->session()->has('user_role');
 
-                // Paksa isi ulang sesi jika identitas ditemukan di database via cookie
-                $request->session()->put([
-                    'user_id' => $user->id,
-                    'user_role' => $user->role,
-                    'user_kelas_id' => $user->kelas_id,
-                    'admin_name' => $user->name,
-                ]);
+        if ($needsRestore && Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
 
-                // Pastikan sesi disimpan ke store
-                $request->session()->save();
-            }
+            $request->session()->put([
+                'user_id' => $user->id,
+                'user_role' => $user->role,
+                'user_kelas_id' => $user->kelas_id,
+                'admin_name' => $user->name,
+            ]);
+
+            $request->session()->save();
         }
 
         $userId = $request->session()->get('user_id');
         $userRole = $request->session()->get('user_role');
 
-        // 2. Fallback terakhir jika sesi benar-benar tidak bisa dipulihkan
         if (!$userId) {
             return redirect()
                 ->route('login')
                 ->with('error', 'Sesi berakhir. Silakan login kembali.');
         }
 
-        if (!in_array($userRole, $roles, true)) {
-            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        if (!$userRole || !in_array($userRole, $roles, true)) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'Sesi tidak lengkap. Silakan login kembali.');
         }
 
         return $next($request);
     }
-
 }

@@ -58,21 +58,21 @@
             right: 20px;
             max-width: 640px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: 24px;
             padding: 12px 10px;
             display: flex;
             justify-content: space-around;
-            box-shadow: 0 10px 30px rgba(20, 33, 61, 0.15);
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 20px rgba(20, 33, 61, 0.1);
+            animation: navFadeIn 0.3s ease;
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes navFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .bottom-nav a {
@@ -96,7 +96,7 @@
             transform: translateY(-4px) scale(1.1);
         }
 
-        /* Page Loading UI - Minimalist Transparent */
+        /* Page Loading UI - Transparan, hanya logo melayang */
         #page-loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -112,7 +112,7 @@
             width: 70px;
             height: auto;
             animation: floating 2s infinite ease-in-out;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.12));
         }
 
         @keyframes floating {
@@ -142,7 +142,7 @@
 <body>
     <div id="offline-indicator">Koneksi Terputus - Mode Offline</div>
     <div id="page-loader">
-        <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.src='https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png'">
+        <img src="{{ asset('logo_sekolah.png') }}" class="loader-logo" alt="Logo" onerror="this.style.display='none'">
     </div>
 
     <div class="mobile-shell animate__animated animate__fadeIn">

@@ -6,8 +6,6 @@ use App\Models\Kelas;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Notifications\VerifyEmailNotification;
-use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -28,8 +26,6 @@ class RegistrationTest extends TestCase
 
     public function test_siswa_can_register_when_enabled(): void
     {
-        Notification::fake();
-
         Setting::setValue('registration_siswa_enabled', '1');
         $kelas = Kelas::create(['nama' => 'X IPA 1', 'tingkat' => 'X', 'tahun_ajaran' => '2026/2027']);
 
@@ -48,10 +44,32 @@ class RegistrationTest extends TestCase
         $user = User::where('email', 'siswa@sekolah.com')->first();
         $this->assertNotNull($user);
         $this->assertSame('siswa', $user->role);
-        $this->assertNull($user->email_verified_at);
-        $this->assertTrue($user->aktif);
 
-        Notification::assertSentTo($user, VerifyEmailNotification::class);
+        // Verifikasi email sudah dihapus: akun baru dibuat nonaktif sampai
+        // admin menyetujuinya lewat halaman Manajemen Akun.
+        $this->assertFalse($user->aktif);
+    }
+
+    public function test_registered_siswa_cannot_login_until_admin_approves(): void
+    {
+        Setting::setValue('registration_siswa_enabled', '1');
+        $kelas = Kelas::create(['nama' => 'X IPA 1', 'tingkat' => 'X', 'tahun_ajaran' => '2026/2027']);
+
+        $this->post('/register', [
+            'role' => 'siswa',
+            'nik' => '22334455',
+            'name' => 'Siswa Menunggu',
+            'no_hp' => '081234500000',
+            'email' => 'menunggu@sekolah.com',
+            'kelas_id' => $kelas->id,
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $this->post('/login', [
+            'email' => 'menunggu@sekolah.com',
+            'password' => 'password123',
+        ])->assertGuest();
     }
 
     public function test_guru_cannot_register_when_only_siswa_registration_is_enabled(): void

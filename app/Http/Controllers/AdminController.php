@@ -3,73 +3,73 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kelas;
-use App\Models\Notifikasi;
 use App\Models\Spp;
 use App\Models\User;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class AdminController extends Controller
 {
     public function dashboard(): View
     {
-        $today = today();
+        $isMobile = $this->isMobileRequest();
 
-        // Data for SPP Chart (Last 6 Months)
+        // Diurutkan menurun lalu dibalik agar benar-benar 6 bulan TERAKHIR.
         $sppData = Spp::selectRaw('tahun, bulan, SUM(nominal) as tagihan, SUM(dibayar) as terbayar')
             ->groupBy('tahun', 'bulan')
-            ->orderBy('tahun', 'asc')
-            ->orderBy('bulan', 'asc')
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
             ->take(6)
-            ->get();
-
-        $chartLabels = $sppData->map(fn($item) => "$item->bulan/$item->tahun");
-        $chartTagihan = $sppData->map(fn($item) => $item->tagihan);
-        $chartTerbayar = $sppData->map(fn($item) => $item->terbayar);
+            ->get()
+            ->reverse()
+            ->values();
 
         $data = [
             'totalGuru' => User::where('role', 'guru')->count(),
             'totalSiswa' => User::where('role', 'siswa')->count(),
             'totalKelas' => Kelas::count(),
             'sppKurang' => Spp::where('status', 'belum_lunas')->count(),
-            'sppTotal' => Spp::count(),
             'sppTerbayar' => Spp::sum('dibayar'),
             'sppTagihan' => Spp::sum('nominal'),
-            'sppByMonth' => $sppData->reverse(),
-            'chartLabels' => $chartLabels,
-            'chartTagihan' => $chartTagihan,
-            'chartTerbayar' => $chartTerbayar,
-            'kelasSummaries' => Kelas::with(['users' => fn ($query) => $query->whereIn('role', ['guru', 'siswa'])->orderBy('role')->orderBy('name')])->withCount(['users as guru_count' => fn ($query) => $query->where('role', 'guru'), 'users as siswa_count' => fn ($query) => $query->where('role', 'siswa')])->orderBy('tingkat')->orderBy('nama')->get(),
-            'recentUsers' => User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get(),
+            'chartLabels' => $sppData->map(fn ($item) => "$item->bulan/$item->tahun"),
+            'chartTagihan' => $sppData->map(fn ($item) => $item->tagihan),
+            'chartTerbayar' => $sppData->map(fn ($item) => $item->terbayar),
             'registrationGuruEnabled' => (bool) Setting::getValue('registration_guru_enabled', false),
-            'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false)
+            'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false),
         ];
 
-        // Deteksi apakah akses dari mobile/aplikasi
-        $userAgent = request()->header('User-Agent');
-        $isMobile = preg_match('/(android|iphone|ipad|mobile)/i', $userAgent);
+        // Hanya view desktop yang memakai dua query berat ini.
+        if (! $isMobile) {
+            // View hanya membaca agregat guru_count / siswa_count, jadi tidak perlu
+            // ikut memuat koleksi users lengkap untuk setiap kelas.
+            $data['kelasSummaries'] = Kelas::withCount([
+                    'users as guru_count' => fn ($query) => $query->where('role', 'guru'),
+                    'users as siswa_count' => fn ($query) => $query->where('role', 'siswa'),
+                ])
+                ->orderBy('tingkat')
+                ->orderBy('nama')
+                ->get();
 
-        if ($isMobile) {
-            return view('mobile.admin-dashboard', $data);
+            $data['recentUsers'] = User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get();
         }
 
-        return view('admin.dashboard', $data);
+        return view($isMobile ? 'mobile.admin-dashboard' : 'admin.dashboard', $data);
+    }
+
+    private function isMobileRequest(): bool
+    {
+        return (bool) preg_match('/(android|iphone|ipad|mobile)/i', (string) request()->userAgent());
     }
 
     public function users(Request $request): View
     {
         $users = User::with('kelas')->whereIn('role', ['guru', 'siswa'])->when($request->search, fn ($query, $search) => $query->where(fn ($q) => $q->where('name', 'like', "%$search%")->orWhere('nik', 'like', "%$search%")->orWhere('email', 'like', "%$search%")))->latest()->get();
 
-        $data = ['users' => $users, 'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(), 'registrationEnabled' => (bool) Setting::getValue('registration_enabled', false)];
+        $data = ['users' => $users, 'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get()];
 
-        if (preg_match('/(android|iphone|ipad|mobile)/i', request()->header('User-Agent'))) {
-            return view('mobile.admin-users', $data);
-        }
-
-        return view('admin.users', $data);
+        return view($this->isMobileRequest() ? 'mobile.admin-users' : 'admin.users', $data);
     }
 
     public function updateUser(Request $request, User $user): RedirectResponse
@@ -117,11 +117,7 @@ class AdminController extends Controller
             'lateTime' => Setting::getValue('attendance_late_time', '07:30'),
         ];
 
-        if (preg_match('/(android|iphone|ipad|mobile)/i', request()->header('User-Agent'))) {
-            return view('mobile.admin-settings', $data);
-        }
-
-        return view('admin.settings', $data);
+        return view($this->isMobileRequest() ? 'mobile.admin-settings' : 'admin.settings', $data);
     }
 
     public function updateSettings(Request $request): RedirectResponse

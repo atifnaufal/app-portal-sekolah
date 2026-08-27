@@ -1,97 +1,138 @@
+@php $hideNav = true; @endphp
 @extends('layouts.mobile-app')
+
 @section('content')
-<header class="mobile-hero">
-    <div class="d-flex justify-content-between align-items-start">
-        <div>
-            <div class="eyebrow">PORTAL ADMINISTRATOR</div>
-            <div class="hero-title mt-2">Dashboard Admin</div>
-            <div class="class-pill mt-3">Kendali Sistem Sekolah</div>
-        </div>
-        <a href="{{ route('profile.show') }}" class="avatar text-white text-decoration-none">
-            {{ strtoupper(substr(session('admin_name'),0,1)) }}
-        </a>
-    </div>
-</header>
+<style>
+    .am-body { padding: 16px 14px 40px; max-width: 640px; margin: 0 auto; }
 
-<main class="mobile-content">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="section-title mb-0">Statistik Cepat</h1>
-        <span class="text-secondary small">{{ now()->format('d M Y') }}</span>
-    </div>
+    .am-hero {
+        background: linear-gradient(135deg, #0f172a, #1e3a5f);
+        border-radius: 26px; padding: 24px 20px; color: #fff;
+        margin-bottom: 16px; position: relative; overflow: hidden;
+    }
+    .am-hero::before {
+        content:''; position:absolute; top:-30px; right:-30px;
+        width:130px; height:130px; border-radius:50%;
+        background: radial-gradient(circle, rgba(99,102,241,0.3), transparent 70%);
+    }
 
-    <div class="row g-3 mb-4 stagger">
-        <div class="col-6">
-            <div class="card mobile-card">
-                <div class="card-body">
-                    <div class="small text-secondary">Total Guru</div>
-                    <div class="h4 fw-bold mb-0 text-primary">{{ $totalGuru }}</div>
-                </div>
+    .am-stat {
+        background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 16px; padding: 12px 8px; text-align: center; flex: 1;
+    }
+    .am-stat .n { font-size: 20px; font-weight: 800; line-height: 1.1; }
+    .am-stat .l { font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.65; margin-top: 3px; }
+
+    .am-card {
+        background: #fff; border-radius: 20px; padding: 18px;
+        margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .am-action {
+        display: flex; align-items: center; gap: 12px; padding: 16px;
+        background: #fff; border-radius: 20px; text-decoration: none; color: #1e293b;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 12px;
+        transition: transform 0.15s;
+    }
+    .am-action:active { transform: scale(0.98); }
+    .am-action-icon {
+        width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+
+    .am-note {
+        background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 18px;
+        padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start;
+    }
+</style>
+
+<div class="am-body">
+    <div class="am-hero">
+        <div style="position:relative;z-index:1;">
+            <div style="font-size:11px;font-weight:800;letter-spacing:0.13em;text-transform:uppercase;opacity:0.6;">Portal Administrator</div>
+            <div style="font-size:22px;font-weight:800;margin-top:4px;">Halo, {{ explode(' ', session('admin_name') ?? 'Admin')[0] }}!</div>
+            <div style="font-size:12px;opacity:0.65;margin-top:4px;">{{ now()->format('d M Y') }}</div>
+
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <div class="am-stat"><div class="n">{{ $totalGuru }}</div><div class="l">Guru</div></div>
+                <div class="am-stat"><div class="n">{{ $totalSiswa }}</div><div class="l">Siswa</div></div>
+                <div class="am-stat"><div class="n">{{ $totalKelas }}</div><div class="l">Kelas</div></div>
+                <div class="am-stat"><div class="n" style="color:#fca5a5;">{{ $sppKurang }}</div><div class="l">Tunggakan</div></div>
             </div>
         </div>
-        <div class="col-6">
-            <div class="card mobile-card">
-                <div class="card-body">
-                    <div class="small text-secondary">Total Siswa</div>
-                    <div class="h4 fw-bold mb-0 text-success">{{ $totalSiswa }}</div>
-                </div>
+    </div>
+
+    @if(session('info'))
+        <div class="am-note mb-3">
+            <i class="bi bi-info-circle-fill" style="color:#2563eb;flex-shrink:0;margin-top:1px;"></i>
+            <div style="font-size:12px;color:#1e40af;line-height:1.5;">{{ session('info') }}</div>
+        </div>
+    @endif
+
+    <div style="font-size:13px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">
+        Aksi Cepat
+    </div>
+
+    <a href="{{ route('pengumuman.create') }}" class="am-action">
+        <div class="am-action-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb;">
+            <i class="bi bi-megaphone-fill"></i>
+        </div>
+        <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">Buat Pengumuman</div>
+            <div style="font-size:11px;color:#94a3b8;">Publikasikan info ke seluruh sekolah</div>
+        </div>
+        <i class="bi bi-chevron-right" style="color:#cbd5e1;"></i>
+    </a>
+
+    <a href="{{ route('pengumuman.index') }}" class="am-action">
+        <div class="am-action-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#d97706;">
+            <i class="bi bi-list-check"></i>
+        </div>
+        <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">Daftar Pengumuman</div>
+            <div style="font-size:11px;color:#94a3b8;">Lihat, ubah, atau hapus</div>
+        </div>
+        <i class="bi bi-chevron-right" style="color:#cbd5e1;"></i>
+    </a>
+
+    <div class="am-card">
+        <div style="font-size:13px;font-weight:800;margin-bottom:10px;">
+            <i class="bi bi-graph-up-arrow" style="color:#16a34a;"></i> Ringkasan SPP
+        </div>
+        @php $pct = $sppTagihan > 0 ? round(($sppTerbayar / $sppTagihan) * 100) : 0; @endphp
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+            <span style="color:#64748b;font-weight:600;">Terbayar</span>
+            <span style="font-weight:800;color:#16a34a;">{{ $pct }}%</span>
+        </div>
+        <div style="height:8px;border-radius:99px;background:#f1f5f9;overflow:hidden;margin-bottom:12px;">
+            <div style="height:100%;border-radius:99px;width:{{ $pct }}%;background:linear-gradient(90deg,#16a34a,#4ade80);"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+            <div>
+                <div style="font-size:10px;color:#94a3b8;font-weight:700;">TOTAL TAGIHAN</div>
+                <div style="font-size:14px;font-weight:800;color:#1e293b;">Rp {{ number_format($sppTagihan, 0, ',', '.') }}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:10px;color:#94a3b8;font-weight:700;">SISA PIUTANG</div>
+                <div style="font-size:14px;font-weight:800;color:#d97706;">Rp {{ number_format(max(0, $sppTagihan - $sppTerbayar), 0, ',', '.') }}</div>
             </div>
         </div>
-        <div class="col-12">
-            <div class="card mobile-card bg-primary text-white border-0">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="small opacity-75 fw-bold">PROGRES SPP BULAN INI</div>
-                        <div class="small fw-bold">{{ $sppTagihan > 0 ? round(($sppTerbayar/$sppTagihan)*100) : 0 }}%</div>
-                    </div>
-                    <div class="progress bg-white bg-opacity-25" style="height: 8px;">
-                        <div class="progress-bar bg-white" style="width: {{ $sppTagihan > 0 ? min(100,($sppTerbayar/$sppTagihan)*100) : 0 }}%"></div>
-                    </div>
-                </div>
-            </div>
+    </div>
+
+    <div class="am-note">
+        <i class="bi bi-pc-display-horizontal" style="color:#2563eb;flex-shrink:0;margin-top:1px;"></i>
+        <div style="font-size:12px;color:#1e40af;line-height:1.6;">
+            <strong>Manajemen lengkap hanya di desktop.</strong><br>
+            Kelola akun, kelas, jurusan, pengaturan, dan laporan SPP buka melalui peramban desktop di
+            <span style="font-weight:700;word-break:break-all;">{{ url('/dashboard') }}</span>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="section-title mb-0">Menu Admin Mobile</h2>
-    </div>
-
-    <div class="stagger">
-        <a href="{{ route('admin.settings') }}" class="card mobile-card tap-card text-decoration-none text-dark mb-3">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="icon-box" style="background:#fef3c7; color:#92400e">&#9881;</div>
-                <div>
-                    <div class="fw-bold">Pengaturan Absensi</div>
-                    <div class="small text-secondary">Aktifkan/Matikan Vermuk</div>
-                </div>
-                <div class="ms-auto">&rarr;</div>
-            </div>
-        </a>
-
-        <a href="{{ route('admin.users') }}" class="card mobile-card tap-card text-decoration-none text-dark mb-3">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="icon-box" style="background:#dcfce7; color:#166534">&#128101;</div>
-                <div>
-                    <div class="fw-bold">Manajemen Akun</div>
-                    <div class="small text-secondary">Daftar Guru & Siswa</div>
-                </div>
-                <div class="ms-auto">&rarr;</div>
-            </div>
-        </a>
-
-        <a href="{{ route('pengumuman.index') }}" class="card mobile-card tap-card text-decoration-none text-dark mb-3">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="icon-box" style="background:#e0f2fe; color:#075985">&#128226;</div>
-                <div>
-                    <div class="fw-bold">Pengumuman</div>
-                    <div class="small text-secondary">Buat Pengumuman Baru</div>
-                </div>
-                <div class="ms-auto">&rarr;</div>
-            </div>
-        </a>
-    </div>
-
-    <div class="alert alert-info border-0 rounded-4 mt-4 small">
-        <strong>Info:</strong> Untuk manajemen data berat seperti Kelas, Jurusan, dan Laporan SPP lengkap, disarankan menggunakan versi Desktop/Web.
-    </div>
-</main>
+    <form method="POST" action="{{ route('logout') }}" style="margin-top:16px;">
+        @csrf
+        <button style="width:100%;padding:14px;border-radius:16px;background:#fff5f6;border:1px solid #fecdd3;color:#d94b61;font-weight:700;font-size:14px;cursor:pointer;">
+            <i class="bi bi-box-arrow-right"></i> Keluar Akun
+        </button>
+    </form>
+</div>
 @endsection

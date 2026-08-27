@@ -10,6 +10,7 @@ use App\Models\Tugas;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -20,7 +21,12 @@ class TugasController extends Controller
 {
     public function index(Request $request): View
     {
-        $user = User::with('kelas')->findOrFail($request->session()->get('user_id'));
+        $userId = $request->session()->get('user_id');
+        if (!$userId && Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        }
+
+        $user = User::with('kelas')->findOrFail($userId);
 
         if ($user->role === 'guru') {
             $tugas = Tugas::with(['kelas', 'user'])
@@ -112,10 +118,16 @@ class TugasController extends Controller
 
     public function show(Request $request, Tugas $tugas): View
     {
-        $user = User::with('kelas')->findOrFail($request->session()->get('user_id'));
+        $userId = $request->session()->get('user_id');
+        if (!$userId && Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        }
+
+        $user = User::with('kelas')->findOrFail($userId);
         abort_unless(
-            ($user->role === 'guru' && $tugas->user_id === $user->id)
-            || ($user->role === 'siswa' && $tugas->kelas_id === $user->kelas_id),
+            ($user->role === 'guru' && (int) $tugas->user_id === (int) $user->id)
+            || ($user->role === 'siswa' && (int) $tugas->kelas_id === (int) $user->kelas_id)
+            || $user->role === 'admin',
             403
         );
 
@@ -146,7 +158,13 @@ class TugasController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatedTugasPayload($request);
-        $data['user_id'] = $request->session()->get('user_id');
+
+        $userId = $request->session()->get('user_id');
+        if (!$userId && Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        }
+
+        $data['user_id'] = $userId;
 
         if ($request->hasFile('lampiran')) {
             $data['lampiran'] = $request->file('lampiran')->store('tugas', 'public');
@@ -228,7 +246,13 @@ class TugasController extends Controller
     public function exportGrades(Tugas $tugas)
     {
         $request = request();
-        abort_unless($tugas->user_id === $request->session()->get('user_id'), 403);
+
+        $userId = $request->session()->get('user_id');
+        if (!$userId && Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        }
+
+        abort_unless((int) $tugas->user_id === (int) $userId, 403);
 
         $submissions = PengumpulanTugas::with('siswa')
             ->where('tugas_id', $tugas->id)
@@ -287,8 +311,13 @@ class TugasController extends Controller
 
     public function submit(Request $request, Tugas $tugas): RedirectResponse
     {
-        $user = User::findOrFail($request->session()->get('user_id'));
-        abort_unless($user->role === 'siswa' && $user->kelas_id === $tugas->kelas_id, 403);
+        $userId = $request->session()->get('user_id');
+        if (!$userId && Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        }
+
+        $user = User::findOrFail($userId);
+        abort_unless($user->role === 'siswa' && (int) $user->kelas_id === (int) $tugas->kelas_id, 403);
         abort_if($tugas->isExpired(), 403, 'Batas pengumpulan tugas telah berakhir.');
 
         $existing = PengumpulanTugas::where('tugas_id', $tugas->id)->where('siswa_id', $user->id)->first();
@@ -306,7 +335,7 @@ class TugasController extends Controller
         } else {
             $rules = [
                 'catatan' => ['required', 'string'],
-                'jawaban_file' => [$existing && $existing->jawaban_file ? 'nullable' : 'required', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,zip', 'max:10240'],
+                'jawaban_file' => [$existing && $existing->jawaban_file ? 'nullable' : 'required', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,xlsx,xls,ppt,pptx,csv,txt,zip', 'max:10240'],
             ];
             $data = $request->validate($rules);
             $updateData['catatan'] = $data['catatan'];
@@ -338,9 +367,14 @@ class TugasController extends Controller
 
     public function review(Request $request, PengumpulanTugas $pengumpulan): RedirectResponse
     {
-        $user = User::findOrFail($request->session()->get('user_id'));
+        $userId = $request->session()->get('user_id');
+        if (!$userId && Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        }
+
+        $user = User::findOrFail($userId);
         $pengumpulan->load('tugas');
-        abort_unless($user->role === 'guru' && $pengumpulan->tugas->user_id === $user->id, 403);
+        abort_unless($user->role === 'guru' && (int) $pengumpulan->tugas->user_id === (int) $user->id, 403);
 
         $data = $request->validate([
             'nilai' => ['required', 'numeric', 'between:0,100'],
@@ -363,7 +397,22 @@ class TugasController extends Controller
 
     private function assertOwner(Request $request, Tugas $tugas): void
     {
-        abort_unless($tugas->user_id === $request->session()->get('user_id'), 403);
+        $userId = $request->session()->get('user_id');
+
+        if (!$userId && Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        }
+
+        $userRole = $request->session()->get('user_role');
+
+        if (!$userRole && Auth::guard('web')->check()) {
+            $userRole = Auth::guard('web')->user()?->role;
+        }
+
+        $isOwner = (int) $tugas->user_id === (int) $userId;
+        $isAdmin = $userRole === 'admin';
+
+        abort_unless($isOwner || $isAdmin, 403);
     }
 
     private function validatedTugasPayload(Request $request): array
@@ -374,7 +423,7 @@ class TugasController extends Controller
             'tipe' => ['required', 'in:file,form'],
             'batas_pengumpulan' => ['nullable', 'date'],
             'kelas_id' => ['required', 'exists:kelas,id'],
-            'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120'],
+            'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,xlsx,xls,ppt,pptx,csv,txt,zip', 'max:10240'],
         ]);
 
         if ($data['tipe'] === 'form') {
@@ -490,7 +539,16 @@ class TugasController extends Controller
             ->get();
 
         foreach ($students as $student) {
-            Mail::to($student->email)->queue(new TugasBaruMail($tugas));
+            // Kirim sinkron: QUEUE_CONNECTION=database tapi tidak ada proses
+            // queue:work yang dijalankan di Railway, jadi ->queue() tidak akan
+            // pernah dieksekusi dan email hilang tanpa suara.
+            try {
+                Mail::to($student->email)->send(new TugasBaruMail($tugas));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error(
+                    'Gagal kirim email tugas ke '.$student->email.': '.$e->getMessage()
+                );
+            }
         }
     }
 

@@ -61,6 +61,10 @@ return [
             // ],
         ],
 
+        // PERINGATAN: transport ini TIDAK bisa dipakai di proyek ini.
+        // Paket 'resend/resend-php' tidak ada di composer.json, jadi
+        // MAIL_MAILER=resend akan melempar error saat email dikirim.
+        // Untuk Resend, gunakan mailer 'smtp' dengan host smtp.resend.com.
         'resend' => [
             'transport' => 'resend',
         ],

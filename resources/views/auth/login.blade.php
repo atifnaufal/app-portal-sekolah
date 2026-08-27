@@ -2,271 +2,356 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Masuk | Portal Akademik Sekolah</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Masuk | Portal Sekolah Digital</title>
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#246bfe">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1e3a5f">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root {
-            --primary-color: #246bfe;
-            --dark-blue: #14213d;
-            --surface-color: #f8f9fa;
-        }
-
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--dark-blue), var(--primary-color));
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            min-height: 100vh; margin: 0;
+            background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 40%, #1d4ed8 100%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px; overflow-x: hidden;
         }
 
-        .login-card {
-            max-width: 440px;
-            width: 100%;
-            border: none;
-            border-radius: 28px;
-            box-shadow: 0 20px 45px rgba(0,0,0,0.25);
-            background: #fff;
-            position: relative;
+        .auth-container {
+            max-width: 440px; width: 100%; position: relative;
         }
 
-        .card-header-section {
-            background: #f0f4ff;
-            padding: 50px 30px 20px;
+        /* Screen transitions */
+        .auth-screen {
+            display: none;
+            animation: screenIn 0.4s ease both;
+        }
+        .auth-screen.active { display: block; }
+        @keyframes screenIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Welcome Screen */
+        .welcome-card {
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 32px;
+            padding: 52px 32px 40px;
             text-align: center;
-            border-radius: 28px 28px 0 0;
+            color: #fff;
+        }
+        .welcome-logo {
+            width: 100px; height: 100px; border-radius: 30px;
+            margin: 0 auto 24px;
+            background: transparent;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            filter: drop-shadow(0 6px 16px rgba(0,0,0,0.25));
+        }
+        .welcome-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .welcome-title {
+            font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+        .welcome-sub {
+            font-size: 14px; opacity: 0.6; line-height: 1.5;
+            margin-bottom: 36px;
+        }
+        .welcome-features {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            margin-bottom: 36px; text-align: left;
+        }
+        .welcome-feature {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px; padding: 16px;
+        }
+        .welcome-feature-icon {
+            width: 32px; height: 32px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; margin-bottom: 8px;
+        }
+        .welcome-feature-title { font-size: 12px; font-weight: 700; }
+        .welcome-feature-desc { font-size: 10px; opacity: 0.5; margin-top: 2px; }
+
+        .btn-welcome {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 14px 28px; border-radius: 16px; font-weight: 700;
+            font-size: 14px; border: none; cursor: pointer;
+            transition: all 0.2s; text-decoration: none; width: 100%;
+        }
+        .btn-welcome:active { transform: scale(0.97); }
+        .btn-welcome-primary {
+            background: #fff; color: #1e3a5f;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .btn-welcome-secondary {
+            background: rgba(255,255,255,0.1); color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Login Screen */
+        .login-card {
+            background: #fff;
+            border-radius: 28px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+        .login-header {
+            background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+            padding: 36px 32px 28px;
+            text-align: center;
             position: relative;
         }
-
-        .logo-school-wrapper {
-            position: absolute;
-            top: -40px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 100px;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .login-header-logo {
+            width: 64px; height: 64px; border-radius: 20px;
+            margin: 0 auto 14px; overflow: hidden;
+            background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px rgba(15,23,42,0.10);
         }
+        .login-header-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .login-header h1 { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0; }
+        .login-header p { font-size: 12px; color: #64748b; margin: 4px 0 0; }
 
-        .logo-school-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: none;
-        }
-
-        .illustration-img {
-            width: 100%;
-            max-width: 200px;
-            height: auto;
-            margin: 0 auto;
-            display: block;
-        }
+        .login-body { padding: 28px 32px 32px; }
 
         .form-control {
-            border-radius: 14px;
-            padding: 12px 18px;
-            border: 1px solid #e2e8f0;
-            background: #fbfcfe;
-            font-size: 14px;
+            border-radius: 14px; padding: 12px 16px;
+            border: 1.5px solid #e2e8f0; background: #f8fafc;
+            font-size: 14px; transition: all 0.2s;
         }
-
         .form-control:focus {
-            box-shadow: 0 0 0 4px rgba(36, 107, 254, 0.12);
-            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(36,107,254,0.1);
+            border-color: #246bfe; background: #fff;
+        }
+        .form-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+
+        .btn-login-submit {
+            width: 100%; padding: 14px; border-radius: 14px;
+            background: linear-gradient(135deg, #246bfe, #1d59d4);
+            color: #fff; font-weight: 700; font-size: 14px;
+            border: none; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 6px 20px rgba(36,107,254,0.25);
+        }
+        .btn-login-submit:active { transform: scale(0.97); }
+        .btn-login-submit:disabled { opacity: 0.7; }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7);
+            text-decoration: none; margin-bottom: 16px; cursor: pointer;
+            background: none; border: none; padding: 0;
+        }
+        .back-btn:hover { color: #fff; }
+
+        .password-toggle { cursor: pointer; color: #94a3b8; }
+
+        .info-box {
+            background: #f8fafc; border: 1px dashed #e2e8f0;
+            border-radius: 12px; padding: 10px 12px;
+            font-size: 11px; color: #64748b; margin-top: 12px;
         }
 
-        .btn-login {
-            background: var(--primary-color);
-            border: none;
-            border-radius: 14px;
-            padding: 14px;
-            font-weight: 700;
-            font-size: 15px;
-            letter-spacing: 0.8px;
-            transition: all 0.3s;
+        /* Loading overlay */
+        #loading-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(15,23,42,0.9); backdrop-filter: blur(8px);
+            display: none; flex-direction: column;
+            align-items: center; justify-content: center; color: #fff;
         }
-
-        .btn-login:hover {
-            background: #1d59d4;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(36, 107, 254, 0.35);
-        }
-
-        .password-toggle {
-            cursor: pointer;
-            color: #94a3b8;
-            padding: 0 10px;
-        }
-
-        .input-group-text {
-            background: #fbfcfe;
-            border-color: #e2e8f0;
-            color: #64748b;
-        }
-
-        #web-splash {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
-
+        #loading-overlay.show { display: flex; }
         .loader-ring {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(36, 107, 254, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 0.8s ease-in-out infinite;
+            width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #60a5fa; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .instruction-box {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 11px;
-            color: #64748b;
-            border: 1px dashed #cbd5e1;
-            margin-top: 8px;
-        }
-
-        @media (max-width: 576px) {
-            .login-card { border-radius: 24px; margin-top: 40px; }
-            .card-header-section { padding: 50px 20px 20px; }
-            .illustration-img { max-width: 180px; }
+        @media (max-width: 480px) {
+            body { padding: 12px; align-items: flex-start; padding-top: 40px; }
+            .welcome-card { padding: 32px 20px 24px; border-radius: 28px; }
+            .welcome-features { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .login-body { padding: 20px; }
         }
     </style>
 </head>
 <body>
 
-<div id="web-splash">
+<div id="loading-overlay">
     <div class="loader-ring"></div>
-    <div class="mt-3 fw-bold" style="color: var(--dark-blue)">MEMUAT PORTAL</div>
-    <div class="small text-muted mt-1">Menyiapkan lingkungan akademik...</div>
+    <div style="font-weight:700;margin-top:16px;font-size:14px;">Menghubungkan...</div>
+    <div style="font-size:12px;opacity:0.5;margin-top:4px;">Menyiapkan App portal akademik</div>
 </div>
 
-<div class="container">
-    <div class="card login-card mx-auto">
-        <div class="logo-school-wrapper">
-            <img src="{{ asset('logo_sekolah.png') }}" alt="Logo Sekolah" onerror="this.src='https://png.pngtree.com/png-clipart/20230124/original/pngtree-high-school-kids-holding-big-red-and-white-flags-png-image_8927815.png'">
-        </div>
+<div class="auth-container">
+    {{-- ========== SCREEN 1: WELCOME ========== --}}
+    <div class="auth-screen active" id="welcomeScreen">
+        <div class="welcome-card">
+            <div class="welcome-logo">
+                <img src="{{ asset('logo_sekolah.png') }}" alt="Logo" onerror="this.style.display='none'">
+            </div>
+            <div class="welcome-title">Portal Sekolah Digital</div>
+            <div class="welcome-sub">Portal Akademik Mahasiswa & Guru</div>
 
-        <div class="card-header-section">
-            <!-- Undraw Illustration (Fallback to direct SVG URL if API fails) -->
-            <img src="https://raw.githubusercontent.com/undraw-co/undraw-co.github.io/master/img/illustrations/undraw_back_to_school_re_8nrc.svg" alt="Illustration" class="illustration-img" onerror="this.src='https://illustrations.popsy.co/blue/studying.svg'">
-            <div class="mt-2">
-                <h1 class="h5 fw-bold mb-1" style="color: var(--dark-blue)">SELAMAT DATANG</h1>
-                <p class="text-secondary small mb-0">Portal Akademik Mahasiswa & Guru</p>
+            <div class="welcome-features">
+                <div class="welcome-feature">
+                    <div class="welcome-feature-icon" style="background:rgba(59,130,246,0.2);color:#60a5fa;">
+                        <i class="bi bi-journal-check"></i>
+                    </div>
+                    <div class="welcome-feature-title">Tugas Online</div>
+                    <div class="welcome-feature-desc">Kerjakan & kumpul tugas</div>
+                </div>
+                <div class="welcome-feature">
+                    <div class="welcome-feature-icon" style="background:rgba(16,185,129,0.2);color:#34d399;">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div class="welcome-feature-title">Absensi Digital</div>
+                    <div class="welcome-feature-desc">Catat kehadiran realtime</div>
+                </div>
+                <div class="welcome-feature">
+                    <div class="welcome-feature-icon" style="background:rgba(251,191,36,0.2);color:#fbbf24;">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <div class="welcome-feature-title">Pembayaran SPP</div>
+                    <div class="welcome-feature-desc">Monitor tagihan & bayar</div>
+                </div>
+                <div class="welcome-feature">
+                    <div class="welcome-feature-icon" style="background:rgba(139,92,246,0.2);color:#a78bfa;">
+                        <i class="bi bi-chat-dots"></i>
+                    </div>
+                    <div class="welcome-feature-title">Chat Grup</div>
+                    <div class="welcome-feature-desc">Komunikasi dengan kelas</div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;">
+                <button type="button" class="btn-welcome btn-welcome-primary" onclick="showScreen('loginScreen')" style="flex:1;">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </button>
+                @if(\App\Models\Setting::getValue('registration_guru_enabled', false) || \App\Models\Setting::getValue('registration_siswa_enabled', false))
+                    <a href="{{ route('register') }}" class="btn-welcome btn-welcome-secondary" style="flex:1;">
+                        <i class="bi bi-person-plus"></i> Daftar
+                    </a>
+                @endif
+            </div>
+
+            <div style="margin-top:20px;">
+                <a href="{{ asset('downloads/app-portal-sekolah.apk') }}" style="font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none;">
+                    <i class="bi bi-cloud-arrow-down"></i> Unduh Aplikasi Android
+                </a>
             </div>
         </div>
+    </div>
 
-        <div class="card-body p-4 p-md-4">
-            @if(session('success'))<div class="alert alert-success small py-2 mb-3 border-0">{{ session('success') }}</div>@endif
-            @if(session('error'))<div class="alert alert-danger small py-2 mb-3 border-0">{{ session('error') }}</div>@endif
+    {{-- ========== SCREEN 2: LOGIN FORM ========== --}}
+    <div class="auth-screen" id="loginScreen">
+        <button type="button" class="back-btn" onclick="showScreen('welcomeScreen')">
+            <i class="bi bi-chevron-left"></i> Kembali
+        </button>
 
-            <form method="POST" action="{{ route('login.store') }}" id="loginForm">
-                @csrf
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-dark">ALAMAT EMAIL</label>
-                    <div class="input-group">
-                        <span class="input-group-text border-end-0" style="border-radius: 14px 0 0 14px;">
-                            <i class="bi bi-person"></i>
-                        </span>
-                        <input type="email" name="email" value="{{ old('email') }}" class="form-control border-start-0" placeholder="nama@sekolah.com" required autofocus style="border-radius: 0 14px 14px 0;">
-                    </div>
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-header-logo">
+                    <img src="{{ asset('logo_sekolah.png') }}" alt="Logo" onerror="this.style.display='none'">
                 </div>
+                <h1>Portal Sekolah Digital</h1>
+                <p>Portal Akademik Mahasiswa & Guru</p>
+            </div>
 
-                <div class="mb-4">
-                    <label class="form-label fw-bold small text-dark">KATA SANDI</label>
-                    <div class="input-group">
-                        <span class="input-group-text border-end-0" style="border-radius: 14px 0 0 14px;">
-                            <i class="bi bi-shield-lock"></i>
-                        </span>
-                        <input type="password" name="password" id="passwordInput" class="form-control border-start-0 border-end-0" placeholder="••••••••" required>
-                        <span class="input-group-text border-start-0" style="border-radius: 0 14px 14px 0;">
-                            <i class="bi bi-eye password-toggle" id="togglePassword"></i>
-                        </span>
+            <div class="login-body">
+                @if(session('success'))<div class="alert alert-success small py-2 mb-3 border-0 rounded-3">{{ session('success') }}</div>@endif
+                @if(session('error'))<div class="alert alert-danger small py-2 mb-3 border-0 rounded-3">{{ session('error') }}</div>@endif
+
+                <form method="POST" action="{{ route('login.store') }}" id="loginForm">
+                    @csrf
+                    <div style="margin-bottom:14px;">
+                        <label class="form-label">Alamat Email</label>
+                        <div style="position:relative;">
+                            <i class="bi bi-person" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:15px;"></i>
+                            <input type="email" name="email" value="{{ old('email') }}" class="form-control" style="padding-left:40px;" placeholder="nama@gmail.com" required autofocus>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between mt-2">
-                        <a href="{{ route('password.request') }}" class="x-small fw-bold text-decoration-none text-primary">Lupa Password?</a>
-                        <a href="{{ route('email.request') }}" class="x-small fw-bold text-decoration-none text-muted">Lupa Email?</a>
+
+                    <div style="margin-bottom:8px;">
+                        <label class="form-label">Kata Sandi</label>
+                        <div style="position:relative;">
+                            <i class="bi bi-shield-lock" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:15px;"></i>
+                            <input type="password" name="password" id="passwordInput" class="form-control" style="padding-left:40px;padding-right:40px;" placeholder="Masukkan password" required>
+                            <i class="bi bi-eye password-toggle" id="togglePassword" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:15px;"></i>
+                        </div>
                     </div>
-                    <div class="instruction-box mt-3">
-                        <div class="d-flex gap-2">
-                            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                            <div class="small">
-                                <div class="fw-bold" style="color: #92400e;">Email dipastikan aktif dan harus terkonfirmasi dahulu baru bisa masuk sepenuhnya.</div>
-                                <div class="mt-1 text-muted x-small">Lupa semuanya? Berikan NIK ke Bagian Admin IT Sekolah untuk reset atau aktivasi.</div>
-                            </div>
+
+                    <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
+                        <a href="{{ route('password.request') }}" style="font-size:11px;font-weight:600;color:#246bfe;text-decoration:none;">Lupa Password?</a>
+                        <a href="{{ route('email.request') }}" style="font-size:11px;font-weight:600;color:#94a3b8;text-decoration:none;">Lupa Email?</a>
+                    </div>
+
+                    <button type="submit" class="btn-login-submit" id="submitBtn">
+                        Masuk ke Portal
+                    </button>
+                </form>
+
+                <div class="info-box">
+                    <div style="display:flex;gap:8px;align-items:start;">
+                        <i class="bi bi-info-circle" style="color:#3b82f6;flex-shrink:0;margin-top:1px;"></i>
+                        <div>
+                            <div style="margin-top:2px;color:#94a3b8;">Butuh bantuan akses? Hubungi Admin IT sekolah.</div>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-login w-100 text-white mb-3">
-                    MASUK KE PORTAL &rarr;
-                </button>
-            </form>
-
-            @if(\App\Models\Setting::getValue('registration_enabled', false))
-                <div class="text-center mt-2">
-                    <span class="small text-muted">Belum terdaftar?</span>
-                    <a href="{{ route('register') }}" class="small fw-bold text-decoration-none ms-1">Minta Akses</a>
-                </div>
-            @endif
-
-            <div id="download-app-area" class="mt-4 pt-3 border-top text-center">
-                <a href="{{ asset('downloads/app-portal-sekolah.apk') }}" class="text-decoration-none d-flex align-items-center justify-content-center gap-2">
-                    <i class="bi bi-cloud-arrow-down text-primary"></i>
-                    <span class="small fw-bold text-dark">Unduh Aplikasi Android</span>
-                </a>
+                @if(\App\Models\Setting::getValue('registration_guru_enabled', false) || \App\Models\Setting::getValue('registration_siswa_enabled', false))
+                    <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #f1f5f9;">
+                        <span style="font-size:12px;color:#94a3b8;">Belum punya akun?</span>
+                        <a href="{{ route('register') }}" style="font-size:12px;font-weight:700;color:#246bfe;text-decoration:none;margin-left:4px;">Daftar Sekarang</a>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Password Toggle Logic
-    const togglePassword = document.querySelector('#togglePassword');
-    const passwordInput = document.querySelector('#passwordInput');
+function showScreen(id) {
+    document.querySelectorAll('.auth-screen').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+}
 
-    togglePassword.addEventListener('click', function () {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        this.classList.toggle('bi-eye');
-        this.classList.toggle('bi-eye-slash');
-    });
-
-    // Loading Splash Logic
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        document.getElementById('web-splash').style.display = 'flex';
-        const btn = this.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>MENGHUBUNGKAN...';
-    });
-
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js');
-        });
+// Password toggle
+document.getElementById('togglePassword').addEventListener('click', function() {
+    var input = document.getElementById('passwordInput');
+    if (input.type === 'password') {
+        input.type = 'text';
+        this.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+        input.type = 'password';
+        this.classList.replace('bi-eye-slash', 'bi-eye');
     }
+});
+
+// Loading on submit
+document.getElementById('loginForm').addEventListener('submit', function() {
+    document.getElementById('loading-overlay').classList.add('show');
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan...';
+});
+
+// Auto-show login if there are errors (validation failed)
+@if($errors->any())
+    showScreen('loginScreen');
+@endif
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js');
+    });
+}
 </script>
 </body>
 </html>

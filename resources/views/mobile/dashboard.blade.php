@@ -1,120 +1,331 @@
 @extends('layouts.mobile-app')
 @section('content')
-<header class="mobile-hero" style="padding-top: 45px; border-radius: 0 0 45px 45px; box-shadow: 0 10px 30px rgba(20, 33, 61, 0.2);">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <div class="eyebrow" style="opacity: 0.9; letter-spacing: 2.5px; font-weight: 900; color: rgba(255,255,255,0.85);">PORTAL AKADEMIK</div>
-            <div class="hero-title mt-1" style="font-size: 28px; color: #fff;">Halo, {{ $user->name }}!</div>
-            <!-- Seluruh badge dan div mt-2 di bawah nama dihapus total agar bersih -->
+@php
+    $isGuru = $user->role === 'guru';
+    $spp = $sppStats ?? null;
+    $hadir = (int) ($absensiBulan['hadir'] ?? $absensiBulan['Hadir'] ?? 0);
+    $izin = (int) ($absensiBulan['izin'] ?? $absensiBulan['Izin'] ?? 0);
+    $sakit = (int) ($absensiBulan['sakit'] ?? $absensiBulan['Sakit'] ?? 0);
+    $alpha = (int) ($absensiBulan['alpha'] ?? $absensiBulan['Alpha'] ?? 0);
+    $totalAbsen = $hadir + $izin + $sakit + $alpha;
+    $pctHadir = $totalAbsen > 0 ? round(($hadir / $totalAbsen) * 100) : 0;
+@endphp
+
+<style>
+    .db-body { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
+
+    /* Hero Card - Dark gradient like banking card */
+    .db-hero-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+        border-radius: 28px;
+        padding: 24px 22px;
+        margin-bottom: 18px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.3);
+    }
+    .db-hero-card::before {
+        content: ''; position: absolute; top: -50%; right: -30%;
+        width: 200px; height: 200px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+    }
+    .db-hero-card::after {
+        content: ''; position: absolute; bottom: -40%; left: -20%;
+        width: 180px; height: 180px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+    }
+
+    .db-hero-greeting { font-size: 13px; opacity: 0.6; font-weight: 600; letter-spacing: 0.05em; }
+    .db-hero-name { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-top: 2px; }
+    .db-hero-class {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px; padding: 6px 14px; font-size: 12px; font-weight: 600;
+        margin-top: 12px; backdrop-filter: blur(8px);
+    }
+
+    .db-hero-avatar {
+        width: 50px; height: 50px; border-radius: 18px; overflow: hidden;
+        background: transparent;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; font-weight: 800; flex-shrink: 0;
+        filter: drop-shadow(0 3px 8px rgba(0,0,0,0.2));
+    }
+    .db-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Stat Cards Row */
+    .db-stat-row { display: flex; gap: 10px; margin-bottom: 16px; }
+    .db-stat-card {
+        flex: 1; border-radius: 20px; padding: 16px 12px;
+        text-align: center; position: relative; overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .db-stat-card::before {
+        content: ''; position: absolute; top: -12px; right: -12px;
+        width: 50px; height: 50px; border-radius: 50%; opacity: 0.15;
+    }
+    .db-stat-num { font-size: 24px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+    .db-stat-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.03em; margin-top: 4px; opacity: 0.65; }
+    .db-stat-icon {
+        width: 36px; height: 36px; border-radius: 12px; margin: 0 auto 8px;
+        display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+
+    /* Section Card */
+    .db-section {
+        background: #fff; border-radius: 22px; padding: 18px;
+        margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .db-section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 14px;
+    }
+    .db-section-title { font-size: 15px; font-weight: 800; color: #1e293b; }
+    .db-section-link { font-size: 12px; font-weight: 700; color: #6366f1; text-decoration: none; }
+
+    /* Quick Menu Grid */
+    .db-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .db-menu-item {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 12px 4px; border-radius: 14px; text-decoration: none;
+        transition: all 0.13s; -webkit-tap-highlight-color: transparent;
+    }
+    .db-menu-item:active { transform: scale(0.93); background: #f8fafc; }
+    .db-menu-icon {
+        width: 48px; height: 48px; border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; margin-bottom: 6px;
+    }
+    .db-menu-label { font-size: 10px; font-weight: 700; color: #475569; text-align: center; }
+
+    /* List Items */
+    .db-list-item {
+        display: flex; align-items: center; gap: 12px; padding: 10px 0;
+        text-decoration: none; color: #1e293b;
+    }
+    .db-list-item + .db-list-item { border-top: 1px solid #f1f5f9; }
+    .db-list-icon {
+        width: 42px; height: 42px; border-radius: 14px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .db-list-text { flex: 1; min-width: 0; }
+    .db-list-title { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .db-list-sub { font-size: 11px; color: #94a3b8; }
+
+    /* Attendance Bar */
+    .db-absen-bar { height: 10px; border-radius: 99px; background: #f1f5f9; overflow: hidden; display: flex; margin-bottom: 10px; }
+    .db-absen-legend { display: flex; gap: 12px; flex-wrap: wrap; }
+    .db-absen-legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: #64748b; }
+    .db-absen-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* Alert Card */
+    .db-alert {
+        border-radius: 18px; padding: 14px 16px; margin-bottom: 14px;
+        display: flex; align-items: center; gap: 12px;
+    }
+    .db-alert-icon {
+        width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp 0.4s ease both; }
+</style>
+
+<div class="db-body" style="padding-top: 12px;">
+    {{-- Hero Card --}}
+    <div class="db-hero-card fade-up">
+        <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div class="db-hero-avatar">
+                    @if($user->foto)
+                        <img src="{{ asset('storage/'.$user->foto) }}">
+                    @else
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                    @endif
+                </div>
+                <div>
+                    <div class="db-hero-greeting">PORTAL AKADEMIK</div>
+                    <div class="db-hero-name">Halo, {{ explode(' ', $user->name)[0] }}!</div>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <a href="{{ route('notifications.index') }}" style="width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;position:relative;border:1px solid rgba(255,255,255,0.1);">
+                    <i class="bi bi-bell-fill" style="font-size:17px;"></i>
+                    @if($unreadNotificationsCount > 0)
+                        <span style="position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#ef4444;border:1.5px solid #1e1b4b;"></span>
+                    @endif
+                </a>
+            </div>
         </div>
-        <div class="d-flex align-items-center gap-3">
-            <a href="{{ route('notifications.index') }}" class="btn bg-white shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center position-relative" style="width: 48px; height: 48px; color: #246bfe; border: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917z"/></svg>
-                @if($unreadNotificationsCount > 0)
-                    <span id="notif-dot" class="position-absolute top-0 start-100 translate-middle p-2 bg-success border border-2 border-white rounded-circle" style="box-shadow: 0 0 15px rgba(25, 135, 84, 0.6);"></span>
-                @endif
+        @if($user->kelas)
+            <div class="db-hero-class" style="position:relative;z-index:1;">
+                <i class="bi bi-mortarboard-fill" style="color:#fbbf24;font-size:14px;"></i>
+                {{ $user->kelas->nama }}
+            </div>
+        @endif
+    </div>
+
+    {{-- Stat Cards --}}
+    <div class="db-stat-row fade-up" style="animation-delay:0.05s;">
+        <a href="{{ route('tugas.index') }}" class="db-stat-card text-decoration-none" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#1e40af;">
+            <div class="db-stat-icon" style="background:rgba(37,99,235,0.12);color:#2563eb;"><i class="bi bi-journal-check"></i></div>
+            <div class="db-stat-num">{{ $tugasAktif }}</div>
+            <div class="db-stat-lbl">Tugas Aktif</div>
+        </a>
+        @if($spp)
+            <a href="{{ route('spp.index') }}" class="db-stat-card text-decoration-none" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);color:#065f46;">
+                <div class="db-stat-icon" style="background:rgba(5,150,105,0.12);color:#059669;"><i class="bi bi-wallet2"></i></div>
+                <div class="db-stat-num">{{ $spp['lunas'] }}<span style="font-size:14px;opacity:0.5;">/{{ $spp['total'] }}</span></div>
+                <div class="db-stat-lbl">SPP Lunas</div>
             </a>
-            <a href="{{ route('profile.show') }}" class="avatar border border-3 border-white border-opacity-30 shadow-sm" style="width: 52px; height: 52px; border-radius: 18px; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px); overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                @if($user->foto)
-                    <img src="{{ asset('storage/'.$user->foto) }}" alt="P"
-                         style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <span class="h5 mb-0 fw-bold text-white w-100 h-100 d-none align-items-center justify-content-center">{{ strtoupper(substr($user->name,0,1)) }}</span>
-                @else
-                    <span class="h5 mb-0 fw-bold text-white w-100 h-100 d-flex align-items-center justify-content-center">{{ strtoupper(substr($user->name,0,1)) }}</span>
-                @endif
-            </a>
+        @endif
+        <div class="db-stat-card" style="background:linear-gradient(135deg,#fefce8,#fef3c7);color:#92400e;">
+            <div class="db-stat-icon" style="background:rgba(217,119,6,0.12);color:#d97706;"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="db-stat-num">{{ $pctHadir }}<span style="font-size:14px;">%</span></div>
+            <div class="db-stat-lbl">Hadir</div>
         </div>
     </div>
-</header>
 
-<main class="mobile-content" style="margin-top: -30px;">
-    <!-- Widgets Grid -->
-    <div class="row g-3 stagger mb-4">
-        <div class="col-6">
-            <a href="{{ route('tugas.index') }}" class="card mobile-card tap-card border-0 text-decoration-none text-dark h-100 shadow-sm" style="border-radius: 28px; background: #fff;">
-                <div class="card-body p-4 text-center">
-                    <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 54px; height: 54px; border-radius: 18px; background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #0284c7;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/><path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.147-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.147-1.147a.5.5 0 0 1 .708 0z"/></svg>
-                    </div>
-                    <div class="h3 fw-bold mb-0" style="color: #0c4a6e; font-size: 24px;">{{ $tugas->count() }}</div>
-                    <div class="fw-bold text-muted mt-1" style="font-size: 10px; letter-spacing: 1.2px;">TUGAS AKTIF</div>
-                </div>
-            </a>
+    {{-- Quick Menu --}}
+    <div class="db-section fade-up" style="animation-delay:0.1s;">
+        <div class="db-section-header">
+            <div class="db-section-title">Menu Cepat</div>
         </div>
-        <div class="col-6">
-            <a href="{{ route('spp.index') }}" class="card mobile-card tap-card border-0 text-decoration-none text-dark h-100 shadow-sm" style="border-radius: 28px; background: #fff;">
-                <div class="card-body p-4 text-center">
-                    <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 54px; height: 54px; border-radius: 18px; background: linear-gradient(135deg, #fef3c7, #fde68a); color: #d97706;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13zM1 3.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-1zm0 4a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm7 0a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-7 3a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"/></svg>
-                    </div>
-                    <div class="h3 fw-bold mb-0" style="color: #78350f; font-size: 24px;">SPP</div>
-                    <div class="fw-bold text-muted mt-1" style="font-size: 10px; letter-spacing: 1.2px;">PEMBAYARAN</div>
-                </div>
+        <div class="db-menu-grid">
+            <a href="{{ route('absensi.index') }}" class="db-menu-item">
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb;"><i class="bi bi-calendar-check-fill"></i></div>
+                <div class="db-menu-label">Absensi</div>
             </a>
+            <a href="{{ route('tugas.index') }}" class="db-menu-item">
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#d97706;"><i class="bi bi-journal-check"></i></div>
+                <div class="db-menu-label">Tugas</div>
+            </a>
+            <a href="{{ route('spp.index') }}" class="db-menu-item">
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#059669;"><i class="bi bi-wallet2"></i></div>
+                <div class="db-menu-label">SPP</div>
+            </a>
+            <a href="{{ route('chat.index') }}" class="db-menu-item">
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#7c3aed;"><i class="bi bi-chat-dots-fill"></i></div>
+                <div class="db-menu-label">Chat</div>
+            </a>
+            <!-- <a href="{{ route('pengumuman.index') }}" class="db-menu-item">
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#dc2626;"><i class="bi bi-megaphone-fill"></i></div>
+                <div class="db-menu-label">Info</div>
+            </a>
+         
+            @if($isGuru)
+               <a href="{{ route('mahasiswa.index') }}" class="db-menu-item">
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#cffafe,#a5f3fc);color:#0891b2;"><i class="bi bi-people-fill"></i></div>
+                <div class="db-menu-label">Siswa</div>
+                </a>
+                <a href="{{ route('tugas.create') }}" class="db-menu-item">
+                    <div class="db-menu-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#059669;"><i class="bi bi-plus-circle-fill"></i></div>
+                    <div class="db-menu-label">Buat Tugas</div>
+                </a>
+            @endif
+            <a href="{{ route('profile.show') }}" class="db-menu-item">
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0);color:#64748b;"><i class="bi bi-gear-fill"></i></div>
+                <div class="db-menu-label">Profil</div>
+            </a> -->
+            
         </div>
     </div>
 
-    @if($user->role === 'guru')
-        <div class="px-2">
-            <a href="{{ route('tugas.create') }}" class="btn btn-primary w-100 mb-4 shadow py-3" style="border-radius: 22px; font-weight: 800; background: linear-gradient(135deg, #246bfe, #1d59d4); border: none;">
-                <i class="bi bi-plus-circle-fill me-2"></i> BUAT TUGAS BARU
-            </a>
+    {{-- Absensi Bulan Ini --}}
+    @if($totalAbsen > 0)
+        <div class="db-section fade-up" style="animation-delay:0.15s;">
+            <div class="db-section-header">
+                <div class="db-section-title">Absensi Bulan Ini</div>
+                <span style="font-size:11px;color:#94a3b8;font-weight:600;">{{ $totalAbsen }} hari</span>
+            </div>
+            <div class="db-absen-bar">
+                <span style="width:{{ ($hadir/$totalAbsen)*100 }}%;background:linear-gradient(90deg,#16a34a,#4ade80);"></span>
+                <span style="width:{{ ($sakit/$totalAbsen)*100 }}%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></span>
+                <span style="width:{{ ($izin/$totalAbsen)*100 }}%;background:linear-gradient(90deg,#3b82f6,#60a5fa);"></span>
+                <span style="width:{{ ($alpha/$totalAbsen)*100 }}%;background:linear-gradient(90deg,#ef4444,#f87171);"></span>
+            </div>
+            <div class="db-absen-legend">
+                <div class="db-absen-legend-item"><span class="db-absen-dot" style="background:#16a34a;"></span> Hadir {{ $hadir }}</div>
+                <div class="db-absen-legend-item"><span class="db-absen-dot" style="background:#f59e0b;"></span> Sakit {{ $sakit }}</div>
+                <div class="db-absen-legend-item"><span class="db-absen-dot" style="background:#3b82f6;"></span> Izin {{ $izin }}</div>
+                <div class="db-absen-legend-item"><span class="db-absen-dot" style="background:#ef4444;"></span> Alpha {{ $alpha }}</div>
+            </div>
         </div>
     @endif
 
-    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
-        <h2 class="section-title mb-0" style="font-size: 19px; color: #14213d; font-weight: 800;">Pengumuman Terkini</h2>
-        <a href="{{ route('pengumuman.index') }}" class="btn btn-link text-decoration-none fw-bold p-0" style="font-size: 13px; color: #246bfe;">Lihat Semua</a>
+    {{-- Tugas Terbaru --}}
+    <div class="db-section fade-up" style="animation-delay:0.2s;">
+        <div class="db-section-header">
+            <div class="db-section-title">Tugas Terbaru</div>
+            <a href="{{ route('tugas.index') }}" class="db-section-link">Lihat Semua</a>
+        </div>
+        @forelse($tugas as $t)
+            @php
+                $dl = $t->deadlineStatus();
+                $bgColors = ['ok' => '#eff6ff', 'soon' => '#fef3c7', 'today' => '#fee2e2', 'expired' => '#f1f5f9', 'open' => '#ecfdf5'];
+                $txColors = ['ok' => '#2563eb', 'soon' => '#d97706', 'today' => '#dc2626', 'expired' => '#94a3b8', 'open' => '#059669'];
+                $bg = $bgColors[$dl['key']] ?? '#f8fafc';
+                $tx = $txColors[$dl['key']] ?? '#64748b';
+            @endphp
+            <a href="{{ route('tugas.show', $t) }}" class="db-list-item">
+                <div class="db-list-icon" style="background:{{ $bg }};color:{{ $tx }};">
+                    <i class="bi {{ $t->isForm() ? 'bi-ui-checks-grid' : 'bi-file-earmark-text-fill' }}"></i>
+                </div>
+                <div class="db-list-text">
+                    <div class="db-list-title">{{ $t->judul }}</div>
+                    <div class="db-list-sub">{{ $dl['label'] }}</div>
+                </div>
+                <i class="bi bi-chevron-right" style="font-size:12px;color:#cbd5e1;"></i>
+            </a>
+        @empty
+            <div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Belum ada tugas</div>
+        @endforelse
     </div>
 
-    <div class="stagger px-1">
-        @forelse($publicPengumumans as $item)
-            <a href="{{ route('pengumuman.index') }}" class="card mobile-card tap-card text-decoration-none text-dark mb-3 border-0 shadow-sm" style="border-radius: 25px; overflow: hidden;">
-                @if($item->gambar)
-                    <img src="{{ asset('storage/'.$item->gambar) }}" alt="{{ $item->judul }}" style="width:100%; height:180px; object-fit:cover;">
-                @endif
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="badge rounded-pill px-3 py-1" style="background: #e0f2fe; color: #0284c7; font-size: 10px; font-weight: 800; letter-spacing: 0.5px;">INFO</span>
-                        <div class="fw-bold text-muted" style="font-size: 10px;">{{ $item->tanggal_acara?->format('d M Y') ?? $item->created_at->format('d M Y') }}</div>
-                    </div>
-                    <h3 class="h6 fw-bold mb-2 ls-tight" style="color: #14213d; line-height: 1.5; font-size: 15px;">{{ $item->judul }}</h3>
-                    <p class="small text-secondary mb-0 opacity-80" style="line-height: 1.7; font-size: 13px;">{{ \Illuminate\Support\Str::limit($item->isi, 95) }}</p>
+    {{-- Pengumuman --}}
+    <div class="db-section fade-up" style="animation-delay:0.25s;">
+        <div class="db-section-header">
+            <div class="db-section-title">Pengumuman</div>
+            <a href="{{ route('pengumuman.index') }}" class="db-section-link">Lihat Semua</a>
+        </div>
+        @forelse($publicPengumumans as $p)
+            <a href="{{ route('pengumuman.index') }}" class="db-list-item">
+                <div class="db-list-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#d97706;">
+                    <i class="bi bi-megaphone-fill"></i>
+                </div>
+                <div class="db-list-text">
+                    <div class="db-list-title">{{ $p->judul }}</div>
+                    <div class="db-list-sub">{{ \Illuminate\Support\Str::limit(strip_tags($p->isi), 50) }}</div>
                 </div>
             </a>
         @empty
-            <div class="card mobile-card border-0 shadow-sm py-5 text-center" style="border-radius: 28px; background: #fff;">
-                <div class="opacity-40 py-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="#cbd5e1" viewBox="0 0 16 16"><path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-11zm-1 .5H3.5A1.5 1.5 0 0 0 2 4.5v7A1.5 1.5 0 0 0 3.5 13H12V3zm1 0v11h2v-11h-2zM5.5 6a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 1 .5-.5z"/></svg>
-                    <div class="small mt-3 fw-bold text-secondary">Belum ada pengumuman hari ini</div>
-                </div>
-            </div>
+            <div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Belum ada pengumuman</div>
         @endforelse
     </div>
-</main>
+
+    {{-- Alert SPP --}}
+    @if($spp && $spp['kekurangan'] > 0)
+        <div class="db-alert fade-up" style="animation-delay:0.3s;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;">
+            <div class="db-alert-icon" style="background:#fef3c7;color:#d97706;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:11px;font-weight:700;color:#92400e;">Tunggakan SPP</div>
+                <div style="font-size:17px;font-weight:800;color:#b45309;">Rp {{ number_format($spp['kekurangan'], 0, ',', '.') }}</div>
+            </div>
+            <a href="{{ route('spp.index') }}" style="font-size:11px;font-weight:700;color:#d97706;text-decoration:none;">Detail →</a>
+        </div>
+    @endif
+</div>
 
 <script>
-    // Fitur Suara Notifikasi Canggih
-    const unreadCount = {{ $unreadNotificationsCount }};
-    const lastSpoken = localStorage.getItem('last_notif_spoken');
-
-    // Dot Hijau Logic
-    const notifDot = document.getElementById('notif-dot');
-
-    if (unreadCount > 0) {
-        // Hanya bersuara jika jumlah notifikasi bertambah (data baru)
-        if (unreadCount > (parseInt(lastSpoken) || 0)) {
-            const msg = new SpeechSynthesisUtterance();
-            msg.text = "Ada notifikasi untukmu";
-            msg.lang = 'id-ID';
-            msg.rate = 1.0;
-            window.speechSynthesis.speak(msg);
-        }
-        localStorage.setItem('last_notif_spoken', unreadCount);
-    } else {
-        localStorage.setItem('last_notif_spoken', 0);
-        if (notifDot) notifDot.style.display = 'none';
+    var unreadCount = {{ $unreadNotificationsCount }};
+    var lastSpoken = localStorage.getItem('last_notif_spoken');
+    if (unreadCount > 0 && unreadCount > (parseInt(lastSpoken) || 0)) {
+        try { var msg = new SpeechSynthesisUtterance(); msg.text = "Ada notifikasi untukmu"; msg.lang = 'id-ID'; msg.rate = 1.0; window.speechSynthesis.speak(msg); } catch(e) {}
     }
+    localStorage.setItem('last_notif_spoken', unreadCount || 0);
 </script>
 @endsection

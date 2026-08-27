@@ -22,11 +22,11 @@
             <h1 class="h3 fw-bold mb-1">Daftar Akun Baru</h1>
             <p class="text-secondary mb-4">Bergabunglah dengan ekosistem akademik digital kami.</p>
 
-            <div class="warning-box">
+            <div class="warning-box" style="background:#eff6ff;border:1px dashed #93c5fd;">
                 <div class="d-flex gap-2">
-                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                    <div class="small fw-bold" style="color: #92400e; line-height: 1.4;">
-                        PENTING: Email dipastikan aktif dan harus terkonfirmasi dahulu baru bisa mendaftar sepenuhnya. Link verifikasi akan dikirim setelah pendaftaran.
+                    <i class="bi bi-shield-check" style="color:#2563eb;"></i>
+                    <div class="small fw-bold" style="color:#1e3a5f; line-height: 1.5;">
+                        Setelah mendaftar, akun Anda menunggu <strong>persetujuan admin</strong> sebelum bisa dipakai.Dan Email Aktif Untuk Menunggu Beberapa Informasi Nantinya
                     </div>
                 </div>
             </div>
