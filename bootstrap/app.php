@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
                      'role' => \App\Http\Middleware\RoleMiddleware::class,
                      'verified_except_admin' => \App\Http\Middleware\VerifiedExceptAdmin::class,
                      'local-only' => \App\Http\Middleware\LocalOnly::class,
+                     'admin.desktop' => \App\Http\Middleware\BlockAdminOnMobile::class,
                  ]);
 
       })

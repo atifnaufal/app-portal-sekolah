@@ -62,6 +62,9 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.store');
 
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 Route::get('/forgot-email', [AuthController::class, 'showForgotEmail'])->name('email.request');
 Route::post('/forgot-email', [AuthController::class, 'findEmail'])->name('email.find');
 
@@ -88,7 +91,13 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::get('/chat/poll', [ChatController::class, 'poll'])->middleware('verified_except_admin')->name('chat.poll');
 });
 
-Route::middleware('role:admin')->group(function () {
+// Admin tetap dapat membuat/kelola pengumuman dari mobile.
+Route::middleware(['role:admin', 'verified_except_admin'])->group(function () {
+    Route::resource('pengumuman', PengumumanController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+});
+
+// Menu admin berat khusus desktop.
+Route::middleware(['role:admin', 'verified_except_admin', 'admin.desktop'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.user.update');
@@ -99,7 +108,7 @@ Route::middleware('role:admin')->group(function () {
     Route::post('/admin/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
     Route::resource('jurusan', JurusanController::class)->except('show');
     Route::resource('kelas', KelasController::class)->except('show');
-    Route::resource('pengumuman', PengumumanController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('mahasiswa', MahasiswaController::class)->except(['index', 'show']);
     Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
 });
 

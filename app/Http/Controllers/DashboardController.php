@@ -3,9 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absensi;
-use App\Models\Jurusan;
-use App\Models\Kelas;
-use App\Models\Mahasiswa;
 use App\Models\Notifikasi;
 use App\Models\Pengumuman;
 use App\Models\Spp;
@@ -39,10 +36,14 @@ class DashboardController extends Controller
 
         $sppStats = null;
         if ($user->role === 'siswa') {
-            $sppTotal = Spp::where('siswa_id', $user->id)->count();
-            $sppLunas = Spp::where('siswa_id', $user->id)->where('status', 'lunas')->count();
-            $sppKekurangan = Spp::where('siswa_id', $user->id)->sum(\DB::raw('GREATEST(nominal - dibayar, 0)'));
-            $sppStats = ['total' => $sppTotal, 'lunas' => $sppLunas, 'belum' => $sppTotal - $sppLunas, 'kekurangan' => $sppKekurangan];
+            $sppRows = Spp::where('siswa_id', $user->id)->get(['nominal', 'dibayar', 'status']);
+
+            $sppStats = [
+                'total' => $sppRows->count(),
+                'lunas' => $sppRows->where('status', 'lunas')->count(),
+                'belum' => $sppRows->where('status', '!=', 'lunas')->count(),
+                'kekurangan' => $sppRows->sum(fn ($row) => $row->kekurangan),
+            ];
         }
 
         $absensiHariIni = Absensi::where('user_id', $user->id)->whereDate('tanggal', today())->first();

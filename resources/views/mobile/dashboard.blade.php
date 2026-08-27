@@ -163,10 +163,6 @@
             <div class="db-hero-class" style="position:relative;z-index:1;">
                 <i class="bi bi-mortarboard-fill" style="color:#fbbf24;font-size:14px;"></i>
                 {{ $user->kelas->nama }}
-                @if($user->kelas->jurusan)
-                    <span style="opacity:0.4;">·</span>
-                    <span style="opacity:0.7;">{{ $user->kelas->jurusan->nama ?? '' }}</span>
-                @endif
             </div>
         @endif
     </div>

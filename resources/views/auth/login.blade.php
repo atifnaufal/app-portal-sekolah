@@ -46,11 +46,12 @@
         .welcome-logo {
             width: 100px; height: 100px; border-radius: 30px;
             margin: 0 auto 24px;
-            background: linear-gradient(135deg, #0b1120, #1e3a5f);
+            background: transparent;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
+            filter: drop-shadow(0 6px 16px rgba(0,0,0,0.25));
         }
-        .welcome-logo img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; }
+        .welcome-logo img { width: 100%; height: 100%; object-fit: contain; }
         .welcome-title {
             font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
             margin-bottom: 8px;
@@ -108,11 +109,11 @@
         .login-header-logo {
             width: 64px; height: 64px; border-radius: 20px;
             margin: 0 auto 14px; overflow: hidden;
-            background: linear-gradient(135deg, #0f172a, #1e3a5f);
+            background: #fff;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 14px rgba(15,23,42,0.25);
+            box-shadow: 0 4px 14px rgba(15,23,42,0.10);
         }
-        .login-header-logo img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; }
+        .login-header-logo img { width: 100%; height: 100%; object-fit: contain; }
         .login-header h1 { font-size: 18px; font-weight: 800; color: #1e293b; margin: 0; }
         .login-header p { font-size: 12px; color: #64748b; margin: 4px 0 0; }
 
@@ -231,7 +232,7 @@
                 <button type="button" class="btn-welcome btn-welcome-primary" onclick="showScreen('loginScreen')" style="flex:1;">
                     <i class="bi bi-box-arrow-in-right"></i> Login
                 </button>
-                @if(\App\Models\Setting::getValue('registration_enabled', false))
+                @if(\App\Models\Setting::getValue('registration_guru_enabled', false) || \App\Models\Setting::getValue('registration_siswa_enabled', false))
                     <a href="{{ route('register') }}" class="btn-welcome btn-welcome-secondary" style="flex:1;">
                         <i class="bi bi-person-plus"></i> Daftar
                     </a>
@@ -304,7 +305,7 @@
                     </div>
                 </div>
 
-                @if(\App\Models\Setting::getValue('registration_enabled', false))
+                @if(\App\Models\Setting::getValue('registration_guru_enabled', false) || \App\Models\Setting::getValue('registration_siswa_enabled', false))
                     <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #f1f5f9;">
                         <span style="font-size:12px;color:#94a3b8;">Belum punya akun?</span>
                         <a href="{{ route('register') }}" style="font-size:12px;font-weight:700;color:#246bfe;text-decoration:none;margin-left:4px;">Daftar Sekarang</a>
