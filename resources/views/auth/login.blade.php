@@ -184,7 +184,7 @@
 <div id="loading-overlay">
     <div class="loader-ring"></div>
     <div style="font-weight:700;margin-top:16px;font-size:14px;">Menghubungkan...</div>
-    <div style="font-size:12px;opacity:0.5;margin-top:4px;">Menyiapkan portal akademik</div>
+    <div style="font-size:12px;opacity:0.5;margin-top:4px;">Menyiapkan App portal akademik</div>
 </div>
 
 <div class="auth-container">
@@ -272,7 +272,7 @@
                         <label class="form-label">Alamat Email</label>
                         <div style="position:relative;">
                             <i class="bi bi-person" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:15px;"></i>
-                            <input type="email" name="email" value="{{ old('email') }}" class="form-control" style="padding-left:40px;" placeholder="nama@sekolah.com" required autofocus>
+                            <input type="email" name="email" value="{{ old('email') }}" class="form-control" style="padding-left:40px;" placeholder="nama@gmail.com" required autofocus>
                         </div>
                     </div>
 
@@ -299,7 +299,6 @@
                     <div style="display:flex;gap:8px;align-items:start;">
                         <i class="bi bi-info-circle" style="color:#3b82f6;flex-shrink:0;margin-top:1px;"></i>
                         <div>
-                            <div style="font-weight:600;color:#475569;">Akun baru perlu disetujui admin sebelum bisa login.</div>
                             <div style="margin-top:2px;color:#94a3b8;">Butuh bantuan akses? Hubungi Admin IT sekolah.</div>
                         </div>
                     </div>
