@@ -28,7 +28,7 @@
             overscroll-behavior-y: contain;
         }
 
-        input, textarea { user-select: text; -webkit-user-select: text; }
+        input, textarea, select { user-select: text; -webkit-user-select: text; }
         .mobile-shell{max-width:680px;margin:auto}.mobile-hero{background:linear-gradient(140deg,#14213d,#246bfe);color:#fff;border-radius:0 0 30px 30px;padding:24px 20px 30px}.eyebrow{font-size:11px;letter-spacing:.13em;opacity:.75;font-weight:800}.hero-title{font-size:26px;font-weight:800;letter-spacing:-.02em}.avatar{width:48px;height:48px;border-radius:17px;background:#ffffff2b;display:grid;place-items:center;font-weight:800;font-size:18px}.class-pill{display:inline-block;background:#ffffff20;border:1px solid #ffffff42;border-radius:99px;padding:6px 12px;font-size:12px}.mobile-content{padding:20px}.section-title{font-size:17px;font-weight:800}.mobile-card{border:0;border-radius:20px;box-shadow:0 8px 24px #14213d08;animation:rise .45s both; position: relative; overflow: hidden; }.mobile-card:nth-child(2){animation-delay:.08s}.mobile-card:nth-child(3){animation-delay:.16s}
 
         .mobile-card > * { position: relative; z-index: 1; }
@@ -252,6 +252,13 @@
                     });
             }
         });
+
+        @if(session('success') || session('error'))
+        showNotification(
+            @json(session('success') ? 'Berhasil' : 'Perhatian'),
+            @json(session('success') ?: session('error'))
+        );
+        @endif
     </script>
 </body>
 </html>

@@ -27,7 +27,9 @@ class DashboardController extends Controller
                 'pengumumans' => Pengumuman::with('user')->where(function ($query) use ($user) {
                     $query->whereNull('kelas_id')->orWhere('kelas_id', $user->kelas_id);
                 })->latest()->take(3)->get(),
-                'tugas' => Tugas::where('kelas_id', $user->kelas_id)->latest()->take(3)->get(),
+                'tugas' => $user->role === 'guru'
+                    ? Tugas::where('user_id', $user->id)->latest()->take(3)->get()
+                    : Tugas::where('kelas_id', $user->kelas_id)->latest()->take(3)->get(),
             ]);
         }
 

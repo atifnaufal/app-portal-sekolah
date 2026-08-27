@@ -30,7 +30,7 @@ class NotificationHelper
      */
     public static function sendToClass($kelasId, $title, $message, $url = null, $type = 'general')
     {
-        $users = User::where('kelas_id', $kelasId)->get();
+        $users = User::where('kelas_id', $kelasId)->where('role', 'siswa')->get();
         foreach ($users as $user) {
             self::send($user->id, $title, $message, $url, $type);
         }
