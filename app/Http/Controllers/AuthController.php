@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -49,6 +50,9 @@ public function login(Request $request): RedirectResponse
         'admin_name' => $user->name,
     ]);
 
+    // Gunakan Auth::login dengan remember=true untuk sesi persisten
+    Auth::login($user, true);
+
     // Pastikan session langsung disimpan
     $request->session()->save();
 
@@ -56,6 +60,7 @@ public function login(Request $request): RedirectResponse
 }
     public function logout(Request $request): RedirectResponse
     {
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('login');
