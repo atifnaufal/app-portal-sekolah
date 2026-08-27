@@ -3,7 +3,7 @@
 - [x] Redesign Grup Chat as Full Screen
 - [x] Add Emoji Picker and GIF UI to Chat
 - [x] Redesign Tugas as Full Screen
-- [x] Add Sticky Headers with Back Buttons to Chat & Tugas
-- [x] Fix Notification icon rendering (Remove `&#9993;`)
-- [x] Integrate Bootstrap Icons globally
-- [x] Verify mobile UI responsiveness for all new layouts
+- [x] Fix Notification icon rendering
+- [x] Fix "SISWA SPACE" text to "PORTAL AKADEMIK"
+- [x] Redesign Dashboard Widgets (Tugas & SPP) with Premium Look
+- [x] Verify overall dashboard aesthetic and spacing
