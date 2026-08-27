@@ -539,7 +539,16 @@ class TugasController extends Controller
             ->get();
 
         foreach ($students as $student) {
-            Mail::to($student->email)->queue(new TugasBaruMail($tugas));
+            // Kirim sinkron: QUEUE_CONNECTION=database tapi tidak ada proses
+            // queue:work yang dijalankan di Railway, jadi ->queue() tidak akan
+            // pernah dieksekusi dan email hilang tanpa suara.
+            try {
+                Mail::to($student->email)->send(new TugasBaruMail($tugas));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error(
+                    'Gagal kirim email tugas ke '.$student->email.': '.$e->getMessage()
+                );
+            }
         }
     }
 

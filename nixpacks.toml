@@ -1,5 +1,18 @@
 [phases.build]
-cmds = ["composer install --no-dev --optimize-autoloader", "npm install", "npm run build"]
+cmds = [
+    "composer install --no-dev --optimize-autoloader",
+    "npm ci",
+    "npm run build"
+]
 
+# db:seed sengaja DIHAPUS dari fase deploy: dulu dijalankan tiap cold start
+# sehingga data seed bisa dobel / deploy gagal. Seed cukup dijalankan manual sekali.
+# storage:link diberi || true karena perintah ini exit non-zero bila symlink sudah ada.
 [phases.deploy]
-cmds = ["php artisan migrate --force", "php artisan db:seed --force", "php artisan config:cache", "php artisan route:cache"]
+cmds = [
+    "php artisan migrate --force",
+    "php artisan storage:link || true",
+    "php artisan config:cache",
+    "php artisan route:cache",
+    "php artisan view:cache"
+]

@@ -42,8 +42,9 @@ class AdminController extends Controller
 
         // Hanya view desktop yang memakai dua query berat ini.
         if (! $isMobile) {
-            $data['kelasSummaries'] = Kelas::with(['users' => fn ($query) => $query->whereIn('role', ['guru', 'siswa'])->orderBy('role')->orderBy('name')])
-                ->withCount([
+            // View hanya membaca agregat guru_count / siswa_count, jadi tidak perlu
+            // ikut memuat koleksi users lengkap untuk setiap kelas.
+            $data['kelasSummaries'] = Kelas::withCount([
                     'users as guru_count' => fn ($query) => $query->where('role', 'guru'),
                     'users as siswa_count' => fn ($query) => $query->where('role', 'siswa'),
                 ])
