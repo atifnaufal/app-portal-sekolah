@@ -104,7 +104,11 @@ Route::middleware('role:admin')->group(function () {
 });
 
 Route::middleware(['role:guru', 'verified_except_admin'])->group(function () {
-    Route::resource('tugas', TugasController::class)->except(['index', 'show']);
+    Route::get('/tugas/create', [TugasController::class, 'create'])->name('tugas.create');
+    Route::post('/tugas', [TugasController::class, 'store'])->name('tugas.store');
+    Route::get('/tugas/{tugas}/edit', [TugasController::class, 'edit'])->name('tugas.edit');
+    Route::put('/tugas/{tugas}', [TugasController::class, 'update'])->name('tugas.update');
+    Route::delete('/tugas/{tugas}', [TugasController::class, 'destroy'])->name('tugas.destroy');
     Route::get('/tugas/{tugas}/export', [TugasController::class, 'exportGrades'])->name('tugas.export');
     Route::post('/pengumpulan/{pengumpulan}/review', [TugasController::class, 'review'])->name('tugas.review');
     Route::get('/tugas-notifikasi', [NotifikasiController::class, 'tugas'])->name('tugas.notifikasi');

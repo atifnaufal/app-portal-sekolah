@@ -196,14 +196,16 @@
                 </button>
             </div>
         </div>
-    </form>
-</div>
 
-<div class="pf-bottom">
-    <a href="{{ $isEdit ? route('tugas.show', $tugas) : route('tugas.index') }}" style="flex:0 0 auto;padding:12px 20px;border-radius:14px;background:#f1f5f9;font-weight:700;font-size:14px;text-decoration:none;color:#475569;text-align:center;">Batal</a>
-    <button type="submit" form="tugasForm" style="flex:1;padding:12px;border-radius:14px;background:#246bfe;color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;">
-        <i class="bi bi-send-fill"></i> {{ $isEdit ? 'Simpan' : 'Terbitkan' }}
-    </button>
+        <div style="height: 80px;"></div>
+
+        <div class="pf-bottom">
+            <a href="{{ $isEdit ? route('tugas.show', $tugas) : route('tugas.index') }}" style="flex:0 0 auto;padding:12px 20px;border-radius:14px;background:#f1f5f9;font-weight:700;font-size:14px;text-decoration:none;color:#475569;text-align:center;">Batal</a>
+            <button type="submit" style="flex:1;padding:12px;border-radius:14px;background:#246bfe;color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;">
+                <i class="bi bi-send-fill"></i> {{ $isEdit ? 'Simpan' : 'Terbitkan' }}
+            </button>
+        </div>
+    </form>
 </div>
 
 <script>

@@ -50,7 +50,6 @@
             border: 2px solid rgba(255,255,255,0.15);
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
         }
         .welcome-logo img { width: 100%; height: 100%; object-fit: contain; }
         .welcome-title {
@@ -110,7 +109,7 @@
         .login-header-logo {
             width: 64px; height: 64px; border-radius: 20px;
             margin: 0 auto 14px; overflow: hidden;
-            background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            background: #fff;
             display: flex; align-items: center; justify-content: center;
         }
         .login-header-logo img { width: 100%; height: 100%; object-fit: contain; }
