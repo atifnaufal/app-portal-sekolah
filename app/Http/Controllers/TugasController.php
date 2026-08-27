@@ -306,7 +306,7 @@ class TugasController extends Controller
         } else {
             $rules = [
                 'catatan' => ['required', 'string'],
-                'jawaban_file' => [$existing && $existing->jawaban_file ? 'nullable' : 'required', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,zip', 'max:10240'],
+                'jawaban_file' => [$existing && $existing->jawaban_file ? 'nullable' : 'required', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,xlsx,xls,ppt,pptx,csv,txt,zip', 'max:10240'],
             ];
             $data = $request->validate($rules);
             $updateData['catatan'] = $data['catatan'];
@@ -374,7 +374,7 @@ class TugasController extends Controller
             'tipe' => ['required', 'in:file,form'],
             'batas_pengumpulan' => ['nullable', 'date'],
             'kelas_id' => ['required', 'exists:kelas,id'],
-            'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120'],
+            'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,xlsx,xls,ppt,pptx,csv,txt,zip', 'max:10240'],
         ]);
 
         if ($data['tipe'] === 'form') {

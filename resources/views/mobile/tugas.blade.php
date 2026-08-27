@@ -91,6 +91,7 @@
         border-radius: 28px 28px 0 0; padding: 24px 20px 32px;
     }
     .empty-box { text-align: center; padding: 48px 20px; background: #fff; border-radius: 24px; }
+    @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 </style>
 
 <div class="page-header">
@@ -160,7 +161,7 @@
                         }
                         $toneClass = $item->isExpired() ? 'urgent' : ((int) $item->revisi_count > 0 ? 'revise' : '');
                     @endphp
-                    <article class="card ai-card mb-3 {{ $toneClass }}" data-card data-filter="{{ $filterKey }}" data-search="{{ strtolower($item->judul.' '.$item->kelas?->nama) }}">
+                    <article class="card ai-card mb-3 {{ $toneClass }}" data-card data-filter="{{ $filterKey }}" data-search="{{ strtolower($item->judul.' '.$item->kelas?->nama) }}" style="animation: slideUp 0.4s ease both;">
                         <div class="card-body p-4">
                             <a href="{{ route('tugas.show', $item) }}" class="text-decoration-none text-dark d-block">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -266,10 +267,12 @@
 
                 @foreach($completedTugas as $item)
                     @php($submission = $item->pengumpulan->first())
-                    <a href="{{ route('tugas.show', $item) }}" class="card ai-card completed mb-3 text-decoration-none" data-card data-filter="done" data-search="{{ strtolower($item->judul) }}">
+                    @php($gradeColor = $submission->nilai >= 85 ? '#16a34a' : ($submission->nilai >= 70 ? '#2563eb' : ($submission->nilai >= 55 ? '#d97706' : '#dc2626')))
+                    @php($gradeBg = $submission->nilai >= 85 ? '#f0fdf4' : ($submission->nilai >= 70 ? '#eef4ff' : ($submission->nilai >= 55 ? '#fefce8' : '#fef2f2')))
+                    <a href="{{ route('tugas.show', $item) }}" class="card ai-card completed mb-3 text-decoration-none" data-card data-filter="done" data-search="{{ strtolower($item->judul) }}" style="animation: slideUp 0.4s ease both;">
                         <div class="card-body p-3 d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background: {{ $gradeBg }}; color: {{ $gradeColor }};">
                                     <i class="bi bi-check2-circle h5 mb-0"></i>
                                 </div>
                                 <div>
@@ -278,8 +281,8 @@
                                 </div>
                             </div>
                             <div class="text-end">
-                                <div class="h5 fw-bold text-success mb-0">{{ $submission->nilai }}</div>
-                                <div class="fw-bold text-muted" style="font-size: 9px; letter-spacing: 0.5px;">SKOR</div>
+                                <div class="h5 fw-bold mb-0" style="color: {{ $gradeColor }};">{{ $submission->nilai }}</div>
+                                <div class="fw-bold" style="font-size: 9px; letter-spacing: 0.5px; color: {{ $gradeColor }}; opacity: 0.7;">SKOR</div>
                             </div>
                         </div>
                     </a>
