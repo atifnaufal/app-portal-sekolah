@@ -2,18 +2,34 @@
 @section('content')
 <div class="mb-4">
     <a href="{{ route('tugas.index') }}" class="text-decoration-none">&larr; Kembali</a>
-    <h1 class="h3 fw-bold mt-3">Buat Tugas Pro</h1>
+    <h1 class="h3 fw-bold mt-3">Buat Tugas Baru</h1>
+    <p class="text-secondary small mb-0">
+        Pilih <b>Pengiriman File</b> untuk tugas biasa, atau <b>Formulir Online</b> untuk membuat kuis/kuesioner
+        gaya Google Forms yang dikerjakan siswa langsung di aplikasi.
+    </p>
 </div>
 
 <div class="card form-card">
     <div class="card-body p-4">
-        <form method="POST" action="{{ route('tugas.store') }}" enctype="multipart/form-data" id="tugasForm">
+        <form method="POST" action="{{ route('tugas.store') }}" enctype="multipart/form-data" id="tugasForm" novalidate>
             @csrf
+
+            @if($errors->any())
+                <div class="alert alert-danger border-0 rounded-4">
+                    <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Periksa kembali isian Anda:</div>
+                    <ul class="mb-0 small">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="row g-4">
                 <div class="col-md-7">
                     <div class="mb-3">
                         <label class="form-label">Judul tugas</label>
-                        <input name="judul" class="form-control" placeholder="Contoh: Ulangan Harian Bab 1" required>
+                        <input name="judul" value="{{ old('judul') }}" class="form-control" placeholder="Contoh: Ulangan Harian Bab 1" required>
                     </div>
 
                     <div class="mb-3">
@@ -21,27 +37,27 @@
                         <select name="kelas_id" class="form-select" required>
                             <option value="">Pilih kelas</option>
                             @foreach($kelases as $kelas)
-                                <option value="{{ $kelas->id }}">{{ $kelas->nama }}</option>
+                                <option value="{{ $kelas->id }}" @selected(old('kelas_id') == $kelas->id)>{{ $kelas->nama }}</option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Deskripsi / Instruksi</label>
-                        <textarea name="deskripsi" rows="4" class="form-control" placeholder="Tulis instruksi pengerjaan tugas di sini..."></textarea>
+                        <textarea name="deskripsi" rows="4" class="form-control" placeholder="Tulis instruksi pengerjaan tugas di sini...">{{ old('deskripsi') }}</textarea>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Tipe Tugas</label>
                             <select name="tipe" class="form-select" id="tipeTugas" required>
-                                <option value="file">Pengiriman File (PDF/Gambar)</option>
-                                <option value="form">Formulir Online (Google Form Style)</option>
+                                <option value="file" @selected(old('tipe', 'file') === 'file')>Pengiriman File (PDF/Gambar)</option>
+                                <option value="form" @selected(old('tipe') === 'form')>Formulir Online (Google Form Style)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Batas Pengumpulan</label>
-                            <input name="batas_pengumpulan" type="date" class="form-control">
+                            <input name="batas_pengumpulan" type="date" value="{{ old('batas_pengumpulan') }}" class="form-control">
                         </div>
                     </div>
 
@@ -53,11 +69,21 @@
                 </div>
 
                 <div class="col-md-5" id="formBuilderArea" style="display:none; border-left: 1px solid #eee; padding-left: 25px;">
-                    <label class="form-label fw-bold mb-3">Form Builder</label>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="form-label fw-bold mb-0">Form Builder</label>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill" id="questionCount">0 Pertanyaan</span>
+                    </div>
+
+                    <div class="alert alert-info border-0 rounded-4 x-small py-2 px-3 mb-3">
+                        <i class="bi bi-lightbulb-fill me-1"></i>
+                        Siswa mengerjakan langsung di aplikasi seperti Google Forms. Jawaban terekap otomatis untuk penilaian.
+                    </div>
+
                     <div id="questionsContainer"></div>
+                    <div id="builderError" class="alert alert-danger border-0 rounded-4 x-small py-2 px-3 mt-2" style="display:none;"></div>
 
                     <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-3" id="addQuestionBtn">
-                        + Tambah Pertanyaan
+                        <i class="bi bi-plus-lg me-1"></i> Tambah Pertanyaan
                     </button>
 
                     <input type="hidden" name="form_data" id="formDataInput">
@@ -71,16 +97,31 @@
 </div>
 
 <template id="questionTemplate">
-    <div class="question-card mb-3 p-3 border rounded shadow-sm bg-light">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <span class="badge bg-secondary">Pertanyaan</span>
-            <button type="button" class="btn-close remove-question" style="font-size: 0.7rem;"></button>
+    <div class="question-card mb-3 p-3 border rounded-4 shadow-sm bg-light">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary rounded-pill question-number">1</span>
+                <span class="x-small fw-bold text-secondary">PERTANYAAN</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="form-check form-switch mb-0" title="Tandai wajib diisi">
+                    <input class="form-check-input question-required" type="checkbox" role="switch" checked>
+                    <label class="form-check-label x-small fw-bold text-secondary">Wajib</label>
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-secondary border-0 move-up" title="Naikkan"><i class="bi bi-arrow-up"></i></button>
+                    <button type="button" class="btn btn-outline-secondary border-0 move-down" title="Turunkan"><i class="bi bi-arrow-down"></i></button>
+                </div>
+                <button type="button" class="btn-close remove-question" style="font-size: 0.7rem;" title="Hapus pertanyaan"></button>
+            </div>
         </div>
-        <input type="text" class="form-control form-control-sm mb-2 question-text" placeholder="Tulis pertanyaan..." required>
+        <input type="text" class="form-control form-control-sm mb-2 question-text fw-bold" placeholder="Tulis pertanyaan...">
         <select class="form-select form-select-sm mb-2 question-type">
             <option value="text">Jawaban Singkat</option>
-            <option value="essay">Esai Panjang</option>
-            <option value="multiple">Pilihan Ganda</option>
+            <option value="essay">Paragraf / Esai</option>
+            <option value="multiple">Pilihan Ganda (Satu Jawaban)</option>
+            <option value="checkbox">Kotak Centang (Banyak Jawaban)</option>
+            <option value="dropdown">Dropdown</option>
         </select>
         <div class="options-container" style="display:none;">
             <div class="options-list mb-2"></div>
@@ -90,68 +131,183 @@
 </template>
 
 <script>
-document.getElementById('tipeTugas').addEventListener('change', function() {
-    const isForm = this.value === 'form';
-    document.getElementById('formBuilderArea').style.display = isForm ? 'block' : 'none';
-    document.getElementById('fileUploadArea').style.opacity = isForm ? '0.5' : '1';
-});
-
-document.getElementById('addQuestionBtn').addEventListener('click', function() {
+(function () {
+    const QUESTION_TYPES = ['text', 'essay', 'multiple', 'checkbox', 'dropdown'];
     const container = document.getElementById('questionsContainer');
-    const template = document.getElementById('questionTemplate').content.cloneNode(true);
+    const template = document.getElementById('questionTemplate');
+    const typeSelect = document.getElementById('tipeTugas');
+    const builderArea = document.getElementById('formBuilderArea');
+    const fileArea = document.getElementById('fileUploadArea');
+    const errorBox = document.getElementById('builderError');
+    const countBadge = document.getElementById('questionCount');
 
-    const questionCard = template.querySelector('.question-card');
-    const typeSelect = questionCard.querySelector('.question-type');
-    const optionsContainer = questionCard.querySelector('.options-container');
-    const addOptionBtn = questionCard.querySelector('.add-option');
-    const removeBtn = questionCard.querySelector('.remove-question');
+    function showError(message) {
+        errorBox.innerText = message;
+        errorBox.style.display = 'block';
+        errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-    typeSelect.addEventListener('change', function() {
-        optionsContainer.style.display = this.value === 'multiple' ? 'block' : 'none';
-    });
+    function hideError() { errorBox.style.display = 'none'; }
 
-    addOptionBtn.addEventListener('click', function() {
-        const list = questionCard.querySelector('.options-list');
+    function refreshNumbers() {
+        const cards = container.querySelectorAll('.question-card');
+        cards.forEach((card, i) => {
+            card.querySelector('.question-number').innerText = i + 1;
+            card.querySelector('.move-up').disabled = i === 0;
+            card.querySelector('.move-down').disabled = i === cards.length - 1;
+        });
+        countBadge.innerText = cards.length + ' Pertanyaan';
+    }
+
+    function wireOptionRow(card, optDiv) {
+        optDiv.querySelector('.remove-option').onclick = () => {
+            optDiv.remove();
+            refreshOptionsHint(card);
+        };
+        optDiv.querySelector('.option-text').addEventListener('input', hideError);
+    }
+
+    function addOption(card, value = '') {
+        const list = card.querySelector('.options-list');
         const optDiv = document.createElement('div');
         optDiv.className = 'd-flex gap-2 mb-1';
-        optDiv.innerHTML = `<input type="text" class="form-control form-control-sm option-text" placeholder="Opsi..." required><button type="button" class="btn-close remove-option" style="font-size: 0.6rem; margin-top: 8px;"></button>`;
-        optDiv.querySelector('.remove-option').onclick = () => optDiv.remove();
+        optDiv.innerHTML = `<input type="text" class="form-control form-control-sm option-text" placeholder="Opsi..." value=""><button type="button" class="btn-close remove-option" style="font-size: 0.6rem; margin-top: 8px;" title="Hapus opsi"></button>`;
+        optDiv.querySelector('.option-text').value = value;
+        wireOptionRow(card, optDiv);
         list.appendChild(optDiv);
-    });
+        refreshOptionsHint(card);
+    }
 
-    removeBtn.onclick = () => questionCard.remove();
+    function refreshOptionsHint(card) {
+        const hint = card.querySelector('.options-hint');
+        if (hint) hint.remove();
+        const count = card.querySelectorAll('.option-text').length;
+        if (count > 0 && count < 2) {
+            const div = document.createElement('div');
+            div.className = 'x-small text-warning options-hint';
+            div.innerText = 'Minimal 2 opsi jawaban diperlukan.';
+            card.querySelector('.options-list').after(div);
+        }
+    }
 
-    container.appendChild(template);
-});
+    function addQuestion(data = {}) {
+        const node = template.content.cloneNode(true);
+        const card = node.querySelector('.question-card');
+        container.appendChild(node);
 
-document.getElementById('tugasForm').addEventListener('submit', function(e) {
-    if (document.getElementById('tipeTugas').value === 'form') {
-        const questions = [];
-        document.querySelectorAll('.question-card').forEach(card => {
-            const q = {
-                text: card.querySelector('.question-text').value,
-                type: card.querySelector('.question-type').value,
-                options: []
-            };
-            if (q.type === 'multiple') {
-                card.querySelectorAll('.option-text').forEach(opt => q.options.push(opt.value));
-            }
-            questions.push(q);
+        card.querySelector('.question-text').value = data.text || '';
+        card.querySelector('.question-type').value = QUESTION_TYPES.includes(data.type) ? data.type : 'text';
+        card.querySelector('.question-required').checked = data.required !== false;
+
+        const typeSel = card.querySelector('.question-type');
+        const optionsBox = card.querySelector('.options-container');
+
+        const syncOptions = () => {
+            optionsBox.style.display = ['multiple', 'checkbox', 'dropdown'].includes(typeSel.value) ? 'block' : 'none';
+        };
+        typeSel.addEventListener('change', syncOptions);
+        syncOptions();
+
+        (data.options || []).forEach(opt => addOption(card, opt));
+        if (['multiple', 'checkbox', 'dropdown'].includes(typeSel.value) && !data.options?.length) {
+            addOption(card); addOption(card);
+        }
+
+        card.querySelector('.add-option').addEventListener('click', () => addOption(card));
+        card.querySelector('.remove-question').addEventListener('click', () => { card.remove(); refreshNumbers(); hideError(); });
+        card.querySelector('.question-text').addEventListener('input', hideError);
+
+        card.querySelector('.move-up').addEventListener('click', () => {
+            const prev = card.previousElementSibling;
+            if (prev) container.insertBefore(card, prev);
+            refreshNumbers();
+        });
+        card.querySelector('.move-down').addEventListener('click', () => {
+            const next = card.nextElementSibling;
+            if (next) container.insertBefore(next, card);
+            refreshNumbers();
         });
 
-        if (questions.length === 0) {
-            alert('Harap tambahkan minimal satu pertanyaan untuk tipe tugas Formulir.');
-            e.preventDefault();
+        refreshNumbers();
+    }
+
+    function collectQuestions() {
+        return Array.from(container.querySelectorAll('.question-card')).map(card => ({
+            text: card.querySelector('.question-text').value.trim(),
+            type: card.querySelector('.question-type').value,
+            required: card.querySelector('.question-required').checked,
+            options: Array.from(card.querySelectorAll('.option-text'))
+                .map(input => input.value.trim())
+                .filter(Boolean)
+        }));
+    }
+
+    function syncBuilderVisibility() {
+        const isForm = typeSelect.value === 'form';
+        builderArea.style.display = isForm ? 'block' : 'none';
+        fileArea.style.display = isForm ? 'none' : 'block';
+    }
+    typeSelect.addEventListener('change', syncBuilderVisibility);
+
+    document.getElementById('addQuestionBtn').addEventListener('click', () => { addQuestion(); hideError(); });
+
+    document.getElementById('tugasForm').addEventListener('submit', function (e) {
+        hideError();
+
+        // Validasi dasar HTML5 tetap dijalankan untuk field non-builder.
+        if (!this.checkValidity()) {
+            this.reportValidity();
             return;
         }
 
+        if (typeSelect.value !== 'form') return;
+
+        const questions = collectQuestions();
+
+        if (questions.length === 0) {
+            e.preventDefault();
+            showError('Tipe Formulir Online memerlukan minimal satu pertanyaan. Klik "Tambah Pertanyaan" untuk memulai.');
+            return;
+        }
+
+        for (let i = 0; i < questions.length; i++) {
+            const q = questions[i];
+            if (!q.text) {
+                e.preventDefault();
+                showError('Pertanyaan ke-' + (i + 1) + ' belum ditulis. Lengkapi teks pertanyaannya.');
+                return;
+            }
+            if (['multiple', 'checkbox', 'dropdown'].includes(q.type) && q.options.length < 2) {
+                e.preventDefault();
+                showError('Pertanyaan ke-' + (i + 1) + ' bertipe pilihan dan memerlukan minimal 2 opsi jawaban terisi.');
+                return;
+            }
+        }
+
         document.getElementById('formDataInput').value = JSON.stringify(questions);
+    });
+
+    // Pulihkan pertanyaan bila validasi server gagal (old input).
+    const initial = @json(old('form_data'));
+    if (typeof initial === 'string' && initial) {
+        try {
+            const parsed = JSON.parse(initial);
+            if (Array.isArray(parsed)) parsed.forEach(q => addQuestion(q));
+        } catch (_) {}
+    } else if (Array.isArray(initial)) {
+        initial.forEach(q => addQuestion(q));
     }
-});
+    if (!container.children.length && typeSelect.value === 'form') {
+        addQuestion();
+    }
+    syncBuilderVisibility();
+})();
 </script>
 
 <style>
     .form-card { border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
     .btn-primary { border-radius: 10px; padding: 10px 30px; }
+    .question-card { border-color: #e9ecef !important; }
+    .x-small { font-size: 11px; }
 </style>
 @endsection

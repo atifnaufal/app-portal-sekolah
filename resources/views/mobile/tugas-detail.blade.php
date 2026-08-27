@@ -28,7 +28,7 @@
 
 <div class="page-container px-3">
     <header class="mobile-hero" style="border-radius: 30px; margin-bottom: 25px; background: linear-gradient(135deg, #246bfe, #1e293b);">
-        <div class="eyebrow" style="color: rgba(255,255,255,0.7);">{{ strtoupper($tugas->tipe) }} · {{ $tugas->kelas->nama }}</div>
+        <div class="eyebrow" style="color: rgba(255,255,255,0.7);">{{ $tugas->tipe === 'form' ? 'FORMULIR ONLINE' : 'PENGIRIMAN FILE' }} · {{ $tugas->kelas->nama }}</div>
         <div class="hero-title mt-2 text-white" style="font-size: 24px;">{{ $tugas->judul }}</div>
         <div class="mt-3">
             <span class="badge bg-white bg-opacity-20 rounded-pill px-3 py-2 fw-normal" style="font-size: 11px;">
@@ -62,26 +62,49 @@
 
     @if($user->role === 'siswa')
         @if($tugas->tipe === 'form')
+            @php
+                $formData = is_array($tugas->form_data) ? $tugas->form_data : (json_decode($tugas->form_data ?: '[]', true) ?: []);
+            @endphp
             <div class="card ai-card">
                 <div class="card-body p-4">
                     <h2 class="section-title mb-4" style="font-size: 18px;">Formulir Pengerjaan</h2>
                     <form method="POST" action="{{ route('tugas.submit', $tugas) }}" id="formTask">
                         @csrf
-                        @php $formData = json_decode($tugas->form_data, true) ?: []; @endphp
                         @foreach($formData as $index => $q)
+                            @php($isRequired = $q['required'] ?? true)
                             <div class="form-question">
-                                <label class="fw-bold text-dark mb-2" style="font-size: 14px;">{{ $index + 1 }}. {{ $q['text'] }}</label>
+                                <label class="fw-bold text-dark mb-2 d-block" style="font-size: 14px;" for="q{{ $index }}">
+                                    {{ $index + 1 }}. {{ $q['text'] }}
+                                    @if($isRequired)
+                                        <span class="text-danger fw-bold">*</span>
+                                    @endif
+                                </label>
                                 @if($q['type'] === 'text')
-                                    <input type="text" name="jawaban[{{ $index }}]" class="form-control border-0 shadow-sm" style="border-radius: 12px;" required>
+                                    <input type="text" id="q{{ $index }}" name="jawaban[{{ $index }}]" class="form-control border-0 shadow-sm" style="border-radius: 12px;" placeholder="Jawaban singkat Anda..." @if($isRequired) required @endif>
                                 @elseif($q['type'] === 'essay')
-                                    <textarea name="jawaban[{{ $index }}]" rows="3" class="form-control border-0 shadow-sm" style="border-radius: 12px;" required></textarea>
+                                    <textarea id="q{{ $index }}" name="jawaban[{{ $index }}]" rows="3" class="form-control border-0 shadow-sm" style="border-radius: 12px;" placeholder="Tulis jawaban paragraf Anda..." @if($isRequired) required @endif></textarea>
                                 @elseif($q['type'] === 'multiple')
-                                    @foreach($q['options'] as $optIndex => $opt)
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="jawaban[{{ $index }}]" id="q{{ $index }}_{{ $optIndex }}" value="{{ $opt }}" required>
+                                    @foreach($q['options'] ?? [] as $optIndex => $opt)
+                                        <div class="form-check mb-2 ps-0">
+                                            <input class="form-check-input" type="radio" name="jawaban[{{ $index }}]" id="q{{ $index }}_{{ $optIndex }}" value="{{ $opt }}" @if($isRequired) required @endif>
                                             <label class="form-check-label small" for="q{{ $index }}_{{ $optIndex }}">{{ $opt }}</label>
                                         </div>
                                     @endforeach
+                                @elseif($q['type'] === 'checkbox')
+                                    @foreach($q['options'] ?? [] as $optIndex => $opt)
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" name="jawaban[{{ $index }}][]" id="q{{ $index }}_{{ $optIndex }}" value="{{ $opt }}" @if($isRequired) required @endif>
+                                            <label class="form-check-label small" for="q{{ $index }}_{{ $optIndex }}">{{ $opt }}</label>
+                                        </div>
+                                    @endforeach
+                                    <div class="x-small text-secondary mt-1">Centang semua jawaban yang sesuai.</div>
+                                @elseif($q['type'] === 'dropdown')
+                                    <select id="q{{ $index }}" name="jawaban[{{ $index }}]" class="form-select border-0 shadow-sm" style="border-radius: 12px;" @if($isRequired) required @endif>
+                                        <option value="">-- Pilih jawaban --</option>
+                                        @foreach($q['options'] ?? [] as $opt)
+                                            <option value="{{ $opt }}">{{ $opt }}</option>
+                                        @endforeach
+                                    </select>
                                 @endif
                             </div>
                         @endforeach
@@ -137,11 +160,41 @@
                     </div>
                     <div class="x-small text-muted mb-3">{{ $item->dikumpulkan_pada?->diffForHumans() }}</div>
 
+                    {{-- Rincian jawaban siswa: tautan file atau jawaban formulir --}}
+                    @if($item->jawaban_file)
+                        <a href="{{ asset('storage/'.$item->jawaban_file) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3 mb-3">
+                            <i class="bi bi-paperclip me-1"></i> {{ \Illuminate\Support\Str::limit($item->jawaban_nama ?: 'Lihat File Jawaban', 25) }}
+                        </a>
+                    @endif
+                    @if($item->jawaban_form)
+                        @php
+                            $answers = is_array($item->jawaban_form) ? $item->jawaban_form : (json_decode($item->jawaban_form ?: '[]', true) ?: []);
+                            $formData = is_array($tugas->form_data) ? $tugas->form_data : (json_decode($tugas->form_data ?: '[]', true) ?: []);
+                        @endphp
+                        <div class="p-3 rounded-4 mb-3" style="background: #f8fafc;">
+                            <div class="x-small fw-bold text-secondary mb-2"><i class="bi bi-ui-checks me-1"></i>JAWABAN FORMULIR SISWA</div>
+                            @foreach($formData as $qi => $q)
+                                @php($ans = $answers[$qi] ?? null)
+                                <div class="mb-2">
+                                    <div class="x-small fw-bold text-dark">{{ $qi + 1 }}. {{ $q['text'] ?? '' }}</div>
+                                    <div class="x-small text-secondary" style="white-space: pre-line;">{{ is_array($ans) ? (implode(' • ', array_filter($ans)) ?: '— tidak dijawab —') : ($ans && $ans !== '' ? $ans : '— tidak dijawab —') }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                    @if($item->catatan && !$item->jawaban_form)
+                        <div class="x-small text-secondary mb-3 fst-italic">"{{ $item->catatan }}"</div>
+                    @endif
+
                     <form method="POST" action="{{ route('tugas.review', $item) }}" class="mt-2 pt-2 border-top">
                         @csrf
                         <div class="row g-2">
                             <div class="col-4"><input name="nilai" type="number" step="0.01" class="form-control form-control-sm" placeholder="Nilai" value="{{ $item->nilai }}" required></div>
                             <div class="col-8"><input name="feedback_guru" class="form-control form-control-sm" placeholder="Catatan/Feedback" value="{{ $item->feedback_guru }}"></div>
+                        </div>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" role="switch" name="revisi_aktif" id="revisi_{{ $item->id }}" value="1" @checked($item->revisi_aktif)>
+                            <label class="form-check-label x-small" for="revisi_{{ $item->id }}">Minta siswa revisi jawaban</label>
                         </div>
                         <button class="btn btn-primary btn-sm w-100 mt-2 rounded-pill">Simpan</button>
                     </form>

@@ -56,7 +56,7 @@
                 <div class="mb-4">
                     <label class="form-label x-small fw-bold text-muted">ALAMAT EMAIL</label>
                     <input name="email" type="email" value="{{ old('email',$user->email) }}" class="form-control" style="border-radius: 12px;" required>
-                    @if(!$user->hasVerifiedEmail())
+                    @if($user->role === 'siswa' && !$user->hasVerifiedEmail())
                         <div class="x-small text-warning mt-1"><i class="bi bi-info-circle"></i> Email belum terverifikasi.</div>
                     @endif
                 </div>

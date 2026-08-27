@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\PengumpulanTugas;
 use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use App\Events\NotificationEvent;
 use App\Helpers\NotificationHelper;
 
@@ -24,8 +25,9 @@ class TugasController extends Controller
             ->when($kelasId, fn ($q) => $q->where('kelas_id', $kelasId))->latest()->get();
         if ($request->session()->get('user_role') !== 'admin') {
             $activeTugas = $tugas->filter(fn ($item) => ! $item->batas_pengumpulan?->isBefore(today()) && (! $item->pengumpulan->first() || $item->pengumpulan->first()->revisi_aktif));
+            $pendingTugas = $tugas->filter(fn ($item) => $item->pengumpulan->first() && ! $item->pengumpulan->first()->revisi_aktif && $item->pengumpulan->first()->nilai === null);
             $completedTugas = $tugas->filter(fn ($item) => $item->pengumpulan->first() && ! $item->pengumpulan->first()->revisi_aktif && $item->pengumpulan->first()->nilai !== null);
-            return view('mobile.tugas', ['tugas' => $activeTugas, 'completedTugas' => $completedTugas, 'user' => $user]);
+            return view('mobile.tugas', ['tugas' => $activeTugas, 'pendingTugas' => $pendingTugas, 'completedTugas' => $completedTugas, 'user' => $user]);
         }
         return view('tugas.index', compact('tugas'));
     }
@@ -48,13 +50,21 @@ class TugasController extends Controller
             'judul' => ['required', 'max:255'],
             'deskripsi' => ['nullable'],
             'tipe' => ['required', 'in:file,form'],
-            'form_data' => ['nullable', 'json'],
             'batas_pengumpulan' => ['nullable', 'date'],
             'kelas_id' => ['required', 'exists:kelas,id'],
             'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx', 'max:5120']
         ]);
         $data['user_id'] = $request->session()->get('user_id');
         $data['kelas_id'] = $request->session()->get('user_kelas_id') ?: $data['kelas_id'];
+
+        // Validasi & normalisasi pertanyaan formulir online (tipe: form).
+        // form_data dikirim sebagai string JSON dari form builder, lalu disimpan
+        // sebagai array terstruktur (cast "array" pada model Tugas).
+        if ($data['tipe'] === 'form') {
+            $data['form_data'] = $this->validateFormData((string) $request->input('form_data', '[]'));
+        } else {
+            $data['form_data'] = null;
+        }
 
         if ($request->hasFile('lampiran')) {
             $data['lampiran'] = $request->file('lampiran')->store('tugas', 'public');
@@ -75,7 +85,54 @@ class TugasController extends Controller
 
         NotificationHelper::sendToClass($tugas->kelas_id, 'Tugas Baru: ' . $tugas->judul, 'Guru telah menambahkan tugas baru di kelas Anda.', route('tugas.show', $tugas), 'task');
 
-        return redirect()->route('tugas.index')->with('success', 'Tugas berhasil dibuat.');
+        return redirect()->route('tugas.index')->with('success', $data['tipe'] === 'form'
+            ? 'Formulir online berhasil diterbitkan untuk siswa.'
+            : 'Tugas berhasil dibuat.');
+    }
+
+    /**
+     * Validasi struktur pertanyaan formulir online dan kembalikan versi yang
+     * sudah dinormalisasi: [ ['text' => ..., 'type' => ..., 'options' => [...], 'required' => bool], ... ]
+     */
+    private function validateFormData(string $json): array
+    {
+        $questions = json_decode($json, true);
+
+        if (! is_array($questions) || $questions === []) {
+            throw ValidationException::withMessages([
+                'form_data' => 'Tipe Formulir Online memerlukan minimal satu pertanyaan. Tambahkan pertanyaan pada Form Builder.',
+            ]);
+        }
+
+        $allowedTypes = ['text', 'essay', 'multiple', 'checkbox', 'dropdown'];
+        $normalized = [];
+
+        foreach ($questions as $i => $q) {
+            $text = trim((string) ($q['text'] ?? ''));
+            $type = (string) ($q['type'] ?? '');
+            $options = array_values(array_filter(array_map('trim', (array) ($q['options'] ?? []))));
+
+            if ($text === '' || ! in_array($type, $allowedTypes, true)) {
+                throw ValidationException::withMessages([
+                    'form_data' => 'Pertanyaan ke-' . ($i + 1) . ' belum lengkap. Isi teks pertanyaan dan pilih jenis jawaban yang valid.',
+                ]);
+            }
+
+            if (in_array($type, ['multiple', 'checkbox', 'dropdown'], true) && count($options) < 2) {
+                throw ValidationException::withMessages([
+                    'form_data' => 'Pertanyaan ke-' . ($i + 1) . ' bertipe pilihan dan memerlukan minimal 2 opsi jawaban.',
+                ]);
+            }
+
+            $normalized[] = [
+                'text' => $text,
+                'type' => $type,
+                'options' => in_array($type, ['multiple', 'checkbox', 'dropdown'], true) ? $options : [],
+                'required' => array_key_exists('required', $q) ? (bool) $q['required'] : true,
+            ];
+        }
+
+        return $normalized;
     }
 
     public function exportGrades(Tugas $tugas)
@@ -135,7 +192,9 @@ class TugasController extends Controller
 
         $rules = [];
         if ($tugas->tipe === 'form') {
-            $rules['jawaban'] = ['required', 'array'];
+            // Jika seluruh pertanyaan bersifat opsional, jawaban kosong tetap diperbolehkan.
+            $hasRequired = collect($tugas->form_data ?? [])->contains(fn ($q) => ($q['required'] ?? true) !== false);
+            $rules['jawaban'] = [$hasRequired ? 'required' : 'nullable', 'array'];
         } else {
             $rules['catatan'] = ['required', 'string'];
             $rules['jawaban_file'] = ['required', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,zip', 'max:10240'];
@@ -150,7 +209,7 @@ class TugasController extends Controller
         ];
 
         if ($tugas->tipe === 'form') {
-            $updateData['jawaban_form'] = $data['jawaban'];
+            $updateData['jawaban_form'] = array_values($data['jawaban'] ?? []);
             $updateData['catatan'] = 'Pengerjaan via formulir online.';
         } else {
             $updateData['catatan'] = $data['catatan'];

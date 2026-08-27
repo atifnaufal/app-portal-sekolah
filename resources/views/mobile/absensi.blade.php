@@ -52,7 +52,7 @@
 
                 @if($canMasuk || $canPulang)
                     <div id="camera-container" class="position-relative overflow-hidden rounded-4 shadow-lg mb-3 d-none" style="aspect-ratio: 3/4; background: #000;">
-                        <video id="video" autoplay muted playsinline class="w-100 h-100" style="object-fit: cover;"></video>
+                        <video id="video" autoplay muted playsinline class="w-100 h-100" style="object-fit: cover; transform: scaleX(-1);"></video>
 
                         <!-- Scanning Animation Overlays -->
                         <div class="face-scanner"></div>
@@ -133,7 +133,11 @@
 
 <script>
     let detector;
-    let stream;
+    let stream = null;
+    let detecting = false;
+    let submitting = false;
+    let lastDetection = 0;
+
     const video = document.getElementById('video');
     const captureBtn = document.getElementById('capture-btn');
     const openCameraBtn = document.getElementById('open-camera-btn');
@@ -148,89 +152,185 @@
             document.getElementById('long').value = position.coords.longitude;
         }, function(err) {
             console.warn("Geo error:", err);
-        }, { enableHighAccuracy: true });
+        }, { enableHighAccuracy: true, timeout: 10000 });
     }
 
-    async function setupCamera() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-                audio: false
-            });
-            video.srcObject = stream;
-            return new Promise((resolve) => {
-                video.onloadedmetadata = () => resolve(video);
-            });
-        } catch (err) {
-            alert("Izin kamera ditolak atau tidak tersedia.");
-            throw err;
+    // Pesan error kamera yang spesifik dan mudah dipahami.
+    function cameraErrorMessage(err) {
+        switch (err && err.name) {
+            case 'NotAllowedError':
+            case 'SecurityError':
+                return 'Izin kamera ditolak. Buka pengaturan perangkat, aktifkan izin kamera untuk aplikasi ini, lalu coba lagi.';
+            case 'NotFoundError':
+            case 'DevicesNotFoundError':
+                return 'Kamera tidak ditemukan pada perangkat ini.';
+            case 'NotReadableError':
+            case 'TrackStartError':
+                return 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi tersebut lalu coba lagi.';
+            case 'OverconstrainedError':
+                return 'Kamera depan tidak mendukung resolusi yang diminta. Silakan coba lagi.';
+            default:
+                return 'Kamera gagal dijalankan (' + ((err && err.name) || 'kesalahan tidak diketahui') + '). Silakan coba lagi.';
         }
     }
 
-    async function detectFace() {
-        if (!detector || !video.srcObject || video.paused) return;
+    // Setup kamera: resolusi HD dengan fallback bertahap agar selalu berhasil menyala.
+    async function setupCamera() {
+        const attempts = [
+            { video: { facingMode: { exact: 'user' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+            { video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+            { video: { facingMode: 'user' }, audio: false },
+            { video: true, audio: false }
+        ];
+
+        let lastError = null;
+        for (const constraints of attempts) {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                break;
+            } catch (err) {
+                lastError = err;
+                // Izin ditolak tidak perlu dicoba ulang dengan konfigurasi lain.
+                if (err && ['NotAllowedError', 'SecurityError'].includes(err.name)) break;
+            }
+        }
+
+        if (!stream) throw lastError;
+
+        video.srcObject = stream;
+
+        await new Promise((resolve, reject) => {
+            video.onloadedmetadata = () => resolve();
+            video.onerror = () => reject(new Error('Video gagal dimuat.'));
+            // Pengaman bila metadata sudah termuat lebih dulu.
+            if (video.readyState >= 1) resolve();
+        });
+
+        try { await video.play(); } catch (_) { /* autoplay muted: aman diabaikan */ }
+
+        // Autofokus kontinu bila perangkat mendukung (fitur kamera tingkat lanjut).
+        try {
+            const [track] = stream.getVideoTracks();
+            const capabilities = typeof track.getCapabilities === 'function' ? track.getCapabilities() : {};
+            if (Array.isArray(capabilities.focusMode) && capabilities.focusMode.includes('continuous')) {
+                await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+            }
+        } catch (_) { /* tidak semua perangkat mendukung */ }
+
+        return video;
+    }
+
+    // Loop deteksi wajah — dijalankan maksimal 4x/detik agar stabil & hemat baterai.
+    async function detectFace(timestamp) {
+        if (!detecting) return;
+        requestAnimationFrame(detectFace);
+
+        if (!detector || !stream || video.readyState < 2) return;
+        if (timestamp - lastDetection < 250) return;
+        lastDetection = timestamp;
 
         try {
-            const faces = await detector.estimateFaces(video, { flipHorizontal: false });
+            const faces = await detector.estimateFaces(video);
+            if (!detecting) return;
 
             if (faces.length > 0) {
-                const face = faces[0];
-                // Pastikan wajah cukup dekat dan terpusat (opsional logic)
-                statusText.innerText = "WAJAH TERDETEKSI";
-                statusText.className = "small fw-bold text-success";
-                captureBtn.disabled = false;
+                statusText.innerText = 'WAJAH TERDETEKSI';
+                statusText.className = 'small fw-bold text-success';
+                if (!submitting) captureBtn.disabled = false;
             } else {
-                statusText.innerText = "POSISIKAN WAJAH DI TENGAH";
-                statusText.className = "small fw-bold text-warning";
-                captureBtn.disabled = true;
+                statusText.innerText = 'POSISIKAN WAJAH DI TENGAH';
+                statusText.className = 'small fw-bold text-warning';
+                if (!submitting) captureBtn.disabled = true;
             }
         } catch (e) {
-            console.error("Detection loop error:", e);
+            // Kesalahan transien diabaikan; frame berikutnya akan dicoba ulang.
         }
+    }
 
+    function startDetection() {
+        detecting = true;
+        lastDetection = 0;
         requestAnimationFrame(detectFace);
     }
 
+    function stopStream() {
+        detecting = false;
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+
     openCameraBtn.addEventListener('click', async () => {
-        openCameraBtn.innerText = "Menyiapkan Sensor...";
+        openCameraBtn.innerText = 'Menyiapkan Sensor...';
         openCameraBtn.disabled = true;
 
         try {
             await setupCamera();
+        } catch (err) {
+            console.error('Camera Error:', err);
+            alert(cameraErrorMessage(err));
+            openCameraBtn.innerText = 'Buka Kamera Vermuk';
+            openCameraBtn.disabled = false;
+            stopStream();
+            return;
+        }
 
-            // Gunakan MediaPipe Face Detector (lebih canggih/akurat)
+        try {
+            // MediaPipe Face Detector via TensorFlow.js (deteksi wajah real-time tercanggih di browser).
             const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
             detector = await faceDetection.createDetector(model, {
                 runtime: 'tfjs',
                 maxFaces: 1
             });
-
-            cameraContainer.classList.remove('d-none');
-            absensiForm.classList.remove('d-none');
-            openCameraBtn.classList.add('d-none');
-
-            detectFace();
         } catch (err) {
-            console.error("AI Init Error:", err);
-            alert("Gagal memuat sistem Vermuk. Coba gunakan browser Chrome terbaru.");
-            openCameraBtn.innerText = "Buka Kamera Vermuk";
+            console.error('AI Init Error:', err);
+            alert('Gagal memuat sistem deteksi wajah. Pastikan koneksi internet stabil, lalu coba lagi.');
+            openCameraBtn.innerText = 'Buka Kamera Vermuk';
             openCameraBtn.disabled = false;
+            stopStream();
+            return;
         }
+
+        cameraContainer.classList.remove('d-none');
+        absensiForm.classList.remove('d-none');
+        openCameraBtn.classList.add('d-none');
+        statusText.innerText = 'MEMULAI DETEKSI...';
+        startDetection();
     });
 
     captureBtn.addEventListener('click', () => {
-        // Visual feedback
-        cameraContainer.style.filter = 'brightness(2)';
-        captureBtn.innerText = "MENGIRIM...";
+        // Jangan ambil foto sebelum frame video benar-benar siap.
+        if (!video.videoWidth || !video.videoHeight) return;
+
+        submitting = true;
+        detecting = false;
+        captureBtn.innerText = 'MENGIRIM...';
         captureBtn.disabled = true;
+        cameraContainer.style.filter = 'brightness(2)';
 
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        const ctx = canvas.getContext('2d');
+
+        // Pratinjau ditampilkan cermin (mode selfie alami). Foto ikut dicerminkan
+        // sehingga hasil akhir SELALU identik dengan yang dilihat pengguna (anti terbalik-balik).
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0);
 
         canvas.toBlob((blob) => {
-            const file = new File([blob], "absensi.jpg", { type: "image/jpeg" });
+            if (!blob) {
+                alert('Gagal memproses foto. Silakan coba lagi.');
+                submitting = false;
+                captureBtn.innerText = 'Konfirmasi & Absen';
+                cameraContainer.style.filter = '';
+                startDetection();
+                return;
+            }
+
+            const file = new File([blob], 'absensi.jpg', { type: 'image/jpeg' });
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
             document.getElementById('foto-input').files = dataTransfer.files;
@@ -241,12 +341,22 @@
             // Submit form
             document.getElementById('page-loader').style.display = 'flex';
             absensiForm.submit();
-        }, 'image/jpeg', 0.9);
+        }, 'image/jpeg', 0.92);
+    });
+
+    // Hentikan analisis saat aplikasi berpindah ke latar belakang.
+    document.addEventListener('visibilitychange', () => {
+        if (!stream) return;
+        if (document.hidden) {
+            detecting = false;
+        } else if (detector && !submitting) {
+            startDetection();
+        }
     });
 
     // Clean up camera on page hide
     window.addEventListener('pagehide', () => {
-        if (stream) stream.getTracks().forEach(track => track.stop());
+        stopStream();
     });
 </script>
 @endsection

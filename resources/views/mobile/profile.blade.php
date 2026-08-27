@@ -18,7 +18,8 @@
 </header>
 
 <main class="mobile-content">
-    @if(!$user->hasVerifiedEmail())
+    {{-- Verifikasi email hanya relevan untuk siswa: guru & admin dibuat/dibatasi langsung oleh admin sehingga melewati verifikasi. --}}
+    @if($user->role === 'siswa' && !$user->hasVerifiedEmail())
         <div class="alert alert-warning border-0 rounded-4 p-3 mb-4 d-flex align-items-start gap-3">
             <i class="bi bi-exclamation-octagon-fill h4 mb-0"></i>
             <div>

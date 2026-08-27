@@ -35,6 +35,14 @@
         border: 1px solid rgba(36, 107, 254, 0.1);
         padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 700;
     }
+
+    .ai-card.pending::before { background: #f59e0b; }
+
+    .revise-badge {
+        background: #fef3c7; color: #b45309; border: 1px solid #fde68a;
+        padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 800;
+        letter-spacing: 0.3px;
+    }
 </style>
 
 <div class="page-header">
@@ -68,17 +76,23 @@
                 @php
                     $isExpired = $item->batas_pengumpulan && $item->batas_pengumpulan->isPast();
                     $isForm = $item->tipe === 'form';
+                    $needsRevision = $item->pengumpulan->first()?->revisi_aktif;
                 @endphp
                 <a href="{{ route('tugas.show', $item) }}" class="card ai-card mb-3 text-decoration-none text-dark {{ $isExpired ? 'urgent' : '' }}">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="glass-pill">
-                                <i class="bi {{ $isForm ? 'bi-ui-checks' : 'bi-file-earmark-text' }} me-1"></i>
-                                {{ $isForm ? 'FORMULIR ONLINE' : 'PENGIRIMAN FILE' }}
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="glass-pill">
+                                    <i class="bi {{ $isForm ? 'bi-ui-checks' : 'bi-file-earmark-text' }} me-1"></i>
+                                    {{ $isForm ? 'FORMULIR ONLINE' : 'PENGIRIMAN FILE' }}
+                                </div>
+                                @if($needsRevision)
+                                    <span class="revise-badge"><i class="bi bi-arrow-repeat me-1"></i>PERLU REVISI</span>
+                                @endif
                             </div>
                             <div class="text-end">
                                 <div class="small fw-bold {{ $isExpired ? 'text-danger' : 'text-muted' }}" style="font-size: 10px;">DEADLINE</div>
-                                <div class="fw-bold" style="font-size: 13px;">{{ $item->batas_pengumpulan?->format('d M') ?? 'N/A' }}</div>
+                                <div class="fw-bold" style="font-size: 13px;">{{ $item->batas_pengumpulan?->format('d M') ?? 'Terbuka' }}</div>
                             </div>
                         </div>
 
@@ -86,9 +100,9 @@
                         <p class="small text-secondary mb-4 opacity-75" style="line-height: 1.6;">{{ \Illuminate\Support\Str::limit($item->deskripsi ?: 'Buka modul untuk panduan lengkap.', 85) }}</p>
 
                         <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center text-{{ $isExpired ? 'danger' : 'primary' }}" style="font-size: 12px; font-weight: 700;">
-                                <span class="status-glow" style="color: {{ $isExpired ? '#ef4444' : '#246bfe' }}"></span>
-                                {{ $isExpired ? 'Waktu Habis' : 'Sedang Berjalan' }}
+                            <div class="d-flex align-items-center text-{{ $needsRevision ? 'warning' : ($isExpired ? 'danger' : 'primary') }}" style="font-size: 12px; font-weight: 700;">
+                                <span class="status-glow" style="color: {{ $needsRevision ? '#f59e0b' : ($isExpired ? '#ef4444' : '#246bfe') }}"></span>
+                                {{ $needsRevision ? 'Perbaiki & Kirim Ulang' : ($isExpired ? 'Waktu Habis' : 'Sedang Berjalan') }}
                             </div>
                             <i class="bi bi-arrow-right-short h4 mb-0 text-muted"></i>
                         </div>
@@ -102,6 +116,29 @@
                 </div>
             @endforelse
         </div>
+
+        @if($user->role === 'siswa' && $pendingTugas->isNotEmpty())
+            <h2 class="section-title mt-5 mb-4 px-1" style="font-size: 19px;">Menunggu Penilaian</h2>
+            <div class="stagger">
+                @foreach($pendingTugas as $item)
+                    @php($submission = $item->pengumpulan->first())
+                    <a href="{{ route('tugas.show', $item) }}" class="card ai-card pending mb-2 shadow-none border border-light text-decoration-none">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-box rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #fffbeb; color: #f59e0b;">
+                                    <i class="bi bi-hourglass-split h6 mb-0"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark" style="font-size: 14px;">{{ $item->judul }}</div>
+                                    <div class="small text-muted" style="font-size: 11px;">Dikirim {{ $submission->dikumpulkan_pada?->format('d M Y, H:i') ?? 'Baru saja' }}</div>
+                                </div>
+                            </div>
+                            <span class="badge rounded-pill" style="background: #fffbeb; color: #b45309; font-size: 10px; font-weight: 800;">MENUNGGU</span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
 
         @if($user->role === 'siswa' && $completedTugas->isNotEmpty())
             <h2 class="section-title mt-5 mb-4 px-1" style="font-size: 19px;">Arsip & Nilai</h2>
