@@ -71,7 +71,9 @@
                     <form method="POST" action="{{ route('tugas.submit', $tugas) }}" id="formTask">
                         @csrf
                         @foreach($formData as $index => $q)
-                            @php($isRequired = $q['required'] ?? true)
+                            @php
+                                $isRequired = $q['required'] ?? true;
+                            @endphp
                             <div class="form-question">
                                 <label class="fw-bold text-dark mb-2 d-block" style="font-size: 14px;" for="q{{ $index }}">
                                     {{ $index + 1 }}. {{ $q['text'] }}
@@ -174,7 +176,9 @@
                         <div class="p-3 rounded-4 mb-3" style="background: #f8fafc;">
                             <div class="x-small fw-bold text-secondary mb-2"><i class="bi bi-ui-checks me-1"></i>JAWABAN FORMULIR SISWA</div>
                             @foreach($formData as $qi => $q)
-                                @php($ans = $answers[$qi] ?? null)
+                                @php
+                                    $ans = $answers[$qi] ?? null;
+                                @endphp
                                 <div class="mb-2">
                                     <div class="x-small fw-bold text-dark">{{ $qi + 1 }}. {{ $q['text'] ?? '' }}</div>
                                     <div class="x-small text-secondary" style="white-space: pre-line;">{{ is_array($ans) ? (implode(' • ', array_filter($ans)) ?: '— tidak dijawab —') : ($ans && $ans !== '' ? $ans : '— tidak dijawab —') }}</div>
