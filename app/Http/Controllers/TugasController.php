@@ -438,7 +438,7 @@ class TugasController extends Controller
             'tipe' => ['required', 'in:file,form'],
             'batas_pengumpulan' => ['nullable', 'date'],
             'kelas_id' => ['required', 'exists:kelas,id'],
-            'mata_pelajaran_id' => ['required', 'exists:mata_pelajaran,id'],
+            'mata_pelajaran_id' => ['nullable', 'exists:mata_pelajaran,id'],
             'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,xlsx,xls,ppt,pptx,csv,txt,zip', 'max:10240'],
         ]);
 

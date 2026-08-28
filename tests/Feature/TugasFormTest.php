@@ -65,7 +65,7 @@ class TugasFormTest extends TestCase
             'form_data' => json_encode($this->sampleQuestions()),
         ]);
 
-        $response->assertRedirect(route('tugas.index'));
+        $response->assertRedirect(route('tugas.show', Tugas::first()));
         $tugas = Tugas::first();
         $this->assertNotNull($tugas);
         $this->assertSame('form', $tugas->tipe);

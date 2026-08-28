@@ -183,12 +183,13 @@
                         $answers = is_array($item->jawaban_form) ? $item->jawaban_form : (json_decode($item->jawaban_form ?: '[]', true) ?: []);
                         $formData = is_array($tugas->form_data) ? $tugas->form_data : (json_decode($tugas->form_data ?: '[]', true) ?: []);
                     @endphp
+                    <div style="font-size:10px;font-weight:800;color:#7c3aed;letter-spacing:0.05em;margin:2px 0 6px;"><i class="bi bi-ui-checks-grid"></i> JAWABAN FORMULIR SISWA</div>
                     <div style="background:#f8fafc;border-radius:10px;padding:10px;margin-bottom:8px;">
                         @foreach($formData as $qi => $q)
                             @php $ans = $answers[$qi] ?? null; @endphp
                             <div style="margin-bottom:6px;">
                                 <div style="font-size:11px;font-weight:700;color:#1e293b;">{{ $qi+1 }}. {{ $q['text'] ?? '' }}</div>
-                                <div style="font-size:11px;color:#64748b;white-space:pre-line;">{{ is_array($ans) ? implode(', ', array_filter($ans)) : ($ans ?: '--') }}</div>
+                                <div style="font-size:11px;color:#64748b;white-space:pre-line;">{{ is_array($ans) ? implode(', ', array_filter($ans)) : ($ans ?: 'tidak dijawab') }}</div>
                             </div>
                         @endforeach
                     </div>
@@ -286,7 +287,7 @@
             @if($tugas->tipe === 'form')
                 @php $formData = is_array($tugas->form_data) ? $tugas->form_data : (json_decode($tugas->form_data ?: '[]', true) ?: []); @endphp
                 <div class="td-card fade-up" style="animation-delay:0.15s;">
-                    <div style="font-size:14px;font-weight:700;margin-bottom:14px;"><i class="bi bi-ui-checks-grid" style="color:#7c3aed;"></i> Formulir</div>
+                    <div style="font-size:14px;font-weight:700;margin-bottom:14px;"><i class="bi bi-ui-checks-grid" style="color:#7c3aed;"></i> Formulir Pengerjaan</div>
                     <form method="POST" action="{{ route('tugas.submit', $tugas) }}">
                         @csrf
                         @foreach($formData as $idx => $q)
