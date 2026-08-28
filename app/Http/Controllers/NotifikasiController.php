@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Absensi;
 use App\Models\Notifikasi;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class NotifikasiController extends Controller
@@ -45,6 +47,37 @@ class NotifikasiController extends Controller
     {
         return view('mobile.tugas-notifikasi', [
             'notifikasis' => Notifikasi::where('user_id', session('user_id'))->latest()->get(),
+        ]);
+    }
+
+    /**
+     * Fallback realtime: polling notifikasi baru (id > last_id) untuk menampilkan
+     * toast popup langsung di mobile saat Echo/Reverb tidak tersedia.
+     */
+    public function poll(Request $request): JsonResponse
+    {
+        $userId = $request->session()->get('user_id');
+        $lastId = (int) $request->query('last_id', 0);
+
+        $notifikasi = Notifikasi::where('user_id', $userId)
+            ->where('id', '>', $lastId)
+            ->latest('id')
+            ->take(10)
+            ->get(['id', 'judul', 'pesan', 'url', 'created_at']);
+
+        $unread = Notifikasi::where('user_id', $userId)->whereNull('dibaca_pada')->count();
+        $newestId = $notifikasi->first()?->id ?? $lastId;
+
+        return response()->json([
+            'new_last_id' => $newestId,
+            'unread' => (int) $unread,
+            'items' => $notifikasi->map(fn ($n) => [
+                'id' => $n->id,
+                'judul' => $n->judul,
+                'pesan' => $n->pesan,
+                'url' => $n->url,
+                'created_at' => $n->created_at?->diffForHumans(),
+            ]),
         ]);
     }
 }

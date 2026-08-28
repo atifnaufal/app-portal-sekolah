@@ -184,9 +184,7 @@
             <div style="display:flex;gap:8px;">
                 <a href="<?php echo e(route('notifications.index')); ?>" style="width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;position:relative;border:1px solid rgba(255,255,255,0.1);">
                     <i class="bi bi-bell-fill" style="font-size:17px;"></i>
-                    <?php if($unreadNotificationsCount > 0): ?>
-                        <span style="position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#ef4444;border:1.5px solid #1e1b4b;"></span>
-                    <?php endif; ?>
+                    <span data-live-dot id="notif-dot" style="display:none; position:absolute; top:8px; right:8px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#ef4444; border:2px solid #1e1b4b; color:#fff; font-size:10px; font-weight:800; place-items:center; line-height:1;">0</span>
                 </a>
             </div>
         </div>

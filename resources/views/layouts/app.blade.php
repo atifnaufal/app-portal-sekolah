@@ -125,16 +125,18 @@
 </nav>
 
 <div id="portal-toast" class="animate__animated animate__fadeInDown" style="display:none;">
-    <div class="d-flex align-items-center gap-3">
-        <div id="toast-icon" style="width: 44px; height: 44px; background: var(--blue-soft); border-radius: 12px; display: grid; place-items: center; color: var(--blue);">
-            <i class="bi bi-bell-fill"></i>
+    <a id="toast-link" href="#" style="display:block; text-decoration:none; color:inherit;">
+        <div class="d-flex align-items-center gap-3">
+            <div id="toast-icon" style="width: 44px; height: 44px; background: var(--blue-soft); border-radius: 12px; display: grid; place-items: center; color: var(--blue); flex-shrink:0;">
+                <i class="bi bi-bell-fill"></i>
+            </div>
+            <div style="flex: 1; min-width:0;">
+                <div id="toast-title" class="fw-bold text-dark" style="font-size: 14px;">Notifikasi</div>
+                <div id="toast-msg" class="text-muted" style="font-size: 13px; line-height:1.4;">Ada pesan baru untuk Anda.</div>
+            </div>
+            <button type="button" class="btn-close btn-close-sm" onclick="event.preventDefault();event.stopPropagation();document.getElementById('portal-toast').style.display='none';" style="flex-shrink:0;"></button>
         </div>
-        <div style="flex: 1;">
-            <div id="toast-title" class="fw-bold text-dark" style="font-size: 14px;">Notifikasi</div>
-            <div id="toast-msg" class="text-muted" style="font-size: 13px;">Ada pesan baru untuk Anda.</div>
-        </div>
-        <button onclick="document.getElementById('portal-toast').style.display='none'" class="btn-close btn-close-sm"></button>
-    </div>
+    </a>
 </div>
 
 <audio id="notif-sound" src="{{ asset('sounds/doorbell.mp3') }}" preload="auto"></audio>
@@ -161,27 +163,91 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function showNotification(title, message) {
-        const toast = document.getElementById('portal-toast');
-        document.getElementById('toast-title').innerText = title;
-        document.getElementById('toast-msg').innerText = message;
+    var portalToastEl = document.getElementById('portal-toast');
+    var toastTimer = null;
+    function showNotification(title, message, url) {
+        document.getElementById('toast-title').innerText = title || 'Notifikasi';
+        document.getElementById('toast-msg').innerText = message || '';
+        document.getElementById('toast-link').setAttribute('href', url || '#');
         document.getElementById('notif-sound').play().catch(e => {});
-
-        toast.style.display = 'block';
-        setTimeout(() => {
-            toast.classList.replace('animate__fadeInDown', 'animate__fadeOutUp');
-            setTimeout(() => {
-                toast.style.display = 'none';
-                toast.classList.replace('animate__fadeOutUp', 'animate__fadeInDown');
-            }, 500);
-        }, 5000);
+        portalToastEl.style.display = 'block';
+        portalToastEl.classList.remove('animate__fadeOutUp');
+        portalToastEl.classList.add('animate__fadeInDown');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            portalToastEl.classList.remove('animate__fadeInDown');
+            portalToastEl.classList.add('animate__fadeOutUp');
+            setTimeout(() => { portalToastEl.style.display = 'none'; }, 500);
+        }, 6000);
     }
 
-    if (window.Echo) {
-        const userId = @json((int) session('user_id'));
-        window.Echo.private('portal-notifications.' + userId)
-            .listen('.new-notification', (e) => showNotification(e.title, e.message));
-    }
+    // ===== Sesi realtime + Notifikasi langsung (seperti aplikasi native) =====
+    (function () {
+        var SESSION_URL = "{{ route('session.status') }}";
+        var POLL_URL = "{{ route('notifications.poll') }}";
+        var LOGIN_URL = "{{ route('login') }}";
+        var MAX_RETRY = 3;
+        var lastId = 0;
+        var offlineRetry = 0;
+        var stdout = null;
+
+        function updateUnreadBadges(count) {
+            document.querySelectorAll('[data-live-unread]').forEach(function (el) {
+                var num = document.getElementById(el.getAttribute('data-live-unread'));
+                if (!num) return;
+                num.innerText = count > 99 ? '99+' : String(count);
+                num.style.display = (count > 0) ? 'grid' : 'none';
+            });
+            document.querySelectorAll('[data-live-dot]').forEach(function (h) {
+                h.innerText = count > 99 ? '99+' : String(count);
+                h.style.display = (count > 0) ? 'grid' : 'none';
+            });
+        }
+
+        function pollNotifications() {
+            fetch(POLL_URL + '?last_id=' + lastId + '&t=' + Date.now(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { if (!r.ok) throw new Error('poll'); return r.json(); })
+                .then(function (d) {
+                    offlineRetry = 0;
+                    updateUnreadBadges(d.unread);
+                    if (d.new_last_id && d.new_last_id !== lastId) {
+                        (d.items || []).forEach(function (it) { showNotification(it.judul, it.pesan, it.url || '#'); });
+                        lastId = d.new_last_id;
+                    }
+                })
+                .catch(function () { offlineRetry++; if (offlineRetry > MAX_RETRY) stopHeartbeat(); });
+        }
+
+        function heartbeat() {
+            fetch(SESSION_URL + '?t=' + Date.now(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (!d.authenticated) { window.location.href = d.redirect || LOGIN_URL; return; }
+                    updateUnreadBadges(d.unread);
+                })
+                .catch(function () {});
+        }
+
+        function startHeartbeat() {
+            if (stdout) return;
+            heartbeat();
+            stdout = setInterval(heartbeat, 60000);
+            pollNotifications();
+            setInterval(pollNotifications, 15000);
+        }
+        function stopHeartbeat() { if (stdout) { clearInterval(stdout); stdout = null; } }
+
+        if (window.Echo) {
+            try {
+                window.Echo.private('portal-notifications.' + @json((int) session('user_id')))
+                    .listen('.new-notification', function (e) {
+                        showNotification(e.title || 'Notifikasi', e.message || '', '#');
+                        document.querySelectorAll('[data-live-dot]').forEach(function (h) { h.style.display = 'block'; });
+                    });
+            } catch (e) {}
+        }
+        startHeartbeat();
+    })();
 </script>
 </body>
 </html>

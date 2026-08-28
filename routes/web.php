@@ -21,6 +21,7 @@ use App\Http\Controllers\SppController;
 use App\Http\Controllers\TugasController;
 use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\JadwalController;
+use App\Http\Controllers\SessionController;
 use App\Models\MataPelajaran;
 
 Route::redirect('/', '/dashboard');
@@ -93,6 +94,8 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::get('/chat/poll', [ChatController::class, 'poll'])->name('chat.poll');
     Route::get('/chat/{group}', [ChatController::class, 'show'])->name('chat.show');
     Route::get('/notifikasi-saya', [NotifikasiController::class, 'mine'])->name('notifications.index');
+    Route::get('/notifikasi/poll', [NotifikasiController::class, 'poll'])->name('notifications.poll');
+    Route::get('/session/status', [SessionController::class, 'status'])->name('session.status');
     Route::get('/mahasiswa', [MahasiswaController::class, 'index'])->name('mahasiswa.index');
     Route::get('/tugas', [TugasController::class, 'index'])->name('tugas.index');
     Route::get('/tugas/{tugas}', [TugasController::class, 'show'])->whereNumber('tugas')->name('tugas.show');

@@ -134,16 +134,18 @@
     @endif
 
     <div id="portal-toast" class="animate__animated animate__fadeInDown" style="display:none;">
-        <div class="d-flex align-items-center gap-3">
-            <div style="width: 40px; height: 40px; background: #e8f0fe; border-radius: 12px; display: grid; place-items: center; color: var(--blue);">
-                <i class="bi bi-bell-fill"></i>
+        <a id="toast-link" href="#" style="display:block; text-decoration:none; color:inherit;">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width: 42px; height: 42px; background: #e8f0fe; border-radius: 12px; display: grid; place-items: center; color: var(--blue); flex-shrink:0;">
+                    <i class="bi bi-bell-fill" style="font-size:18px;"></i>
+                </div>
+                <div style="flex: 1; min-width:0;">
+                    <div id="toast-title" class="fw-bold text-dark" style="font-size: 14px; line-height:1.3;">Notifikasi</div>
+                    <div id="toast-msg" class="text-muted" style="font-size: 13px; line-height:1.4; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">Ada pesan baru.</div>
+                </div>
+                <button type="button" class="btn-close btn-close-sm" onclick="event.preventDefault();event.stopPropagation();document.getElementById('portal-toast').style.display='none';" style="flex-shrink:0;"></button>
             </div>
-            <div style="flex: 1;">
-                <div id="toast-title" class="fw-bold text-dark" style="font-size: 14px;">Notifikasi</div>
-                <div id="toast-msg" class="text-muted" style="font-size: 13px;">Ada pesan baru.</div>
-            </div>
-            <button onclick="document.getElementById('portal-toast').style.display='none'" class="btn-close btn-close-sm"></button>
-        </div>
+        </a>
     </div>
 
     <audio id="notif-sound" src="{{ asset('sounds/doorbell.mp3') }}" preload="auto"></audio>
@@ -151,13 +153,23 @@
     <script>
         window.addEventListener('load', () => { document.getElementById('page-loader').style.display = 'none'; });
 
-        function showNotification(title, message) {
-            const toast = document.getElementById('portal-toast');
-            document.getElementById('toast-title').innerText = title;
-            document.getElementById('toast-msg').innerText = message;
+        var portalToastEl = document.getElementById('portal-toast');
+        var toastTimer = null;
+
+        function showNotification(title, message, url) {
+            document.getElementById('toast-title').innerText = title || 'Notifikasi';
+            document.getElementById('toast-msg').innerText = message || '';
+            document.getElementById('toast-link').setAttribute('href', url || '#');
             document.getElementById('notif-sound').play().catch(() => {});
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 5000);
+            portalToastEl.style.display = 'block';
+            portalToastEl.classList.remove('animate__fadeOutUp');
+            portalToastEl.classList.add('animate__fadeInDown');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                portalToastEl.classList.remove('animate__fadeInDown');
+                portalToastEl.classList.add('animate__fadeOutUp');
+                setTimeout(() => { portalToastEl.style.display = 'none'; }, 400);
+            }, 6000);
         }
 
         document.querySelectorAll('a, button').forEach(el => {
@@ -172,6 +184,96 @@
         @if(session('success') || session('error'))
             showNotification('Informasi', '{{ session('success') ?: session('error') }}');
         @endif
+    </script>
+
+    <script>
+        // ===== Sesi realtime + Notifikasi langsung (seperti aplikasi native) =====
+        (function () {
+            var SESSION_URL = "{{ route('session.status') }}";
+            var POLL_URL = "{{ route('notifications.poll') }}";
+            var LOGIN_URL = "{{ route('login') }}";
+            var MAX_RETRY = 3;
+
+            // Update badge notifikasi bila ada elemen ber-peringatan unread live.
+            function updateUnreadBadges(count) {
+                document.querySelectorAll('[data-live-unread]').forEach(function (el) {
+                    var num = document.getElementById(el.getAttribute('data-live-unread'));
+                    if (!num) return;
+                    num.innerText = count > 99 ? '99+' : String(count);
+                    num.style.display = (count > 0) ? 'grid' : 'none';
+                });
+                // Elemen bertanda data-live-dot menampilkan angka + toggle tampil.
+                document.querySelectorAll('[data-live-dot]').forEach(function (h) {
+                    h.innerText = count > 99 ? '99+' : String(count);
+                    h.style.display = (count > 0) ? 'grid' : 'none';
+                });
+            }
+
+            var lastId = 0;
+            var offlineRetry = 0;
+            var stdout = null;
+
+            // Polling notifikasi baru (fallback saat Echo tak tersedia)
+            function pollNotifications() {
+                fetch(POLL_URL + '?last_id=' + lastId + '&t=' + Date.now(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function (r) { if (!r.ok) throw new Error('poll'); return r.json(); })
+                    .then(function (d) {
+                        offlineRetry = 0;
+                        updateUnreadBadges(d.unread);
+                        if (d.new_last_id && d.new_last_id !== lastId) {
+                            (d.items || []).forEach(function (it) {
+                                showNotification(it.judul, it.pesan, it.url || '#');
+                            });
+                            lastId = d.new_last_id;
+                        }
+                    })
+                    .catch(function () {
+                        offlineRetry++;
+                        if (offlineRetry > MAX_RETRY) { stopHeartbeat(); }
+                    });
+            }
+
+            // Heartbeat sesi: jaga last_activity + deteksi sesi mati secara realtime
+            function heartbeat() {
+                fetch(SESSION_URL + '?t=' + Date.now(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        if (!d.authenticated) {
+                            // Sesi habis/expired -> redirect ke login langsung
+                            if (d.redirect) window.location.href = d.redirect;
+                            else window.location.href = LOGIN_URL;
+                            return;
+                        }
+                        updateUnreadBadges(d.unread);
+                    })
+                    .catch(function () { /* offline sementara, abaikan */ });
+            }
+
+            function startHeartbeat() {
+                if (stdout) return;
+                heartbeat();
+                stdout = setInterval(heartbeat, 60000);   // setiap 60 detik
+                // Notifikasi di-poll lebih rapat untuk nuansa "langsung"
+                pollNotifications();
+                setInterval(pollNotifications, 15000);
+            }
+            function stopHeartbeat() { if (stdout) { clearInterval(stdout); stdout = null; } }
+
+            // Echo/Reverb: terima notifikasi push secara instan
+            if (window.Echo) {
+                var myId = @json((int) session('user_id'));
+                try {
+                    window.Echo.private('portal-notifications.' + myId)
+                        .listen('.new-notification', function (e) {
+                            showNotification(e.title || 'Notifikasi', e.message || '', '#');
+                            var dots = document.querySelectorAll('[data-live-dot]');
+                            dots.forEach(function (h) { h.style.display = 'block'; });
+                        });
+                } catch (e) { /* Echo gagal -> pakai polling */ }
+            }
+
+            startHeartbeat();
+        })();
     </script>
 </body>
 </html>
