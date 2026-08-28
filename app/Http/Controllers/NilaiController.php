@@ -11,7 +11,8 @@ class NilaiController extends Controller
 {
     public function index(Request $request)
     {
-        $user = Auth::user();
+        $userId = session('user_id') ?: Auth::id();
+        $user = \App\Models\User::with('kelas')->findOrFail($userId);
         $isGuru = $user->role === 'guru';
 
         if ($isGuru) {

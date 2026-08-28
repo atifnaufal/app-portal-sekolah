@@ -93,22 +93,25 @@
     .db-section-link { font-size: 12px; font-weight: 700; color: #6366f1; text-decoration: none; }
 
     /* Quick Menu Grid */
-    .db-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .db-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     .db-menu-item {
         display: flex; flex-direction: column; align-items: center;
-        padding: 12px 2px; border-radius: 20px; text-decoration: none;
-        transition: all 0.2s; background: #fff;
-        border: 1px solid rgba(15,23,42,0.05);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        padding: 14px 2px; border-radius: 22px; text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fff;
+        border: 1px solid rgba(15,23,42,0.03);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
-    .db-menu-item:active { transform: scale(0.94); background: #f8fafc; }
+    .db-menu-item:active { transform: scale(0.92); background: #f8fafc; }
     .db-menu-icon {
-        width: 48px; height: 48px; border-radius: 16px;
+        width: 50px; height: 50px; border-radius: 18px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 20px; margin-bottom: 8px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        font-size: 22px; margin-bottom: 8px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        transition: all 0.3s;
     }
-    .db-menu-label { font-size: 10px; font-weight: 700; color: #64748b; }
+    .db-menu-item:hover .db-menu-icon { transform: translateY(-2px); }
+    .db-menu-label { font-size: 11px; font-weight: 700; color: #475569; letter-spacing: -0.2px; }
 
     /* List Items */
     .db-list-item {
@@ -234,7 +237,7 @@
                 <div class="db-menu-label">Nilai</div>
             </a>
             <a href="{{ route('eskul.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#f472b6,#db2777);color:#fff;"><i class="bi bi-flag-fill"></i></div>
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;"><i class="bi bi-flag-fill"></i></div>
                 <div class="db-menu-label">Eskul</div>
             </a>
             <!-- <a href="{{ route('pengumuman.index') }}" class="db-menu-item">

@@ -97,9 +97,10 @@
 
         #portal-toast {
             position: fixed; top: 20px; left: 16px; right: 16px; z-index: 10001;
-            background: #fff; border-radius: 18px; padding: 14px 16px;
-            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
+            background: #fff; border-radius: 20px; padding: 16px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
             border: 1px solid rgba(15, 23, 42, 0.05); border-left: 6px solid var(--blue);
+            transition: all 0.3s;
         }
     </style>
 </head>

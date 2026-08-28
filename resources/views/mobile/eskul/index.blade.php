@@ -22,32 +22,34 @@
     }
 
     .eskul-card {
-        background: #fff; border-radius: 24px; padding: 16px;
+        background: #fff; border-radius: 24px; padding: 20px;
         margin-bottom: 16px; border: 1px solid #f1f5f9;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-        transition: all 0.3s;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative; overflow: hidden;
     }
-    .eskul-card:active { transform: scale(0.97); }
+    .eskul-card:active { transform: scale(0.98); }
     .eskul-logo {
-        width: 64px; height: 64px; border-radius: 20px;
+        width: 56px; height: 56px; border-radius: 16px;
         background: #f8fafc; flex-shrink: 0; overflow: hidden;
         display: flex; align-items: center; justify-content: center;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
     }
-    .eskul-name { font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-    .eskul-meta { font-size: 12px; color: #94a3b8; font-weight: 600; }
+    .eskul-name { font-size: 17px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+    .eskul-meta { font-size: 12px; color: #64748b; font-weight: 600; }
 
     .eskul-logo img { width: 100%; height: 100%; object-fit: cover; }
     .eskul-logo-placeholder {
         width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-        background: #f1f5f9; color: #94a3b8; font-size: 24px;
+        background: #f1f5f9; color: #94a3b8; font-size: 22px;
     }
 
     .btn-join {
-        padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 700;
-        transition: all 0.2s; min-width: 80px;
+        padding: 8px 18px; border-radius: 12px; font-size: 13px; font-weight: 700;
+        transition: all 0.2s; min-width: 88px; border: none;
     }
     .status-badge {
-        font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 100px;
+        font-size: 9px; font-weight: 800; padding: 3px 10px; border-radius: 100px;
         text-transform: uppercase; letter-spacing: 0.05em;
     }
 </style>
@@ -80,9 +82,7 @@
                 <div class="d-flex align-items-center gap-3">
                     <div class="eskul-logo">
                         @if($eskul->logo)
-                            <img src="{{ asset('storage/'.$eskul->logo) }}"
-                                 alt="{{ $eskul->nama }}"
-                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"eskul-logo-placeholder\"><i class=\"bi bi-flag-fill\"></i></div>';">
+                            <img src="{{ asset('storage/'.$eskul->logo) }}" alt="{{ $eskul->nama }}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($eskul->nama) }}&background=f1f5f9&color=94a3b8';">
                         @else
                             <div class="eskul-logo-placeholder">
                                 <i class="bi bi-flag-fill"></i>
@@ -92,19 +92,14 @@
                     <div class="flex-grow-1 min-width-0">
                         <div class="eskul-name text-truncate">{{ $eskul->nama }}</div>
                         <div class="eskul-meta d-flex align-items-center gap-2">
-                            <span><i class="bi bi-people-fill me-1"></i> {{ $eskul->members_count }} Anggota</span>
-                            @if($isPending)
-                                <span class="status-badge bg-warning text-dark">Pending</span>
-                            @elseif($isJoined)
-                                <span class="status-badge bg-success text-white">Member</span>
-                            @endif
+                            <span><i class="bi bi-people-fill me-1 text-primary"></i> {{ $eskul->members_count }} Anggota</span>
                         </div>
                     </div>
-                    <div>
+                    <div class="flex-shrink-0">
                         @if(!$isEskulAdmin)
                             <form action="{{ route('eskul.join', $eskul) }}" method="POST">
                                 @csrf
-                                <button class="btn btn-join {{ ($isJoined || $isPending) ? 'btn-outline-danger' : 'btn-primary shadow-sm' }}">
+                                <button class="btn btn-join {{ ($isJoined || $isPending) ? 'btn-light text-danger' : 'btn-primary shadow-sm' }}" style="{{ ($isJoined || $isPending) ? 'background:#fef2f2; border:1px solid #fee2e2;' : '' }}">
                                     {{ $isPending ? 'Batal' : ($isJoined ? 'Keluar' : 'Gabung') }}
                                 </button>
                             </form>
@@ -115,6 +110,16 @@
                         @endif
                     </div>
                 </div>
+
+                @if($isPending || $isJoined)
+                    <div class="mt-2 d-flex gap-2">
+                        @if($isPending)
+                            <span class="status-badge bg-warning text-dark" style="background: #fef3c7 !important;">Menunggu Persetujuan</span>
+                        @elseif($isJoined)
+                            <span class="status-badge bg-success text-white" style="background: #10b981 !important;">Sudah Bergabung</span>
+                        @endif
+                    </div>
+                @endif
                 @if($eskul->deskripsi)
                     <div class="mt-3 pt-3 border-top small text-secondary" style="line-height: 1.5;">
                         {{ \Illuminate\Support\Str::limit($eskul->deskripsi, 80) }}

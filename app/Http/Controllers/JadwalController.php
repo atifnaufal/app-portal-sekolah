@@ -10,7 +10,8 @@ class JadwalController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
+        $userId = session('user_id') ?: Auth::id();
+        $user = \App\Models\User::with('kelas')->findOrFail($userId);
         $isGuru = $user->role === 'guru';
 
         $query = Jadwal::with(['mataPelajaran', 'kelas', 'guru']);

@@ -40,67 +40,76 @@
 </div>
 
 <div class="page-container">
-    <header class="mobile-hero" style="border-radius: 0 0 28px 28px; margin-bottom: 20px; background: linear-gradient(135deg, #0f172a, #1e293b); padding: 32px 24px 28px;">
-        <div class="eyebrow" style="color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">
-            {{ $user->kelas?->nama ?? ($isGuru ? 'Panel Pengajar' : 'Akademik') }}
+    <header class="mobile-hero" style="border-radius: 0 0 32px 32px; margin-bottom: 24px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px 24px 40px; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.15);">
+        <div class="eyebrow" style="color: rgba(255,255,255,0.6); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em;">
+            @if($isGuru)
+                MANAJEMEN AKADEMIK
+            @else
+                {{ $user->kelas?->nama ?? 'INFORMASI AKADEMIK' }}
+            @endif
         </div>
-        <div class="hero-title mt-2 text-white" style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">{{ $isGuru ? 'Kelola Nilai' : 'Laporan Nilai' }}</div>
-        <p class="mb-0 mt-1" style="font-size: 12px; color: rgba(255,255,255,.6); line-height: 1.5;">
-            {{ $isGuru ? 'Lihat dan evaluasi pencapaian siswa di mata pelajaran Anda.' : 'Pantau perkembangan nilai tugas dan ujian Anda semester ini.' }}
-        </p>
+        <div class="hero-title mt-2 text-white" style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">{{ $isGuru ? 'Penilaian Siswa' : 'Laporan Nilai' }}</div>
+        <div class="mt-2" style="font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.6;">
+            {{ $isGuru ? 'Monitor dan evaluasi performa akademik siswa di kelas Anda secara real-time.' : 'Rekapitulasi pencapaian tugas, UTS, dan UAS Anda sepanjang semester ini.' }}
+        </div>
     </header>
 
     <main class="mobile-content px-3">
         @if($isGuru)
             @if(!$selectedSubject)
-                <h6 class="fw-bold mb-3 px-1">Mata Pelajaran Anda</h6>
+                <div class="d-flex align-items-center gap-2 mb-3 px-1">
+                    <div style="width: 4px; height: 16px; background: var(--blue); border-radius: 2px;"></div>
+                    <h6 class="fw-bold mb-0" style="font-size: 14px; color: #475569;">MATA PELAJARAN ANDA</h6>
+                </div>
                 @forelse($mataPelajarans as $mp)
                     <a href="{{ route('nilai.index', ['subject_id' => $mp->id]) }}" class="card ai-card text-decoration-none text-dark" style="animation: slideUp 0.4s ease both;">
-                        <div class="card-body p-4 d-flex align-items-center gap-3">
-                            <div class="subject-icon">
-                                <i class="bi bi-book-half"></i>
+                        <div class="card-body p-3 d-flex align-items-center gap-3">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0);">
+                                <i class="bi bi-journal-text text-primary"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <div class="fw-bold" style="font-size: 16px;">{{ $mp->nama }}</div>
-                                <div class="small text-muted">{{ $mp->kelas?->nama }} · {{ $mp->kode }}</div>
+                                <div class="fw-bold" style="font-size: 15px; color: #1e293b;">{{ $mp->nama }}</div>
+                                <div class="small text-muted fw-semibold" style="font-size: 11px;">{{ $mp->kelas?->nama ?? 'Umum' }} · {{ $mp->kode }}</div>
                             </div>
-                            <i class="bi bi-chevron-right text-muted"></i>
+                            <div class="btn btn-light rounded-pill p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                <i class="bi bi-chevron-right text-muted" style="font-size: 12px;"></i>
+                            </div>
                         </div>
                     </a>
                 @empty
-                    <div class="text-center py-5">
-                        <i class="bi bi-journal-x h1 text-muted"></i>
-                        <p class="text-muted mt-2">Belum ada mata pelajaran yang diampu.</p>
+                    <div class="text-center py-5 opacity-50">
+                        <i class="bi bi-journal-x h1"></i>
+                        <p class="mt-2 fw-bold">Belum ada mapel.</p>
                     </div>
                 @endforelse
             @else
-                <div class="d-flex align-items-center justify-content-between mb-4 px-1">
+                <div class="d-flex align-items-center justify-content-between mb-4 px-2 py-3 bg-white rounded-4 border shadow-sm">
                     <div>
-                        <h6 class="fw-bold mb-0">{{ $selectedSubject->nama }}</h6>
-                        <div class="small text-muted">{{ $selectedSubject->kelas?->nama }}</div>
+                        <div class="fw-bold" style="font-size: 15px;">{{ $selectedSubject->nama }}</div>
+                        <div class="small text-muted fw-semibold">{{ $selectedSubject->kelas?->nama ?? 'Semua Kelas' }}</div>
                     </div>
-                    <a href="{{ route('nilai.index') }}" class="btn btn-light btn-sm rounded-pill px-3 fw-bold">Ganti</a>
+                    <a href="{{ route('nilai.index') }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">Ganti Mapel</a>
                 </div>
 
                 @forelse($students as $siswaId => $studentNilais)
                     @php($siswa = $studentNilais->first()->siswa)
                     <div class="card ai-card" style="animation: slideUp 0.4s ease both;">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <img src="{{ $siswa->foto ? asset('storage/'.$siswa->foto) : 'https://ui-avatars.com/api/?name='.urlencode($siswa->name).'&background=random' }}"
-                                     class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
-                                <div>
-                                    <div class="fw-bold">{{ $siswa->name }}</div>
-                                    <div class="small text-muted">NIS: {{ $siswa->nik ?? '-' }}</div>
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                                <img src="{{ $siswa->foto ? asset('storage/'.$siswa->foto) : 'https://ui-avatars.com/api/?name='.urlencode($siswa->name).'&background=f1f5f9&color=94a3b8' }}"
+                                     class="rounded-4" style="width: 44px; height: 44px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold" style="font-size: 14px; color: #1e293b;">{{ $siswa->name }}</div>
+                                    <div class="small text-muted fw-bold" style="font-size: 10px;">NIS: {{ $siswa->nik ?? '-' }}</div>
                                 </div>
                             </div>
                             <div class="row g-2">
                                 @foreach($studentNilais as $n)
-                                    <div class="col-4 text-center">
-                                        <div class="p-2 rounded-3" style="background: #f8fafc;">
-                                            <div class="small text-muted fw-bold" style="font-size: 9px; text-transform: uppercase;">{{ $n->semester }}</div>
-                                            <div class="fw-bold text-primary">{{ $n->uas ?? $n->uts ?? $n->tugas }}</div>
-                                            <div class="small" style="font-size: 8px;">UAS/UTS/TGS</div>
+                                    <div class="col-4">
+                                        <div class="p-2 rounded-4 text-center" style="background: #f8fafc; border: 1px solid #f1f5f9;">
+                                            <div class="small text-muted fw-extrabold" style="font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">SMT {{ $n->semester }}</div>
+                                            <div class="fw-black text-primary" style="font-size: 16px;">{{ $n->uas ?? $n->uts ?? $n->tugas }}</div>
+                                            <div class="text-muted" style="font-size: 8px; font-weight: 700;">UAS/UTS/TGS</div>
                                         </div>
                                     </div>
                                 @endforeach
@@ -108,9 +117,9 @@
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-5">
-                        <i class="bi bi-people h1 text-muted"></i>
-                        <p class="text-muted mt-2">Belum ada nilai siswa untuk mapel ini.</p>
+                    <div class="text-center py-5 opacity-25">
+                        <i class="bi bi-people h1"></i>
+                        <p class="mt-2 fw-bold">Data siswa kosong.</p>
                     </div>
                 @endforelse
             @endif
@@ -137,29 +146,38 @@
                     };
                 @endphp
                 <div class="card ai-card" style="animation: slideUp 0.4s ease both;">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
-                                <h3 class="h6 fw-bold mb-1" style="font-size: 16px;">{{ $mp->nama }}</h3>
-                                <p class="small text-muted mb-0">KKM: {{ $mp->kkm ?? 75 }} · Semester {{ $mpNilais->first()->semester }}</p>
+                                <h3 class="fw-bold mb-1" style="font-size: 16px; color: #1e293b;">{{ $mp->nama }}</h3>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-light text-muted border fw-bold" style="font-size: 9px;">SEMESTER {{ $mpNilais->first()->semester }}</span>
+                                    <span class="small text-muted fw-bold" style="font-size: 10px;">KKM: {{ $mp->kkm ?? 75 }}</span>
+                                </div>
                             </div>
-                            <div class="grade-badge" style="background: {{ $bgColor }}; color: {{ $textColor }};">
+                            <div class="grade-badge shadow-sm border" style="background: {{ $bgColor }}; color: {{ $textColor }}; border-color: rgba(0,0,0,0.05) !important;">
                                 {{ round($avg) }}
                             </div>
                         </div>
 
-                        <div class="row g-3">
-                            <div class="col-4 text-center">
-                                <div class="fw-bold" style="font-size: 14px;">{{ $mpNilais->avg('tugas') ?: '-' }}</div>
-                                <div class="small text-muted" style="font-size: 10px; font-weight: 700; text-transform: uppercase;">Tugas</div>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
+                                    <div class="fw-black" style="font-size: 15px; color: #1e293b;">{{ $mpNilais->avg('tugas') ?: '-' }}</div>
+                                    <div class="text-muted fw-extrabold" style="font-size: 9px; text-transform: uppercase;">Tugas</div>
+                                </div>
                             </div>
-                            <div class="col-4 text-center border-start border-end">
-                                <div class="fw-bold" style="font-size: 14px;">{{ $mpNilais->avg('uts') ?: '-' }}</div>
-                                <div class="small text-muted" style="font-size: 10px; font-weight: 700; text-transform: uppercase;">UTS</div>
+                            <div class="col-4">
+                                <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
+                                    <div class="fw-black" style="font-size: 15px; color: #1e293b;">{{ $mpNilais->avg('uts') ?: '-' }}</div>
+                                    <div class="text-muted fw-extrabold" style="font-size: 9px; text-transform: uppercase;">UTS</div>
+                                </div>
                             </div>
-                            <div class="col-4 text-center">
-                                <div class="fw-bold" style="font-size: 14px;">{{ $mpNilais->avg('uas') ?: '-' }}</div>
-                                <div class="small text-muted" style="font-size: 10px; font-weight: 700; text-transform: uppercase;">UAS</div>
+                            <div class="col-4">
+                                <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
+                                    <div class="fw-black" style="font-size: 15px; color: #1e293b;">{{ $mpNilais->avg('uas') ?: '-' }}</div>
+                                    <div class="text-muted fw-extrabold" style="font-size: 9px; text-transform: uppercase;">UAS</div>
+                                </div>
                             </div>
                         </div>
                     </div>
