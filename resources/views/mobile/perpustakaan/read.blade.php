@@ -3,57 +3,87 @@
 
 @section('content')
 <style>
-    body { background: #0f172a; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+    :root {
+        --read-bg: #0f172a;
+        --read-ui: rgba(30, 41, 59, 0.9);
+    }
 
-    .reader-ui-header {
+    body { background: var(--read-bg); margin: 0; padding: 0; height: 100vh; overflow: hidden; position: relative; }
+
+    .reader-top-bar {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: rgba(15, 23, 42, 0.85);
-        backdrop-filter: blur(20px);
-        color: white; padding: 16px 20px;
-        display: flex; align-items: center; justify-content: space-between;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        background: var(--read-ui); backdrop-filter: blur(20px);
+        padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: #fff;
     }
 
-    .reader-btn-back {
-        width: 38px; height: 38px; border-radius: 12px;
-        background: rgba(255,255,255,0.1);
+    .btn-exit-reader {
+        width: 36px; height: 36px; border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
         display: flex; align-items: center; justify-content: center;
-        color: #fff; text-decoration: none;
+        color: #fff; text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.2s;
     }
+    .btn-exit-reader:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.2); }
 
-    .reader-viewport {
+    .reader-canvas {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        padding-top: 70px;
-        background: #f1f5f9; /* Contrast for the PDF */
+        padding-top: 64px; /* Space for top bar */
+        display: flex; flex-direction: column;
     }
 
-    iframe { width: 100%; height: 100%; border: none; }
+    .pdf-frame {
+        flex: 1; border: none; width: 100%; height: 100%;
+        background: #f1f5f9;
+    }
 
-    .immersive-info { text-align: center; flex: 1; padding: 0 15px; }
-    .immersive-title { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 2px; }
-    .immersive-status { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+    .immersive-header-txt { text-align: center; flex: 1; padding: 0 10px; }
+    .book-name-small { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 1px; }
+    .reader-badge-pro { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.15em; }
+
+    /* UI Hint for Mobile Reader */
+    .reader-hint {
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px);
+        padding: 8px 16px; border-radius: 100px;
+        color: #fff; font-size: 11px; font-weight: 700;
+        z-index: 1001; pointer-events: none;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        animation: fadeOut 3s forwards ease-in-out;
+    }
+    @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
 </style>
 
-<div class="reader-ui-header animate__animated animate__fadeInDown">
-    <a href="{{ route('perpustakaan.show', $buku->slug) }}" class="reader-btn-back">
-        <i class="bi bi-chevron-left"></i>
+<div class="reader-top-bar animate__animated animate__fadeInDown">
+    <a href="{{ route('perpustakaan.show', $buku->slug) }}" class="btn-exit-reader">
+        <i class="bi bi-x-lg"></i>
     </a>
-    <div class="immersive-info">
-        <div class="immersive-title text-truncate">{{ $buku->judul }}</div>
-        <div class="immersive-status"><i class="bi bi-eye-fill me-1"></i> Mode Baca Digital</div>
+    <div class="immersive-header-txt">
+        <div class="book-name-small text-truncate">{{ $buku->judul }}</div>
+        <div class="reader-badge-pro"><i class="bi bi-stars text-primary me-1"></i> Intellectual Reader</div>
     </div>
-    <div style="width: 38px;"></div>
+    <div style="width: 36px;"></div>
 </div>
 
-<div class="reader-viewport">
-    <iframe src="{{ asset('storage/'.$buku->file_pdf) }}#toolbar=0&navpanes=0&scrollbar=0" type="application/pdf"></iframe>
+<div class="reader-canvas">
+    {{-- Using PDF viewer params to improve mobile experience --}}
+    <iframe
+        class="pdf-frame"
+        src="{{ asset('storage/'.$buku->file_pdf) }}#toolbar=0&navpanes=0&scrollbar=0&view=FitH"
+        allow="fullscreen"
+    ></iframe>
+</div>
+
+<div class="reader-hint">
+    <i class="bi bi-phone-flip me-2"></i> Scroll untuk membaca
 </div>
 
 <script>
-    // Prevent some common mobile iframe issues
-    document.addEventListener('touchmove', function (e) {
-        if (e.target.tagName !== 'IFRAME') {
-            // e.preventDefault();
+    // Ensure the body doesn't bounce on iOS
+    document.body.addEventListener('touchmove', function (e) {
+        if (!e.target.closest('.pdf-frame')) {
+            e.preventDefault();
         }
     }, { passive: false });
 </script>
