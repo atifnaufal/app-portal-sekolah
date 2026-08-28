@@ -1,8 +1,15 @@
 @php
-    $m = $materi ?? null;
-    $val = function($key, $default = '') use ($j, $m) {
-        $item = $j ?? $m;
-        return old($key, $item[$key] ?? $default);
+    $item = $j ?? $m ?? null;
+    $val = function ($key, $default = '') use ($item) {
+        if (($v = old($key)) !== null) {
+            return $v;
+        }
+        $raw = $item ? ($item[$key] ?? $default) : $default;
+        // Normalisasi jam dari "H:i:s" menjadi "H:i" agar <input type="time"> valid.
+        if (in_array($key, ['jam_mulai', 'jam_selesai'], true) && is_string($raw) && $raw !== '') {
+            return \Illuminate\Support\Str::substr($raw, 0, 5);
+        }
+        return $raw;
     };
 @endphp
 <div class="row g-3">

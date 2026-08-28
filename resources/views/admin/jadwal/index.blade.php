@@ -84,8 +84,6 @@
                             </form>
                         </td>
                     </tr>
-
-                    @include('admin.jadwal.modal-edit', ['j' => $j])
                 @empty
                     <tr><td colspan="7" class="text-center py-5 text-muted">Belum ada jadwal. Tambahkan jadwal baru.</td></tr>
                 @endforelse
@@ -93,6 +91,12 @@
         </table>
     </div>
 </div>
+
+{{-- Modal Edit (di luar tabel agar struktur HTML valid & modal selalu berfungsi) --}}
+@foreach($jadwals as $j)
+    @include('admin.jadwal.modal-edit', ['j' => $j])
+@endforeach
+@unset($j)
 
 {{-- Modal Create --}}
 <div class="modal fade" id="createModal" tabindex="-1">
@@ -104,7 +108,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                @include('admin.jadwal.fields')
+                @include('admin.jadwal.fields', ['j' => null, 'materi' => null])
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>

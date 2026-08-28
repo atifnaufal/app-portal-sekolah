@@ -4,6 +4,13 @@ set -e
 # Pastikan direktori penyimpanan runtime tersedia (fresh clone di Railway).
 mkdir -p storage/framework/{cache,sessions,views,testing} storage/logs bootstrap/cache
 
+echo "Linking public storage (storage:link)..."
+# Hapus dulu bila sudah ada (bisa symlink lama / file), lalu buat symlink baru.
+if [ -e public/storage ] || [ -L public/storage ]; then
+  rm -rf public/storage
+fi
+php artisan storage:link --no-interaction
+
 echo "Clearing stale caches..."
 php artisan config:clear --no-interaction || true
 php artisan route:clear --no-interaction || true
