@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ChatMessageEvent;
 use App\Models\ChatGroup;
 use App\Models\ChatMessage;
 use App\Models\User;
-use App\Events\ChatMessageEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +25,7 @@ class ChatController extends Controller
         );
 
         // Ensure user is in School Group
-        if (!$schoolGroup->members()->where('user_id', $userId)->exists()) {
+        if (! $schoolGroup->members()->where('user_id', $userId)->exists()) {
             $schoolGroup->members()->attach($userId);
         }
 
@@ -33,9 +33,9 @@ class ChatController extends Controller
         if ($user->kelas_id) {
             $classGroup = ChatGroup::firstOrCreate(
                 ['type' => 'class', 'related_id' => $user->kelas_id],
-                ['name' => 'Grup ' . $user->kelas->nama]
+                ['name' => 'Grup '.$user->kelas->nama]
             );
-            if (!$classGroup->members()->where('user_id', $userId)->exists()) {
+            if (! $classGroup->members()->where('user_id', $userId)->exists()) {
                 $classGroup->members()->attach($userId);
             }
         }
@@ -96,7 +96,7 @@ class ChatController extends Controller
 
             $group = ChatGroup::firstOrCreate(
                 ['type' => 'eskul', 'related_id' => $eskul->id],
-                ['name' => 'Group ' . $eskul->nama]
+                ['name' => 'Group '.$eskul->nama]
             );
 
             if (! $group->members()->where('user_id', $userId)->exists()) {
@@ -113,10 +113,10 @@ class ChatController extends Controller
         $data = $request->validate([
             'pesan' => ['nullable', 'string', 'max:1000'],
             'file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
-            'chat_group_id' => ['required', 'exists:chat_groups,id']
+            'chat_group_id' => ['required', 'exists:chat_groups,id'],
         ]);
 
-        if (empty($data['pesan']) && !$request->hasFile('file')) {
+        if (empty($data['pesan']) && ! $request->hasFile('file')) {
             return response()->json(['error' => 'Pesan atau gambar harus diisi'], 422);
         }
 
@@ -133,7 +133,7 @@ class ChatController extends Controller
             'user_id' => $userId,
             'chat_group_id' => $group->id,
             'pesan' => $data['pesan'] ?? '',
-            'file' => $filePath
+            'file' => $filePath,
         ]);
 
         $message->load('user');
@@ -151,9 +151,9 @@ class ChatController extends Controller
                 'user_id' => $message->user_id,
                 'chat_group_id' => $message->chat_group_id,
                 'pesan' => $message->pesan,
-                'file_url' => $message->file ? asset('storage/' . $message->file) : null,
+                'file_url' => $message->file ? asset('storage/'.$message->file) : null,
                 'nama' => $message->user?->name,
-                'foto' => $message->user?->foto ? asset('storage/' . $message->user->foto) : null,
+                'foto' => $message->user?->foto ? asset('storage/'.$message->user->foto) : null,
                 'waktu' => $message->created_at?->format('H:i'),
             ]);
         }
@@ -179,7 +179,7 @@ class ChatController extends Controller
             ->oldest()
             ->get();
 
-        $data = $messages->map(fn($msg) => [
+        $data = $messages->map(fn ($msg) => [
             'id' => $msg->id,
             'user_id' => $msg->user_id,
             'nama' => $msg->user->name,

@@ -7,11 +7,12 @@ use App\Models\MataPelajaran;
 use App\Models\Nilai;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
 
 class NilaiController extends Controller
 {
@@ -23,6 +24,7 @@ class NilaiController extends Controller
         if (! $n || ($n->tugas === null && $n->uts === null && $n->uas === null)) {
             return null;
         }
+
         return round((($n->tugas ?? 0) + ($n->uts ?? 0) + ($n->uas ?? 0)) / 3, 2);
     }
 
@@ -36,7 +38,7 @@ class NilaiController extends Controller
             $nilai >= 80 => 'B',
             $nilai >= 70 => 'C',
             $nilai >= 60 => 'D',
-            default     => 'E',
+            default => 'E',
         };
     }
 
@@ -76,6 +78,7 @@ class NilaiController extends Controller
 
                 $students = $allStudents->map(function ($student) use ($nilais) {
                     $student->nilai_records = $nilais->get($student->id, collect());
+
                     return $student;
                 });
             }
@@ -99,13 +102,13 @@ class NilaiController extends Controller
     public function upsert(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'siswa_id'          => 'required|integer|exists:users,id',
+            'siswa_id' => 'required|integer|exists:users,id',
             'mata_pelajaran_id' => 'required|integer|exists:mata_pelajaran,id',
-            'semester'          => 'required|integer|between:1,2',
-            'tahun_ajaran'      => 'nullable|string|max:10',
-            'tugas'             => 'nullable|numeric|min:0|max:100',
-            'uts'               => 'nullable|numeric|min:0|max:100',
-            'uas'               => 'nullable|numeric|min:0|max:100',
+            'semester' => 'required|integer|between:1,2',
+            'tahun_ajaran' => 'nullable|string|max:10',
+            'tugas' => 'nullable|numeric|min:0|max:100',
+            'uts' => 'nullable|numeric|min:0|max:100',
+            'uas' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $userId = session('user_id') ?: Auth::id();
@@ -114,16 +117,16 @@ class NilaiController extends Controller
 
         Nilai::updateOrCreate(
             [
-                'siswa_id'          => $data['siswa_id'],
+                'siswa_id' => $data['siswa_id'],
                 'mata_pelajaran_id' => $data['mata_pelajaran_id'],
-                'semester'          => $data['semester'],
+                'semester' => $data['semester'],
             ],
             [
-                'kelas_id'     => $subject->kelas_id,
-                'tahun_ajaran' => $data['tahun_ajaran'] ?? $subject->kelas?->tahun_ajaran ?? now()->format('Y').'/'.(now()->format('Y')+1),
-                'tugas'        => $data['tugas'] ?? 0,
-                'uts'          => $data['uts'] ?? 0,
-                'uas'          => $data['uas'] ?? 0,
+                'kelas_id' => $subject->kelas_id,
+                'tahun_ajaran' => $data['tahun_ajaran'] ?? $subject->kelas?->tahun_ajaran ?? now()->format('Y').'/'.(now()->format('Y') + 1),
+                'tugas' => $data['tugas'] ?? 0,
+                'uts' => $data['uts'] ?? 0,
+                'uas' => $data['uas'] ?? 0,
             ]
         );
 
@@ -135,7 +138,7 @@ class NilaiController extends Controller
      */
     protected function dataRecap(Kelas $kelas, int $semester, ?string $tahunAjaran = null): array
     {
-        $tahunAjaran = $tahunAjaran ?: ($kelas->tahun_ajaran ?? now()->format('Y').'/'.(now()->format('Y')+1));
+        $tahunAjaran = $tahunAjaran ?: ($kelas->tahun_ajaran ?? now()->format('Y').'/'.(now()->format('Y') + 1));
 
         $students = User::where('role', 'siswa')
             ->where('kelas_id', $kelas->id)
@@ -154,13 +157,13 @@ class NilaiController extends Controller
         }
 
         return [
-            'kelas'       => $kelas,
-            'semester'    => $semester,
+            'kelas' => $kelas,
+            'semester' => $semester,
             'tahunAjaran' => $tahunAjaran,
-            'students'    => $students,
-            'mapels'      => $mapels,
-            'nilais'      => $normalized,
-            'today'       => now()->translatedFormat('d F Y'),
+            'students' => $students,
+            'mapels' => $mapels,
+            'nilais' => $normalized,
+            'today' => now()->translatedFormat('d F Y'),
         ];
     }
 
@@ -169,9 +172,9 @@ class NilaiController extends Controller
         $userId = session('user_id') ?: Auth::id();
         $userRole = session('user_role') ?: optional(Auth::user())->role;
 
-        $isWaliKelas   = $kelas->pembina_id == $userId;
-        $isMapelGuru   = MataPelajaran::where('kelas_id', $kelas->id)->where('guru_id', $userId)->exists();
-        $isHomeGuru    = optional(User::find($userId))->kelas_id == $kelas->id;
+        $isWaliKelas = $kelas->pembina_id == $userId;
+        $isMapelGuru = MataPelajaran::where('kelas_id', $kelas->id)->where('guru_id', $userId)->exists();
+        $isHomeGuru = optional(User::find($userId))->kelas_id == $kelas->id;
 
         abort_unless(
             $isWaliKelas
@@ -191,7 +194,7 @@ class NilaiController extends Controller
         $userRole = session('user_role') ?: optional(Auth::user())->role;
 
         $isWaliKelas = $mp->kelas && $mp->kelas->pembina_id == $userId;
-        $isHomeGuru  = optional(User::find($userId))->kelas_id == $mp->kelas_id;
+        $isHomeGuru = optional(User::find($userId))->kelas_id == $mp->kelas_id;
 
         abort_unless(
             $mp->guru_id == $userId
@@ -208,7 +211,7 @@ class NilaiController extends Controller
     protected function dataRecapMapel(MataPelajaran $mp, int $semester, ?string $tahunAjaran = null): array
     {
         $kelas = $mp->kelas;
-        $tahunAjaran = $tahunAjaran ?: ($kelas->tahun_ajaran ?? now()->format('Y').'/'.(now()->format('Y')+1));
+        $tahunAjaran = $tahunAjaran ?: ($kelas->tahun_ajaran ?? now()->format('Y').'/'.(now()->format('Y') + 1));
 
         $students = User::where('role', 'siswa')
             ->where('kelas_id', $mp->kelas_id)
@@ -221,13 +224,13 @@ class NilaiController extends Controller
             ->keyBy('siswa_id');
 
         return [
-            'mapel'       => $mp,
-            'kelas'       => $kelas,
-            'semester'    => $semester,
+            'mapel' => $mp,
+            'kelas' => $kelas,
+            'semester' => $semester,
             'tahunAjaran' => $tahunAjaran,
-            'students'    => $students,
-            'nilais'      => $nilais,
-            'today'       => now()->translatedFormat('d F Y'),
+            'students' => $students,
+            'nilais' => $nilais,
+            'today' => now()->translatedFormat('d F Y'),
         ];
     }
 
@@ -247,7 +250,8 @@ class NilaiController extends Controller
                 'rekap-nilai-'.Str::slug($mp->nama).'-smt-'.$semester.'-'.str_replace('/', '_', $data['tahunAjaran']).'.pdf'
             );
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Recap PDF gagal, fallback ke Excel: '.$e->getMessage());
+            Log::error('Recap PDF gagal, fallback ke Excel: '.$e->getMessage());
+
             return $this->recapMapelExcel($request, $mp);
         }
     }
@@ -286,9 +290,11 @@ class NilaiController extends Controller
         $xml .= '<Style ss:ID="score"><Font ss:Bold="1" ss:Color="#0F172A"/></Style>';
         $xml .= '</Styles>';
 
-        $xml .= '<Worksheet ss:Name="Rekap '.$this->esc(substr($mp->nama,0,28)).'"><Table>';
+        $xml .= '<Worksheet ss:Name="Rekap '.$this->esc(substr($mp->nama, 0, 28)).'"><Table>';
         $xml .= '<Column ss:Width="50"/><Column ss:Width="240"/>';
-        foreach (range(1,4) as $i) { $xml .= '<Column ss:Width="90"/>'; }
+        foreach (range(1, 4) as $i) {
+            $xml .= '<Column ss:Width="90"/>';
+        }
 
         // Judul
         $xml .= '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="4"><Data ss:Type="String">REKAPITULASI NILAI MATA PELAJARAN</Data></Cell></Row>';
@@ -296,7 +302,7 @@ class NilaiController extends Controller
 
         // Header
         $xml .= '<Row ss:Height="22">';
-        foreach (['No','Nama Siswa','Tugas','UTS','UAS','Rata-rata','Predikat'] as $hdr) {
+        foreach (['No', 'Nama Siswa', 'Tugas', 'UTS', 'UAS', 'Rata-rata', 'Predikat'] as $hdr) {
             $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">'.$hdr.'</Data></Cell>';
         }
         $xml .= '</Row>';
@@ -308,7 +314,7 @@ class NilaiController extends Controller
             $xml .= '<Row>';
             $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.($i + 1).'</Data></Cell>';
             $xml .= '<Cell ss:StyleID="bordered left '.$rowStyle.'"><Data ss:Type="String">'.$this->esc($s->name).'</Data></Cell>';
-            foreach (['tugas','uts','uas'] as $col) {
+            foreach (['tugas', 'uts', 'uas'] as $col) {
                 $c = $n->{$col} ?? null;
                 $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.($c === null ? $c : (float) $c).'</Data></Cell>';
             }
@@ -330,7 +336,7 @@ class NilaiController extends Controller
         $filename = 'rekap-nilai-'.Str::slug($mp->nama).'-smt-'.$semester.'-'.str_replace('/', '_', $d['tahunAjaran']).'.xls';
 
         return response($xml, 200, [
-            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Type' => 'application/vnd.ms-excel',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
@@ -351,7 +357,8 @@ class NilaiController extends Controller
                 'rekap-nilai-'.$kelas->nama.'-smt-'.$semester.'-'.str_replace('/', '_', $data['tahunAjaran']).'.pdf'
             );
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Recap kelas PDF gagal, fallback ke Excel: '.$e->getMessage());
+            Log::error('Recap kelas PDF gagal, fallback ke Excel: '.$e->getMessage());
+
             return $this->recapExcel($request, $kelas);
         }
     }
@@ -477,7 +484,7 @@ class NilaiController extends Controller
         $filename = 'rekap-nilai-'.$kelas->nama.'-smt-'.$semester.'-'.str_replace('/', '_', $d['tahunAjaran']).'.xls';
 
         return response($xml, 200, [
-            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Type' => 'application/vnd.ms-excel',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
@@ -500,7 +507,7 @@ class NilaiController extends Controller
     protected function prepPdf(): void
     {
         app()->setLocale('id');
-        \Carbon\Carbon::setLocale('id');
+        Carbon::setLocale('id');
     }
 
     /**
@@ -513,7 +520,7 @@ class NilaiController extends Controller
         $query = Nilai::query();
         if ($periode === 'bulanan') {
             $query->whereYear('created_at', $tahun)
-                  ->whereMonth('created_at', $bulan);
+                ->whereMonth('created_at', $bulan);
         } else {
             $query->where('tahun_ajaran', $tahunAjaran);
         }
@@ -522,8 +529,12 @@ class NilaiController extends Controller
         $students = collect();
         $mapels = collect();
         foreach ($all as $n) {
-            if ($n->siswa) { $students->put($n->siswa_id, $n->siswa); }
-            if ($n->mataPelajaran) { $mapels->put($n->mata_pelajaran_id, $n->mataPelajaran); }
+            if ($n->siswa) {
+                $students->put($n->siswa_id, $n->siswa);
+            }
+            if ($n->mataPelajaran) {
+                $mapels->put($n->mata_pelajaran_id, $n->mataPelajaran);
+            }
         }
         $students = $students->sortBy('name')->values();
         $mapels = $mapels->sortBy('nama')->values();
@@ -538,14 +549,14 @@ class NilaiController extends Controller
         }
 
         return [
-            'periode'    => $periode,
-            'tahun'      => $tahun,
-            'bulan'      => $bulan,
-            'tahunAjaran'=> $tahunAjaran,
-            'students'   => $students,
-            'mapels'     => $mapels,
-            'nilais'     => $normalized,
-            'today'      => now()->translatedFormat('d F Y'),
+            'periode' => $periode,
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+            'tahunAjaran' => $tahunAjaran,
+            'students' => $students,
+            'mapels' => $mapels,
+            'nilais' => $normalized,
+            'today' => now()->translatedFormat('d F Y'),
         ];
     }
 
@@ -557,18 +568,20 @@ class NilaiController extends Controller
             $this->prepPdf();
 
             $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
-            $tahun   = (int) ($request->tahun ?: now()->year);
-            $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
-            $tahunAjaran = $periode === 'tahunan' ? ($request->tahun_ajaran ?: (now()->format('Y').'/'.(now()->format('Y')+1))) : null;
+            $tahun = (int) ($request->tahun ?: now()->year);
+            $bulan = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
+            $tahunAjaran = $periode === 'tahunan' ? ($request->tahun_ajaran ?: (now()->format('Y').'/'.(now()->format('Y') + 1))) : null;
 
             $data = $this->dataRecapPeriode($periode, $tahun, $bulan, $tahunAjaran);
             $pdf = Pdf::loadView('pdf.rekap-nilai-periode', $data);
             $pdf->setPaper('a4', 'landscape');
 
             $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.str_replace('/', '_', $tahunAjaran);
+
             return $pdf->download('rekap-nilai-'.$label.'.pdf');
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Recap periode PDF gagal, fallback ke Excel: '.$e->getMessage());
+            Log::error('Recap periode PDF gagal, fallback ke Excel: '.$e->getMessage());
+
             return $this->recapPeriodeExcel($request);
         }
     }
@@ -578,9 +591,9 @@ class NilaiController extends Controller
         $this->authorizePeriode();
 
         $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
-        $tahun   = (int) ($request->tahun ?: now()->year);
-        $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
-        $tahunAjaran = $periode === 'tahunan' ? ($request->tahun_ajaran ?: (now()->format('Y').'/'.(now()->format('Y')+1))) : null;
+        $tahun = (int) ($request->tahun ?: now()->year);
+        $bulan = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
+        $tahunAjaran = $periode === 'tahunan' ? ($request->tahun_ajaran ?: (now()->format('Y').'/'.(now()->format('Y') + 1))) : null;
 
         $d = $this->dataRecapPeriode($periode, $tahun, $bulan, $tahunAjaran);
         $colCount = $d['mapels']->count() + 4;
@@ -609,12 +622,14 @@ class NilaiController extends Controller
         $xml .= '</Styles>';
 
         $periodeLabel = $periode === 'bulanan'
-            ? \Carbon\Carbon::create()->month($bulan)->translatedFormat('F').' '.$tahun
+            ? Carbon::create()->month($bulan)->translatedFormat('F').' '.$tahun
             : 'Tahun Ajaran '.$tahunAjaran;
 
         $xml .= '<Worksheet ss:Name="Rekap Nilai"><Table>';
         $xml .= '<Column ss:Width="50"/><Column ss:Width="220"/>';
-        foreach (range(1, $d['mapels']->count() + 2) as $i) { $xml .= '<Column ss:Width="95"/>'; }
+        foreach (range(1, $d['mapels']->count() + 2) as $i) {
+            $xml .= '<Column ss:Width="95"/>';
+        }
 
         $xml .= '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="'.$mergeTitle.'"><Data ss:Type="String">REKAPITULASI NILAI SISWA ('.$this->esc(strtoupper($periode)).')</Data></Cell></Row>';
         $xml .= '<Row ss:Height="20"><Cell ss:StyleID="subtitle" ss:MergeAcross="'.$mergeTitle.'"><Data ss:Type="String">'.$this->esc($periodeLabel).'</Data></Cell></Row>';
@@ -630,7 +645,8 @@ class NilaiController extends Controller
         $xml .= '</Row>';
 
         foreach ($d['students'] as $i => $s) {
-            $total = 0; $count = 0;
+            $total = 0;
+            $count = 0;
             $xml .= '<Row>';
             $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="Number">'.($i + 1).'</Data></Cell>';
             $xml .= '<Cell ss:StyleID="bordered left"><Data ss:Type="String">'.$this->esc($s->name).'</Data></Cell>';
@@ -640,7 +656,8 @@ class NilaiController extends Controller
                 if ($val === null) {
                     $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="String">-</Data></Cell>';
                 } else {
-                    $total += $val; $count++;
+                    $total += $val;
+                    $count++;
                     $xml .= '<Cell ss:StyleID="bordered cell score"><Data ss:Type="Number">'.$val.'</Data></Cell>';
                 }
             }
@@ -654,8 +671,9 @@ class NilaiController extends Controller
         $xml .= '</Table></Worksheet></Workbook>';
 
         $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.str_replace('/', '_', $tahunAjaran);
+
         return response($xml, 200, [
-            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Type' => 'application/vnd.ms-excel',
             'Content-Disposition' => 'attachment; filename="rekap-nilai-'.$label.'.xls"',
         ]);
     }

@@ -15,7 +15,7 @@ class Nilai extends Model
         'uts',
         'uas',
         'semester',
-        'tahun_ajaran'
+        'tahun_ajaran',
     ];
 
     public function siswa(): BelongsTo

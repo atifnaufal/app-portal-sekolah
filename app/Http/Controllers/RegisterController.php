@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kelas;
-use App\Models\User;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -22,7 +22,7 @@ class RegisterController extends Controller
         return view('auth.register', [
             'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
             'guruEnabled' => $guruEnabled,
-            'siswaEnabled' => $siswaEnabled
+            'siswaEnabled' => $siswaEnabled,
         ]);
     }
 
@@ -43,11 +43,11 @@ class RegisterController extends Controller
             'password' => ['required', 'min:8', 'confirmed'],
         ]);
 
-        if ($data['role'] === 'guru' && !$guruEnabled) {
+        if ($data['role'] === 'guru' && ! $guruEnabled) {
             return back()->withErrors(['role' => 'Pendaftaran Guru sedang dinonaktifkan.'])->withInput();
         }
 
-        if ($data['role'] === 'siswa' && !$siswaEnabled) {
+        if ($data['role'] === 'siswa' && ! $siswaEnabled) {
             return back()->withErrors(['role' => 'Pendaftaran Siswa sedang dinonaktifkan.'])->withInput();
         }
 

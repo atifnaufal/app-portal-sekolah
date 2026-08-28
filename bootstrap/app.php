@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\BlockAdminOnMobile;
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,20 +15,19 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
-      ->withMiddleware(function (Middleware $middleware) {
-          $middleware->trustProxies(at: '*');
-          $middleware->validateCsrfTokens(except: [
-              'api/*'
-          ]);
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
 
-          // MENGGUNAKAN ROLE MIDDLEWARE CUSTOM:
-                 $middleware->alias([
-                     'role' => \App\Http\Middleware\RoleMiddleware::class,
-                     'admin.desktop' => \App\Http\Middleware\BlockAdminOnMobile::class,
-                 ]);
+        // MENGGUNAKAN ROLE MIDDLEWARE CUSTOM:
+        $middleware->alias([
+            'role' => RoleMiddleware::class,
+            'admin.desktop' => BlockAdminOnMobile::class,
+        ]);
 
-      })
-
+    })
 
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

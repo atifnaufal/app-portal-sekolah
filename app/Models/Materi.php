@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Materi extends Model
 {
     protected $table = 'materi';
+
     protected $fillable = ['mata_pelajaran_id', 'user_id', 'judul', 'deskripsi', 'file_materi', 'file_nama', 'video_url'];
 
     public function mataPelajaran(): BelongsTo

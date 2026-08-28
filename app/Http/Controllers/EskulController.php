@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\NotificationHelper;
+use App\Models\ChatGroup;
 use App\Models\Eskul;
 use App\Models\EskulMember;
-use App\Models\ChatGroup;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-use App\Helpers\NotificationHelper;
+use Illuminate\Support\Str;
 
 class EskulController extends Controller
 {
@@ -49,7 +49,7 @@ class EskulController extends Controller
                 $group->members()->detach($userId);
             }
 
-            return back()->with('success', 'Berhasil membatalkan permintaan gabung/keluar dari eskul ' . $eskul->nama);
+            return back()->with('success', 'Berhasil membatalkan permintaan gabung/keluar dari eskul '.$eskul->nama);
         }
 
         // Enforce max 3 approved/pending eskul per student
@@ -66,21 +66,21 @@ class EskulController extends Controller
             'user_id' => $userId,
             'eskul_id' => $eskul->id,
             'is_admin' => false,
-            'status' => 'pending' // Default pending, wait for admin eskul approval
+            'status' => 'pending', // Default pending, wait for admin eskul approval
         ]);
 
         // Notify Pembina
         if ($eskul->pembina_id) {
             NotificationHelper::send(
                 $eskul->pembina_id,
-                "Permintaan Gabung Eskul",
-                "Siswa " . User::find($userId)->name . " ingin bergabung dengan eskul " . $eskul->nama,
+                'Permintaan Gabung Eskul',
+                'Siswa '.User::find($userId)->name.' ingin bergabung dengan eskul '.$eskul->nama,
                 route('eskul.members', $eskul),
                 'eskul'
             );
         }
 
-        return back()->with('success', 'Permintaan bergabung dengan eskul ' . $eskul->nama . ' telah dikirim. Menunggu persetujuan admin.');
+        return back()->with('success', 'Permintaan bergabung dengan eskul '.$eskul->nama.' telah dikirim. Menunggu persetujuan admin.');
     }
 
     // Mobile: Lihat & Kelola Member Eskul (Hanya untuk Admin Eskul)
@@ -95,6 +95,7 @@ class EskulController extends Controller
         abort_unless($isEskulAdmin || session('user_role') === 'admin', 403);
 
         $members = EskulMember::with('user')->where('eskul_id', $eskul->id)->latest()->get();
+
         return view('mobile.eskul.members', compact('eskul', 'members'));
     }
 
@@ -114,8 +115,8 @@ class EskulController extends Controller
         // Notify User
         NotificationHelper::send(
             $member->user_id,
-            "Eskul Disetujui",
-            "Anda telah disetujui bergabung dengan eskul " . $member->eskul->nama,
+            'Eskul Disetujui',
+            'Anda telah disetujui bergabung dengan eskul '.$member->eskul->nama,
             route('eskul.index'),
             'eskul'
         );
@@ -123,7 +124,7 @@ class EskulController extends Controller
         // Add to chat group after approval (create group if it does not exist)
         $group = ChatGroup::firstOrCreate(
             ['type' => 'eskul', 'related_id' => $member->eskul_id],
-            ['name' => 'Group ' . $member->eskul->nama]
+            ['name' => 'Group '.$member->eskul->nama]
         );
         $group->members()->syncWithoutDetaching([$member->user_id]);
 
@@ -147,6 +148,7 @@ class EskulController extends Controller
         }
 
         $member->delete();
+
         return back()->with('success', 'Permintaan member ditolak.');
     }
 
@@ -173,7 +175,7 @@ class EskulController extends Controller
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'pembina_id' => 'nullable|exists:users,id',
-            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048'
+            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ]);
 
         $data = $request->only(['nama', 'deskripsi', 'pembina_id']);
@@ -186,7 +188,7 @@ class EskulController extends Controller
                 ->where('is_admin', true)
                 ->exists();
             if ($isAdminElsewhere) {
-                return back()->with('error', 'Guru ' . $pembina->name . ' sudah menjadi admin eskul lain. Satu guru hanya boleh menjadi admin 1 eskul.')->withInput();
+                return back()->with('error', 'Guru '.$pembina->name.' sudah menjadi admin eskul lain. Satu guru hanya boleh menjadi admin 1 eskul.')->withInput();
             }
         }
 
@@ -198,9 +200,9 @@ class EskulController extends Controller
 
         // Create Chat Group for this Eskul
         $group = ChatGroup::create([
-            'name' => 'Group ' . $eskul->nama,
+            'name' => 'Group '.$eskul->nama,
             'type' => 'eskul',
-            'related_id' => $eskul->id
+            'related_id' => $eskul->id,
         ]);
 
         // If pembina exists, make them admin of this eskul and member of group
@@ -209,7 +211,7 @@ class EskulController extends Controller
                 'user_id' => $eskul->pembina_id,
                 'eskul_id' => $eskul->id,
                 'is_admin' => true,
-                'status' => 'approved'
+                'status' => 'approved',
             ]);
             $group->members()->attach($eskul->pembina_id);
         }
@@ -224,7 +226,7 @@ class EskulController extends Controller
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'pembina_id' => 'nullable|exists:users,id',
-            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048'
+            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ]);
 
         $data = $request->only(['nama', 'deskripsi', 'pembina_id']);
@@ -239,7 +241,7 @@ class EskulController extends Controller
                     ->where('eskul_id', '!=', $eskul->id)
                     ->exists();
             if ($isAdminElsewhere) {
-                return back()->with('error', 'Guru ' . $pembina->name . ' sudah menjadi admin eskul lain. Satu guru hanya boleh menjadi admin 1 eskul.')->withInput();
+                return back()->with('error', 'Guru '.$pembina->name.' sudah menjadi admin eskul lain. Satu guru hanya boleh menjadi admin 1 eskul.')->withInput();
             }
         }
 
@@ -255,7 +257,7 @@ class EskulController extends Controller
         // Update Chat Group Name
         $group = ChatGroup::where('type', 'eskul')->where('related_id', $eskul->id)->first();
         if ($group) {
-            $group->name = 'Group ' . $eskul->nama;
+            $group->name = 'Group '.$eskul->nama;
             $group->save();
         }
 
@@ -278,14 +280,16 @@ class EskulController extends Controller
         }
 
         $eskul->delete();
+
         return back()->with('success', 'Eskul berhasil dihapus.');
     }
 
     public function toggle(Eskul $eskul)
     {
         abort_unless(session('user_role') === 'admin', 403);
-        $eskul->aktif = !$eskul->aktif;
+        $eskul->aktif = ! $eskul->aktif;
         $eskul->save();
+
         return back()->with('success', 'Status eskul berhasil diubah.');
     }
 
@@ -300,7 +304,7 @@ class EskulController extends Controller
                 return back()->with('error', 'Hanya anggota yang sudah disetujui yang bisa dijadikan admin.');
             }
 
-            $becomingAdmin = !$member->is_admin;
+            $becomingAdmin = ! $member->is_admin;
             if ($becomingAdmin) {
                 $user = User::find($userId);
                 $isAdminElsewhere = EskulMember::where('user_id', $userId)
@@ -309,12 +313,14 @@ class EskulController extends Controller
                     ->exists();
                 if ($isAdminElsewhere) {
                     $label = $user && $user->role === 'guru' ? 'Guru ini' : 'Anggota ini';
-                    return back()->with('error', $label . ' sudah menjadi admin eskul lain. Seseorang hanya boleh menjadi admin 1 eskul.');
+
+                    return back()->with('error', $label.' sudah menjadi admin eskul lain. Seseorang hanya boleh menjadi admin 1 eskul.');
                 }
             }
 
-            $member->is_admin = !$member->is_admin;
+            $member->is_admin = ! $member->is_admin;
             $member->save();
+
             return back()->with('success', 'Status admin eskul berhasil diubah.');
         }
 

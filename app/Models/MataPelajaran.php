@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class MataPelajaran extends Model
 {
     protected $table = 'mata_pelajaran';
+
     protected $fillable = ['nama', 'kode', 'kelas_id', 'guru_id', 'kkm'];
 
     public function kelas(): BelongsTo

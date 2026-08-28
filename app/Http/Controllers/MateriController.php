@@ -157,7 +157,9 @@ class MateriController extends Controller
     {
         $user = User::findOrFail($this->userId($request));
 
-        if ($user->role === 'admin') return;
+        if ($user->role === 'admin') {
+            return;
+        }
         if ($user->role === 'guru') {
             abort_unless((int) $mapel->guru_id === (int) $user->id, 403);
         }

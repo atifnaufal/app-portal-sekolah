@@ -24,7 +24,7 @@ class SessionController extends Controller
         $userId = $request->session()->get('user_id');
         $role = $request->session()->get('user_role');
 
-        if (!$userId || !$role) {
+        if (! $userId || ! $role) {
             return response()->json([
                 'authenticated' => false,
                 'redirect' => route('login'),

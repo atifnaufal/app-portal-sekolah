@@ -6,6 +6,9 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -17,54 +20,54 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    public function kelas(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class);
     }
 
-    public function absensi(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function absensi(): HasMany
     {
         return $this->hasMany(Absensi::class);
     }
 
-    public function notifikasi(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function notifikasi(): HasMany
     {
         return $this->hasMany(Notifikasi::class);
     }
 
-    public function eskuls(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function eskuls(): BelongsToMany
     {
         return $this->belongsToMany(Eskul::class, 'eskul_members')->withPivot(['is_admin', 'status'])->withTimestamps();
     }
 
-    public function pengumumanPribadi(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function pengumumanPribadi(): BelongsToMany
     {
         return $this->belongsToMany(Pengumuman::class, 'pengumuman_user')
             ->withPivot(['read_at'])
             ->withTimestamps();
     }
 
-    public function chatGroups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function chatGroups(): BelongsToMany
     {
         return $this->belongsToMany(ChatGroup::class, 'chat_group_members');
     }
 
-    public function mataPelajarans(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function mataPelajarans(): HasMany
     {
         return $this->hasMany(MataPelajaran::class, 'guru_id');
     }
 
-    public function materi(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function materi(): HasMany
     {
         return $this->hasMany(Materi::class, 'user_id');
     }
 
-    public function nilais(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function nilais(): HasMany
     {
         return $this->hasMany(Nilai::class, 'siswa_id');
     }
 
-    public function jadwals(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function jadwals(): HasMany
     {
         return $this->hasMany(Jadwal::class, 'guru_id');
     }

@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Helpers\NotificationHelper;
 use App\Mail\TugasBaruMail;
 use App\Models\Kelas;
+use App\Models\MataPelajaran;
 use App\Models\PengumpulanTugas;
 use App\Models\Tugas;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -22,7 +24,7 @@ class TugasController extends Controller
     public function index(Request $request): View
     {
         $userId = $request->session()->get('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
 
@@ -107,7 +109,7 @@ class TugasController extends Controller
     public function create(): View
     {
         $userId = session('user_id') ?: Auth::id();
-        $mapels = \App\Models\MataPelajaran::where('guru_id', $userId)->get();
+        $mapels = MataPelajaran::where('guru_id', $userId)->get();
 
         return view('mobile.tugas-form', [
             'tugas' => new Tugas(['tipe' => 'file', 'mata_pelajaran_id' => request('mapel_id')]),
@@ -121,7 +123,7 @@ class TugasController extends Controller
     {
         $this->assertOwner($request, $tugas);
         $userId = session('user_id') ?: Auth::id();
-        $mapels = \App\Models\MataPelajaran::where('guru_id', $userId)->get();
+        $mapels = MataPelajaran::where('guru_id', $userId)->get();
 
         return view('mobile.tugas-form', [
             'tugas' => $tugas,
@@ -134,7 +136,7 @@ class TugasController extends Controller
     public function show(Request $request, Tugas $tugas): View
     {
         $userId = $request->session()->get('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
 
@@ -175,7 +177,7 @@ class TugasController extends Controller
         $data = $this->validatedTugasPayload($request);
 
         $userId = $request->session()->get('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
 
@@ -263,7 +265,7 @@ class TugasController extends Controller
         $request = request();
 
         $userId = $request->session()->get('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
 
@@ -327,7 +329,7 @@ class TugasController extends Controller
     public function submit(Request $request, Tugas $tugas): RedirectResponse
     {
         $userId = $request->session()->get('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
 
@@ -383,7 +385,7 @@ class TugasController extends Controller
     public function review(Request $request, PengumpulanTugas $pengumpulan): RedirectResponse
     {
         $userId = $request->session()->get('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
 
@@ -414,13 +416,13 @@ class TugasController extends Controller
     {
         $userId = $request->session()->get('user_id');
 
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
 
         $userRole = $request->session()->get('user_role');
 
-        if (!$userRole && Auth::guard('web')->check()) {
+        if (! $userRole && Auth::guard('web')->check()) {
             $userRole = Auth::guard('web')->user()?->role;
         }
 
@@ -561,7 +563,7 @@ class TugasController extends Controller
             try {
                 Mail::to($student->email)->send(new TugasBaruMail($tugas));
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error(
+                Log::error(
                     'Gagal kirim email tugas ke '.$student->email.': '.$e->getMessage()
                 );
             }

@@ -20,12 +20,12 @@ class PerpustakaanController extends Controller
         $query = Buku::with('kategori');
 
         if ($request->has('search')) {
-            $query->where('judul', 'like', '%' . $request->search . '%')
-                  ->orWhere('penulis', 'like', '%' . $request->search . '%');
+            $query->where('judul', 'like', '%'.$request->search.'%')
+                ->orWhere('penulis', 'like', '%'.$request->search.'%');
         }
 
         if ($request->has('kategori')) {
-            $query->whereHas('kategori', function($q) use ($request) {
+            $query->whereHas('kategori', function ($q) use ($request) {
                 $q->where('slug', $request->kategori);
             });
         }
@@ -37,7 +37,7 @@ class PerpustakaanController extends Controller
             'user' => $user,
             'bukus' => $bukus,
             'kategoris' => $kategoris,
-            'title' => 'Perpustakaan Digital'
+            'title' => 'Perpustakaan Digital',
         ]);
     }
 
@@ -55,7 +55,7 @@ class PerpustakaanController extends Controller
             'user' => $user,
             'buku' => $buku,
             'isPinjam' => $isPinjam,
-            'title' => $buku->judul
+            'title' => $buku->judul,
         ]);
     }
 
@@ -68,14 +68,14 @@ class PerpustakaanController extends Controller
         PeminjamanBuku::firstOrCreate([
             'user_id' => $user->id,
             'buku_id' => $buku->id,
-            'status' => 'pinjam'
+            'status' => 'pinjam',
         ], [
-            'tanggal_pinjam' => now()
+            'tanggal_pinjam' => now(),
         ]);
 
         // Fix for Railway: If using dummy.pdf and it's missing, use a real public PDF for testing
         $pdfUrl = asset('storage/'.$buku->file_pdf);
-        if ($buku->file_pdf === 'perpustakaan/dummy.pdf' && !file_exists(public_path('storage/perpustakaan/dummy.pdf'))) {
+        if ($buku->file_pdf === 'perpustakaan/dummy.pdf' && ! file_exists(public_path('storage/perpustakaan/dummy.pdf'))) {
             $pdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
         }
 
@@ -83,7 +83,7 @@ class PerpustakaanController extends Controller
             'user' => $user,
             'buku' => $buku,
             'pdfUrl' => $pdfUrl,
-            'title' => 'Membaca: ' . $buku->judul
+            'title' => 'Membaca: '.$buku->judul,
         ]);
     }
 }

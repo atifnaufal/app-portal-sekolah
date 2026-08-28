@@ -15,9 +15,10 @@ class SppController extends Controller
     private function resolveUserId(Request $request): ?int
     {
         $userId = $request->session()->get('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
+
         return $userId;
     }
 
@@ -110,7 +111,7 @@ class SppController extends Controller
         NotificationHelper::send(
             $siswa->id,
             'Tagihan SPP Baru',
-            'Tagihan SPP bulan ' . $this->namaBulan($data['bulan']) . ' ' . $data['tahun'] . ' telah diterbitkan.',
+            'Tagihan SPP bulan '.$this->namaBulan($data['bulan']).' '.$data['tahun'].' telah diterbitkan.',
             route('spp.index'),
             'billing'
         );
@@ -128,7 +129,7 @@ class SppController extends Controller
         $spp->load('siswa');
         abort_unless((int) $spp->siswa->kelas_id === (int) $kelasId, 403);
 
-        $pesan = 'SPP ' . $this->namaBulan($spp->bulan) . ' ' . $spp->tahun . ' masih memiliki kekurangan Rp ' . number_format($spp->kekurangan, 0, ',', '.');
+        $pesan = 'SPP '.$this->namaBulan($spp->bulan).' '.$spp->tahun.' masih memiliki kekurangan Rp '.number_format($spp->kekurangan, 0, ',', '.');
         NotificationHelper::send($spp->siswa_id, 'Pengingat Pembayaran SPP', $pesan, route('spp.index'), 'billing');
 
         return back()->with('success', 'Pengingat SPP dikirim ke siswa.');

@@ -13,8 +13,11 @@ class NotificationEvent implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $title;
+
     public $message;
+
     public $type; // 'announcement' or 'task'
+
     public $userId;
 
     public function __construct($userId, $title, $message, $type = 'announcement')

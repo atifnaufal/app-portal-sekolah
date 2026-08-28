@@ -18,8 +18,12 @@ class MapelController extends Controller
         $user = User::findOrFail($userId);
 
         // Security check
-        if ($user->role === 'guru' && $mapel->guru_id !== $user->id) abort(403);
-        if ($user->role === 'siswa' && $mapel->kelas_id !== $user->kelas_id) abort(403);
+        if ($user->role === 'guru' && $mapel->guru_id !== $user->id) {
+            abort(403);
+        }
+        if ($user->role === 'siswa' && $mapel->kelas_id !== $user->kelas_id) {
+            abort(403);
+        }
 
         $materi = Materi::where('mata_pelajaran_id', $mapel->id)->latest()->get();
         $tugas = Tugas::where('mata_pelajaran_id', $mapel->id)->latest()->get();

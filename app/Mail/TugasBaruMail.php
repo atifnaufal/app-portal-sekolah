@@ -13,14 +13,12 @@ class TugasBaruMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Tugas $tugas)
-    {
-    }
+    public function __construct(public Tugas $tugas) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Tugas Baru: ' . $this->tugas->judul,
+            subject: 'Tugas Baru: '.$this->tugas->judul,
         );
     }
 

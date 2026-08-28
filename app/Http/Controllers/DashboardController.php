@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absensi;
+use App\Models\MataPelajaran;
 use App\Models\Notifikasi;
 use App\Models\Pengumuman;
 use App\Models\Spp;
@@ -15,18 +16,20 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
-        if (session('user_role') === 'admin') return app(AdminController::class)->dashboard();
+        if (session('user_role') === 'admin') {
+            return app(AdminController::class)->dashboard();
+        }
 
         $userId = session('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
 
         $user = User::with('kelas')->findOrFail($userId);
 
         $mapels = $user->role === 'guru'
-            ? \App\Models\MataPelajaran::where('guru_id', $user->id)->with('kelas')->get()
-            : \App\Models\MataPelajaran::where('kelas_id', $user->kelas_id)->with('guru')->get();
+            ? MataPelajaran::where('guru_id', $user->id)->with('kelas')->get()
+            : MataPelajaran::where('kelas_id', $user->kelas_id)->with('guru')->get();
 
         $tugasQuery = $user->role === 'guru'
             ? Tugas::where('user_id', $user->id)

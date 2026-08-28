@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kelas;
+use App\Helpers\NotificationHelper;
 use App\Models\Eskul;
 use App\Models\EskulMember;
+use App\Models\Kelas;
 use App\Models\Pengumuman;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Storage;
-use App\Helpers\NotificationHelper;
 
 class PengumumanController extends Controller
 {
@@ -30,14 +29,14 @@ class PengumumanController extends Controller
         // Pengumuman publik berdasarkan scope (umum / kelas / eskul) milik user.
         $pengumumans = Pengumuman::with(['kelas', 'eskul', 'user'])
             ->where('publik', true)
-            ->where(function($query) use ($kelasId, $myEskulIds) {
+            ->where(function ($query) use ($kelasId, $myEskulIds) {
                 $query->whereNull('kelas_id')->whereNull('eskul_id');
 
                 if ($kelasId) {
                     $query->orWhere('kelas_id', $kelasId);
                 }
 
-                if (!empty($myEskulIds)) {
+                if (! empty($myEskulIds)) {
                     $query->orWhereIn('eskul_id', $myEskulIds);
                 }
             })
@@ -46,9 +45,9 @@ class PengumumanController extends Controller
 
         // Pengumuman privat yang ditujukan khusus user ini.
         $privat = Pengumuman::with(['user'])
-            ->with(['users' => fn($q) => $q->where('users.id', $userId)])
+            ->with(['users' => fn ($q) => $q->where('users.id', $userId)])
             ->where('publik', false)
-            ->whereHas('users', fn($q) => $q->where('users.id', $userId))
+            ->whereHas('users', fn ($q) => $q->where('users.id', $userId))
             ->latest()
             ->get();
 
@@ -63,7 +62,7 @@ class PengumumanController extends Controller
 
         if ($role !== 'admin') {
             $isWaliKelas = Kelas::where('pembina_id', $userId)->exists();
-            $pembinaEskuls = Eskul::whereHas('members', fn($q) => $q->where('user_id', $userId)->where('is_admin', true))->get();
+            $pembinaEskuls = Eskul::whereHas('members', fn ($q) => $q->where('user_id', $userId)->where('is_admin', true))->get();
             $canCreate = ($role === 'guru' && $isWaliKelas) || $pembinaEskuls->isNotEmpty();
             $canManage = $role === 'guru' && ($isWaliKelas || $pembinaEskuls->isNotEmpty());
 
@@ -88,7 +87,7 @@ class PengumumanController extends Controller
 
         // Admin IT, Wali Kelas, atau Admin Eskul
         $isWaliKelas = Kelas::where('pembina_id', $userId)->first();
-        $adminEskuls = Eskul::whereHas('members', function($q) use ($userId) {
+        $adminEskuls = Eskul::whereHas('members', function ($q) use ($userId) {
             $q->where('user_id', $userId)->where('is_admin', true);
         })->get();
 
@@ -177,18 +176,18 @@ class PengumumanController extends Controller
         $pengumuman = Pengumuman::create($data);
 
         // Kirim notifikasi sesuai target
-        $targetName = "Semua";
+        $targetName = 'Semua';
         if ($pengumuman->kelas_id) {
-            $targetName = "Kelas " . $pengumuman->kelas->nama;
+            $targetName = 'Kelas '.$pengumuman->kelas->nama;
             NotificationHelper::sendToClass($pengumuman->kelas_id, "Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'announcement');
         } elseif ($pengumuman->eskul_id) {
-            $targetName = "Eskul " . $pengumuman->eskul->nama;
+            $targetName = 'Eskul '.$pengumuman->eskul->nama;
             NotificationHelper::sendToEskul($pengumuman->eskul_id, "Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'announcement');
-        } elseif (!empty($privateSiswaIds)) {
+        } elseif (! empty($privateSiswaIds)) {
             // Privat: lampirkan penerima + kirim notifikasi individu.
             $pengumuman->users()->sync($privateSiswaIds);
             foreach ($privateSiswaIds as $sid) {
-                NotificationHelper::send($sid, "Pengumuman Pribadi", $pengumuman->judul, route('pengumuman.index'), 'announcement');
+                NotificationHelper::send($sid, 'Pengumuman Pribadi', $pengumuman->judul, route('pengumuman.index'), 'announcement');
             }
         } else {
             // Umum
@@ -207,7 +206,7 @@ class PengumumanController extends Controller
         abort_unless($role === 'admin' || $pengumuman->user_id === $userId, 403);
 
         $isWaliKelas = Kelas::where('pembina_id', $userId)->first();
-        $adminEskuls = Eskul::whereHas('members', function($q) use ($userId) {
+        $adminEskuls = Eskul::whereHas('members', function ($q) use ($userId) {
             $q->where('user_id', $userId)->where('is_admin', true);
         })->get();
 
@@ -290,6 +289,7 @@ class PengumumanController extends Controller
             $data['gambar_nama'] = $request->file('gambar')->getClientOriginalName();
         }
         $pengumuman->update($data);
+
         return redirect()->route('pengumuman.index')->with('success', 'Pengumuman berhasil diperbarui.');
     }
 
@@ -299,6 +299,7 @@ class PengumumanController extends Controller
         abort_unless(session('user_role') === 'admin', 403);
 
         $pengumuman->delete();
+
         return back()->with('success', 'Pengumuman berhasil dihapus.');
     }
 }

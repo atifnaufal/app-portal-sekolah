@@ -8,6 +8,7 @@ use App\Models\MataPelajaran;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -122,7 +123,7 @@ class JadwalController extends Controller
      * for today, only keep sessions that have not finished yet. The schedule
      * "disappears" as time passes and admin re-creates it for the next week.
      */
-    private function filterExpired(\Illuminate\Support\Collection $jadwals): \Illuminate\Support\Collection
+    private function filterExpired(Collection $jadwals): Collection
     {
         $order = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
 
@@ -146,6 +147,7 @@ class JadwalController extends Controller
             // For today, hide sessions that have already ended
             if ($dayIndex === $todayIndex) {
                 $list = $list->filter(fn ($j) => $j->jam_selesai >= $nowTime);
+
                 return $list->isNotEmpty();
             }
 

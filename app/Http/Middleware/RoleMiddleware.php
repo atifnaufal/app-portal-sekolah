@@ -17,7 +17,7 @@ class RoleMiddleware
         // Sesi login "hilang" (cookie/waktu habis) atau tidak lengkap.
         // Coba pulihkan otomatis dari Auth guard (remember-token) supaya user
         // TETAP login seperti aplikasi native sampai dia logout sendiri.
-        if (!$userId || !$userRole) {
+        if (! $userId || ! $userRole) {
             if (Auth::guard('web')->check()) {
                 $user = Auth::guard('web')->user();
 
@@ -48,13 +48,13 @@ class RoleMiddleware
             $request->session()->save();
         }
 
-        if (!$userId) {
+        if (! $userId) {
             return redirect()
                 ->route('login')
                 ->with('error', 'Sesi berakhir. Silakan login kembali.');
         }
 
-        if (!$userRole || !in_array($userRole, $roles, true)) {
+        if (! $userRole || ! in_array($userRole, $roles, true)) {
             // User sudah login (sesi sah) namun role-nya tidak diizinkan.
             // Beri 403 Forbidden — bukan redirect ke login — supaya user yang
             // tercatat sebagai guru/siswa tidak "terusir" hanya karena membuka

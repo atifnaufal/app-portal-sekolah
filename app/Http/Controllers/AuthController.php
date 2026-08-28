@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -16,56 +18,58 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-public function login(Request $request): RedirectResponse
-{
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required'],
-    ]);
+    public function login(Request $request): RedirectResponse
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
 
-    $user = User::where('email', $credentials['email'])->first();
+        $user = User::where('email', $credentials['email'])->first();
 
-    if (
-        ! $user ||
-        ! $user->aktif ||
-        ! Hash::check($credentials['password'], $user->password)
-    ) {
-        return back()
-            ->withInput($request->only('email'))
-            ->with('error',
-                $user && ! $user->aktif
-                    ? 'Akun Anda belum disetujui admin, atau sedang dinonaktifkan. Hubungi admin IT sekolah.'
-                    : 'Email atau password salah.'
-            );
+        if (
+            ! $user ||
+            ! $user->aktif ||
+            ! Hash::check($credentials['password'], $user->password)
+        ) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error',
+                    $user && ! $user->aktif
+                        ? 'Akun Anda belum disetujui admin, atau sedang dinonaktifkan. Hubungi admin IT sekolah.'
+                        : 'Email atau password salah.'
+                );
+        }
+
+        // Regenerasi session setelah login berhasil
+        $request->session()->regenerate();
+
+        // Simpan data login ke session
+        $request->session()->put([
+            'user_id' => $user->id,
+            'user_role' => $user->role,
+            'user_kelas_id' => $user->kelas_id,
+            'admin_name' => $user->name,
+        ]);
+
+        // Persistent login untuk SEMUA role (default ON). Dengan remember-token
+        // yang berumur panjang, sesi tetap hidup layaknya aplikasi native sampai
+        // user benar-benar logout — bahkan saat tab/popup ditutup.
+        $remember = $request->boolean('remember', true);
+        Auth::login($user, $remember);
+
+        // Pastikan session langsung disimpan
+        $request->session()->save();
+
+        return redirect()->intended(route('dashboard'));
     }
 
-    // Regenerasi session setelah login berhasil
-    $request->session()->regenerate();
-
-    // Simpan data login ke session
-    $request->session()->put([
-        'user_id' => $user->id,
-        'user_role' => $user->role,
-        'user_kelas_id' => $user->kelas_id,
-        'admin_name' => $user->name,
-    ]);
-
-    // Persistent login untuk SEMUA role (default ON). Dengan remember-token
-    // yang berumur panjang, sesi tetap hidup layaknya aplikasi native sampai
-    // user benar-benar logout — bahkan saat tab/popup ditutup.
-    $remember = $request->boolean('remember', true);
-    Auth::login($user, $remember);
-
-    // Pastikan session langsung disimpan
-    $request->session()->save();
-
-    return redirect()->intended(route('dashboard'));
-}
     public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
 
@@ -79,16 +83,16 @@ public function login(Request $request): RedirectResponse
         $request->validate(['email' => ['required', 'email']]);
 
         try {
-            $status = \Illuminate\Support\Facades\Password::sendResetLink($request->only('email'));
+            $status = Password::sendResetLink($request->only('email'));
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Gagal mengirim email reset password: ' . $e->getMessage());
+            Log::error('Gagal mengirim email reset password: '.$e->getMessage());
 
             return back()
                 ->withInput($request->only('email'))
                 ->with('error', 'Gagal mengirim email reset. Silakan coba beberapa saat lagi atau hubungi admin IT sekolah.');
         }
 
-        return $status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT
+        return $status === Password::RESET_LINK_SENT
             ? back()->with('status', 'Link reset sudah dikirim ke email Anda.')
             : back()->withInput($request->only('email'))
                 ->withErrors(['email' => 'Email tersebut tidak terdaftar di sistem kami.']);
@@ -107,7 +111,7 @@ public function login(Request $request): RedirectResponse
             'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
-        $status = \Illuminate\Support\Facades\Password::reset(
+        $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
@@ -117,7 +121,7 @@ public function login(Request $request): RedirectResponse
             }
         );
 
-        if ($status !== \Illuminate\Support\Facades\Password::PASSWORD_RESET) {
+        if ($status !== Password::PASSWORD_RESET) {
             return back()->withInput($request->only('email'))
                 ->withErrors(['email' => __($status)]);
         }
@@ -141,7 +145,7 @@ public function login(Request $request): RedirectResponse
             ->where('no_hp', $request->no_hp)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return back()->with('error', 'Data tidak ditemukan. Pastikan NIK dan No HP benar.');
         }
 

@@ -1,28 +1,28 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\PerpustakaanController;
-use App\Http\Controllers\AdminPerpustakaanController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\EskulController;
 use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminPerpustakaanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EskulController;
+use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\MahasiswaController;
+use App\Http\Controllers\MapelController;
+use App\Http\Controllers\MateriController;
+use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PengumumanController;
+use App\Http\Controllers\PerpustakaanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SppController;
 use App\Http\Controllers\TugasController;
-use App\Http\Controllers\NilaiController;
-use App\Http\Controllers\JadwalController;
-use App\Http\Controllers\SessionController;
-use App\Models\MataPelajaran;
+use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 
@@ -63,10 +63,10 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
     Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
 
     // LMS - Mata Pelajaran
-    Route::get('/mapel/{mapel}', [\App\Http\Controllers\MapelController::class, 'show'])->name('mapel.show');
+    Route::get('/mapel/{mapel}', [MapelController::class, 'show'])->name('mapel.show');
 
     // LMS - Materi (semua role dapat melihat detail materi)
-    Route::get('/mapel/{mapel}/materi/{materi}', [\App\Http\Controllers\MateriController::class, 'show'])->name('materi.show');
+    Route::get('/mapel/{mapel}/materi/{materi}', [MateriController::class, 'show'])->name('materi.show');
 });
 
 // Unduhan rekap (nilai & absensi) hanya untuk staf (admin/guru) — prevent siswa 403.
@@ -105,7 +105,6 @@ Route::middleware('role:guru,siswa')->group(function () {
 // Aman: controller memeriksa `session('user_id')` & mengembalikan authenticated:false.
 Route::get('/notifikasi/poll', [NotifikasiController::class, 'poll'])->name('notifications.poll');
 Route::get('/session/status', [SessionController::class, 'status'])->name('session.status');
-
 
 // Admin, Wali Kelas, dan Pembina Eskul dapat membuat/kelola pengumuman (termasuk privat per-siswa).
 Route::middleware('role:admin,guru')->group(function () {
@@ -166,11 +165,11 @@ Route::middleware('role:guru')->group(function () {
     Route::post('/spp/{spp}/remind', [SppController::class, 'remind'])->name('spp.remind');
 
     // LMS - Materi CRUD (hanya guru)
-    Route::get('/mapel/{mapel}/materi/create', [\App\Http\Controllers\MateriController::class, 'create'])->name('materi.create');
-    Route::post('/mapel/{mapel}/materi', [\App\Http\Controllers\MateriController::class, 'store'])->name('materi.store');
-    Route::get('/mapel/{mapel}/materi/{materi}/edit', [\App\Http\Controllers\MateriController::class, 'edit'])->name('materi.edit');
-    Route::put('/mapel/{mapel}/materi/{materi}', [\App\Http\Controllers\MateriController::class, 'update'])->name('materi.update');
-    Route::delete('/mapel/{mapel}/materi/{materi}', [\App\Http\Controllers\MateriController::class, 'destroy'])->name('materi.destroy');
+    Route::get('/mapel/{mapel}/materi/create', [MateriController::class, 'create'])->name('materi.create');
+    Route::post('/mapel/{mapel}/materi', [MateriController::class, 'store'])->name('materi.store');
+    Route::get('/mapel/{mapel}/materi/{materi}/edit', [MateriController::class, 'edit'])->name('materi.edit');
+    Route::put('/mapel/{mapel}/materi/{materi}', [MateriController::class, 'update'])->name('materi.update');
+    Route::delete('/mapel/{mapel}/materi/{materi}', [MateriController::class, 'destroy'])->name('materi.destroy');
 });
 
 Route::middleware('role:admin,guru')->group(function () {

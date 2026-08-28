@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\NotificationHelper;
 use App\Models\Absensi;
-use App\Models\User;
 use App\Models\Kelas;
 use App\Models\Setting;
-use App\Helpers\NotificationHelper;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Storage;
 
 class AbsensiController extends Controller
 {
@@ -32,13 +34,13 @@ class AbsensiController extends Controller
             // Guru melihat siswa di kelasnya
             $students = User::where('role', 'siswa')
                 ->where('kelas_id', $user->kelas_id)
-                ->with(['absensi' => fn($q) => $q->whereDate('tanggal', $today)])
+                ->with(['absensi' => fn ($q) => $q->whereDate('tanggal', $today)])
                 ->get();
 
             return view('mobile.absensi-monitoring', [
                 'students' => $students,
                 'user' => $user,
-                'today' => $today
+                'today' => $today,
             ]);
         }
 
@@ -48,18 +50,18 @@ class AbsensiController extends Controller
             'attendanceActive' => $attendanceActive,
             'startTime' => $startTime,
             'endTime' => $endTime,
-            'isWithinTime' => now()->between(now()->setTimeFromTimeString($startTime), now()->setTimeFromTimeString($endTime))
+            'isWithinTime' => now()->between(now()->setTimeFromTimeString($startTime), now()->setTimeFromTimeString($endTime)),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        \Illuminate\Support\Facades\Log::info('Absensi submission started', $request->all());
+        Log::info('Absensi submission started', $request->all());
 
         $userId = $request->session()->get('user_id');
         $user = User::findOrFail($userId);
 
-        if (!Setting::getValue('attendance_active', false)) {
+        if (! Setting::getValue('attendance_active', false)) {
             return back()->with('error', 'Absensi saat ini dinonaktifkan oleh Admin.');
         }
 
@@ -67,9 +69,10 @@ class AbsensiController extends Controller
         $now = now();
         $attendance = Absensi::firstOrNew(['user_id' => $user->id, 'tanggal' => $today]);
 
-        if (!$request->hasFile('foto')) {
-             \Illuminate\Support\Facades\Log::error('Absensi failed: Foto is missing in request');
-             return back()->with('error', 'Foto verifikasi tidak terdeteksi. Silakan coba lagi.');
+        if (! $request->hasFile('foto')) {
+            Log::error('Absensi failed: Foto is missing in request');
+
+            return back()->with('error', 'Foto verifikasi tidak terdeteksi. Silakan coba lagi.');
         }
 
         try {
@@ -77,17 +80,19 @@ class AbsensiController extends Controller
                 'foto' => 'required|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
                 'lat' => 'nullable|numeric',
                 'long' => 'nullable|numeric',
-                'tipe' => 'required|in:masuk,pulang'
+                'tipe' => 'required|in:masuk,pulang',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            \Illuminate\Support\Facades\Log::error('Absensi validation failed', ['errors' => $e->errors()]);
+        } catch (ValidationException $e) {
+            Log::error('Absensi validation failed', ['errors' => $e->errors()]);
             throw $e;
         }
 
         $path = $request->file('foto')->store('absensi/'.$today, 'public');
 
         if ($request->tipe === 'masuk') {
-            if ($attendance->waktu_masuk) return back()->with('error', 'Anda sudah absen masuk hari ini.');
+            if ($attendance->waktu_masuk) {
+                return back()->with('error', 'Anda sudah absen masuk hari ini.');
+            }
 
             $lateTime = Setting::getValue('attendance_late_time', '07:30');
             $status = $now->gt(now()->setTimeFromTimeString($lateTime)) ? 'terlambat' : 'hadir';
@@ -98,7 +103,7 @@ class AbsensiController extends Controller
                 'foto_masuk' => $path,
                 'lat_masuk' => $request->lat,
                 'long_masuk' => $request->long,
-                'status' => $status
+                'status' => $status,
             ]);
             $attendance->save();
 
@@ -106,20 +111,24 @@ class AbsensiController extends Controller
                 // Cari guru kelas ini
                 $guru = User::where('role', 'guru')->where('kelas_id', $user->kelas_id)->first();
                 if ($guru) {
-                    NotificationHelper::send($guru->id, 'Siswa Terlambat', $user->name . ' terlambat masuk hari ini.', route('absensi.index'), 'attendance');
+                    NotificationHelper::send($guru->id, 'Siswa Terlambat', $user->name.' terlambat masuk hari ini.', route('absensi.index'), 'attendance');
                 }
             }
 
-            return back()->with('success', 'Absensi masuk berhasil dicatat. Status: ' . ucfirst($status));
+            return back()->with('success', 'Absensi masuk berhasil dicatat. Status: '.ucfirst($status));
         } else {
-            if (!$attendance->waktu_masuk) return back()->with('error', 'Anda harus absen masuk terlebih dahulu.');
-            if ($attendance->waktu_pulang) return back()->with('error', 'Anda sudah absen pulang hari ini.');
+            if (! $attendance->waktu_masuk) {
+                return back()->with('error', 'Anda harus absen masuk terlebih dahulu.');
+            }
+            if ($attendance->waktu_pulang) {
+                return back()->with('error', 'Anda sudah absen pulang hari ini.');
+            }
 
             $attendance->update([
                 'waktu_pulang' => $now->format('H:i:s'),
                 'foto_pulang' => $path,
                 'lat_pulang' => $request->lat,
-                'long_pulang' => $request->long
+                'long_pulang' => $request->long,
             ]);
 
             return back()->with('success', 'Absensi pulang berhasil dicatat.');
@@ -134,7 +143,9 @@ class AbsensiController extends Controller
         $role = session('user_role');
         $userId = session('user_id');
 
-        if ($role === 'admin') return;
+        if ($role === 'admin') {
+            return;
+        }
 
         abort_unless($role === 'guru', 403);
 
@@ -167,35 +178,35 @@ class AbsensiController extends Controller
 
         $rows = $students->map(function ($s) use ($recs) {
             $rs = $recs->where('user_id', $s->id);
-            $hadir    = $rs->where('status', 'hadir')->count();
-            $terlambat= $rs->where('status', 'terlambat')->count();
-            $izin     = $rs->where('status', 'izin')->count();
-            $sakit    = $rs->where('status', 'sakit')->count();
-            $alpha    = $rs->where('status', 'alpha')->count();
-            $masuk    = $rs->whereIn('status', ['hadir', 'terlambat'])->count();
-            $total    = $rs->count();
-            $pct      = $total > 0 ? round(($masuk / $total) * 100, 1) : 0;
+            $hadir = $rs->where('status', 'hadir')->count();
+            $terlambat = $rs->where('status', 'terlambat')->count();
+            $izin = $rs->where('status', 'izin')->count();
+            $sakit = $rs->where('status', 'sakit')->count();
+            $alpha = $rs->where('status', 'alpha')->count();
+            $masuk = $rs->whereIn('status', ['hadir', 'terlambat'])->count();
+            $total = $rs->count();
+            $pct = $total > 0 ? round(($masuk / $total) * 100, 1) : 0;
 
             return [
-                'user'        => $s,
-                'hadir'       => $hadir,
-                'terlambat'   => $terlambat,
-                'izin'        => $izin,
-                'sakit'       => $sakit,
-                'alpha'       => $alpha,
-                'total'       => $total,
-                'hadir_persen'=> $pct,
+                'user' => $s,
+                'hadir' => $hadir,
+                'terlambat' => $terlambat,
+                'izin' => $izin,
+                'sakit' => $sakit,
+                'alpha' => $alpha,
+                'total' => $total,
+                'hadir_persen' => $pct,
             ];
         });
 
         return [
-            'periode'  => $periode,
-            'tahun'    => $tahun,
-            'bulan'    => $bulan,
-            'kelasId'  => $kelasId,
-            'kelas'    => $kelasId ? Kelas::find($kelasId) : null,
-            'rows'     => $rows,
-            'today'    => now()->translatedFormat('d F Y'),
+            'periode' => $periode,
+            'tahun' => $tahun,
+            'bulan' => $bulan,
+            'kelasId' => $kelasId,
+            'kelas' => $kelasId ? Kelas::find($kelasId) : null,
+            'rows' => $rows,
+            'today' => now()->translatedFormat('d F Y'),
         ];
     }
 
@@ -207,15 +218,15 @@ class AbsensiController extends Controller
     public function recapPdf(Request $request)
     {
         $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
-        $tahun   = (int) ($request->tahun ?: now()->year);
-        $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
+        $tahun = (int) ($request->tahun ?: now()->year);
+        $bulan = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
         $kelasId = $request->kelas_id ? (int) $request->kelas_id : null;
 
         $this->authorizeRecap($kelasId);
 
         try {
             app()->setLocale('id');
-            \Carbon\Carbon::setLocale('id');
+            Carbon::setLocale('id');
 
             $data = $this->dataRecapAbsensi($periode, $tahun, $bulan, $kelasId);
 
@@ -223,9 +234,11 @@ class AbsensiController extends Controller
             $pdf->setPaper('a4', 'landscape');
 
             $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.$tahun;
+
             return $pdf->download('rekap-absensi-'.$label.'.pdf');
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Absensi recap PDF gagal, fallback ke Excel: '.$e->getMessage());
+            Log::error('Absensi recap PDF gagal, fallback ke Excel: '.$e->getMessage());
+
             return $this->recapExcel($request);
         }
     }
@@ -233,8 +246,8 @@ class AbsensiController extends Controller
     public function recapExcel(Request $request)
     {
         $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
-        $tahun   = (int) ($request->tahun ?: now()->year);
-        $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
+        $tahun = (int) ($request->tahun ?: now()->year);
+        $bulan = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
         $kelasId = $request->kelas_id ? (int) $request->kelas_id : null;
 
         $this->authorizeRecap($kelasId);
@@ -264,7 +277,9 @@ class AbsensiController extends Controller
 
         $xml .= '<Worksheet ss:Name="Rekap Absensi"><Table>';
         $xml .= '<Column ss:Width="50"/><Column ss:Width="220"/>';
-        foreach (range(1, 7) as $i) { $xml .= '<Column ss:Width="80"/>'; }
+        foreach (range(1, 7) as $i) {
+            $xml .= '<Column ss:Width="80"/>';
+        }
 
         $periodeLabel = $periode === 'bulanan'
             ? 'Bulan '.now()->month($bulan)->translatedFormat('F').' '.$tahun
@@ -274,7 +289,7 @@ class AbsensiController extends Controller
         $xml .= '<Row ss:Height="20"><Cell ss:StyleID="subtitle" ss:MergeAcross="7"><Data ss:Type="String">'.$this->esc($namaKelas).' | '.$this->esc($periodeLabel).'</Data></Cell></Row>';
 
         $xml .= '<Row ss:Height="22">';
-        foreach (['No','Nama Siswa','Hadir','Terlambat','Izin','Sakit','Alpha','% Hadir'] as $h) {
+        foreach (['No', 'Nama Siswa', 'Hadir', 'Terlambat', 'Izin', 'Sakit', 'Alpha', '% Hadir'] as $h) {
             $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">'.$h.'</Data></Cell>';
         }
         $xml .= '</Row>';
@@ -283,7 +298,7 @@ class AbsensiController extends Controller
             $xml .= '<Row>';
             $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="Number">'.($i + 1).'</Data></Cell>';
             $xml .= '<Cell ss:StyleID="bordered left"><Data ss:Type="String">'.$this->esc($r['user']->name).'</Data></Cell>';
-            foreach (['hadir','terlambat','izin','sakit','alpha'] as $k) {
+            foreach (['hadir', 'terlambat', 'izin', 'sakit', 'alpha'] as $k) {
                 $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="Number">'.$r[$k].'</Data></Cell>';
             }
             $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="Number">'.$r['hadir_persen'].'</Data></Cell>';
@@ -294,8 +309,9 @@ class AbsensiController extends Controller
         $xml .= '</Table></Worksheet></Workbook>';
 
         $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.$tahun;
+
         return response($xml, 200, [
-            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Type' => 'application/vnd.ms-excel',
             'Content-Disposition' => 'attachment; filename="rekap-absensi-'.$label.'.xls"',
         ]);
     }

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Kelas;
 use App\Models\MataPelajaran;
 use App\Models\Nilai;
 use App\Models\User;
@@ -18,6 +17,7 @@ use Illuminate\Database\Seeder;
 class NilaiSeeder extends Seeder
 {
     protected string $tahunAjaran = '2026/2027';
+
     protected int $semester = 1;
 
     public function run(): void
@@ -36,22 +36,22 @@ class NilaiSeeder extends Seeder
                 ->get();
 
             foreach ($siswas as $siswa) {
-                $tugas  = $this->score($siswa->id, $mapel->id, 0);
-                $uts    = $this->score($siswa->id, $mapel->id, 1);
-                $uas    = $this->score($siswa->id, $mapel->id, 2);
+                $tugas = $this->score($siswa->id, $mapel->id, 0);
+                $uts = $this->score($siswa->id, $mapel->id, 1);
+                $uas = $this->score($siswa->id, $mapel->id, 2);
 
                 Nilai::updateOrCreate(
                     [
-                        'siswa_id'          => $siswa->id,
+                        'siswa_id' => $siswa->id,
                         'mata_pelajaran_id' => $mapel->id,
-                        'semester'          => $this->semester,
-                        'tahun_ajaran'      => $this->tahunAjaran,
+                        'semester' => $this->semester,
+                        'tahun_ajaran' => $this->tahunAjaran,
                     ],
                     [
                         'kelas_id' => $kelas->id,
-                        'tugas'    => $tugas,
-                        'uts'      => $uts,
-                        'uas'      => $uas,
+                        'tugas' => $tugas,
+                        'uts' => $uts,
+                        'uas' => $uas,
                     ]
                 );
                 $nilaiBaru++;
@@ -69,7 +69,9 @@ class NilaiSeeder extends Seeder
     {
         $seed = ($siswaId * 53) + ($mapelId * 17) + ($slot * 11);
         $base = 72 + ($seed % 23);                      // 72..94
-        $delta = match ($slot) { 0 => -2, 1 => 0, 2 => 3 };
+        $delta = match ($slot) {
+            0 => -2, 1 => 0, 2 => 3
+        };
         $value = $base + $delta;
 
         return min(99, max(60, $value));

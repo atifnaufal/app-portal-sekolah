@@ -2,9 +2,9 @@
 
 namespace App\Helpers;
 
+use App\Events\NotificationEvent;
 use App\Models\Notifikasi;
 use App\Models\User;
-use App\Events\NotificationEvent;
 
 class NotificationHelper
 {
@@ -18,7 +18,7 @@ class NotificationHelper
             'judul' => $title,
             'pesan' => $message,
             'url' => $url,
-            'dibaca_pada' => null
+            'dibaca_pada' => null,
         ]);
 
         // Trigger real-time event (private channel per-user)
@@ -41,7 +41,7 @@ class NotificationHelper
      */
     public static function sendToEskul($eskulId, $title, $message, $url = null, $type = 'general')
     {
-        $users = User::whereHas('eskuls', function($q) use ($eskulId) {
+        $users = User::whereHas('eskuls', function ($q) use ($eskulId) {
             $q->where('eskul_id', $eskulId)->where('status', 'approved');
         })->get();
 

@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\NotificationHelper;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,9 +15,10 @@ class ProfileController extends Controller
     private function resolveUser(Request $request): User
     {
         $userId = $request->session()->get('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
+        if (! $userId && Auth::guard('web')->check()) {
             $userId = Auth::guard('web')->id();
         }
+
         return User::with('kelas')->findOrFail($userId);
     }
 
@@ -39,7 +38,7 @@ class ProfileController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'password' => ['nullable', 'min:8', 'confirmed'],
             'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'foto_posisi_x' => ['nullable', 'integer', 'between:0,100'],
@@ -69,7 +68,7 @@ class ProfileController extends Controller
                 'user' => [
                     'name' => $user->name,
                     'email' => $user->email,
-                    'foto' => $user->foto ? asset('storage/' . $user->foto) : null,
+                    'foto' => $user->foto ? asset('storage/'.$user->foto) : null,
                     'foto_posisi_x' => $user->foto_posisi_x,
                     'foto_posisi_y' => $user->foto_posisi_y,
                     'role' => $user->role,
@@ -98,7 +97,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'ok' => true,
-            'url' => asset('storage/' . $path),
+            'url' => asset('storage/'.$path),
             'message' => 'Foto berhasil diupload.',
         ]);
     }

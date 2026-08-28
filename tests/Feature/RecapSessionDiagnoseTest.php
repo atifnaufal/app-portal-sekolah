@@ -7,7 +7,6 @@ use App\Models\MataPelajaran;
 use App\Models\Nilai;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class RecapSessionDiagnoseTest extends TestCase

@@ -15,12 +15,14 @@ class AdminPerpustakaanController extends Controller
     public function index(): View
     {
         $bukus = Buku::with('kategori')->latest()->get();
+
         return view('admin.perpustakaan.index', compact('bukus'));
     }
 
     public function create(): View
     {
         $kategoris = KategoriBuku::all();
+
         return view('admin.perpustakaan.form', compact('kategoris'));
     }
 
@@ -38,7 +40,7 @@ class AdminPerpustakaanController extends Controller
             'file_pdf' => 'required|mimes:pdf|max:20480',
         ]);
 
-        $data['slug'] = Str::slug($data['judul']) . '-' . rand(100, 999);
+        $data['slug'] = Str::slug($data['judul']).'-'.rand(100, 999);
 
         if ($request->hasFile('cover')) {
             $data['cover'] = $request->file('cover')->store('perpustakaan/covers', 'public');
@@ -56,6 +58,7 @@ class AdminPerpustakaanController extends Controller
     public function edit(Buku $buku): View
     {
         $kategoris = KategoriBuku::all();
+
         return view('admin.perpustakaan.form', compact('buku', 'kategoris'));
     }
 
@@ -74,12 +77,16 @@ class AdminPerpustakaanController extends Controller
         ]);
 
         if ($request->hasFile('cover')) {
-            if ($buku->cover) Storage::disk('public')->delete($buku->cover);
+            if ($buku->cover) {
+                Storage::disk('public')->delete($buku->cover);
+            }
             $data['cover'] = $request->file('cover')->store('perpustakaan/covers', 'public');
         }
 
         if ($request->hasFile('file_pdf')) {
-            if ($buku->file_pdf) Storage::disk('public')->delete($buku->file_pdf);
+            if ($buku->file_pdf) {
+                Storage::disk('public')->delete($buku->file_pdf);
+            }
             $data['file_pdf'] = $request->file('file_pdf')->store('perpustakaan/pdfs', 'public');
         }
 
@@ -90,8 +97,12 @@ class AdminPerpustakaanController extends Controller
 
     public function destroy(Buku $buku): RedirectResponse
     {
-        if ($buku->cover) Storage::disk('public')->delete($buku->cover);
-        if ($buku->file_pdf) Storage::disk('public')->delete($buku->file_pdf);
+        if ($buku->cover) {
+            Storage::disk('public')->delete($buku->cover);
+        }
+        if ($buku->file_pdf) {
+            Storage::disk('public')->delete($buku->file_pdf);
+        }
         $buku->delete();
 
         return back()->with('success', 'Buku berhasil dihapus.');
@@ -100,6 +111,7 @@ class AdminPerpustakaanController extends Controller
     public function kategoriIndex(): View
     {
         $kategoris = KategoriBuku::all();
+
         return view('admin.perpustakaan.kategori', compact('kategoris'));
     }
 
@@ -110,22 +122,25 @@ class AdminPerpustakaanController extends Controller
         ]);
         $data['slug'] = Str::slug($data['nama']);
         KategoriBuku::create($data);
+
         return back()->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     public function kategoriUpdate(Request $request, KategoriBuku $kategori): RedirectResponse
     {
         $data = $request->validate([
-            'nama' => 'required|max:255|unique:kategori_bukus,nama,' . $kategori->id,
+            'nama' => 'required|max:255|unique:kategori_bukus,nama,'.$kategori->id,
         ]);
         $data['slug'] = Str::slug($data['nama']);
         $kategori->update($data);
+
         return back()->with('success', 'Kategori berhasil diperbarui.');
     }
 
     public function kategoriDestroy(KategoriBuku $kategori): RedirectResponse
     {
         $kategori->delete();
+
         return back()->with('success', 'Kategori berhasil dihapus.');
     }
 }

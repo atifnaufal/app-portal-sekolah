@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -39,7 +40,7 @@ class MahasiswaController extends Controller
     {
         return view('mahasiswa.form', [
             'mahasiswa' => new User,
-            'kelases'   => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
+            'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
         ]);
     }
 
@@ -47,8 +48,8 @@ class MahasiswaController extends Controller
     {
         User::create($this->validated($request) + [
             'password' => Hash::make($request->input('password', 'password')),
-            'role'     => 'siswa',
-            'aktif'    => true,
+            'role' => 'siswa',
+            'aktif' => true,
         ]);
 
         return redirect()->route('mahasiswa.index')->with('success', 'Data siswa berhasil ditambahkan.');
@@ -58,7 +59,7 @@ class MahasiswaController extends Controller
     {
         return view('mahasiswa.form', [
             'mahasiswa' => $mahasiswa,
-            'kelases'   => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
+            'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
         ]);
     }
 
@@ -73,7 +74,7 @@ class MahasiswaController extends Controller
     {
         try {
             $mahasiswa->delete();
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             return back()->with('error', 'Siswa tidak dapat dihapus karena masih terhubung ke data lain (nilai, tugas, pengumpulan, dst). Pindahkan atau hapus data terkait dahulu.');
         }
 
@@ -82,19 +83,19 @@ class MahasiswaController extends Controller
 
     private function validated(Request $request, ?User $mahasiswa = null): array
     {
-        $nikRule   = Rule::unique('users', 'nik');
+        $nikRule = Rule::unique('users', 'nik');
         $emailRule = Rule::unique('users', 'email');
 
         if ($mahasiswa) {
-            $nikRule   = $nikRule->ignore($mahasiswa->id);
+            $nikRule = $nikRule->ignore($mahasiswa->id);
             $emailRule = $emailRule->ignore($mahasiswa->id);
         }
 
         return $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'nik'      => ['required', 'string', 'max:30', $nikRule],
-            'email'    => ['required', 'email', 'max:255', $emailRule],
-            'no_hp'    => ['nullable', 'string', 'max:25'],
+            'name' => ['required', 'string', 'max:255'],
+            'nik' => ['required', 'string', 'max:30', $nikRule],
+            'email' => ['required', 'email', 'max:255', $emailRule],
+            'no_hp' => ['nullable', 'string', 'max:25'],
             'kelas_id' => ['required', 'exists:kelas,id'],
         ]);
     }

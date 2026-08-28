@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kelas extends Model
 {
     protected $fillable = ['nama', 'tingkat', 'tahun_ajaran', 'pembina_id'];
 
-    public function pembina(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function pembina(): BelongsTo
     {
         return $this->belongsTo(User::class, 'pembina_id');
     }

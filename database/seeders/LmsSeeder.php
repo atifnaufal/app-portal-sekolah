@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Jadwal;
 use App\Models\Jurusan;
 use App\Models\Kelas;
-use App\Models\Mahasiswa;
 use App\Models\MataPelajaran;
 use App\Models\Materi;
 use App\Models\Nilai;
@@ -73,9 +72,9 @@ class LmsSeeder extends Seeder
 
         // ===== Siswa =====
         $namaSiswa = ['Agus Pratama', 'Bella Seputri', 'Citra Kirana', 'Dedi Kurniawan', 'Eka Putri',
-                      'Fajar Nugroho', 'Gita Savitri', 'Hendra Gunawan', 'Intan Ayu', 'Joko Susilo',
-                      'Kartika Sari', 'Lukman Hakim', 'Maya Dewi', 'Naufal Rizki', 'Putri Maharani',
-                      'Rangga Aditya', 'Sri Wahyuni', 'Taufik Hidayat'];
+            'Fajar Nugroho', 'Gita Savitri', 'Hendra Gunawan', 'Intan Ayu', 'Joko Susilo',
+            'Kartika Sari', 'Lukman Hakim', 'Maya Dewi', 'Naufal Rizki', 'Putri Maharani',
+            'Rangga Aditya', 'Sri Wahyuni', 'Taufik Hidayat'];
         $siswa = [];
         foreach ($namaSiswa as $i => $name) {
             $email = 'siswa'.str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT).'@sekolah.com';
@@ -115,17 +114,17 @@ class LmsSeeder extends Seeder
         // ===== Materi (6 contoh) =====
         $materiData = [
             [$mapel['RPL-WEB'], $guru['Budi Santoso'], 'Pengenalan HTML & CSS',
-             'Materi dasar struktur halaman web menggunakan HTML5 dan styling dengan CSS3. Meliputi tag semantic, selektor, dan layout flexbox. Silakan pelajari dan praktikkan langsung di editor kalian masing-masing.', null, null],
+                'Materi dasar struktur halaman web menggunakan HTML5 dan styling dengan CSS3. Meliputi tag semantic, selektor, dan layout flexbox. Silakan pelajari dan praktikkan langsung di editor kalian masing-masing.', null, null],
             [$mapel['RPL-WEB'], $guru['Budi Santoso'], 'JavaScript Dasar',
-             'Pengenalan variabel, tipe data, fungsi, dan manipulasi DOM menggunakan JavaScript. Video penjelasan tersedia untuk menambah pemahaman.', null, 'https://www.youtube.com/watch?v=W6NZfCO5SIk'],
+                'Pengenalan variabel, tipe data, fungsi, dan manipulasi DOM menggunakan JavaScript. Video penjelasan tersedia untuk menambah pemahaman.', null, 'https://www.youtube.com/watch?v=W6NZfCO5SIk'],
             [$mapel['RPL-BD'], $guru['Siti Rahayu'], 'Entity Relationship Diagram (ERD)',
-             'Konsep perancangan basis data dengan ERD: entitas, atribut, relasi, dan kardinalitas. Termasuk contoh studi kasus sistem perpustakaan sekolah.', null, null],
+                'Konsep perancangan basis data dengan ERD: entitas, atribut, relasi, dan kardinalitas. Termasuk contoh studi kasus sistem perpustakaan sekolah.', null, null],
             [$mapel['RPL-BD'], $guru['Siti Rahayu'], 'Normalisasi Basis Data',
-             'Materi normalisasi 1NF, 2NF, dan 3NF dengan contoh penerapan. Penting untuk membangun skema database yang efisien dan bebas redundansi.', null, null],
+                'Materi normalisasi 1NF, 2NF, dan 3NF dengan contoh penerapan. Penting untuk membangun skema database yang efisien dan bebas redundansi.', null, null],
             [$mapel['UMUM-MTK'], $guru['Andi Wijaya'], 'Aljabar & Persamaan Linear',
-             'Ringkasan materi aljabar, penyelesaian persamaan linear satu dan dua variabel, lengkap dengan latihan soal dan pembahasan.', null, null],
+                'Ringkasan materi aljabar, penyelesaian persamaan linear satu dan dua variabel, lengkap dengan latihan soal dan pembahasan.', null, null],
             [$mapel['TKJ-SRV'], $guru['Rudi Hartono'], 'Pengenalan Jaringan Komputer',
-             'Dasar-dasar jaringan komputer: model OSI, TCP/IP, topologi jaringan, dan perangkat jaringan. Materi wajib sebelum praktik administrasi server.', null, 'https://www.youtube.com/watch?v=3Q9R0c9F2hQ'],
+                'Dasar-dasar jaringan komputer: model OSI, TCP/IP, topologi jaringan, dan perangkat jaringan. Materi wajib sebelum praktik administrasi server.', null, 'https://www.youtube.com/watch?v=3Q9R0c9F2hQ'],
         ];
         foreach ($materiData as [$mp, $gr, $judul, $deskripsi, $file, $video]) {
             Materi::updateOrCreate(

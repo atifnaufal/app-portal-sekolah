@@ -10,7 +10,7 @@ class Buku extends Model
 {
     protected $fillable = [
         'kategori_buku_id', 'judul', 'slug', 'penulis', 'penerbit',
-        'tahun_terbit', 'deskripsi', 'cover', 'file_pdf', 'stok'
+        'tahun_terbit', 'deskripsi', 'cover', 'file_pdf', 'stok',
     ];
 
     public function kategori(): BelongsTo

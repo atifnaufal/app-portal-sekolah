@@ -65,12 +65,12 @@ class TugasTestDataSeeder extends Seeder
                 Tugas::firstOrCreate(
                     ['mata_pelajaran_id' => $mapel->id, 'judul' => $judul],
                     [
-                        'user_id'             => $mapel->guru_id,
-                        'kelas_id'            => $mapel->kelas_id,
-                        'deskripsi'           => $deskripsi,
-                        'batas_pengumpulan'   => now()->addDays(rand(3, 14))->toDateString(),
-                        'tipe'                => $tipe,
-                        'form_data'           => $formData,
+                        'user_id' => $mapel->guru_id,
+                        'kelas_id' => $mapel->kelas_id,
+                        'deskripsi' => $deskripsi,
+                        'batas_pengumpulan' => now()->addDays(rand(3, 14))->toDateString(),
+                        'tipe' => $tipe,
+                        'form_data' => $formData,
                     ]
                 );
             }

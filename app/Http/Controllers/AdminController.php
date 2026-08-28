@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Absensi;
 use App\Models\Kelas;
-use App\Models\Spp;
-use App\Models\User;
-use App\Models\Setting;
 use App\Models\MataPelajaran;
-use App\Models\Tugas;
 use App\Models\Materi;
 use App\Models\Nilai;
-use App\Models\Absensi;
 use App\Models\PengumpulanTugas;
+use App\Models\Setting;
+use App\Models\Spp;
+use App\Models\Tugas;
+use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -35,20 +37,20 @@ class AdminController extends Controller
         $totalMapel = MataPelajaran::count();
         $totalTugas = Tugas::count();
         $totalMateri = Materi::count();
-        $tugasBelumDinilai = \App\Models\PengumpulanTugas::whereNull('nilai')->where('revisi_aktif', false)->count();
+        $tugasBelumDinilai = PengumpulanTugas::whereNull('nilai')->where('revisi_aktif', false)->count();
 
         // ===== Analytics tambahan =====
         $totalNilai = Nilai::count();
         $rataNilai = round((float) Nilai::selectRaw('(COALESCE(tugas,0)+COALESCE(uts,0)+COALESCE(uas,0))/3 as r')->get()->avg('r'), 2);
 
-        $totalAbsensi   = Absensi::count();
+        $totalAbsensi = Absensi::count();
         $absensiHariIni = Absensi::whereDate('tanggal', today())->count();
-        $hadirHariIni   = Absensi::whereDate('tanggal', today())->where('status', 'hadir')->count();
-        $terlambatHari  = Absensi::whereDate('tanggal', today())->where('status', 'terlambat')->count();
-        $izinHariIni    = Absensi::whereDate('tanggal', today())->where('status', 'izin')->count();
+        $hadirHariIni = Absensi::whereDate('tanggal', today())->where('status', 'hadir')->count();
+        $terlambatHari = Absensi::whereDate('tanggal', today())->where('status', 'terlambat')->count();
+        $izinHariIni = Absensi::whereDate('tanggal', today())->where('status', 'izin')->count();
 
         $totalPengumpulan = PengumpulanTugas::count();
-        $totalTugasForm   = Tugas::where('tipe', 'form')->count();
+        $totalTugasForm = Tugas::where('tipe', 'form')->count();
         $totalPengumpulanDinilai = PengumpulanTugas::whereNotNull('nilai')->count();
 
         // Distribusi nilai (rata-rata per siswa) untuk grafik predikat.
@@ -57,21 +59,21 @@ class AdminController extends Controller
             ->groupBy('siswa_id')
             ->get()
             ->each(function ($n) use (&$gradeDist) {
-                $avg  = (float) $n->r;
-                $key  = match (true) {
+                $avg = (float) $n->r;
+                $key = match (true) {
                     $avg >= 90 => 'A', $avg >= 80 => 'B', $avg >= 70 => 'C',
-                    $avg >= 60 => 'D', default    => 'E',
+                    $avg >= 60 => 'D', default => 'E',
                 };
                 $gradeDist[$key]++;
             });
 
         // Distribusi status absensi (keseluruhan).
         $distAbsensi = [
-            'hadir'     => Absensi::where('status', 'hadir')->count(),
+            'hadir' => Absensi::where('status', 'hadir')->count(),
             'terlambat' => Absensi::where('status', 'terlambat')->count(),
-            'izin'      => Absensi::where('status', 'izin')->count(),
-            'sakit'     => Absensi::where('status', 'sakit')->count(),
-            'alpha'     => Absensi::where('status', 'alpha')->count(),
+            'izin' => Absensi::where('status', 'izin')->count(),
+            'sakit' => Absensi::where('status', 'sakit')->count(),
+            'alpha' => Absensi::where('status', 'alpha')->count(),
         ];
 
         // Tren pendaftaran 6 bulan terakhir (DB-agnostic, diproses di PHP).
@@ -81,7 +83,7 @@ class AdminController extends Controller
             ->map->count()
             ->sortKeys()
             ->take(-6);
-        $regLabels = $regTrend->keys()->map(fn ($k) => \Illuminate\Support\Carbon::createFromFormat('Y-m', $k)->translatedFormat('M y'))->values();
+        $regLabels = $regTrend->keys()->map(fn ($k) => Carbon::createFromFormat('Y-m', $k)->translatedFormat('M y'))->values();
         $regCounts = $regTrend->values();
 
         $data = [
@@ -124,9 +126,9 @@ class AdminController extends Controller
         // View hanya membaca agregat guru_count / siswa_count, jadi tidak perlu
         // ikut memuat koleksi users lengkap untuk setiap kelas.
         $data['kelasSummaries'] = Kelas::withCount([
-                'users as guru_count' => fn ($query) => $query->where('role', 'guru'),
-                'users as siswa_count' => fn ($query) => $query->where('role', 'siswa'),
-            ])
+            'users as guru_count' => fn ($query) => $query->where('role', 'guru'),
+            'users as siswa_count' => fn ($query) => $query->where('role', 'siswa'),
+        ])
             ->orderBy('tingkat')
             ->orderBy('nama')
             ->get();
@@ -136,7 +138,7 @@ class AdminController extends Controller
         // Data grafik distribusi siswa per kelas.
         $data['kelasNames'] = collect($data['kelasSummaries'])->pluck('nama');
         $data['kelasSiswa'] = collect($data['kelasSummaries'])->pluck('siswa_count');
-        $data['kelasGuru']  = collect($data['kelasSummaries'])->pluck('guru_count');
+        $data['kelasGuru'] = collect($data['kelasSummaries'])->pluck('guru_count');
 
         return view($isMobile ? 'mobile.admin-dashboard' : 'admin.dashboard', $data);
     }
@@ -160,6 +162,7 @@ class AdminController extends Controller
         abort_unless(in_array($user->role, ['guru', 'siswa'], true), 404);
         $data = $request->validate(['name' => ['required', 'max:255'], 'nik' => ['required', 'max:30', 'unique:users,nik,'.$user->id], 'no_hp' => ['required', 'max:25'], 'email' => ['required', 'email', 'unique:users,email,'.$user->id], 'kelas_id' => ['required', 'exists:kelas,id'], 'role' => ['required', 'in:guru,siswa']]);
         $user->update($data);
+
         return back()->with('success', 'Data akun berhasil diperbarui.');
     }
 
@@ -167,6 +170,7 @@ class AdminController extends Controller
     {
         abort_unless(in_array($user->role, ['guru', 'siswa'], true), 404);
         $user->update(['aktif' => ! $user->aktif]);
+
         return back()->with('success', 'Status akun berhasil diubah.');
     }
 
@@ -176,7 +180,7 @@ class AdminController extends Controller
 
         try {
             $user->delete();
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             return back()->with('error', 'Akun tidak dapat dihapus karena masih terhubung ke data lain (nilai, tugas, materi, pengumpulan, dst). Pindahkan atau hapus data terkait terlebih dahulu.');
         }
 
@@ -192,6 +196,7 @@ class AdminController extends Controller
         Setting::setValue($key, $enabled ? '1' : '0');
 
         $roleName = ucfirst($role);
+
         return back()->with('success', $enabled ? "Registrasi {$roleName} diaktifkan." : "Registrasi {$roleName} dinonaktifkan.");
     }
 
