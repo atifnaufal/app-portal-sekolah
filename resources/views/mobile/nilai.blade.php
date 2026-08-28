@@ -60,6 +60,13 @@
             @endif
         </div>
         <div class="hero-title mt-2 text-white" style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">{{ $isGuru ? 'Penilaian Siswa' : 'Laporan Nilai' }}</div>
+        @if($isGuru && $managedClass)
+            <div class="mt-3">
+                <a href="{{ route('nilai.recap', $managedClass->id) }}" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Cetak Rekap Kelas {{ $managedClass->nama }}
+                </a>
+            </div>
+        @endif
         <div class="mt-2" style="font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.6;">
             {{ $isGuru ? 'Monitor dan evaluasi performa akademik siswa di kelas Anda secara real-time.' : 'Rekapitulasi pencapaian tugas, UTS, dan UAS Anda sepanjang semester ini.' }}
         </div>
