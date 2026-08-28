@@ -168,11 +168,23 @@
 <script>
     var portalToastEl = document.getElementById('portal-toast');
     var toastTimer = null;
+    var lastSoundAt = 0;
+
+    function playNotifSound() {
+        var now = Date.now();
+        var snd = document.getElementById('notif-sound');
+        if (snd && (now - lastSoundAt) > 1500) {
+            lastSoundAt = now;
+            snd.currentTime = 0;
+            snd.play().catch(e => {});
+        }
+    }
+
     function showNotification(title, message, url) {
         document.getElementById('toast-title').innerText = title || 'Notifikasi';
         document.getElementById('toast-msg').innerText = message || '';
         document.getElementById('toast-link').setAttribute('href', url || '#');
-        document.getElementById('notif-sound').play().catch(e => {});
+        playNotifSound();
         portalToastEl.style.display = 'block';
         portalToastEl.classList.remove('animate__fadeOutUp');
         portalToastEl.classList.add('animate__fadeInDown');
@@ -191,6 +203,7 @@
         var LOGIN_URL = "<?php echo e(route('login')); ?>";
         var MAX_RETRY = 3;
         var lastId = 0;
+        var bootstrapped = false;
         var offlineRetry = 0;
         var stdout = null;
 
@@ -213,7 +226,16 @@
                 .then(function (d) {
                     offlineRetry = 0;
                     updateUnreadBadges(d.unread);
-                    if (d.new_last_id && d.new_last_id !== lastId) {
+
+                    // Bootstrap: jadikan titik resume = notif terbaru, jangan
+                    // popup/bunyi ulang notifikasi histori yang sudah ada.
+                    if (!bootstrapped) {
+                        bootstrapped = true;
+                        lastId = (d.latest_id || 0);
+                        return;
+                    }
+
+                    if (d.new_last_id && d.new_last_id > lastId) {
                         (d.items || []).forEach(function (it) { showNotification(it.judul, it.pesan, it.url || '#'); });
                         lastId = d.new_last_id;
                     }

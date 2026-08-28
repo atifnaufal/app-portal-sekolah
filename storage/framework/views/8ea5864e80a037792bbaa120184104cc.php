@@ -155,12 +155,24 @@
 
         var portalToastEl = document.getElementById('portal-toast');
         var toastTimer = null;
+        var lastSoundAt = 0;
+
+        function playNotifSound() {
+            // Debounce: jangan bunyi berulang/beruntun dalam 1,5 detik
+            var now = Date.now();
+            var snd = document.getElementById('notif-sound');
+            if (snd && (now - lastSoundAt) > 1500) {
+                lastSoundAt = now;
+                snd.currentTime = 0;
+                snd.play().catch(function () {});
+            }
+        }
 
         function showNotification(title, message, url) {
             document.getElementById('toast-title').innerText = title || 'Notifikasi';
             document.getElementById('toast-msg').innerText = message || '';
             document.getElementById('toast-link').setAttribute('href', url || '#');
-            document.getElementById('notif-sound').play().catch(() => {});
+            playNotifSound();
             portalToastEl.style.display = 'block';
             portalToastEl.classList.remove('animate__fadeOutUp');
             portalToastEl.classList.add('animate__fadeInDown');
@@ -210,6 +222,7 @@
             }
 
             var lastId = 0;
+            var bootstrapped = false;   // sudah sinkron `lastId` dengan server
             var offlineRetry = 0;
             var stdout = null;
 
@@ -220,7 +233,17 @@
                     .then(function (d) {
                         offlineRetry = 0;
                         updateUnreadBadges(d.unread);
-                        if (d.new_last_id && d.new_last_id !== lastId) {
+
+                        // Pertama kali: jadikan titik awal resume = notif terbaru.
+                        // Dengan ini notifikasi histori lama TIDAK pernah di-popup/bunyi ulang.
+                        if (!bootstrapped) {
+                            bootstrapped = true;
+                            lastId = (d.latest_id || 0);
+                            d.items = [];   // jangan tampilkan histori yang sudah ada
+                            return;
+                        }
+
+                        if (d.new_last_id && d.new_last_id > lastId) {
                             (d.items || []).forEach(function (it) {
                                 showNotification(it.judul, it.pesan, it.url || '#');
                             });

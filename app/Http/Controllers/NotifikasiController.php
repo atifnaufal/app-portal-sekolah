@@ -59,6 +59,10 @@ class NotifikasiController extends Controller
         $userId = $request->session()->get('user_id');
         $lastId = (int) $request->query('last_id', 0);
 
+        // id notifikasi terbaru milik user — dipakai client untuk "resume".
+        // Historis yang sudah ada JANGAN dianggap baru/di-popup ulang.
+        $latestId = (int) Notifikasi::where('user_id', $userId)->max('id');
+
         $notifikasi = Notifikasi::where('user_id', $userId)
             ->where('id', '>', $lastId)
             ->latest('id')
@@ -66,9 +70,10 @@ class NotifikasiController extends Controller
             ->get(['id', 'judul', 'pesan', 'url', 'created_at']);
 
         $unread = Notifikasi::where('user_id', $userId)->whereNull('dibaca_pada')->count();
-        $newestId = $notifikasi->first()?->id ?? $lastId;
+        $newestId = $notifikasi->first()?->id ?? $latestId;
 
         return response()->json([
+            'latest_id' => $latestId,
             'new_last_id' => $newestId,
             'unread' => (int) $unread,
             'items' => $notifikasi->map(fn ($n) => [
