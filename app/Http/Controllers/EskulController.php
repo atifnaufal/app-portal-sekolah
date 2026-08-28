@@ -17,10 +17,21 @@ class EskulController extends Controller
     public function index(Request $request)
     {
         $user = User::findOrFail(session('user_id'));
-        $eskuls = Eskul::withCount('members')->where('aktif', true)->get();
+        $eskuls = Eskul::with('pembina')->withCount(['members' => function ($q) {
+            $q->where('eskul_members.status', 'approved');
+        }])->where('aktif', true)->get();
         $myEskuls = $user->eskuls()->pluck('eskul_id')->toArray();
 
-        return view('mobile.eskul.index', compact('eskuls', 'myEskuls'));
+        // Jumlah eskul aktif (approved/pending) yang sedang diikuti siswa,
+        // dipakai untuk memblokir join saat sudah mencapai batas 3.
+        $myCount = session('user_role') === 'siswa'
+            ? EskulMember::where('user_id', $user->id)
+                ->whereIn('status', ['approved', 'pending'])
+                ->count()
+            : 0;
+        $maxEskul = 3;
+
+        return view('mobile.eskul.index', compact('eskuls', 'myEskuls', 'myCount', 'maxEskul'));
     }
 
     // Mobile: Gabung Eskul
@@ -42,9 +53,13 @@ class EskulController extends Controller
         }
 
         // Enforce max 3 approved/pending eskul per student
-        $currentCount = EskulMember::where('user_id', $userId)->count();
-        if ($currentCount >= 3) {
-            return back()->with('error', 'Anda hanya dapat mengikuti maksimal 3 eskul. Silakan keluar dari salah satu eskul terlebih dahulu.');
+        if (session('user_role') === 'siswa') {
+            $currentCount = EskulMember::where('user_id', $userId)
+                ->whereIn('status', ['approved', 'pending'])
+                ->count();
+            if ($currentCount >= 3) {
+                return back()->with('error', 'Anda hanya dapat mengikuti maksimal 3 eskul. Silakan keluar dari salah satu eskul terlebih dahulu.');
+            }
         }
 
         EskulMember::create([
@@ -139,9 +154,16 @@ class EskulController extends Controller
     public function adminIndex()
     {
         abort_unless(session('user_role') === 'admin', 403);
-        $eskuls = Eskul::with('pembina')->withCount('members')->get();
+        $eskuls = Eskul::with(['pembina', 'members'])->withCount('members')->get();
         $gurus = User::where('role', 'guru')->get();
-        return view('admin.eskul.index', compact('eskuls', 'gurus'));
+
+        // Guru yang sudah menjadi admin di (setidaknya) satu eskul => tidak boleh ditunjuk lagi
+        $adminGuruIds = EskulMember::where('is_admin', true)
+            ->pluck('user_id')
+            ->unique()
+            ->toArray();
+
+        return view('admin.eskul.index', compact('eskuls', 'gurus', 'adminGuruIds'));
     }
 
     public function store(Request $request)
@@ -156,6 +178,17 @@ class EskulController extends Controller
 
         $data = $request->only(['nama', 'deskripsi', 'pembina_id']);
         $data['slug'] = Str::slug($data['nama']);
+
+        // Guru hanya boleh menjadi admin di satu eskul
+        if ($request->pembina_id) {
+            $pembina = User::find($request->pembina_id);
+            $isAdminElsewhere = $pembina && $pembina->role === 'guru' && EskulMember::where('user_id', $pembina->id)
+                ->where('is_admin', true)
+                ->exists();
+            if ($isAdminElsewhere) {
+                return back()->with('error', 'Guru ' . $pembina->name . ' sudah menjadi admin eskul lain. Satu guru hanya boleh menjadi admin 1 eskul.')->withInput();
+            }
+        }
 
         if ($request->hasFile('logo')) {
             $data['logo'] = $request->file('logo')->store('eskul', 'public');
@@ -196,6 +229,19 @@ class EskulController extends Controller
 
         $data = $request->only(['nama', 'deskripsi', 'pembina_id']);
         $data['slug'] = Str::slug($data['nama']);
+
+        // Guru hanya boleh menjadi admin di satu eskul (periksa eskul lain)
+        if ($request->pembina_id) {
+            $pembina = User::find($request->pembina_id);
+            $isAdminElsewhere = $pembina && $pembina->role === 'guru'
+                && EskulMember::where('user_id', $pembina->id)
+                    ->where('is_admin', true)
+                    ->where('eskul_id', '!=', $eskul->id)
+                    ->exists();
+            if ($isAdminElsewhere) {
+                return back()->with('error', 'Guru ' . $pembina->name . ' sudah menjadi admin eskul lain. Satu guru hanya boleh menjadi admin 1 eskul.')->withInput();
+            }
+        }
 
         if ($request->hasFile('logo')) {
             if ($eskul->logo && Storage::disk('public')->exists($eskul->logo)) {
@@ -250,10 +296,28 @@ class EskulController extends Controller
 
         $member = EskulMember::where('eskul_id', $eskul->id)->where('user_id', $userId)->first();
         if ($member) {
+            if ($member->status !== 'approved') {
+                return back()->with('error', 'Hanya anggota yang sudah disetujui yang bisa dijadikan admin.');
+            }
+
+            $becomingAdmin = !$member->is_admin;
+            if ($becomingAdmin) {
+                $user = User::find($userId);
+                $isAdminElsewhere = EskulMember::where('user_id', $userId)
+                    ->where('is_admin', true)
+                    ->where('eskul_id', '!=', $eskul->id)
+                    ->exists();
+                if ($isAdminElsewhere) {
+                    $label = $user && $user->role === 'guru' ? 'Guru ini' : 'Anggota ini';
+                    return back()->with('error', $label . ' sudah menjadi admin eskul lain. Seseorang hanya boleh menjadi admin 1 eskul.');
+                }
+            }
+
             $member->is_admin = !$member->is_admin;
             $member->save();
+            return back()->with('success', 'Status admin eskul berhasil diubah.');
         }
 
-        return back()->with('success', 'Status admin eskul berhasil diubah.');
+        return back()->with('error', 'Anggota tidak ditemukan.');
     }
 }
