@@ -42,6 +42,7 @@ class ChatMessageEvent implements ShouldBroadcast
             'user_id' => $this->message->user_id,
             'chat_group_id' => $this->message->chat_group_id,
             'pesan' => $this->message->pesan,
+            'file_url' => $this->message->file ? asset('storage/'.$this->message->file) : null,
             'nama' => $sender?->name,
             'foto' => $sender?->foto ? asset('storage/'.$sender->foto) : null,
             'waktu' => $this->message->created_at?->format('H:i'),

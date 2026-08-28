@@ -152,6 +152,11 @@
                         @if(!$isMine)
                             <div style="font-size: 10px; font-weight: 800; color: var(--blue); margin-bottom: 2px;">{{ $msg->user->name }}</div>
                         @endif
+                        @if($msg->file)
+                            <div class="mb-2">
+                                <img src="{{ asset('storage/'.$msg->file) }}" class="img-fluid rounded-3" style="max-height: 200px; width: 100%; object-fit: cover;">
+                            </div>
+                        @endif
                         <div>{{ $msg->pesan }}</div>
                         <div class="text-end" style="font-size: 9px; opacity: 0.5; margin-top: 2px;">
                             {{ $msg->created_at->format('H:i') }}
@@ -166,11 +171,12 @@
             @endforelse
         </div>
 
-        <form action="{{ route('chat.store') }}" method="POST" class="chat-footer" id="chatForm">
+        <form action="{{ route('chat.store') }}" method="POST" class="chat-footer" id="chatForm" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="chat_group_id" value="{{ $activeGroup->id }}">
-            <button type="button" class="btn btn-link text-secondary p-0"><i class="bi bi-plus-circle h5 mb-0"></i></button>
-            <input name="pesan" id="chatInput" autocomplete="off" class="chat-input" placeholder="Tulis pesan..." required>
+            <input type="file" name="file" id="fileInput" class="d-none" accept="image/*">
+            <button type="button" class="btn btn-link text-secondary p-0" onclick="document.getElementById('fileInput').click()"><i class="bi bi-plus-circle h5 mb-0"></i></button>
+            <input name="pesan" id="chatInput" autocomplete="off" class="chat-input" placeholder="Tulis pesan..." >
             <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                 <i class="bi bi-send-fill"></i>
             </button>
@@ -193,7 +199,15 @@
         row.className = 'msg-row ' + (mine ? 'mine' : 'other');
         let html = '<div class="msg-bubble">';
         if (!mine) html += '<div style="font-size:10px; font-weight:800; color:var(--blue); margin-bottom:2px;">'+data.nama+'</div>';
-        html += '<div>'+data.pesan+'</div>';
+
+        if (data.file_url) {
+            html += '<div class="mb-2"><img src="'+data.file_url+'" class="img-fluid rounded-3" style="max-height: 200px; width: 100%; object-fit: cover;"></div>';
+        }
+
+        if (data.pesan) {
+            html += '<div>'+data.pesan+'</div>';
+        }
+
         html += '<div class="text-end" style="font-size:9px; opacity:0.5; margin-top:2px;">'+data.waktu;
         if (mine) html += ' <i class="bi bi-check2-all ms-1 text-primary"></i>';
         html += '</div></div>';
@@ -202,16 +216,31 @@
         msgList.scrollTop = msgList.scrollHeight;
     }
 
+    const fileInput = document.getElementById('fileInput');
+
     chatForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const pesan = chatInput.value.trim();
-        if(!pesan) return;
-        appendMessage({ pesan, nama: '', waktu: new Date().toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit'}) }, true);
+        const hasFile = fileInput.files.length > 0;
+
+        if(!pesan && !hasFile) return;
+
+        // Visual feedback immediately for sender
+        let tempFileUrl = null;
+        if (hasFile) {
+            tempFileUrl = URL.createObjectURL(fileInput.files[0]);
+        }
+
+        appendMessage({ pesan, nama: '', waktu: new Date().toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit'}), file_url: tempFileUrl }, true);
+
+        const formData = new FormData(chatForm);
         chatInput.value = '';
+        fileInput.value = ''; // Reset file input
+
         fetch(chatForm.action, {
             method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(new FormData(chatForm))
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
         });
     });
 
@@ -219,7 +248,7 @@
         window.Echo.private('portal-chat-group.' + activeGroupId)
             .listen('.new-message', (e) => {
                 if (e.user_id !== currentUserId) {
-                    appendMessage({ nama: e.nama, pesan: e.pesan, waktu: e.waktu }, false);
+                    appendMessage({ nama: e.nama, pesan: e.pesan, waktu: e.waktu, file_url: e.file_url }, false);
                 }
             });
     }

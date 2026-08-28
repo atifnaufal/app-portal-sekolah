@@ -42,23 +42,23 @@
     .cover-premium img { width: 100%; height: 100%; object-fit: cover; }
 
     .meta-box-container {
-        display: flex; gap: 12px; padding: 0 24px;
-        margin-top: -30px; position: relative; z-index: 10;
+        display: flex; gap: 8px; padding: 0 24px;
+        margin-top: 20px; position: relative; z-index: 10;
     }
     .meta-card-item {
-        flex: 1; background: #fff; border-radius: 22px; padding: 16px 8px;
-        text-align: center; border: 1px solid #f8fafc;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+        flex: 1; background: #fff; border-radius: 16px; padding: 12px 6px;
+        text-align: center; border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
     .meta-val-txt { font-size: 15px; font-weight: 900; color: #0f172a; margin-bottom: 2px; }
     .meta-lbl-txt { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
 
-    .main-content-pro { padding: 40px 24px 130px; }
+    .main-content-pro { padding: 20px 24px 130px; }
 
-    .b-title-txt { font-size: 26px; font-weight: 900; color: #0f172a; margin-bottom: 8px; line-height: 1.2; letter-spacing: -0.5px; }
-    .b-author-txt { font-size: 16px; font-weight: 700; color: var(--blue); margin-bottom: 30px; display: flex; align-items: center; gap: 8px; }
+    .b-title-txt { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 6px; line-height: 1.2; }
+    .b-author-txt { font-size: 14px; font-weight: 600; color: var(--blue); margin-bottom: 24px; display: flex; align-items: center; gap: 6px; }
 
-    .synopsis-wrapper { margin-top: 10px; }
+    .synopsis-wrapper { margin-top: 0; }
     .synopsis-header {
         display: flex; align-items: center; gap: 10px;
         font-size: 16px; font-weight: 900; color: #0f172a; margin-bottom: 16px;

@@ -11,103 +11,91 @@
 
     .perpus-hero {
         background: linear-gradient(160deg, var(--lib-navy) 0%, #1e293b 100%);
-        padding: 48px 24px 70px;
-        border-radius: 0 0 48px 48px;
+        padding: 40px 24px 50px;
+        border-radius: 0 0 32px 32px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
     }
 
     .perpus-hero::before {
         content: ''; position: absolute; top: -20%; right: -10%;
         width: 250px; height: 250px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(36, 107, 254, 0.15) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(36, 107, 254, 0.1) 0%, transparent 70%);
     }
 
-    .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+    .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
 
     .lib-badge {
         display: inline-block; padding: 4px 12px; border-radius: 100px;
         background: var(--lib-glass); border: 1px solid var(--lib-border);
         font-size: 10px; font-weight: 800; letter-spacing: 0.1em;
-        text-transform: uppercase; margin-bottom: 8px;
+        text-transform: uppercase; margin-bottom: 4px;
     }
 
     .search-wrapper {
         position: relative; z-index: 2;
-        background: var(--lib-glass);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--lib-border);
-        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
         padding: 2px 6px;
         display: flex;
         align-items: center;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .search-wrapper:focus-within {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
     }
     .search-input {
         background: transparent; border: none; color: #fff;
-        padding: 12px 10px; width: 100%; outline: none; font-size: 15px;
+        padding: 10px 10px; width: 100%; outline: none; font-size: 14px;
     }
-    .search-input::placeholder { color: rgba(255, 255, 255, 0.4); }
+    .search-input::placeholder { color: rgba(255, 255, 255, 0.5); }
 
     .category-scroll {
-        display: flex; gap: 10px; overflow-x: auto;
-        padding: 4px 24px 24px; margin: -30px 0 0;
-        scroll-snap-type: x mandatory;
+        display: flex; gap: 8px; overflow-x: auto;
+        padding: 20px 24px;
         -webkit-overflow-scrolling: touch;
     }
     .category-scroll::-webkit-scrollbar { display: none; }
 
     .chip {
-        padding: 10px 24px; border-radius: 16px; font-size: 13px; font-weight: 700;
-        white-space: nowrap; text-decoration: none; transition: all 0.3s;
-        border: 1px solid transparent; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        padding: 8px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;
+        white-space: nowrap; text-decoration: none; transition: all 0.2s;
+        border: 1px solid #f1f5f9; background: #fff; color: #64748b;
     }
-    .chip-active { background: var(--lib-blue); color: #fff; box-shadow: 0 8px 20px rgba(36, 107, 254, 0.3); }
-    .chip-inactive { background: #fff; color: #64748b; border-color: #f1f5f9; }
+    .chip-active { background: var(--lib-blue); color: #fff; border-color: var(--lib-blue); }
 
     .grid-container { padding: 0 20px 100px; }
 
     .book-card-premium {
-        background: #fff; border-radius: 28px; padding: 12px;
-        border: 1px solid #f8fafc;
-        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fff; border-radius: 20px; padding: 10px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
         height: 100%; display: flex; flex-direction: column;
     }
-    .book-card-premium:active { transform: scale(0.95); background: #fdfdfd; }
+    .book-card-premium:active { transform: scale(0.97); }
 
     .cover-box {
-        aspect-ratio: 2/3; border-radius: 20px; overflow: hidden;
-        background: #f1f5f9; position: relative;
-        box-shadow: 0 12px 24px -8px rgba(0,0,0,0.15);
+        aspect-ratio: 2/3; border-radius: 14px; overflow: hidden;
+        background: #f8fafc; position: relative;
     }
-    .cover-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
-    .book-card-premium:hover .cover-img { transform: scale(1.05); }
+    .cover-img { width: 100%; height: 100%; object-fit: cover; }
 
     .type-tag {
-        position: absolute; bottom: 10px; left: 10px;
-        background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px);
-        padding: 4px 10px; border-radius: 8px;
-        font-size: 9px; font-weight: 800; color: #fff;
-        text-transform: uppercase; letter-spacing: 0.05em;
+        position: absolute; bottom: 8px; left: 8px;
+        background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);
+        padding: 2px 8px; border-radius: 6px;
+        font-size: 8px; font-weight: 700; color: #fff;
+        text-transform: uppercase;
     }
 
-    .info-box { padding: 12px 6px 4px; }
-    .title-txt { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 4px; line-height: 1.3; }
-    .author-txt { font-size: 11px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .info-box { padding: 10px 4px 2px; }
+    .title-txt { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px; line-height: 1.3; }
+    .author-txt { font-size: 10px; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
 
     .section-head-pro {
         display: flex; align-items: center; justify-content: space-between;
-        margin: 12px 24px 20px;
+        margin: 0 24px 16px;
     }
-    .section-head-pro h2 { font-size: 18px; font-weight: 900; color: #0f172a; margin: 0; }
+    .section-head-pro h2 { font-size: 16px; font-weight: 800; color: #0f172a; margin: 0; }
 
     /* Responsive adjustment for extra small devices */
     @media (max-width: 360px) {

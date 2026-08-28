@@ -65,18 +65,29 @@ class ChatController extends Controller
         $user = User::findOrFail($userId);
 
         $data = $request->validate([
-            'pesan' => ['required', 'string', 'max:1000'],
+            'pesan' => ['nullable', 'string', 'max:1000'],
+            'file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
             'chat_group_id' => ['required', 'exists:chat_groups,id']
         ]);
+
+        if (empty($data['pesan']) && !$request->hasFile('file')) {
+            return response()->json(['error' => 'Pesan atau gambar harus diisi'], 422);
+        }
 
         // Check if user is member of the group
         $group = ChatGroup::findOrFail($data['chat_group_id']);
         abort_unless($group->members()->where('user_id', $userId)->exists(), 403);
 
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('chat_files', 'public');
+        }
+
         $message = ChatMessage::create([
             'user_id' => $userId,
             'chat_group_id' => $group->id,
-            'pesan' => $data['pesan']
+            'pesan' => $data['pesan'] ?? '',
+            'file' => $filePath
         ]);
 
         $message->load('user');
@@ -94,6 +105,7 @@ class ChatController extends Controller
                 'user_id' => $message->user_id,
                 'chat_group_id' => $message->chat_group_id,
                 'pesan' => $message->pesan,
+                'file_url' => $message->file ? asset('storage/' . $message->file) : null,
                 'nama' => $message->user?->name,
                 'foto' => $message->user?->foto ? asset('storage/' . $message->user->foto) : null,
                 'waktu' => $message->created_at?->format('H:i'),
