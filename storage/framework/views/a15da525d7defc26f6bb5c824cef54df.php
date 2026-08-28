@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Admin | App Mahasiswa' }}</title>
+    <title><?php echo e($title ?? 'Admin | App Mahasiswa'); ?></title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#246bfe">
-    @vite(['resources/js/app.js'])
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/js/app.js']); ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
@@ -85,7 +85,7 @@
 <body>
 <nav class="navbar navbar-expand-lg admin-nav navbar-dark">
     <div class="container admin-container">
-        <a class="navbar-brand d-flex align-items-center gap-3 fw-bold" href="{{ route('dashboard') }}">
+        <a class="navbar-brand d-flex align-items-center gap-3 fw-bold" href="<?php echo e(route('dashboard')); ?>">
             <div class="brand-mark">A</div>
             <span>App Mahasiswa</span>
         </a>
@@ -94,29 +94,29 @@
         </button>
         <div class="collapse navbar-collapse" id="adminMenu">
             <div class="navbar-nav ms-lg-4 me-auto">
-                @if(session('user_role') === 'admin')
-                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
-                    <a class="nav-link {{ request()->routeIs('pengumuman.*') ? 'active' : '' }}" href="{{ route('pengumuman.index') }}">Pengumuman</a>
-                    <a class="nav-link {{ request()->routeIs('spp.*') ? 'active' : '' }}" href="{{ route('spp.index') }}">SPP</a>
-                    <a class="nav-link {{ request()->routeIs('kelas.*') ? 'active' : '' }}" href="{{ route('kelas.index') }}">Kelas</a>
-                    <a class="nav-link {{ request()->routeIs('admin.jadwal.*') ? 'active' : '' }}" href="{{ route('admin.jadwal.index') }}"><i class="bi bi-calendar3 me-1"></i>Jadwal</a>
-                    <a class="nav-link {{ request()->routeIs('admin.perpustakaan.*') ? 'active' : '' }}" href="{{ route('admin.perpustakaan.index') }}">Perpustakaan</a>
-                    <a class="nav-link {{ request()->routeIs('admin.eskul.*') ? 'active' : '' }}" href="{{ route('admin.eskul.index') }}">Eskul</a>
-                    <a class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}">Akun</a>
-                    <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}">Pengaturan</a>
-                @else
-                    <a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a>
-                    <a class="nav-link" href="{{ route('pengumuman.index') }}">Pengumuman</a>
-                    <a class="nav-link" href="{{ route('tugas.index') }}">Tugas</a>
-                @endif
+                <?php if(session('user_role') === 'admin'): ?>
+                    <a class="nav-link <?php echo e(request()->routeIs('dashboard') ? 'active' : ''); ?>" href="<?php echo e(route('dashboard')); ?>">Dashboard</a>
+                    <a class="nav-link <?php echo e(request()->routeIs('pengumuman.*') ? 'active' : ''); ?>" href="<?php echo e(route('pengumuman.index')); ?>">Pengumuman</a>
+                    <a class="nav-link <?php echo e(request()->routeIs('spp.*') ? 'active' : ''); ?>" href="<?php echo e(route('spp.index')); ?>">SPP</a>
+                    <a class="nav-link <?php echo e(request()->routeIs('kelas.*') ? 'active' : ''); ?>" href="<?php echo e(route('kelas.index')); ?>">Kelas</a>
+                    <a class="nav-link <?php echo e(request()->routeIs('admin.jadwal.*') ? 'active' : ''); ?>" href="<?php echo e(route('admin.jadwal.index')); ?>"><i class="bi bi-calendar3 me-1"></i>Jadwal</a>
+                    <a class="nav-link <?php echo e(request()->routeIs('admin.perpustakaan.*') ? 'active' : ''); ?>" href="<?php echo e(route('admin.perpustakaan.index')); ?>">Perpustakaan</a>
+                    <a class="nav-link <?php echo e(request()->routeIs('admin.eskul.*') ? 'active' : ''); ?>" href="<?php echo e(route('admin.eskul.index')); ?>">Eskul</a>
+                    <a class="nav-link <?php echo e(request()->routeIs('admin.users') ? 'active' : ''); ?>" href="<?php echo e(route('admin.users')); ?>">Akun</a>
+                    <a class="nav-link <?php echo e(request()->routeIs('admin.settings') ? 'active' : ''); ?>" href="<?php echo e(route('admin.settings')); ?>">Pengaturan</a>
+                <?php else: ?>
+                    <a class="nav-link" href="<?php echo e(route('dashboard')); ?>">Dashboard</a>
+                    <a class="nav-link" href="<?php echo e(route('pengumuman.index')); ?>">Pengumuman</a>
+                    <a class="nav-link" href="<?php echo e(route('tugas.index')); ?>">Tugas</a>
+                <?php endif; ?>
             </div>
             <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
                 <div class="d-flex flex-column text-end d-none d-lg-flex">
-                    <span class="text-white small fw-bold">{{ session('admin_name') }}</span>
+                    <span class="text-white small fw-bold"><?php echo e(session('admin_name')); ?></span>
                     <span class="text-muted small" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;">Administrator</span>
                 </div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
+                <form method="POST" action="<?php echo e(route('logout')); ?>">
+                    <?php echo csrf_field(); ?>
                     <button class="btn btn-sm btn-outline-light rounded-pill px-3">Keluar</button>
                 </form>
             </div>
@@ -140,22 +140,25 @@
 <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 <main class="container admin-container py-5">
-    @if(session('success'))
+    <?php if(session('success')): ?>
         <div class="alert alert-success border-0 rounded-4 shadow-sm animate__animated animate__fadeIn">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+            <i class="bi bi-check-circle-fill me-2"></i> <?php echo e(session('success')); ?>
+
         </div>
-    @endif
-    @if(session('error'))
+    <?php endif; ?>
+    <?php if(session('error')): ?>
         <div class="alert alert-danger border-0 rounded-4 shadow-sm animate__animated animate__fadeIn">
-            <i class="bi bi-exclamation-circle-fill me-2"></i> {{ session('error') }}
+            <i class="bi bi-exclamation-circle-fill me-2"></i> <?php echo e(session('error')); ?>
+
         </div>
-    @endif
-    @yield('content')
+    <?php endif; ?>
+    <?php echo $__env->yieldContent('content'); ?>
 </main>
 
 <footer class="container admin-container pb-5 text-center">
     <div class="admin-footer">
-        App Mahasiswa &bull; Panel Administrasi Terintegrasi &bull; &copy; {{ date('Y') }}
+        App Mahasiswa &bull; Panel Administrasi Terintegrasi &bull; &copy; <?php echo e(date('Y')); ?>
+
     </div>
 </footer>
 
@@ -178,10 +181,11 @@
     }
 
     if (window.Echo) {
-        const userId = @json((int) session('user_id'));
+        const userId = <?php echo json_encode((int) session('user_id'), 15, 512) ?>;
         window.Echo.private('portal-notifications.' + userId)
             .listen('.new-notification', (e) => showNotification(e.title, e.message));
     }
 </script>
 </body>
 </html>
+<?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views\layouts\app.blade.php ENDPATH**/ ?>

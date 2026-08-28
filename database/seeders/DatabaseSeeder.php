@@ -19,5 +19,9 @@ class DatabaseSeeder extends Seeder
                 'aktif' => true,
             ]
         );
+
+        $this->call([
+            LmsSeeder::class,
+        ]);
     }
 }

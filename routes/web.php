@@ -124,6 +124,12 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::resource('kelas', KelasController::class)->except('show');
     Route::resource('mahasiswa', MahasiswaController::class)->except(['index', 'show']);
     Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+
+    // Admin Jadwal (LMS)
+    Route::get('/admin/jadwal', [JadwalController::class, 'adminIndex'])->name('admin.jadwal.index');
+    Route::post('/admin/jadwal', [JadwalController::class, 'store'])->name('admin.jadwal.store');
+    Route::put('/admin/jadwal/{jadwal}', [JadwalController::class, 'update'])->name('admin.jadwal.update');
+    Route::delete('/admin/jadwal/{jadwal}', [JadwalController::class, 'destroy'])->name('admin.jadwal.destroy');
 });
 
 Route::middleware('role:guru')->group(function () {

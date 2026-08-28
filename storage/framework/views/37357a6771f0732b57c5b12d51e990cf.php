@@ -190,11 +190,11 @@
 </div>
 
 <div class="auth-container">
-    {{-- ========== SCREEN 1: WELCOME ========== --}}
+    
     <div class="auth-screen active" id="welcomeScreen">
         <div class="welcome-card">
             <div class="welcome-logo">
-                <img src="{{ asset('logo_sekolah.png') }}" alt="Logo" onerror="this.style.display='none'">
+                <img src="<?php echo e(asset('logo_sekolah.png')); ?>" alt="Logo" onerror="this.style.display='none'">
             </div>
             <div class="welcome-title">Portal Sekolah Digital</div>
             <div class="welcome-sub">Portal Akademik Mahasiswa & Guru</div>
@@ -269,22 +269,22 @@
                 <button type="button" class="btn-welcome btn-welcome-primary" onclick="showScreen('loginScreen')" style="flex:1;">
                     <i class="bi bi-box-arrow-in-right"></i> Login
                 </button>
-                @if(\App\Models\Setting::getValue('registration_guru_enabled', false) || \App\Models\Setting::getValue('registration_siswa_enabled', false))
-                    <a href="{{ route('register') }}" class="btn-welcome btn-welcome-secondary" style="flex:1;">
+                <?php if(\App\Models\Setting::getValue('registration_guru_enabled', false) || \App\Models\Setting::getValue('registration_siswa_enabled', false)): ?>
+                    <a href="<?php echo e(route('register')); ?>" class="btn-welcome btn-welcome-secondary" style="flex:1;">
                         <i class="bi bi-person-plus"></i> Daftar
                     </a>
-                @endif
+                <?php endif; ?>
             </div>
 
             <div style="margin-top:20px;">
-                <a href="{{ asset('downloads/app-portal-sekolah.apk') }}" style="font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none;">
+                <a href="<?php echo e(asset('downloads/app-portal-sekolah.apk')); ?>" style="font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none;">
                     <i class="bi bi-cloud-arrow-down"></i> Unduh Aplikasi Android
                 </a>
             </div>
         </div>
     </div>
 
-    {{-- ========== SCREEN 2: LOGIN FORM ========== --}}
+    
     <div class="auth-screen" id="loginScreen">
         <button type="button" class="back-btn" onclick="showScreen('welcomeScreen')">
             <i class="bi bi-chevron-left"></i> Kembali
@@ -293,23 +293,23 @@
         <div class="login-card">
             <div class="login-header">
                 <div class="login-header-logo">
-                    <img src="{{ asset('logo_sekolah.png') }}" alt="Logo" onerror="this.style.display='none'">
+                    <img src="<?php echo e(asset('logo_sekolah.png')); ?>" alt="Logo" onerror="this.style.display='none'">
                 </div>
                 <h1>Portal Sekolah Digital</h1>
                 <p>Portal Akademik Mahasiswa & Guru</p>
             </div>
 
             <div class="login-body">
-                @if(session('success'))<div class="alert alert-success small py-2 mb-3 border-0 rounded-3">{{ session('success') }}</div>@endif
-                @if(session('error'))<div class="alert alert-danger small py-2 mb-3 border-0 rounded-3">{{ session('error') }}</div>@endif
+                <?php if(session('success')): ?><div class="alert alert-success small py-2 mb-3 border-0 rounded-3"><?php echo e(session('success')); ?></div><?php endif; ?>
+                <?php if(session('error')): ?><div class="alert alert-danger small py-2 mb-3 border-0 rounded-3"><?php echo e(session('error')); ?></div><?php endif; ?>
 
-                <form method="POST" action="{{ route('login.store') }}" id="loginForm">
-                    @csrf
+                <form method="POST" action="<?php echo e(route('login.store')); ?>" id="loginForm">
+                    <?php echo csrf_field(); ?>
                     <div style="margin-bottom:14px;">
                         <label class="form-label">Alamat Email</label>
                         <div style="position:relative;">
                             <i class="bi bi-person" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:15px;"></i>
-                            <input type="email" name="email" value="{{ old('email') }}" class="form-control" style="padding-left:40px;" placeholder="nama@gmail.com" required autofocus>
+                            <input type="email" name="email" value="<?php echo e(old('email')); ?>" class="form-control" style="padding-left:40px;" placeholder="nama@gmail.com" required autofocus>
                         </div>
                     </div>
 
@@ -323,8 +323,8 @@
                     </div>
 
                     <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
-                        <a href="{{ route('password.request') }}" style="font-size:11px;font-weight:600;color:#246bfe;text-decoration:none;">Lupa Password?</a>
-                        <a href="{{ route('email.request') }}" style="font-size:11px;font-weight:600;color:#94a3b8;text-decoration:none;">Lupa Email?</a>
+                        <a href="<?php echo e(route('password.request')); ?>" style="font-size:11px;font-weight:600;color:#246bfe;text-decoration:none;">Lupa Password?</a>
+                        <a href="<?php echo e(route('email.request')); ?>" style="font-size:11px;font-weight:600;color:#94a3b8;text-decoration:none;">Lupa Email?</a>
                     </div>
 
                     <button type="submit" class="btn-login-submit" id="submitBtn">
@@ -341,12 +341,12 @@
                     </div>
                 </div>
 
-                @if(\App\Models\Setting::getValue('registration_guru_enabled', false) || \App\Models\Setting::getValue('registration_siswa_enabled', false))
+                <?php if(\App\Models\Setting::getValue('registration_guru_enabled', false) || \App\Models\Setting::getValue('registration_siswa_enabled', false)): ?>
                     <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #f1f5f9;">
                         <span style="font-size:12px;color:#94a3b8;">Belum punya akun?</span>
-                        <a href="{{ route('register') }}" style="font-size:12px;font-weight:700;color:#246bfe;text-decoration:none;margin-left:4px;">Daftar Sekarang</a>
+                        <a href="<?php echo e(route('register')); ?>" style="font-size:12px;font-weight:700;color:#246bfe;text-decoration:none;margin-left:4px;">Daftar Sekarang</a>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -379,9 +379,9 @@ document.getElementById('loginForm').addEventListener('submit', function() {
 });
 
 // Auto-show login if there are errors or specific session messages
-@if($errors->any() || session('error') || session('success'))
+<?php if($errors->any() || session('error') || session('success')): ?>
     showScreen('loginScreen');
-@endif
+<?php endif; ?>
 
 // Service Worker
 if ('serviceWorker' in navigator) {
@@ -392,3 +392,4 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
+<?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views\auth\login.blade.php ENDPATH**/ ?>

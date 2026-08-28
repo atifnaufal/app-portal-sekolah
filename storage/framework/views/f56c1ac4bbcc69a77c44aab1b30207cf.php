@@ -1,7 +1,7 @@
-@php $hideNav = true; @endphp
-@extends('layouts.mobile-app')
+<?php $hideNav = true; ?>
 
-@section('content')
+
+<?php $__env->startSection('content'); ?>
 <style>
     .page-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
@@ -48,7 +48,7 @@
 </style>
 
 <div class="page-header">
-    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+    <a href="<?php echo e(route('dashboard')); ?>" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
         <i class="bi bi-chevron-left h5 mb-0"></i>
     </a>
     <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px;">Jadwal Pelajaran</div>
@@ -57,67 +57,73 @@
 <div class="page-container">
     <header class="mobile-hero" style="border-radius: 0 0 28px 28px; margin-bottom: 10px; background: linear-gradient(135deg, #0f172a, #1e293b); padding: 32px 24px 28px;">
         <div class="eyebrow" style="color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">
-            {{ $user->kelas?->nama ?? ($isGuru ? 'Guru Pengampu' : 'Akademik') }}
+            <?php echo e($user->kelas?->nama ?? ($isGuru ? 'Guru Pengampu' : 'Akademik')); ?>
+
         </div>
-        <div class="hero-title mt-2 text-white" style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">{{ $isGuru ? 'Agenda Mengajar' : 'Agenda Belajar' }}</div>
+        <div class="hero-title mt-2 text-white" style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;"><?php echo e($isGuru ? 'Agenda Mengajar' : 'Agenda Belajar'); ?></div>
         <p class="mb-0 mt-1" style="font-size: 12px; color: rgba(255,255,255,.6); line-height: 1.5;">
-            {{ $isGuru ? 'Pantau jadwal mengajar Anda setiap harinya.' : 'Lihat jadwal mata pelajaran Anda minggu ini.' }}
+            <?php echo e($isGuru ? 'Pantau jadwal mengajar Anda setiap harinya.' : 'Lihat jadwal mata pelajaran Anda minggu ini.'); ?>
+
         </p>
 
-        @if(isset($stat) && $stat['total'] > 0)
+        <?php if(isset($stat) && $stat['total'] > 0): ?>
             <div style="display:flex;gap:10px;margin-top:18px;">
                 <div style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:12px;text-align:center;">
-                    <div style="font-size:22px;font-weight:800;">{{ $stat['total'] }}</div>
+                    <div style="font-size:22px;font-weight:800;"><?php echo e($stat['total']); ?></div>
                     <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;opacity:0.6;">Total Sesi</div>
                 </div>
                 <div style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:12px;text-align:center;">
-                    <div style="font-size:22px;font-weight:800;">{{ $stat['mapel'] }}</div>
-                    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;opacity:0.6;">{{ $isGuru ? 'Mapel Diampu' : 'Mata Pelajaran' }}</div>
+                    <div style="font-size:22px;font-weight:800;"><?php echo e($stat['mapel']); ?></div>
+                    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;opacity:0.6;"><?php echo e($isGuru ? 'Mapel Diampu' : 'Mata Pelajaran'); ?></div>
                 </div>
                 <div style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:12px;text-align:center;">
-                    <div style="font-size:22px;font-weight:800;color:#4ade80;">{{ $stat['hariIni']->count() }}</div>
+                    <div style="font-size:22px;font-weight:800;color:#4ade80;"><?php echo e($stat['hariIni']->count()); ?></div>
                     <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;opacity:0.6;">Hari Ini</div>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
     </header>
 
     <main class="mobile-content px-3">
-        @php($currentDay = \Carbon\Carbon::now()->translatedFormat('l'))
-        @php($currentTime = \Carbon\Carbon::now()->format('H:i'))
+        <?php ($currentDay = \Carbon\Carbon::now()->translatedFormat('l')); ?>
+        <?php ($currentTime = \Carbon\Carbon::now()->format('H:i')); ?>
 
-        @forelse($jadwals as $hari => $list)
-            <div class="day-header mt-3 mb-2">{{ $hari }}</div>
+        <?php $__empty_1 = true; $__currentLoopData = $jadwals; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hari => $list): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+            <div class="day-header mt-3 mb-2"><?php echo e($hari); ?></div>
 
-            @foreach($list as $j)
-                @php($isActive = ($hari === $currentDay && $currentTime >= $j->jam_mulai && $currentTime <= $j->jam_selesai))
+            <?php $__currentLoopData = $list; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $j): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php ($isActive = ($hari === $currentDay && $currentTime >= $j->jam_mulai && $currentTime <= $j->jam_selesai)); ?>
                 <div class="schedule-card" style="animation: fadeIn 0.4s ease both;">
                     <div class="time-strip">
-                        <div class="time-val">{{ \Carbon\Carbon::parse($j->jam_mulai)->format('H:i') }}</div>
-                        <div class="time-end">{{ \Carbon\Carbon::parse($j->jam_selesai)->format('H:i') }}</div>
+                        <div class="time-val"><?php echo e(\Carbon\Carbon::parse($j->jam_mulai)->format('H:i')); ?></div>
+                        <div class="time-end"><?php echo e(\Carbon\Carbon::parse($j->jam_selesai)->format('H:i')); ?></div>
                     </div>
                     <div class="content-area">
-                        @if($isActive)
+                        <?php if($isActive): ?>
                             <div class="status-dot active"></div>
-                        @endif
-                        <div class="subject-name">{{ $j->mataPelajaran->nama }}</div>
+                        <?php endif; ?>
+                        <div class="subject-name"><?php echo e($j->mataPelajaran->nama); ?></div>
                         <div class="meta-info mb-1">
-                            <i class="bi bi-geo-alt"></i> {{ $j->ruangan ?: 'Ruang Kelas' }}
+                            <i class="bi bi-geo-alt"></i> <?php echo e($j->ruangan ?: 'Ruang Kelas'); ?>
+
                         </div>
                         <div class="meta-info">
-                            <i class="bi {{ $isGuru ? 'bi-people' : 'bi-person-badge' }}"></i>
-                            {{ $isGuru ? $j->kelas?->nama : $j->guru?->name }}
+                            <i class="bi <?php echo e($isGuru ? 'bi-people' : 'bi-person-badge'); ?>"></i>
+                            <?php echo e($isGuru ? $j->kelas?->nama : $j->guru?->name); ?>
+
                         </div>
                     </div>
                 </div>
-            @endforeach
-        @empty
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
             <div class="text-center py-5">
                 <i class="bi bi-calendar-x h1 text-muted"></i>
                 <div class="fw-bold mt-2">Belum ada jadwal</div>
                 <p class="small text-muted">Hubungi bagian kurikulum untuk informasi jadwal.</p>
             </div>
-        @endforelse
+        <?php endif; ?>
     </main>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.mobile-app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views\mobile\jadwal.blade.php ENDPATH**/ ?>
