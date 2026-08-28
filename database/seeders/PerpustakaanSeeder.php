@@ -6,14 +6,22 @@ use Illuminate\Database\Seeder;
 use App\Models\KategoriBuku;
 use App\Models\Buku;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class PerpustakaanSeeder extends Seeder
 {
     public function run()
     {
+        // Disable foreign key checks to allow truncate
+        Schema::disableForeignKeyConstraints();
+
         // Bersihkan data lama untuk testing
+        DB::table('peminjaman_bukus')->truncate();
         Buku::truncate();
         KategoriBuku::truncate();
+
+        Schema::enableForeignKeyConstraints();
 
         $categories = [
             ['nama' => 'Sastra & Novel', 'slug' => 'sastra-novel'],
