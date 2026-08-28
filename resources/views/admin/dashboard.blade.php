@@ -184,6 +184,87 @@
     </div>
 </div>
 
+{{-- KPI Premium Tiles --}}
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="ad-stat">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="ad-stat-lbl">Total Nilai</div>
+                <div class="ad-stat-icon" style="background:#f5f3ff;color:#7c3aed;"><i class="bi bi-clipboard-data"></i></div>
+            </div>
+            <div class="ad-stat-num">{{ number_format($totalNilai) }}</div>
+            <div class="small text-muted mt-2"><i class="bi bi-trophy text-warning"></i> Records Entered</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="ad-stat">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="ad-stat-lbl">Rata-rata Nilai</div>
+                <div class="ad-stat-icon" style="background:#ecfeff;color:#0e9aa7;"><i class="bi bi-award"></i></div>
+            </div>
+            <div class="ad-stat-num" style="display:flex;align-items:baseline;gap:4px;">{{ $rataNilai }}<span style="font-size:14px;color:#94a3b8;font-weight:700;">/100</span></div>
+            <div class="small text-muted mt-2"><i class="bi bi-stars text-primary"></i> Academic Average</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="ad-stat">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="ad-stat-lbl">Hadir Hari Ini</div>
+                <div class="ad-stat-icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-person-check"></i></div>
+            </div>
+            <div class="ad-stat-num text-success">{{ $hadirHariIni }}</div>
+            <div class="small text-muted mt-2"><i class="bi bi-calendar-check"></i> Present Today (Total {{ $absensiHariIni }})</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="ad-stat">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="ad-stat-lbl">Pengumpulan Tugas</div>
+                <div class="ad-stat-icon" style="background:#fff5f6;color:#d94b61;"><i class="bi bi-arrow-repeat"></i></div>
+            </div>
+            <div class="ad-stat-num">{{ number_format($totalPengumpulan) }}</div>
+            <div class="small text-muted mt-2"><i class="bi bi-check2-circle text-success"></i> {{ number_format($totalPengumpulanDinilai) }} Sudah Dinilai</div>
+        </div>
+    </div>
+</div>
+
+{{-- Analytics: Nilai, Kelas, Absensi --}}
+<div class="row g-4 mb-5">
+    <div class="col-xl-4 col-md-6">
+        <div class="ad-card shadow-sm h-100">
+            <div class="ad-card-head d-flex justify-content-between align-items-center">
+                <h2 class="ad-card-title"><i class="bi bi-pie-chart" style="color:#7c3aed;"></i> Distribusi Predikat</h2>
+            </div>
+            <div class="ad-card-body"><div style="height:260px;"><canvas id="gradeChart"></canvas></div></div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6">
+        <div class="ad-card shadow-sm h-100">
+            <div class="ad-card-head"><h2 class="ad-card-title"><i class="bi bi-bar-chart" style="color:#2563eb;"></i> Siswa per Kelas</h2></div>
+            <div class="ad-card-body"><div style="height:260px;"><canvas id="kelasChart"></canvas></div></div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6">
+        <div class="ad-card shadow-sm h-100">
+            <div class="ad-card-head"><h2 class="ad-card-title"><i class="bi bi-person-check" style="color:#16a34a;"></i> Status Absensi</h2></div>
+            <div class="ad-card-body"><div style="height:260px;"><canvas id="absensiChart"></canvas></div></div>
+        </div>
+    </div>
+</div>
+
+{{-- Registration Trend --}}
+<div class="row g-4 mb-5">
+    <div class="col-12">
+        <div class="ad-card shadow-sm">
+            <div class="ad-card-head d-flex justify-content-between align-items-center">
+                <h2 class="ad-card-title"><i class="bi bi-graph-up-arrow text-primary"></i> Tren Pendaftaran (6 Bulan Terakhir)</h2>
+                <span class="badge rounded-pill bg-primary-subtle text-primary px-3" style="font-size:11px;font-weight:800;">Registrations</span>
+            </div>
+            <div class="ad-card-body"><div style="height:280px;"><canvas id="regChart"></canvas></div></div>
+        </div>
+    </div>
+</div>
+
 {{-- Analytics & Financial Status --}}
 <div class="row g-4 mb-5">
     <div class="col-lg-8">
@@ -337,6 +418,70 @@
                     datasets: [{ data: [{{ (float) $sppTerbayar }}, {{ $piutang }}], backgroundColor: ['#16a34a', '#f59e0b'], borderWidth: 0, cutout: '82%', hoverOffset: 8 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        var gradeCtx = document.getElementById('gradeChart');
+        if (gradeCtx) {
+            new Chart(gradeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['A (≥90)', 'B (80-89)', 'C (70-79)', 'D (60-69)', 'E (<60)'],
+                    datasets: [{
+                        data: [{{ $gradeDist['A'] }}, {{ $gradeDist['B'] }}, {{ $gradeDist['C'] }}, {{ $gradeDist['D'] }}, {{ $gradeDist['E'] }}],
+                        backgroundColor: ['#16a34a', '#3b82f6', '#f59e0b', '#f97316', '#dc2626'],
+                        borderWidth: 0, hoverOffset: 8
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { weight: '600', size: 11 } } } } }
+            });
+        }
+
+        var kelasCtx = document.getElementById('kelasChart');
+        if (kelasCtx) {
+            new Chart(kelasCtx, {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($kelasNames) !!},
+                    datasets: [{
+                        label: 'Siswa', data: {!! json_encode($kelasSiswa) !!},
+                        backgroundColor: 'rgba(37,99,235,0.75)', borderRadius: 8, maxBarThickness: 34
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+            });
+        }
+
+        var absensiCtx = document.getElementById('absensiChart');
+        if (absensiCtx) {
+            new Chart(absensiCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hadir', 'Terlambat', 'Izin', 'Sakit', 'Alpha'],
+                    datasets: [{
+                        data: [{{ $distAbsensi['hadir'] }}, {{ $distAbsensi['terlambat'] }}, {{ $distAbsensi['izin'] }}, {{ $distAbsensi['sakit'] }}, {{ $distAbsensi['alpha'] }}],
+                        backgroundColor: ['#16a34a', '#f59e0b', '#3b82f6', '#f97316', '#dc2626'],
+                        borderWidth: 0, hoverOffset: 8
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { weight: '600', size: 11 } } } } }
+            });
+        }
+
+        var regCtx = document.getElementById('regChart');
+        if (regCtx) {
+            var rg = regCtx.getContext('2d').createLinearGradient(0,0,0,280);
+            rg.addColorStop(0, 'rgba(124,58,237,0.35)'); rg.addColorStop(1, 'rgba(124,58,237,0)');
+            new Chart(regCtx, {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($regLabels) !!},
+                    datasets: [{
+                        label: 'Pendaftar', data: {!! json_encode($regCounts) !!},
+                        backgroundColor: rg, borderColor: '#7c3aed', borderWidth: 2, borderRadius: 8, maxBarThickness: 50
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, grid: { color: '#f1f5f9', drawBorder: false } } }, x: { grid: { display: false } } } }
             });
         }
     });

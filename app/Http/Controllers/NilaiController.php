@@ -11,11 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class NilaiController extends Controller
 {
@@ -71,7 +66,6 @@ class NilaiController extends Controller
                     ->orderBy('name')
                     ->get();
 
-                // Nilai per siswa untuk mapel ini (SEMUA semester, agar bisa diedit semua)
                 $nilais = Nilai::where('mata_pelajaran_id', $selectedSubject->id)
                     ->get()
                     ->groupBy('siswa_id');
@@ -102,7 +96,7 @@ class NilaiController extends Controller
     {
         $data = $request->validate([
             'siswa_id'          => 'required|integer|exists:users,id',
-            'mata_pelajaran_id' => 'required|integer|exists:mata_pelajaran,id', // PERBAIKAN: tabel tunggal
+            'mata_pelajaran_id' => 'required|integer|exists:mata_pelajaran,id',
             'semester'          => 'required|integer|between:1,2',
             'tahun_ajaran'      => 'nullable|string|max:10',
             'tugas'             => 'nullable|numeric|min:0|max:100',
@@ -169,8 +163,12 @@ class NilaiController extends Controller
     protected function authorizeRecap(Kelas $kelas): void
     {
         $userId = session('user_id') ?: Auth::id();
-        abort_unless($kelas->pembina_id == $userId || session('user_role') === 'admin'
-            || \App\Models\MataPelajaran::where('kelas_id', $kelas->id)->where('guru_id', $userId)->exists(), 403);
+        abort_unless(
+            $kelas->pembina_id == $userId
+            || session('user_role') === 'admin'
+            || MataPelajaran::where('kelas_id', $kelas->id)->where('guru_id', $userId)->exists(),
+            403
+        );
     }
 
     public function recapPdf(Request $request, Kelas $kelas)
@@ -189,7 +187,11 @@ class NilaiController extends Controller
     }
 
     /**
-     * Export rekap nilai ke Excel (.xlsx) yang rapi menggunakan PhpSpreadsheet.
+     * Export rekap nilai ke Excel (.xls) yang rapi.
+     *
+     * Menggunakan format SpreadsheetML 2003 (XML) sehingga TIDAK membutuhkan
+     * ekstensi PHP tambahan (gd/zip) — aman di semua environment, termasuk
+     * server produksi Docker/Railway.
      */
     public function recapExcel(Request $request, Kelas $kelas)
     {
@@ -198,144 +200,120 @@ class NilaiController extends Controller
         $semester = (int) ($request->semester ?: 1);
         $d = $this->dataRecap($kelas, $semester, $request->tahun_ajaran);
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Rekap Nilai');
+        $colCount = $d['mapels']->count() + 4; // No + Nama + mapel + rata + predikat
 
-        $navy   = '0F172A';
-        $blue   = '2563EB';
-        $light  = 'F1F5F9';
-        $border = 'CBD5E1';
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<?mso-application progid="Excel.Sheet"?>'."\n";
+        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:html="http://www.w3.org/TR/REC-html40">';
 
-        // ---- Baris judul ----
-        $sheet->setCellValue('A1', 'REKAPITULASI NILAI SISWA');
-        $sheet->mergeCells('A1:'.($this->colLetter(3 + $d['mapels']->count())).'1');
-        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16)->getColor()->setARGB('FFFFFF');
-        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($navy);
-        $sheet->getRowDimension(1)->setRowHeight(30);
+        // Styles
+        $xml .= '<Styles>';
+        $xml .= '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style>';
+        $xml .= '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/><Interior ss:Color="#0F172A" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="subtitle"><Font ss:Color="#475569" ss:Size="11"/><Interior ss:Color="#F1F5F9" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="header"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/><Interior ss:Color="#2563EB" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="bordered"><Borders>'
+            .'<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'</Borders></Style>';
+        $xml .= '<Style ss:ID="cell"><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="alt"><Interior ss:Color="#F8FAFC" ss:Pattern="Solid"/></Style>';
+        $xml .= '<Style ss:ID="left"><Alignment ss:Horizontal="Left"/></Style>';
+        $xml .= '<Style ss:ID="footer"><Font ss:Italic="1" ss:Color="#64748B"/></Style>';
+        $xml .= '<Style ss:ID="sig"><Font ss:Bold="1"/><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '</Styles>';
 
-        $sheet->setCellValue('A2', $kelas->nama.' | Semester '.$semester.' | Tahun Ajaran '.$d['tahunAjaran']);
-        $sheet->mergeCells('A2:'.($this->colLetter(3 + $d['mapels']->count())).'2');
-        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A2')->getFont()->setSize(11)->getColor()->setARGB('475569');
-        $sheet->getStyle('A2')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($light);
-        $sheet->getRowDimension(2)->setRowHeight(20);
-
-        // ---- Header kolom ----
-        $headerRow = 4;
-        $sheet->setCellValue('A'.$headerRow, 'No');
-        $sheet->setCellValue('B'.$headerRow, 'Nama Siswa');
-        $col = 3;
-        foreach ($d['mapels'] as $mp) {
-            $sheet->setCellValue($this->colLetter($col).$headerRow, $mp->nama);
-            $col++;
+        // Worksheet
+        $mergeTitle = ($colCount - 1);
+        $xml .= '<Worksheet ss:Name="Rekap Nilai"><Table>';
+        $xml .= '<Column ss:Width="50"/>';
+        $xml .= '<Column ss:Width="220"/>';
+        foreach (range(1, $d['mapels']->count() + 2) as $i) {
+            $xml .= '<Column ss:Width="95"/>';
         }
-        $sheet->setCellValue($this->colLetter($col).$headerRow, 'Rata-rata');
-        $sheet->setCellValue($this->colLetter($col + 1).$headerRow, 'Predikat');
 
-        $lastCol = $this->colLetter(3 + $d['mapels']->count() + 1); // +2 untuk rata & predikat
-        $sheet->getStyle('A'.$headerRow.':'.$lastCol.$headerRow)->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
-        $sheet->getStyle('A'.$headerRow.':'.$lastCol.$headerRow)->getAlignment()
-            ->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle('A'.$headerRow.':'.$lastCol.$headerRow)->getFill()
-            ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($blue);
-        $sheet->getRowDimension($headerRow)->setRowHeight(22);
+        // Judul
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="'.$mergeTitle.'"><Data ss:Type="String">REKAPITULASI NILAI SISWA</Data></Cell></Row>';
+        $xml .= '<Row ss:Height="20"><Cell ss:StyleID="subtitle" ss:MergeAcross="'.$mergeTitle.'"><Data ss:Type="String">'.$this->esc($d['kelas']->nama).' | Semester '.$semester.' | Tahun Ajaran '.$this->esc($d['tahunAjaran']).'</Data></Cell></Row>';
 
-        // ---- Data ----
-        $row = $headerRow + 1;
+        // Header
+        $mergeMapel = ($d['mapels']->count() - 1);
+        $xml .= '<Row ss:Height="22">';
+        $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">No</Data></Cell>';
+        $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">Nama Siswa</Data></Cell>';
+        if ($d['mapels']->count() > 0) {
+            $xml .= '<Cell ss:StyleID="header" ss:MergeAcross="'.$mergeMapel.'"><Data ss:Type="String">Mata Pelajaran</Data></Cell>';
+        }
+        $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">Rata-rata</Data></Cell>';
+        $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">Predikat</Data></Cell>';
+        $xml .= '</Row>';
+
+        // Baris nama mapel (kedua dari header hanya jika perlu dipisah). Simpan satu baris per siswa:
         foreach ($d['students'] as $i => $s) {
-            $sheet->setCellValue('A'.$row, $i + 1);
-            $sheet->setCellValue('B'.$row, $s->name);
-
             $total = 0;
             $count = 0;
-            $col = 3;
+            $rowStyle = (($i % 2) === 1) ? 'alt' : 'default';
+            $xml .= '<Row>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.($i + 1).'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered left '.$rowStyle.'"><Data ss:Type="String">'.$this->esc($s->name).'</Data></Cell>';
+
             foreach ($d['mapels'] as $mp) {
                 $n = $d['nilais'][$s->id][$mp->id] ?? null;
                 $val = $this->hitungAkhir($n);
-                $sheet->setCellValue($this->colLetter($col).$row, $val === null ? '-' : $val);
-                if ($val !== null) {
+                if ($val === null) {
+                    $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+                } else {
                     $total += $val;
                     $count++;
+                    $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.$val.'</Data></Cell>';
                 }
-                $col++;
             }
 
             $avg = $count > 0 ? round($total / $count, 2) : null;
-            $sheet->setCellValue($this->colLetter($col).$row, $avg === null ? '-' : $avg);
-            $sheet->setCellValue($this->colLetter($col + 1).$row, $avg === null ? '-' : $this->predikat($avg));
-
-            if ($i % 2 === 1) {
-                $sheet->getStyle('A'.$row.':'.$lastCol.$row)->getFill()
-                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('F8FAFC');
+            if ($avg === null) {
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+            } else {
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.$avg.'</Data></Cell>';
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">'.$this->predikat($avg).'</Data></Cell>';
             }
-            $row++;
+            $xml .= '</Row>';
         }
 
-        $lastDataRow = $row - 1;
+        // Footer
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="footer" ss:MergeAcross="'.$mergeTitle.'"><Data ss:Type="String">Dicetak pada '.$this->esc($d['today']).'</Data></Cell></Row>';
+        $xml .= '<Row ss:Height="40"></Row>';
+        $xml .= '<Row><Cell ss:MergeAcross="2"></Cell><Cell ss:StyleID="sig" ss:MergeAcross="1"><Data ss:Type="String">Wali Kelas,</Data></Cell></Row>';
+        $xml .= '<Row ss:Height="40"><Cell ss:MergeAcross="2"></Cell><Cell ss:StyleID="sig" ss:MergeAcross="1"><Data ss:Type="String">'.$this->esc($d['kelas']->pembina->name ?? '..........................').'</Data></Cell></Row>';
 
-        // ---- Footer ----
-        $row += 1;
-        $sheet->setCellValue('B'.$row, 'Dicetak pada '.$d['today']);
-        $sheet->getStyle('B'.$row)->getFont()->setItalic(true)->getColor()->setARGB('64748B');
-        $row += 4;
-        $sheet->setCellValue('D'.$row, 'Wali Kelas,');
-        $sheet->mergeCells('D'.$row.':E'.$row);
-        $row += 5;
-        $sheet->setCellValue('D'.$row, $kelas->pembina->name ?? '..........................');
-        $sheet->mergeCells('D'.$row.':E'.$row);
-        $sheet->getStyle('D'.$row)->getFont()->setBold(true);
-        $sheet->getStyle('D'.$row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $xml .= '</Table>';
 
-        // ---- Styling keseluruhan ----
-        $styleArray = [
-            'borders' => [
-                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => $border]],
-            ],
-        ];
-        if ($lastDataRow >= $headerRow) {
-            $sheet->getStyle('A'.$headerRow.':'.$lastCol.$lastDataRow)->applyFromArray($styleArray);
-        }
-        $sheet->getStyle('B'.$headerRow.':B'.$lastDataRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-        $sheet->getStyle('A'.$headerRow.':A'.$lastDataRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        // Freeze panes (baris header)
+        $xml .= '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">'
+            .'<FreezePanes/><FrozenNoSplit/>'
+            .'<SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>0</TopRowBottomPane>'
+            .'<SplitVertical>2</SplitVertical><RightColumnLeftPane>2</RightColumnLeftPane>'
+            .'<ActivePane>0</ActivePane>'
+            .'</WorksheetOptions>';
 
-        // Lebar kolom
-        $sheet->getColumnDimension('A')->setWidth(5);
-        $sheet->getColumnDimension('B')->setWidth(30);
-        foreach (range(3, 3 + $d['mapels']->count() + 1) as $cc) {
-            $sheet->getColumnDimension($this->colLetter($cc))->setWidth(12);
-        }
+        $xml .= '</Worksheet></Workbook>';
 
-        $sheet->freezePane('C5');
+        $filename = 'rekap-nilai-'.$kelas->nama.'-smt-'.$semester.'-'.str_replace('/', '_', $d['tahunAjaran']).'.xls';
 
-        $writer = new Xlsx($spreadsheet);
-        $filename = 'rekap-nilai-'.$kelas->nama.'-smt-'.$semester.'-'.str_replace('/', '_', $d['tahunAjaran']).'.xlsx';
-
-        return $this->streamXlsx($writer, $filename);
-    }
-
-    protected function colLetter(int $n): string
-    {
-        $letter = '';
-        while ($n > 0) {
-            $mod = ($n - 1) % 26;
-            $letter = chr(65 + $mod).$letter;
-            $n = intdiv($n - 1, 26);
-        }
-        return $letter;
-    }
-
-    protected function streamXlsx(Xlsx $writer, string $filename)
-    {
-        $temp = tempnam(sys_get_temp_dir(), 'rekap');
-        $writer->save($temp);
-
-        return response()->streamDownload(function () use ($temp) {
-            readfile($temp);
-            @unlink($temp);
-        }, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        return response($xml, 200, [
+            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
+    }
+
+    protected function esc(string $value): string
+    {
+        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     }
 }

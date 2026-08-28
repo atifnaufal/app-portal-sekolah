@@ -100,10 +100,55 @@
         </div>
     </div>
 
+    
+    <div class="am-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:800;">
+                <i class="bi bi-graph-up-arrow" style="color:#2563eb;"></i> Akademik &amp; Kehadiran
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:10px;">
+            <div style="background:#ecfeff;border-radius:14px;padding:14px;">
+                <div style="display:flex;align-items:baseline;gap:3px;">
+                    <span style="font-size:24px;font-weight:800;color:#0e9aa7;"><?php echo e($rataNilai); ?></span>
+                    <span style="font-size:10px;color:#64748b;font-weight:700;">/100</span>
+                </div>
+                <div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Rata-rata Nilai</div>
+            </div>
+            <div style="background:#f5f3ff;border-radius:14px;padding:14px;text-align:center;">
+                <div style="font-size:24px;font-weight:800;color:#7c3aed;"><?php echo e($totalNilai); ?></div>
+                <div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Nilai Tersimpan</div>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+            <div style="background:#f0fdf4;border-radius:14px;padding:12px;text-align:center;">
+                <div style="font-size:20px;font-weight:800;color:#16a34a;"><?php echo e($hadirHariIni); ?></div>
+                <div style="font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;">Hadir<br>Hari Ini</div>
+            </div>
+            <div style="background:#fffbeb;border-radius:14px;padding:12px;text-align:center;">
+                <div style="font-size:20px;font-weight:800;color:#d97706;"><?php echo e($terlambatHari); ?></div>
+                <div style="font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;">Terlambat<br>Hari Ini</div>
+            </div>
+            <div style="background:#fff5f6;border-radius:14px;padding:12px;text-align:center;">
+                <div style="font-size:20px;font-weight:800;color:#d94b61;"><?php echo e($totalPengumpulan); ?></div>
+                <div style="font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;">Pengumpulan<br>Tugas</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+            <div style="flex:1;background:#f8fafc;border-radius:14px;padding:12px;text-align:center;">
+                <div style="font-size:20px;font-weight:800;color:#2563eb;"><?php echo e($tugasBelumDinilai); ?></div>
+                <div style="font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;">Perlu Dinilai</div>
+            </div>
+            <div style="flex:1;background:#f8fafc;border-radius:14px;padding:12px;text-align:center;">
+                <div style="font-size:20px;font-weight:800;color:#dc2626;"><?php echo e($sppKurang); ?></div>
+                <div style="font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;">Tunggakan SPP</div>
+            </div>
+        </div>
+    </div>
+
     <div style="font-size:13px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">
         Aksi Cepat
     </div>
-
     <a href="<?php echo e(route('pengumuman.create')); ?>" class="am-action">
         <div class="am-action-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb;">
             <i class="bi bi-megaphone-fill"></i>

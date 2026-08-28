@@ -9,6 +9,9 @@ use App\Models\Setting;
 use App\Models\MataPelajaran;
 use App\Models\Tugas;
 use App\Models\Materi;
+use App\Models\Nilai;
+use App\Models\Absensi;
+use App\Models\PengumpulanTugas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -34,6 +37,53 @@ class AdminController extends Controller
         $totalMateri = Materi::count();
         $tugasBelumDinilai = \App\Models\PengumpulanTugas::whereNull('nilai')->where('revisi_aktif', false)->count();
 
+        // ===== Analytics tambahan =====
+        $totalNilai = Nilai::count();
+        $rataNilai = round((float) Nilai::selectRaw('(COALESCE(tugas,0)+COALESCE(uts,0)+COALESCE(uas,0))/3 as r')->get()->avg('r'), 2);
+
+        $totalAbsensi   = Absensi::count();
+        $absensiHariIni = Absensi::whereDate('tanggal', today())->count();
+        $hadirHariIni   = Absensi::whereDate('tanggal', today())->where('status', 'hadir')->count();
+        $terlambatHari  = Absensi::whereDate('tanggal', today())->where('status', 'terlambat')->count();
+        $izinHariIni    = Absensi::whereDate('tanggal', today())->where('status', 'izin')->count();
+
+        $totalPengumpulan = PengumpulanTugas::count();
+        $totalTugasForm   = Tugas::where('tipe', 'form')->count();
+        $totalPengumpulanDinilai = PengumpulanTugas::whereNotNull('nilai')->count();
+
+        // Distribusi nilai (rata-rata per siswa) untuk grafik predikat.
+        $gradeDist = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0];
+        Nilai::selectRaw('siswa_id, AVG((COALESCE(tugas,0)+COALESCE(uts,0)+COALESCE(uas,0))/3) as r')
+            ->groupBy('siswa_id')
+            ->get()
+            ->each(function ($n) use (&$gradeDist) {
+                $avg  = (float) $n->r;
+                $key  = match (true) {
+                    $avg >= 90 => 'A', $avg >= 80 => 'B', $avg >= 70 => 'C',
+                    $avg >= 60 => 'D', default    => 'E',
+                };
+                $gradeDist[$key]++;
+            });
+
+        // Distribusi status absensi (keseluruhan).
+        $distAbsensi = [
+            'hadir'     => Absensi::where('status', 'hadir')->count(),
+            'terlambat' => Absensi::where('status', 'terlambat')->count(),
+            'izin'      => Absensi::where('status', 'izin')->count(),
+            'sakit'     => Absensi::where('status', 'sakit')->count(),
+            'alpha'     => Absensi::where('status', 'alpha')->count(),
+        ];
+
+        // Tren pendaftaran 6 bulan terakhir (DB-agnostic, diproses di PHP).
+        $regTrend = User::whereIn('role', ['guru', 'siswa'])
+            ->get(['created_at'])
+            ->groupBy(fn ($u) => optional($u->created_at)->format('Y-m'))
+            ->map->count()
+            ->sortKeys()
+            ->take(-6);
+        $regLabels = $regTrend->keys()->map(fn ($k) => \Illuminate\Support\Carbon::createFromFormat('Y-m', $k)->translatedFormat('M y'))->values();
+        $regCounts = $regTrend->values();
+
         $data = [
             'totalGuru' => User::where('role', 'guru')->count(),
             'totalSiswa' => User::where('role', 'siswa')->count(),
@@ -51,6 +101,24 @@ class AdminController extends Controller
             'totalTugas' => $totalTugas,
             'totalMateri' => $totalMateri,
             'tugasBelumDinilai' => $tugasBelumDinilai,
+            // Analytics nilai
+            'totalNilai' => $totalNilai,
+            'rataNilai' => $rataNilai,
+            'gradeDist' => $gradeDist,
+            // Analytics absensi
+            'totalAbsensi' => $totalAbsensi,
+            'absensiHariIni' => $absensiHariIni,
+            'hadirHariIni' => $hadirHariIni,
+            'terlambatHari' => $terlambatHari,
+            'izinHariIni' => $izinHariIni,
+            'distAbsensi' => $distAbsensi,
+            // Analytics pengumpulan tugas
+            'totalPengumpulan' => $totalPengumpulan,
+            'totalTugasForm' => $totalTugasForm,
+            'totalPengumpulanDinilai' => $totalPengumpulanDinilai,
+            // Tren pendaftaran
+            'regLabels' => $regLabels,
+            'regCounts' => $regCounts,
         ];
 
         // View hanya membaca agregat guru_count / siswa_count, jadi tidak perlu
@@ -64,6 +132,11 @@ class AdminController extends Controller
             ->get();
 
         $data['recentUsers'] = User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get();
+
+        // Data grafik distribusi siswa per kelas.
+        $data['kelasNames'] = collect($data['kelasSummaries'])->pluck('nama');
+        $data['kelasSiswa'] = collect($data['kelasSummaries'])->pluck('siswa_count');
+        $data['kelasGuru']  = collect($data['kelasSummaries'])->pluck('guru_count');
 
         return view($isMobile ? 'mobile.admin-dashboard' : 'admin.dashboard', $data);
     }
