@@ -137,8 +137,11 @@
         {{-- ===== GURU: Monitoring & Review ===== --}}
         <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 10px;">
             <div style="font-size:14px;font-weight:800;">Pengumpulan Siswa</div>
-            <a href="{{ route('tugas.export', $tugas) }}" style="font-size:11px;font-weight:700;color:#16a34a;text-decoration:none;"><i class="bi bi-download"></i> Export</a>
+            <div style="display:flex;gap:8px;">
+            <a href="{{ route('tugas.export.pdf', $tugas) }}" style="font-size:11px;font-weight:700;color:#dc2626;text-decoration:none;background:#fef2f2;padding:5px 10px;border-radius:8px;"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+            <a href="{{ route('tugas.export.excel', $tugas) }}" style="font-size:11px;font-weight:700;color:#16a34a;text-decoration:none;background:#f0fdf4;padding:5px 10px;border-radius:8px;"><i class="bi bi-file-earmark-excel"></i> Excel</a>
         </div>
+            </div>
 
         {{-- Progress --}}
         @if($totalSiswa > 0)
