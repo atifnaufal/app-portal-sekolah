@@ -128,17 +128,49 @@
     .p-empty h4 { color:var(--p-ink); font-weight:800; margin:14px 0 4px; font-size:16px; }
     .p-empty p { font-size:13px; margin:0; }
 
-    .p-fab { position:fixed; right:20px; z-index:1000; width:56px; height:56px; border-radius:18px;
-        display:flex; align-items:center; justify-content:center; color:#fff; text-decoration:none;
-        background:linear-gradient(135deg,#4f46e5,#2563eb); box-shadow:0 10px 24px rgba(79,70,229,.4);
-        transition:transform .2s; }
-    .p-fab:active { transform:scale(.92); }
-    .p-fab i { font-size:24px; }
-    @media (min-width:640px){ .p-fab{ bottom:40px; right:40px; } }
+    .p-topbar .back { position: relative; z-index: 5; }
+    /* Tombol tambah premium di pojok kanan-atas */
+    .p-add {
+        position: relative; z-index: 5;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        min-width: 42px; height: 42px; padding: 0 14px;
+        border-radius: 14px; text-decoration: none; color: #fff;
+        background: linear-gradient(135deg, #4f46e5 0%, #6366f1 55%, #2563eb 100%);
+        box-shadow: 0 8px 20px rgba(79, 70, 229, .35), inset 0 1px 0 rgba(255,255,255,.25);
+        font-weight: 800; font-size: 13.5px; letter-spacing: -.01em;
+        border: 1px solid rgba(255,255,255,.18);
+        transition: transform .18s, box-shadow .18s, filter .18s;
+        overflow: hidden;
+    }
+    .p-add::after { /* highlight meluncur kiri-atas, kesan premium */
+        content: ''; position: absolute; top: -40%; left: -30%; width: 60%;
+        height: 180%; transform: rotate(25deg);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+        transition: transform .5s ease; opacity: 0;
+    }
+    .p-add:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(79,70,229,.45); filter: brightness(1.05); }
+    .p-add:active { transform: scale(.96); }
+    .p-add:hover::after { opacity: 1; transform: rotate(25deg) translateX(160%); }
+    .p-add .btn-ico {
+        font-size: 19px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.2));
+    }
+    .p-add .btn-txt { white-space: nowrap; }
+    @media (max-width: 399px) {
+        .p-add { min-width: 40px; height: 40px; padding: 0 12px; }
+        .p-add .btn-txt { display: none; }   /* ikon saja di layar sangat kecil */
+    }
+    @media (min-width: 640px) {
+        .p-add { min-width: 46px; height: 46px; padding: 0 18px; border-radius: 15px; }
+    }
 </style>
 
 <div class="p-topbar">
     <a href="{{ route('dashboard') }}" class="back"><i class="bi bi-arrow-left"></i> Beranda</a>
+    @if(isset($canCreate) && $canCreate)
+        <a href="{{ route('pengumuman.create') }}" class="p-add" title="Buat pengumuman">
+            <i class="bi bi-plus-lg btn-ico"></i><span class="btn-txt">Buat</span>
+        </a>
+    @endif
 </div>
 
 <header class="p-hero">
@@ -238,10 +270,6 @@
         </div>
     @endforelse
 </main>
-
-@if(isset($canCreate) && $canCreate)
-    <a href="{{ route('pengumuman.create') }}" class="p-fab" title="Buat pengumuman" style="bottom:90px;"><i class="bi bi-plus-lg"></i></a>
-@endif
 
 <script>
 (function () {
