@@ -38,6 +38,11 @@
         background: #f1f5f9;
     }
 
+    .pdf-fallback {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        height: 100%; padding: 40px; text-align: center; color: #94a3b8;
+    }
+
     .immersive-header-txt { text-align: center; flex: 1; padding: 0 10px; }
     .book-name-small { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 1px; }
     .reader-badge-pro { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.15em; }
@@ -67,12 +72,28 @@
 </div>
 
 <div class="reader-canvas">
-    {{-- Using PDF viewer params to improve mobile experience --}}
-    <iframe
-        class="pdf-frame"
-        src="{{ asset('storage/'.$buku->file_pdf) }}#toolbar=0&navpanes=0&scrollbar=0&view=FitH"
-        allow="fullscreen"
-    ></iframe>
+    @if($buku->file_pdf)
+        {{-- Google Docs Viewer is very robust for mobile web apps --}}
+        <iframe
+            class="pdf-frame"
+            src="https://docs.google.com/viewer?url={{ urlencode($pdfUrl) }}&embedded=true"
+            allow="fullscreen"
+        ></iframe>
+
+        {{-- Floating Download Button as Fallback --}}
+        <div style="position: fixed; bottom: 80px; right: 20px; z-index: 1002;">
+            <a href="{{ $pdfUrl }}" download class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                <i class="bi bi-download"></i>
+            </a>
+        </div>
+    @else
+        <div class="pdf-fallback">
+            <i class="bi bi-file-earmark-x mb-3" style="font-size: 48px;"></i>
+            <div class="fw-bold text-white mb-2">File PDF Tidak Ditemukan</div>
+            <p class="small">Konten digital untuk buku ini belum tersedia atau sedang dalam proses upload.</p>
+            <a href="{{ route('perpustakaan.show', $buku->slug) }}" class="btn btn-primary rounded-pill px-4 mt-3">Kembali</a>
+        </div>
+    @endif
 </div>
 
 <div class="reader-hint">

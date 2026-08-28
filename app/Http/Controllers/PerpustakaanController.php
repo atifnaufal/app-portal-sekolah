@@ -73,9 +73,16 @@ class PerpustakaanController extends Controller
             'tanggal_pinjam' => now()
         ]);
 
+        // Fix for Railway: If using dummy.pdf and it's missing, use a real public PDF for testing
+        $pdfUrl = asset('storage/'.$buku->file_pdf);
+        if ($buku->file_pdf === 'perpustakaan/dummy.pdf' && !file_exists(public_path('storage/perpustakaan/dummy.pdf'))) {
+            $pdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+        }
+
         return view('mobile.perpustakaan.read', [
             'user' => $user,
             'buku' => $buku,
+            'pdfUrl' => $pdfUrl,
             'title' => 'Membaca: ' . $buku->judul
         ]);
     }
