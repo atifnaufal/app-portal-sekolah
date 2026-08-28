@@ -2,7 +2,7 @@
 set -e
 
 # Pastikan direktori penyimpanan runtime tersedia (fresh clone di Railway).
-mkdir -p storage/framework/{cache,sessions,views,testing} storage/logs bootstrap/cache
+mkdir -p storage/framework/{cache,sessions,views,testing} storage/logs storage/fonts storage/app/public bootstrap/cache
 
 echo "Linking public storage (storage:link)..."
 # Hapus dulu bila sudah ada (bisa symlink lama / file), lalu buat symlink baru.

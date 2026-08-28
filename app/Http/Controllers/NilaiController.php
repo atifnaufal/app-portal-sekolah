@@ -46,7 +46,10 @@ class NilaiController extends Controller
         $user = User::with('kelas')->findOrFail($userId);
         $isGuru = $user->role === 'guru';
 
-        $managedClass = Kelas::where('pembina_id', $user->id)->first();
+        // Kelas yang dikelola guru untuk akses rekap: wali kelas (pembina),
+        // atau kelas "rumah" tempat guru ditugaskan (home guru).
+        $managedClass = Kelas::where('pembina_id', $user->id)->first()
+            ?? ($user->kelas_id ? Kelas::find($user->kelas_id) : null);
 
         if ($isGuru) {
             $mataPelajarans = MataPelajaran::where('guru_id', $user->id)
