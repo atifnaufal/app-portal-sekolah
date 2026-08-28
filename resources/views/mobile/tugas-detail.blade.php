@@ -23,11 +23,12 @@
         border-bottom: 1px solid #e2e8f0;
         padding: 10px 16px; display: flex; align-items: center; gap: 10px;
     }
-    .td-body { padding: 62px 14px 40px; max-width: 640px; margin: 0 auto; }
+    .td-body { padding: 62px 14px 100px; max-width: 640px; margin: 0 auto; }
 
     .td-card {
-        background: #fff; border-radius: 18px; padding: 16px;
-        margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        background: #fff; border-radius: 20px; padding: 18px;
+        margin-bottom: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid rgba(15, 23, 42, 0.05);
     }
 
     .td-badge {
@@ -92,42 +93,29 @@
 
 <div class="td-body">
     {{-- Info Card --}}
-    <div class="td-card fade-up" style="background:linear-gradient(135deg,#1e293b,#246bfe);color:#fff;">
-        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-            <span style="background:rgba(255,255,255,0.15);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;">
-                <i class="bi {{ $tugas->isForm() ? 'bi-ui-checks-grid' : 'bi-cloud-arrow-up' }}"></i>
-                {{ $tugas->isForm() ? 'FORMULIR' : 'FILE' }}
+    <div class="td-card fade-up" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 24px 20px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <span style="background:rgba(255,255,255,0.08); padding:4px 10px; border-radius:8px; font-size:9px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase;">
+                <i class="bi {{ $tugas->isForm() ? 'bi-ui-checks-grid' : 'bi-file-earmark-text' }} me-1"></i>
+                {{ $tugas->isForm() ? 'Formulir' : 'File' }}
             </span>
-            <span style="background:rgba(255,255,255,0.15);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;">
-                <i class="bi bi-people"></i> {{ $tugas->kelas->nama }}
-            </span>
-            <span style="background:rgba(255,255,255,0.15);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;">
-                <i class="bi bi-calendar"></i> {{ $tugas->batas_pengumpulan?->format('d M Y') ?? 'Terbuka' }}
+            <span style="background:rgba(255,255,255,0.08); padding:4px 10px; border-radius:8px; font-size:9px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase;">
+                <i class="bi bi-people me-1"></i> {{ $tugas->kelas->nama }}
             </span>
         </div>
-        <div style="font-size:18px;font-weight:800;line-height:1.3;margin-bottom:4px;">{{ $tugas->judul }}</div>
-        <div style="font-size:12px;opacity:0.7;">{{ $tugas->user->name }}</div>
+        <div style="font-size:20px; font-weight:800; line-height:1.2; margin-bottom:6px; letter-spacing:-0.02em;">{{ $tugas->judul }}</div>
+        <div style="font-size:12px; opacity:0.6; font-weight:500;">Oleh: {{ $tugas->user->name }}</div>
 
-        @if($isGuru)
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;">
-                <div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:8px 4px;text-align:center;">
-                    <div style="font-size:18px;font-weight:800;">{{ $totalSiswa }}</div>
-                    <div style="font-size:8px;opacity:0.6;text-transform:uppercase;">Siswa</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:8px 4px;text-align:center;">
-                    <div style="font-size:18px;font-weight:800;">{{ $totalSubmitted }}</div>
-                    <div style="font-size:8px;opacity:0.6;text-transform:uppercase;">Kumpul</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:8px 4px;text-align:center;">
-                    <div style="font-size:18px;font-weight:800;">{{ $totalGraded }}</div>
-                    <div style="font-size:8px;opacity:0.6;text-transform:uppercase;">Dinilai</div>
-                </div>
-                <div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:8px 4px;text-align:center;">
-                    <div style="font-size:18px;font-weight:800;">{{ $totalPending + $totalRevisi }}</div>
-                    <div style="font-size:8px;opacity:0.6;text-transform:uppercase;">Pending</div>
-                </div>
+        <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:9px; font-weight:800; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:2px;">Deadline</div>
+                <div style="font-size:13px; font-weight:700;">{{ $tugas->batas_pengumpulan?->format('d M Y, H:i') ?? 'Tidak ada batas' }}</div>
             </div>
-        @endif
+            <div class="text-end">
+                <div style="font-size:9px; font-weight:800; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:2px;">Status</div>
+                <div style="font-size:13px; font-weight:700; color:{{ $deadline['tone'] === 'danger' ? '#f87171' : '#4ade80' }}">{{ $deadline['label'] }}</div>
+            </div>
+        </div>
     </div>
 
     {{-- Deskripsi & Lampiran --}}

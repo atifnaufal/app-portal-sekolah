@@ -105,23 +105,25 @@
 </div>
 
 <div class="page-container">
-    <header class="mobile-hero" style="border-radius: 0 0 40px 40px; margin-bottom: 18px; background: linear-gradient(135deg, #1e293b, #246bfe);">
-        <div class="eyebrow" style="color: #94a3b8;">{{ $user->kelas?->nama ?? ($isGuru ? 'Panel Pengajar' : 'Akademik') }}</div>
-        <div class="hero-title mt-2 text-white" style="font-size: 26px;">{{ $isGuru ? 'Kelola Tugas Kelas' : 'Tugas Saya' }}</div>
-        <p class="mb-3 mt-1" style="font-size: 12px; color: rgba(255,255,255,.7);">
-            {{ $isGuru ? 'Pantau pengumpulan, nilai, edit, atau hapus tugas Anda.' : 'Kerjakan, kirim, dan lihat nilai tugas dari guru.' }}
+    <header class="mobile-hero" style="border-radius: 0 0 28px 28px; margin-bottom: 20px; background: linear-gradient(135deg, #0f172a, #1e293b); padding: 32px 24px 28px;">
+        <div class="eyebrow" style="color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">
+            {{ $user->kelas?->nama ?? ($isGuru ? 'Panel Pengajar' : 'Akademik') }}
+        </div>
+        <div class="hero-title mt-2 text-white" style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">{{ $isGuru ? 'Kelola Tugas Kelas' : 'Tugas Saya' }}</div>
+        <p class="mb-3 mt-1" style="font-size: 12px; color: rgba(255,255,255,.6); line-height: 1.5;">
+            {{ $isGuru ? 'Pantau pengumpulan, nilai, dan kelola instruksi tugas.' : 'Pantau deadline dan kirim jawaban tugas Anda tepat waktu.' }}
         </p>
-        <div class="stat-grid">
+        <div class="stat-grid" style="gap: 10px;">
             @if($isGuru)
-                <div class="stat-chip"><div class="num">{{ $statTotal }}</div><div class="lbl">Tugas</div></div>
-                <div class="stat-chip"><div class="num">{{ $statPending }}</div><div class="lbl">Nilai</div></div>
-                <div class="stat-chip"><div class="num">{{ $statRevisi }}</div><div class="lbl">Revisi</div></div>
-                <div class="stat-chip"><div class="num">{{ $statExpired }}</div><div class="lbl">Lewat</div></div>
+                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statTotal }}</div><div class="lbl">Total</div></div>
+                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statPending }}</div><div class="lbl">Nilai</div></div>
+                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statRevisi }}</div><div class="lbl">Revisi</div></div>
+                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statExpired }}</div><div class="lbl">Lewat</div></div>
             @else
-                <div class="stat-chip"><div class="num">{{ $statTotal }}</div><div class="lbl">Aktif</div></div>
-                <div class="stat-chip"><div class="num">{{ $statPending }}</div><div class="lbl">Menunggu</div></div>
-                <div class="stat-chip"><div class="num">{{ $statDone }}</div><div class="lbl">Selesai</div></div>
-                <div class="stat-chip"><div class="num">{{ $statExpired }}</div><div class="lbl">Lewat</div></div>
+                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statTotal }}</div><div class="lbl">Aktif</div></div>
+                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statPending }}</div><div class="lbl">Review</div></div>
+                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statDone }}</div><div class="lbl">Skor</div></div>
+                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statExpired }}</div><div class="lbl">Telat</div></div>
             @endif
         </div>
     </header>

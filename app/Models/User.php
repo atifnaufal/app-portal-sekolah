@@ -42,6 +42,21 @@ class User extends Authenticatable
         return $this->belongsToMany(ChatGroup::class, 'chat_group_members');
     }
 
+    public function mataPelajarans(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MataPelajaran::class, 'guru_id');
+    }
+
+    public function nilais(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Nilai::class, 'siswa_id');
+    }
+
+    public function jadwals(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Jadwal::class, 'guru_id');
+    }
+
     /**
      * Akun harus disetujui admin sebelum bisa dipakai.
      * Kolom `aktif` menggantikan verifikasi email sebagai gerbang akses.

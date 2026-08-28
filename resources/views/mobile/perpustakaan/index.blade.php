@@ -11,8 +11,8 @@
 
     .perpus-hero {
         background: linear-gradient(160deg, var(--lib-navy) 0%, #1e293b 100%);
-        padding: 40px 24px 50px;
-        border-radius: 0 0 32px 32px;
+        padding: 32px 24px 24px;
+        border-radius: 0 0 24px 24px;
         color: #fff;
         position: relative;
         overflow: hidden;
@@ -21,37 +21,37 @@
     .perpus-hero::before {
         content: ''; position: absolute; top: -20%; right: -10%;
         width: 250px; height: 250px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(36, 107, 254, 0.1) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(36, 107, 254, 0.08) 0%, transparent 70%);
     }
 
-    .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
 
     .lib-badge {
-        display: inline-block; padding: 4px 12px; border-radius: 100px;
+        display: inline-block; padding: 3px 10px; border-radius: 100px;
         background: var(--lib-glass); border: 1px solid var(--lib-border);
-        font-size: 10px; font-weight: 800; letter-spacing: 0.1em;
+        font-size: 9px; font-weight: 800; letter-spacing: 0.05em;
         text-transform: uppercase; margin-bottom: 4px;
     }
 
     .search-wrapper {
         position: relative; z-index: 2;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 16px;
-        padding: 2px 6px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        padding: 1px 4px;
         display: flex;
         align-items: center;
     }
     .search-input {
         background: transparent; border: none; color: #fff;
-        padding: 10px 10px; width: 100%; outline: none; font-size: 14px;
+        padding: 8px 10px; width: 100%; outline: none; font-size: 14px;
     }
-    .search-input::placeholder { color: rgba(255, 255, 255, 0.5); }
+    .search-input::placeholder { color: rgba(255, 255, 255, 0.4); }
 
     .category-scroll {
         display: flex; gap: 8px; overflow-x: auto;
-        padding: 20px 24px;
+        padding: 16px 24px;
         -webkit-overflow-scrolling: touch;
     }
     .category-scroll::-webkit-scrollbar { display: none; }

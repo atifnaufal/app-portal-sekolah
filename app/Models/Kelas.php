@@ -23,4 +23,19 @@ class Kelas extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function mataPelajarans(): HasMany
+    {
+        return $this->hasMany(MataPelajaran::class);
+    }
+
+    public function nilais(): HasMany
+    {
+        return $this->hasMany(Nilai::class);
+    }
+
+    public function jadwals(): HasMany
+    {
+        return $this->hasMany(Jadwal::class);
+    }
 }

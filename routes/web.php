@@ -19,6 +19,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SppController;
 use App\Http\Controllers\TugasController;
+use App\Http\Controllers\NilaiController;
+use App\Http\Controllers\JadwalController;
 
 Route::redirect('/', '/dashboard');
 
@@ -49,6 +51,10 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
     // Eskul
     Route::get('/eskul', [EskulController::class, 'index'])->name('eskul.index');
     Route::post('/eskul/{eskul}/join', [EskulController::class, 'join'])->name('eskul.join');
+
+    // Nilai & Jadwal
+    Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
+    Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
 });
 
 Route::middleware('role:guru,siswa')->group(function () {

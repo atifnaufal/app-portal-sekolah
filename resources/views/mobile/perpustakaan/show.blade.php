@@ -29,13 +29,13 @@
 
     .hero-backdrop {
         background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
-        padding: 80px 24px 40px; text-align: center;
+        padding: 70px 24px 20px; text-align: center;
     }
 
     .cover-premium {
-        width: 200px; max-width: 60%; aspect-ratio: 2/3;
-        margin: 0 auto; border-radius: 24px;
-        box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.25);
+        width: 170px; max-width: 60%; aspect-ratio: 2/3;
+        margin: 0 auto; border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.2);
         overflow: hidden; background: #e2e8f0;
         position: relative;
     }
