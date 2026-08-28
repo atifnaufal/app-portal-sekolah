@@ -357,8 +357,8 @@ document.getElementById('loginForm').addEventListener('submit', function() {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan...';
 });
 
-// Auto-show login if there are errors (validation failed)
-@if($errors->any())
+// Auto-show login if there are errors or specific session messages
+@if($errors->any() || session('error') || session('success'))
     showScreen('loginScreen');
 @endif
 
