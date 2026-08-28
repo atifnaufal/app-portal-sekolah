@@ -40,6 +40,10 @@ class TugasController extends Controller
                 ->latest()
                 ->get();
 
+            foreach ($tugas as $t) {
+                $this->autoRecordNonSubmitters($t);
+            }
+
             $siswaCounts = User::where('role', 'siswa')
                 ->whereIn('kelas_id', $tugas->pluck('kelas_id')->unique()->filter())
                 ->selectRaw('kelas_id, count(*) as total')
@@ -60,6 +64,10 @@ class TugasController extends Controller
             ->where('kelas_id', $user->kelas_id)
             ->latest()
             ->get();
+
+        foreach ($tugas as $t) {
+            $this->autoRecordNonSubmitters($t);
+        }
 
         $activeTugas = $tugas->filter(function ($item) {
             $sub = $item->pengumpulan->first();
@@ -570,6 +578,38 @@ class TugasController extends Controller
             if ($item->jawaban_file) {
                 Storage::disk('public')->delete($item->jawaban_file);
             }
+        }
+    }
+
+    /**
+     * When a homework passes its deadline, auto-record every student of the
+     * class who did not submit as "not submitted" with a null score. Idempotent:
+     * students who already have a submission (including an empty/0 record) are
+     * never overwritten.
+     */
+    private function autoRecordNonSubmitters(Tugas $tugas): void
+    {
+        if (! $tugas->isExpired() || ! $tugas->kelas_id) {
+            return;
+        }
+
+        $submittedIds = PengumpulanTugas::where('tugas_id', $tugas->id)->pluck('siswa_id');
+
+        $missing = User::where('role', 'siswa')
+            ->where('kelas_id', $tugas->kelas_id)
+            ->whereNotIn('id', $submittedIds)
+            ->pluck('id');
+
+        foreach ($missing as $siswaId) {
+            PengumpulanTugas::firstOrCreate(
+                ['tugas_id' => $tugas->id, 'siswa_id' => $siswaId],
+                [
+                    'status' => 'tidak_mengumpulkan',
+                    'nilai' => null,
+                    'revisi_aktif' => false,
+                    'dinilai_pada' => now(),
+                ]
+            );
         }
     }
 }

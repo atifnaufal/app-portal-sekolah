@@ -40,8 +40,15 @@ class ChatController extends Controller
             }
         }
 
-        // Get all groups user belongs to
+        // Ensure user is in their eskul chat groups (auto-join approved eskuls)
+        $this->syncEskulChatGroups($user, $userId);
+
+        // Get all groups user belongs to (after eskul sync so new groups appear)
         $groups = $user->chatGroups()->with('lastMessage')->get();
+
+        // Split groups into Class (school + class) and Eskul sections
+        $classGroups = $groups->filter(fn ($g) => in_array($g->type, ['school', 'class']));
+        $eskulGroups = $groups->filter(fn ($g) => $g->type === 'eskul');
 
         // Default to first group if no group selected
         $activeGroupId = $request->query('group_id') ?: ($groups->first()?->id);
@@ -54,9 +61,35 @@ class ChatController extends Controller
         return view('mobile.chat', [
             'user' => $user,
             'groups' => $groups,
+            'classGroups' => $classGroups,
+            'eskulGroups' => $eskulGroups,
             'activeGroup' => $activeGroup,
             'messages' => $messages
         ]);
+    }
+
+    /**
+     * Auto-attach the user to every approved eskul's chat group,
+     * creating the group first if it does not exist yet.
+     */
+    private function syncEskulChatGroups(User $user, int $userId): void
+    {
+        $user->load('eskuls');
+
+        foreach ($user->eskuls as $eskul) {
+            if ((string) $eskul->pivot->status !== 'approved') {
+                continue;
+            }
+
+            $group = ChatGroup::firstOrCreate(
+                ['type' => 'eskul', 'related_id' => $eskul->id],
+                ['name' => 'Group ' . $eskul->nama]
+            );
+
+            if (! $group->members()->where('user_id', $userId)->exists()) {
+                $group->members()->attach($userId);
+            }
+        }
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse

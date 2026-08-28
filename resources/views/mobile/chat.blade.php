@@ -31,6 +31,14 @@
     .group-avatar.class { background: linear-gradient(135deg, #10b981, #059669); }
     .group-avatar.eskul { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 
+    .inbox-section-label {
+        padding: 14px 20px 6px; font-size: 11px; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8;
+        display: flex; align-items: center; gap: 8px; background: #fff;
+    }
+    .inbox-section-label::after { content: ''; flex: 1; height: 1px; background: #f1f5f9; }
+    .inbox-section-label i { color: var(--blue); }
+
     .group-info { flex: 1; min-width: 0; }
     .group-name { font-weight: 800; font-size: 15px; color: #0f172a; margin-bottom: 2px; }
     .group-last-msg { font-size: 13px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -94,7 +102,8 @@
                 </div>
             </div>
 
-            @forelse($groups as $g)
+            <div class="inbox-section-label"><i class="bi bi-person-lines-fill"></i> Grup Kelas</div>
+            @forelse($classGroups as $g)
                 <a href="{{ route('chat.index', ['group_id' => $g->id]) }}" class="group-item">
                     <div class="group-avatar {{ $g->type }}">
                         @if($g->avatar)
@@ -121,9 +130,43 @@
                     </div>
                 </a>
             @empty
-                <div class="text-center py-5 opacity-25">
-                    <i class="bi bi-chat-dots-fill" style="font-size: 64px;"></i>
-                    <div class="fw-bold mt-2">Tidak ada chat</div>
+                <div class="text-center py-4 opacity-25">
+                    <i class="bi bi-people" style="font-size: 40px;"></i>
+                    <div class="fw-bold mt-1 small">Belum ada grup kelas</div>
+                </div>
+            @endforelse
+
+            <div class="inbox-section-label"><i class="bi bi-flag-fill"></i> Grup Eskul</div>
+            @forelse($eskulGroups as $g)
+                <a href="{{ route('chat.index', ['group_id' => $g->id]) }}" class="group-item">
+                    <div class="group-avatar eskul">
+                        @if($g->avatar)
+                            <img src="{{ asset('storage/'.$g->avatar) }}" class="rounded-4 w-100 h-100">
+                        @else
+                            {{ strtoupper(substr($g->name, 0, 1)) }}
+                        @endif
+                    </div>
+                    <div class="group-info">
+                        <div class="d-flex justify-content-between">
+                            <div class="group-name">{{ $g->name }}</div>
+                            <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">
+                                {{ $g->lastMessage ? $g->lastMessage->created_at->format('H:i') : '' }}
+                            </div>
+                        </div>
+                        <div class="group-last-msg">
+                            @if($g->lastMessage)
+                                <span class="fw-bold text-dark">{{ $g->lastMessage->user->id === $user->id ? 'Anda: ' : explode(' ', $g->lastMessage->user->name)[0] . ': ' }}</span>
+                                {{ $g->lastMessage->pesan }}
+                            @else
+                                <span class="fst-italic opacity-50">Belum ada pesan baru</span>
+                            @endif
+                        </div>
+                    </div>
+                </a>
+            @empty
+                <div class="text-center py-4 opacity-25">
+                    <i class="bi bi-flag" style="font-size: 40px;"></i>
+                    <div class="fw-bold mt-1 small">Belum ada grup eskul</div>
                 </div>
             @endforelse
         </div>

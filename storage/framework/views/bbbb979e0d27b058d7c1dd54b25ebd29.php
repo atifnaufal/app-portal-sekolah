@@ -31,6 +31,14 @@
     .group-avatar.class { background: linear-gradient(135deg, #10b981, #059669); }
     .group-avatar.eskul { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 
+    .inbox-section-label {
+        padding: 14px 20px 6px; font-size: 11px; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8;
+        display: flex; align-items: center; gap: 8px; background: #fff;
+    }
+    .inbox-section-label::after { content: ''; flex: 1; height: 1px; background: #f1f5f9; }
+    .inbox-section-label i { color: var(--blue); }
+
     .group-info { flex: 1; min-width: 0; }
     .group-name { font-weight: 800; font-size: 15px; color: #0f172a; margin-bottom: 2px; }
     .group-last-msg { font-size: 13px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -94,7 +102,8 @@
                 </div>
             </div>
 
-            <?php $__empty_1 = true; $__currentLoopData = $groups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $g): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+            <div class="inbox-section-label"><i class="bi bi-person-lines-fill"></i> Grup Kelas</div>
+            <?php $__empty_1 = true; $__currentLoopData = $classGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $g): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <a href="<?php echo e(route('chat.index', ['group_id' => $g->id])); ?>" class="group-item">
                     <div class="group-avatar <?php echo e($g->type); ?>">
                         <?php if($g->avatar): ?>
@@ -124,9 +133,46 @@
                     </div>
                 </a>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                <div class="text-center py-5 opacity-25">
-                    <i class="bi bi-chat-dots-fill" style="font-size: 64px;"></i>
-                    <div class="fw-bold mt-2">Tidak ada chat</div>
+                <div class="text-center py-4 opacity-25">
+                    <i class="bi bi-people" style="font-size: 40px;"></i>
+                    <div class="fw-bold mt-1 small">Belum ada grup kelas</div>
+                </div>
+            <?php endif; ?>
+
+            <div class="inbox-section-label"><i class="bi bi-flag-fill"></i> Grup Eskul</div>
+            <?php $__empty_1 = true; $__currentLoopData = $eskulGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $g): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <a href="<?php echo e(route('chat.index', ['group_id' => $g->id])); ?>" class="group-item">
+                    <div class="group-avatar eskul">
+                        <?php if($g->avatar): ?>
+                            <img src="<?php echo e(asset('storage/'.$g->avatar)); ?>" class="rounded-4 w-100 h-100">
+                        <?php else: ?>
+                            <?php echo e(strtoupper(substr($g->name, 0, 1))); ?>
+
+                        <?php endif; ?>
+                    </div>
+                    <div class="group-info">
+                        <div class="d-flex justify-content-between">
+                            <div class="group-name"><?php echo e($g->name); ?></div>
+                            <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">
+                                <?php echo e($g->lastMessage ? $g->lastMessage->created_at->format('H:i') : ''); ?>
+
+                            </div>
+                        </div>
+                        <div class="group-last-msg">
+                            <?php if($g->lastMessage): ?>
+                                <span class="fw-bold text-dark"><?php echo e($g->lastMessage->user->id === $user->id ? 'Anda: ' : explode(' ', $g->lastMessage->user->name)[0] . ': '); ?></span>
+                                <?php echo e($g->lastMessage->pesan); ?>
+
+                            <?php else: ?>
+                                <span class="fst-italic opacity-50">Belum ada pesan baru</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </a>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                <div class="text-center py-4 opacity-25">
+                    <i class="bi bi-flag" style="font-size: 40px;"></i>
+                    <div class="fw-bold mt-1 small">Belum ada grup eskul</div>
                 </div>
             <?php endif; ?>
         </div>

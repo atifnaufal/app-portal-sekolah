@@ -34,7 +34,7 @@ class User extends Authenticatable
 
     public function eskuls(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(Eskul::class, 'eskul_members')->withPivot('is_admin')->withTimestamps();
+        return $this->belongsToMany(Eskul::class, 'eskul_members')->withPivot(['is_admin', 'status'])->withTimestamps();
     }
 
     public function chatGroups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

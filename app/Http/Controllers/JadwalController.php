@@ -32,6 +32,9 @@ class JadwalController extends Controller
             ->get()
             ->groupBy('hari');
 
+        // Auto-expire: hide sessions whose schedule window has already passed.
+        $jadwals = $this->filterExpired($jadwals);
+
         // Statistik ringkas untuk guru / siswa
         $stat = [
             'total' => $jadwals->flatten()->count(),
@@ -111,5 +114,42 @@ class JadwalController extends Controller
         $jadwal->delete();
 
         return redirect()->route('admin.jadwal.index')->with('success', 'Jadwal berhasil dihapus.');
+    }
+
+    /**
+     * Premature schedule expiry: a day-of-week based schedule that is recurring
+     * weekly has no date column, so we hide past days of the current week and,
+     * for today, only keep sessions that have not finished yet. The schedule
+     * "disappears" as time passes and admin re-creates it for the next week.
+     */
+    private function filterExpired(\Illuminate\Support\Collection $jadwals): \Illuminate\Support\Collection
+    {
+        $order = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+
+        // Carbon dayOfWeek: 0=Sunday .. 6=Saturday. Map Mon(=1)->senin index 0, ..., Sat(=6)->5.
+        $todayIndex = now()->dayOfWeek - 1;   // Monday => 0, ... Saturday => 5, Sunday => -1
+        $nowTime = now()->format('H:i:s');
+
+        // If today is not a scheduled day (Sunday => -1), the whole week is over -> hide all
+        if ($todayIndex < 0) {
+            return collect();
+        }
+
+        return $jadwals->filter(function ($list, $hari) use ($order, $todayIndex, $nowTime) {
+            $dayIndex = array_search($hari, $order, true);
+
+            // Hide days that already passed earlier this week
+            if ($dayIndex < $todayIndex) {
+                return false;
+            }
+
+            // For today, hide sessions that have already ended
+            if ($dayIndex === $todayIndex) {
+                $list = $list->filter(fn ($j) => $j->jam_selesai >= $nowTime);
+                return $list->isNotEmpty();
+            }
+
+            return true;
+        });
     }
 }

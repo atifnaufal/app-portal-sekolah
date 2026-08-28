@@ -41,6 +41,12 @@ class EskulController extends Controller
             return back()->with('success', 'Berhasil membatalkan permintaan gabung/keluar dari eskul ' . $eskul->nama);
         }
 
+        // Enforce max 3 approved/pending eskul per student
+        $currentCount = EskulMember::where('user_id', $userId)->count();
+        if ($currentCount >= 3) {
+            return back()->with('error', 'Anda hanya dapat mengikuti maksimal 3 eskul. Silakan keluar dari salah satu eskul terlebih dahulu.');
+        }
+
         EskulMember::create([
             'user_id' => $userId,
             'eskul_id' => $eskul->id,
@@ -99,11 +105,12 @@ class EskulController extends Controller
             'eskul'
         );
 
-        // Add to chat group after approval
-        $group = ChatGroup::where('type', 'eskul')->where('related_id', $member->eskul_id)->first();
-        if ($group) {
-            $group->members()->syncWithoutDetaching([$member->user_id]);
-        }
+        // Add to chat group after approval (create group if it does not exist)
+        $group = ChatGroup::firstOrCreate(
+            ['type' => 'eskul', 'related_id' => $member->eskul_id],
+            ['name' => 'Group ' . $member->eskul->nama]
+        );
+        $group->members()->syncWithoutDetaching([$member->user_id]);
 
         return back()->with('success', 'Member berhasil disetujui.');
     }
@@ -117,6 +124,12 @@ class EskulController extends Controller
             ->exists();
 
         abort_unless($isEskulAdmin || session('user_role') === 'admin', 403);
+
+        // Remove from chat group
+        $group = ChatGroup::where('type', 'eskul')->where('related_id', $member->eskul_id)->first();
+        if ($group) {
+            $group->members()->detach($member->user_id);
+        }
 
         $member->delete();
         return back()->with('success', 'Permintaan member ditolak.');
