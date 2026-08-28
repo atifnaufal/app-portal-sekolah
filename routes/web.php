@@ -159,7 +159,8 @@ Route::middleware('role:guru')->group(function () {
     Route::get('/tugas/{tugas}/edit', [TugasController::class, 'edit'])->name('tugas.edit');
     Route::put('/tugas/{tugas}', [TugasController::class, 'update'])->name('tugas.update');
     Route::delete('/tugas/{tugas}', [TugasController::class, 'destroy'])->name('tugas.destroy');
-    Route::get('/tugas/{tugas}/export', [TugasController::class, 'exportGrades'])->name('tugas.export');
+    Route::get('/tugas/{tugas}/export/pdf', [TugasController::class, 'exportPdf'])->name('tugas.export.pdf');
+    Route::get('/tugas/{tugas}/export/excel', [TugasController::class, 'exportExcel'])->name('tugas.export.excel');
     Route::post('/pengumpulan/{pengumpulan}/review', [TugasController::class, 'review'])->name('tugas.review');
     Route::get('/tugas-notifikasi', [NotifikasiController::class, 'tugas'])->name('tugas.notifikasi');
     Route::post('/spp/{spp}/remind', [SppController::class, 'remind'])->name('spp.remind');
