@@ -63,7 +63,7 @@
                                 <img src="{{ asset('storage/'.$buku->cover) }}" class="rounded shadow-sm" style="width: 100px; aspect-ratio: 2/3; object-fit: cover;">
                             </div>
                         @endif
-                        <input type="file" name="cover" class="form-control" accept="image/*">
+                        <input type="file" name="cover" class="form-control" accept="image/jpeg,image/png,image/jpg,image/webp">
                         <div class="small text-secondary mt-1">Maks. 2MB. Kosongkan jika tidak ingin mengubah.</div>
                     </div>
 

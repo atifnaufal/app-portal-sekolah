@@ -7,6 +7,10 @@
     </div>
 </div>
 
+@if(session('success'))
+    <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4">{{ session('success') }}</div>
+@endif
+
 <div class="row">
     <div class="col-md-4">
         <div class="card shadow-sm border-0">
@@ -42,12 +46,36 @@
                                 <td class="ps-4"><strong>{{ $kat->nama }}</strong></td>
                                 <td><code>{{ $kat->slug }}</code></td>
                                 <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editModal{{ $kat->id }}">Edit</button>
                                     <form action="{{ route('admin.perpustakaan.kategori.destroy', $kat) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus kategori ini?')">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-sm btn-outline-danger">Hapus</button>
                                     </form>
                                 </td>
                             </tr>
+
+                            <!-- Edit Modal -->
+                            <div class="modal fade" id="editModal{{ $kat->id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <form action="{{ route('admin.perpustakaan.kategori.update', $kat) }}" method="POST" class="modal-content border-0 shadow">
+                                        @csrf @method('PUT')
+                                        <div class="modal-header border-0">
+                                            <h5 class="modal-title fw-bold">Edit Kategori</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Nama Kategori</label>
+                                                <input type="text" name="nama" class="form-control" value="{{ $kat->nama }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0">
+                                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-primary rounded-pill px-4">Simpan Perubahan</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                             @empty
                             <tr>
                                 <td colspan="3" class="text-center py-4 text-muted">Belum ada kategori.</td>

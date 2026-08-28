@@ -34,7 +34,7 @@ class AdminPerpustakaanController extends Controller
             'tahun_terbit' => 'nullable|integer',
             'deskripsi' => 'nullable',
             'stok' => 'required|integer|min:0',
-            'cover' => 'nullable|image|max:2048',
+            'cover' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'file_pdf' => 'required|mimes:pdf|max:20480',
         ]);
 
@@ -69,7 +69,7 @@ class AdminPerpustakaanController extends Controller
             'tahun_terbit' => 'nullable|integer',
             'deskripsi' => 'nullable',
             'stok' => 'required|integer|min:0',
-            'cover' => 'nullable|image|max:2048',
+            'cover' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'file_pdf' => 'nullable|mimes:pdf|max:20480',
         ]);
 
@@ -111,6 +111,16 @@ class AdminPerpustakaanController extends Controller
         $data['slug'] = Str::slug($data['nama']);
         KategoriBuku::create($data);
         return back()->with('success', 'Kategori berhasil ditambahkan.');
+    }
+
+    public function kategoriUpdate(Request $request, KategoriBuku $kategori): RedirectResponse
+    {
+        $data = $request->validate([
+            'nama' => 'required|max:255|unique:kategori_bukus,nama,' . $kategori->id,
+        ]);
+        $data['slug'] = Str::slug($data['nama']);
+        $kategori->update($data);
+        return back()->with('success', 'Kategori berhasil diperbarui.');
     }
 
     public function kategoriDestroy(KategoriBuku $kategori): RedirectResponse

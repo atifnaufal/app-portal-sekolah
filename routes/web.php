@@ -92,12 +92,14 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::delete('/admin/perpustakaan/{buku}', [AdminPerpustakaanController::class, 'destroy'])->name('admin.perpustakaan.destroy');
     Route::get('/admin/perpustakaan/kategori', [AdminPerpustakaanController::class, 'kategoriIndex'])->name('admin.perpustakaan.kategori.index');
     Route::post('/admin/perpustakaan/kategori', [AdminPerpustakaanController::class, 'kategoriStore'])->name('admin.perpustakaan.kategori.store');
+    Route::put('/admin/perpustakaan/kategori/{kategori}', [AdminPerpustakaanController::class, 'kategoriUpdate'])->name('admin.perpustakaan.kategori.update');
     Route::delete('/admin/perpustakaan/kategori/{kategori}', [AdminPerpustakaanController::class, 'kategoriDestroy'])->name('admin.perpustakaan.kategori.destroy');
 
     // Admin Eskul
     Route::get('/admin/eskul', [EskulController::class, 'adminIndex'])->name('admin.eskul.index');
-    // Admin IT only can store
     Route::post('/admin/eskul', [EskulController::class, 'store'])->name('admin.eskul.store');
+    Route::put('/admin/eskul/{eskul}', [EskulController::class, 'update'])->name('admin.eskul.update');
+    Route::delete('/admin/eskul/{eskul}', [EskulController::class, 'destroy'])->name('admin.eskul.destroy');
     Route::patch('/admin/eskul/{eskul}/toggle', [EskulController::class, 'toggle'])->name('admin.eskul.toggle');
     Route::post('/admin/eskul/{eskul}/set-admin', [EskulController::class, 'setAdmin'])->name('admin.eskul.set-admin');
 

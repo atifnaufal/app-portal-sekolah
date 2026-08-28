@@ -8,6 +8,7 @@ use App\Models\ChatGroup;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class EskulController extends Controller
 {
@@ -66,13 +67,14 @@ class EskulController extends Controller
     public function store(Request $request)
     {
         abort_unless(session('user_role') === 'admin', 403);
-        $data = $request->validate([
+        $request->validate([
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'pembina_id' => 'nullable|exists:users,id',
-            'logo' => 'nullable|image|max:1024'
+            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048'
         ]);
 
+        $data = $request->only(['nama', 'deskripsi', 'pembina_id']);
         $data['slug'] = Str::slug($data['nama']);
 
         if ($request->hasFile('logo')) {
@@ -99,6 +101,57 @@ class EskulController extends Controller
         }
 
         return back()->with('success', 'Eskul berhasil dibuat.');
+    }
+
+    public function update(Request $request, Eskul $eskul)
+    {
+        abort_unless(session('user_role') === 'admin', 403);
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'pembina_id' => 'nullable|exists:users,id',
+            'logo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048'
+        ]);
+
+        $data = $request->only(['nama', 'deskripsi', 'pembina_id']);
+        $data['slug'] = Str::slug($data['nama']);
+
+        if ($request->hasFile('logo')) {
+            if ($eskul->logo) {
+                Storage::disk('public')->delete($eskul->logo);
+            }
+            $data['logo'] = $request->file('logo')->store('eskul', 'public');
+        }
+
+        $eskul->update($data);
+
+        // Update Chat Group Name
+        $group = ChatGroup::where('type', 'eskul')->where('related_id', $eskul->id)->first();
+        if ($group) {
+            $group->name = 'Group ' . $eskul->nama;
+            $group->save();
+        }
+
+        return back()->with('success', 'Eskul berhasil diperbarui.');
+    }
+
+    public function destroy(Eskul $eskul)
+    {
+        abort_unless(session('user_role') === 'admin', 403);
+
+        if ($eskul->logo) {
+            Storage::disk('public')->delete($eskul->logo);
+        }
+
+        // Remove chat group and its members
+        $group = ChatGroup::where('type', 'eskul')->where('related_id', $eskul->id)->first();
+        if ($group) {
+            $group->members()->detach();
+            $group->delete();
+        }
+
+        $eskul->delete();
+        return back()->with('success', 'Eskul berhasil dihapus.');
     }
 
     public function toggle(Eskul $eskul)

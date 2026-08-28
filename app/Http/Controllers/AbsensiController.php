@@ -72,7 +72,7 @@ class AbsensiController extends Controller
 
         try {
             $request->validate([
-                'foto' => 'required|image|max:2048',
+                'foto' => 'required|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
                 'lat' => 'nullable|numeric',
                 'long' => 'nullable|numeric',
                 'tipe' => 'required|in:masuk,pulang'
