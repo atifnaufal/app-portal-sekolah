@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\PerpustakaanController;
+use App\Http\Controllers\AdminPerpustakaanController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\AuthController;
@@ -39,6 +41,9 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
     Route::get('/spp', [SppController::class, 'index'])->name('spp.index');
+    Route::get('/perpustakaan', [PerpustakaanController::class, 'index'])->name('perpustakaan.index');
+    Route::get('/perpustakaan/{buku:slug}', [PerpustakaanController::class, 'show'])->name('perpustakaan.show');
+    Route::get('/perpustakaan/{buku:slug}/read', [PerpustakaanController::class, 'read'])->name('perpustakaan.read');
 });
 
 Route::middleware('role:guru,siswa')->group(function () {
@@ -73,6 +78,17 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::patch('/admin/registration/toggle', [AdminController::class, 'toggleRegistration'])->name('admin.registration.toggle');
     Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::post('/admin/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
+
+    Route::get('/admin/perpustakaan', [AdminPerpustakaanController::class, 'index'])->name('admin.perpustakaan.index');
+    Route::get('/admin/perpustakaan/create', [AdminPerpustakaanController::class, 'create'])->name('admin.perpustakaan.create');
+    Route::post('/admin/perpustakaan', [AdminPerpustakaanController::class, 'store'])->name('admin.perpustakaan.store');
+    Route::get('/admin/perpustakaan/{buku}/edit', [AdminPerpustakaanController::class, 'edit'])->name('admin.perpustakaan.edit');
+    Route::put('/admin/perpustakaan/{buku}', [AdminPerpustakaanController::class, 'update'])->name('admin.perpustakaan.update');
+    Route::delete('/admin/perpustakaan/{buku}', [AdminPerpustakaanController::class, 'destroy'])->name('admin.perpustakaan.destroy');
+    Route::get('/admin/perpustakaan/kategori', [AdminPerpustakaanController::class, 'kategoriIndex'])->name('admin.perpustakaan.kategori.index');
+    Route::post('/admin/perpustakaan/kategori', [AdminPerpustakaanController::class, 'kategoriStore'])->name('admin.perpustakaan.kategori.store');
+    Route::delete('/admin/perpustakaan/kategori/{kategori}', [AdminPerpustakaanController::class, 'kategoriDestroy'])->name('admin.perpustakaan.kategori.destroy');
+
     Route::resource('jurusan', JurusanController::class)->except('show');
     Route::resource('kelas', KelasController::class)->except('show');
     Route::resource('mahasiswa', MahasiswaController::class)->except(['index', 'show']);

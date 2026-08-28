@@ -228,11 +228,15 @@
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;"><i class="bi bi-chat-dots-fill"></i></div>
                 <div class="db-menu-label">Chat</div>
             </a>
+            <a href="{{ route('perpustakaan.index') }}" class="db-menu-item">
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;"><i class="bi bi-book-half"></i></div>
+                <div class="db-menu-label">Perpus</div>
+            </a>
             <!-- <a href="{{ route('pengumuman.index') }}" class="db-menu-item">
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#dc2626;"><i class="bi bi-megaphone-fill"></i></div>
                 <div class="db-menu-label">Info</div>
             </a>
-         
+
             @if($isGuru)
                <a href="{{ route('mahasiswa.index') }}" class="db-menu-item">
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#cffafe,#a5f3fc);color:#0891b2;"><i class="bi bi-people-fill"></i></div>
@@ -247,7 +251,7 @@
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0);color:#64748b;"><i class="bi bi-gear-fill"></i></div>
                 <div class="db-menu-label">Profil</div>
             </a> -->
-            
+
         </div>
     </div>
 
