@@ -10,6 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class NilaiController extends Controller
@@ -169,6 +170,142 @@ class NilaiController extends Controller
             || MataPelajaran::where('kelas_id', $kelas->id)->where('guru_id', $userId)->exists(),
             403
         );
+    }
+
+    /**
+     * Hanya guru pengampu mapel (atau admin) yang boleh mengunduh rekap mapelnya.
+     */
+    protected function authorizeMapel(MataPelajaran $mp): void
+    {
+        $userId = session('user_id') ?: Auth::id();
+        abort_unless($mp->guru_id == $userId || session('user_role') === 'admin', 403);
+    }
+
+    /**
+     * Data rekap untuk SATU mata pelajaran (dipakai per-mapel PDF & Excel oleh guru pengampu).
+     */
+    protected function dataRecapMapel(MataPelajaran $mp, int $semester, ?string $tahunAjaran = null): array
+    {
+        $kelas = $mp->kelas;
+        $tahunAjaran = $tahunAjaran ?: ($kelas->tahun_ajaran ?? now()->format('Y').'/'.(now()->format('Y')+1));
+
+        $students = User::where('role', 'siswa')
+            ->where('kelas_id', $mp->kelas_id)
+            ->orderBy('name')
+            ->get();
+
+        $nilais = Nilai::where('mata_pelajaran_id', $mp->id)
+            ->where('semester', $semester)
+            ->get()
+            ->keyBy('siswa_id');
+
+        return [
+            'mapel'       => $mp,
+            'kelas'       => $kelas,
+            'semester'    => $semester,
+            'tahunAjaran' => $tahunAjaran,
+            'students'    => $students,
+            'nilais'      => $nilais,
+            'today'       => now()->translatedFormat('d F Y'),
+        ];
+    }
+
+    public function recapMapelPdf(Request $request, MataPelajaran $mp)
+    {
+        $this->authorizeMapel($mp);
+
+        $semester = (int) ($request->semester ?: 1);
+        $data = $this->dataRecapMapel($mp, $semester, $request->tahun_ajaran);
+
+        $pdf = Pdf::loadView('pdf.rekap-nilai-mapel', $data);
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download(
+            'rekap-nilai-'.Str::slug($mp->nama).'-smt-'.$semester.'-'.str_replace('/', '_', $data['tahunAjaran']).'.pdf'
+        );
+    }
+
+    public function recapMapelExcel(Request $request, MataPelajaran $mp)
+    {
+        $this->authorizeMapel($mp);
+
+        $semester = (int) ($request->semester ?: 1);
+        $d = $this->dataRecapMapel($mp, $semester, $request->tahun_ajaran);
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<?mso-application progid="Excel.Sheet"?>'."\n";
+        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:html="http://www.w3.org/TR/REC-html40">';
+
+        $xml .= '<Styles>';
+        $xml .= '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style>';
+        $xml .= '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/><Interior ss:Color="#0F172A" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="subtitle"><Font ss:Color="#475569" ss:Size="11"/><Interior ss:Color="#F1F5F9" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="header"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/><Interior ss:Color="#2563EB" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="bordered"><Borders>'
+            .'<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'</Borders></Style>';
+        $xml .= '<Style ss:ID="cell"><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="alt"><Interior ss:Color="#F8FAFC" ss:Pattern="Solid"/></Style>';
+        $xml .= '<Style ss:ID="left"><Alignment ss:Horizontal="Left"/></Style>';
+        $xml .= '<Style ss:ID="footer"><Font ss:Italic="1" ss:Color="#64748B"/></Style>';
+        $xml .= '<Style ss:ID="sig"><Font ss:Bold="1"/><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="score"><Font ss:Bold="1" ss:Color="#0F172A"/></Style>';
+        $xml .= '</Styles>';
+
+        $xml .= '<Worksheet ss:Name="Rekap '.$this->esc(substr($mp->nama,0,28)).'"><Table>';
+        $xml .= '<Column ss:Width="50"/><Column ss:Width="240"/>';
+        foreach (range(1,4) as $i) { $xml .= '<Column ss:Width="90"/>'; }
+
+        // Judul
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="4"><Data ss:Type="String">REKAPITULASI NILAI MATA PELAJARAN</Data></Cell></Row>';
+        $xml .= '<Row ss:Height="20"><Cell ss:StyleID="subtitle" ss:MergeAcross="4"><Data ss:Type="String">'.$this->esc($mp->nama).' | Kelas '.$this->esc($d['kelas']->nama ?? '-').' | Semester '.$semester.' | '.$this->esc($d['tahunAjaran']).'</Data></Cell></Row>';
+
+        // Header
+        $xml .= '<Row ss:Height="22">';
+        foreach (['No','Nama Siswa','Tugas','UTS','UAS','Rata-rata','Predikat'] as $hdr) {
+            $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">'.$hdr.'</Data></Cell>';
+        }
+        $xml .= '</Row>';
+
+        foreach ($d['students'] as $i => $s) {
+            $n = $d['nilais'][$s->id] ?? null;
+            $rowStyle = (($i % 2) === 1) ? 'alt' : 'default';
+            $val = $this->hitungAkhir($n);
+            $xml .= '<Row>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.($i + 1).'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered left '.$rowStyle.'"><Data ss:Type="String">'.$this->esc($s->name).'</Data></Cell>';
+            foreach (['tugas','uts','uas'] as $col) {
+                $c = $n->{$col} ?? null;
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.($c === null ? $c : (float) $c).'</Data></Cell>';
+            }
+            if ($val === null) {
+                $xml .= '<Cell ss:StyleID="bordered score cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+            } else {
+                $xml .= '<Cell ss:StyleID="bordered score cell '.$rowStyle.'"><Data ss:Type="Number">'.$val.'</Data></Cell>';
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">'.$this->predikat($val).'</Data></Cell>';
+            }
+            $xml .= '</Row>';
+        }
+
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="footer" ss:MergeAcross="4"><Data ss:Type="String">Dicetak pada '.$this->esc($d['today']).'</Data></Cell></Row>';
+        $xml .= '<Row ss:Height="40"></Row>';
+
+        $xml .= '</Table></Worksheet></Workbook>';
+
+        $filename = 'rekap-nilai-'.Str::slug($mp->nama).'-smt-'.$semester.'-'.str_replace('/', '_', $d['tahunAjaran']).'.xls';
+
+        return response($xml, 200, [
+            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
     }
 
     public function recapPdf(Request $request, Kelas $kelas)

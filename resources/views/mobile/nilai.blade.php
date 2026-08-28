@@ -123,6 +123,38 @@
                     <a href="{{ route('nilai.index') }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">Ganti Mapel</a>
                 </div>
 
+                {{-- Premium Rekap & Unduhan Guru per Mapel --}}
+                <div class="ai-card mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#fff; overflow:hidden;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-file-earmark-bar-graph-fill" style="color:#fbbf24;"></i>
+                            <div class="fw-bold" style="font-size: 15px;">Rekap & Unduhan Nilai</div>
+                        </div>
+                        <div class="small mb-3" style="color:rgba(255,255,255,.65);">
+                            Unduh rekap nilai siswa untuk mapel <b class="text-white">{{ $selectedSubject->nama }}</b> dalam format PDF atau Excel.
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <select id="rekapMapelSemester" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none; color:#0f172a !important;">
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                            <a href="#" onclick="goRecapMapel('pdf'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#f59e0b; color:#0f172a;">
+                                <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
+                            </a>
+                            <a href="#" onclick="goRecapMapel('excel'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#22c55e; color:#0f172a;">
+                                <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    function goRecapMapel(type) {
+                        var sem = document.getElementById('rekapMapelSemester').value;
+                        var base = '{{ route('nilai.recap.mapel', $selectedSubject->id) }}';
+                        window.open(base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem, '_blank');
+                    }
+                </script>
+
                 @forelse($students as $siswa)
                     @php
                         $nilaiRecord = $siswa->nilai_records->first();

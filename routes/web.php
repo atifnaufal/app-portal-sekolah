@@ -21,6 +21,7 @@ use App\Http\Controllers\SppController;
 use App\Http\Controllers\TugasController;
 use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\JadwalController;
+use App\Models\MataPelajaran;
 
 Route::redirect('/', '/dashboard');
 
@@ -60,6 +61,8 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
     Route::post('/nilai/upsert', [NilaiController::class, 'upsert'])->name('nilai.upsert');
     Route::get('/nilai/recap/{kelas}', [NilaiController::class, 'recapPdf'])->name('nilai.recap');
     Route::get('/nilai/recap/{kelas}/excel', [NilaiController::class, 'recapExcel'])->name('nilai.recap.excel');
+    Route::get('/nilai/recap-mapel/{mapel}', [NilaiController::class, 'recapMapelPdf'])->name('nilai.recap.mapel');
+    Route::get('/nilai/recap-mapel/{mapel}/excel', [NilaiController::class, 'recapMapelExcel'])->name('nilai.recap.mapel.excel');
     Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
 
     // LMS - Mata Pelajaran
