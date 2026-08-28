@@ -173,12 +173,13 @@ class NilaiController extends Controller
     }
 
     /**
-     * Hanya guru pengampu mapel (atau admin) yang boleh mengunduh rekap mapelnya.
+     * Hanya guru pengampu mapel, wali kelas, atau admin yang boleh mengunduh rekap mapelnya.
      */
     protected function authorizeMapel(MataPelajaran $mp): void
     {
         $userId = session('user_id') ?: Auth::id();
-        abort_unless($mp->guru_id == $userId || session('user_role') === 'admin', 403);
+        $isWaliKelas = $mp->kelas && $mp->kelas->pembina_id == $userId;
+        abort_unless($mp->guru_id == $userId || $isWaliKelas || session('user_role') === 'admin', 403);
     }
 
     /**
@@ -452,5 +453,162 @@ class NilaiController extends Controller
     protected function esc(string $value): string
     {
         return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    }
+
+    protected function authorizePeriode(): void
+    {
+        $userId = session('user_id') ?: Auth::id();
+        $role = session('user_role');
+        abort_unless($role === 'admin' || $role === 'guru', 403);
+    }
+
+    /**
+     * Rekap nilai lintas mapel untuk seluruh siswa pada periode tertentu.
+     * - bulanan : nilai yang dicatat (created_at) pada bulan & tahun tertentu
+     * - tahunan : nilai dengan tahun_ajaran tertentu (lintas semester)
+     */
+    protected function dataRecapPeriode(string $periode, int $tahun, ?int $bulan, ?string $tahunAjaran): array
+    {
+        $query = Nilai::query();
+        if ($periode === 'bulanan') {
+            $query->whereYear('created_at', $tahun)
+                  ->whereMonth('created_at', $bulan);
+        } else {
+            $query->where('tahun_ajaran', $tahunAjaran);
+        }
+        $all = $query->with('mataPelajaran')->with('siswa')->get();
+
+        $students = collect();
+        $mapels = collect();
+        foreach ($all as $n) {
+            if ($n->siswa) { $students->put($n->siswa_id, $n->siswa); }
+            if ($n->mataPelajaran) { $mapels->put($n->mata_pelajaran_id, $n->mataPelajaran); }
+        }
+        $students = $students->sortBy('name')->values();
+        $mapels = $mapels->sortBy('nama')->values();
+
+        // Ambil nilai TERBARU per (siswa, mapel)
+        $normalized = [];
+        foreach ($all as $n) {
+            $cur = $normalized[$n->siswa_id][$n->mata_pelajaran_id] ?? null;
+            if (! $cur || $n->created_at->gte($cur->created_at)) {
+                $normalized[$n->siswa_id][$n->mata_pelajaran_id] = $n;
+            }
+        }
+
+        return [
+            'periode'    => $periode,
+            'tahun'      => $tahun,
+            'bulan'      => $bulan,
+            'tahunAjaran'=> $tahunAjaran,
+            'students'   => $students,
+            'mapels'     => $mapels,
+            'nilais'     => $normalized,
+            'today'      => now()->translatedFormat('d F Y'),
+        ];
+    }
+
+    public function recapPeriodePdf(Request $request)
+    {
+        $this->authorizePeriode();
+
+        $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
+        $tahun   = (int) ($request->tahun ?: now()->year);
+        $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
+        $tahunAjaran = $periode === 'tahunan' ? ($request->tahun_ajaran ?: (now()->format('Y').'/'.(now()->format('Y')+1))) : null;
+
+        $data = $this->dataRecapPeriode($periode, $tahun, $bulan, $tahunAjaran);
+        $pdf = Pdf::loadView('pdf.rekap-nilai-periode', $data);
+        $pdf->setPaper('a4', 'landscape');
+
+        $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.str_replace('/', '_', $tahunAjaran);
+        return $pdf->download('rekap-nilai-'.$label.'.pdf');
+    }
+
+    public function recapPeriodeExcel(Request $request)
+    {
+        $this->authorizePeriode();
+
+        $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
+        $tahun   = (int) ($request->tahun ?: now()->year);
+        $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
+        $tahunAjaran = $periode === 'tahunan' ? ($request->tahun_ajaran ?: (now()->format('Y').'/'.(now()->format('Y')+1))) : null;
+
+        $d = $this->dataRecapPeriode($periode, $tahun, $bulan, $tahunAjaran);
+        $colCount = $d['mapels']->count() + 4;
+        $mergeTitle = $colCount - 1;
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<?mso-application progid="Excel.Sheet"?>'."\n";
+        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
+
+        $xml .= '<Styles>';
+        $xml .= '<Style ss:ID="Default"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style>';
+        $xml .= '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/><Interior ss:Color="#0F172A" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="subtitle"><Font ss:Color="#475569" ss:Size="11"/><Interior ss:Color="#F1F5F9" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="header"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/><Interior ss:Color="#2563EB" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="bordered"><Borders>'
+            .'<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'</Borders></Style>';
+        $xml .= '<Style ss:ID="cell"><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="left"><Alignment ss:Horizontal="Left"/></Style>';
+        $xml .= '<Style ss:ID="score"><Font ss:Bold="1"/></Style>';
+        $xml .= '</Styles>';
+
+        $periodeLabel = $periode === 'bulanan'
+            ? \Carbon\Carbon::create()->month($bulan)->translatedFormat('F').' '.$tahun
+            : 'Tahun Ajaran '.$tahunAjaran;
+
+        $xml .= '<Worksheet ss:Name="Rekap Nilai"><Table>';
+        $xml .= '<Column ss:Width="50"/><Column ss:Width="220"/>';
+        foreach (range(1, $d['mapels']->count() + 2) as $i) { $xml .= '<Column ss:Width="95"/>'; }
+
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="'.$mergeTitle.'"><Data ss:Type="String">REKAPITULASI NILAI SISWA ('.$this->esc(strtoupper($periode)).')</Data></Cell></Row>';
+        $xml .= '<Row ss:Height="20"><Cell ss:StyleID="subtitle" ss:MergeAcross="'.$mergeTitle.'"><Data ss:Type="String">'.$this->esc($periodeLabel).'</Data></Cell></Row>';
+
+        $xml .= '<Row ss:Height="22">';
+        $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">No</Data></Cell>';
+        $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">Nama Siswa</Data></Cell>';
+        if ($d['mapels']->count() > 0) {
+            $xml .= '<Cell ss:StyleID="header" ss:MergeAcross="'.($d['mapels']->count() - 1).'"><Data ss:Type="String">Mata Pelajaran</Data></Cell>';
+        }
+        $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">Rata-rata</Data></Cell>';
+        $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">Predikat</Data></Cell>';
+        $xml .= '</Row>';
+
+        foreach ($d['students'] as $i => $s) {
+            $total = 0; $count = 0;
+            $xml .= '<Row>';
+            $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="Number">'.($i + 1).'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered left"><Data ss:Type="String">'.$this->esc($s->name).'</Data></Cell>';
+            foreach ($d['mapels'] as $mp) {
+                $n = $d['nilais'][$s->id][$mp->id] ?? null;
+                $val = $this->hitungAkhir($n);
+                if ($val === null) {
+                    $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="String">-</Data></Cell>';
+                } else {
+                    $total += $val; $count++;
+                    $xml .= '<Cell ss:StyleID="bordered cell score"><Data ss:Type="Number">'.$val.'</Data></Cell>';
+                }
+            }
+            $avg = $count > 0 ? round($total / $count, 2) : null;
+            $xml .= '<Cell ss:StyleID="bordered cell score"><Data ss:Type="String">'.($avg === null ? '-' : $avg).'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="String">'.($avg === null ? '-' : $this->predikat($avg)).'</Data></Cell>';
+            $xml .= '</Row>';
+        }
+
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="subtitle" ss:MergeAcross="'.$mergeTitle.'"><Data ss:Type="String">Dicetak pada '.$this->esc($d['today']).'</Data></Cell></Row>';
+        $xml .= '</Table></Worksheet></Workbook>';
+
+        $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.str_replace('/', '_', $tahunAjaran);
+        return response($xml, 200, [
+            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Disposition' => 'attachment; filename="rekap-nilai-'.$label.'.xls"',
+        ]);
     }
 }

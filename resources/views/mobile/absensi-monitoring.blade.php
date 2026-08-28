@@ -90,6 +90,46 @@
             <span class="badge bg-light text-dark rounded-pill">{{ now()->translatedFormat('d F Y') }}</span>
         </div>
 
+        <div class="mb-4" style="background: #0f172a; border-radius: 20px; padding: 16px; color: #fff; position: relative; overflow: hidden;">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-calendar3" style="color:#fbbf24;"></i>
+                <div class="fw-bold" style="font-size: 14px;">Rekap Kehadiran</div>
+            </div>
+            <div class="small mb-3" style="color: rgba(255,255,255,.65);">Unduh rekap absensi siswa per bulan atau per tahun dalam format PDF / Excel.</div>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <select id="absRecapPeriode" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                    <option value="bulanan">Bulanan</option>
+                    <option value="tahunan">Tahunan</option>
+                </select>
+                <select id="absRecapTahun" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                    @for($y = now()->year; $y >= now()->year - 4; $y--)
+                        <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }}>{{ $y }}</option>
+                    @endfor
+                </select>
+                <select id="absRecapBulan" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                    @for($m = 1; $m <= 12; $m++)
+                        <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
+                    @endfor
+                </select>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button" onclick="goAbsRecap('pdf'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#f59e0b; color:#0f172a;"><i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF</button>
+                <button type="button" onclick="goAbsRecap('excel'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#22c55e; color:#0f172a;"><i class="bi bi-file-earmark-excel-fill me-1"></i> Excel</button>
+            </div>
+        </div>
+        <script>
+            function goAbsRecap(type) {
+                var periode = document.getElementById('absRecapPeriode').value;
+                var tahun = document.getElementById('absRecapTahun').value;
+                var bulan = document.getElementById('absRecapBulan').value;
+                var base = "{{ route('absensi.recap') }}";
+                var url = base + (type === 'excel' ? '/excel' : '')
+                    + '?periode=' + periode + '&tahun=' + tahun + '&kelas_id=' + {{ $user->kelas_id ?? 'null' }};
+                if (periode === 'bulanan') url += '&bulan=' + bulan;
+                window.open(url, '_blank');
+            }
+        </script>
+
         <div class="stagger">
             @forelse($students as $student)
                 @php $absensi = $student->absensi->first(); @endphp

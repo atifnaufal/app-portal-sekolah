@@ -137,7 +137,7 @@
     </div>
 </div>
 
-<audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+<audio id="notif-sound" src="<?php echo e(asset('sounds/doorbell.mp3')); ?>" preload="auto"></audio>
 
 <main class="container admin-container py-5">
     <?php if(session('success')): ?>

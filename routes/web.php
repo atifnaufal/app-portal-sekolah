@@ -63,7 +63,11 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
     Route::get('/nilai/recap/{kelas}/excel', [NilaiController::class, 'recapExcel'])->name('nilai.recap.excel');
     Route::get('/nilai/recap-mapel/{mapel}', [NilaiController::class, 'recapMapelPdf'])->name('nilai.recap.mapel');
     Route::get('/nilai/recap-mapel/{mapel}/excel', [NilaiController::class, 'recapMapelExcel'])->name('nilai.recap.mapel.excel');
+    Route::get('/nilai/recap-periode', [NilaiController::class, 'recapPeriodePdf'])->name('nilai.recap.periode');
+    Route::get('/nilai/recap-periode/excel', [NilaiController::class, 'recapPeriodeExcel'])->name('nilai.recap.periode.excel');
     Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
+    Route::get('/absensi/recap', [AbsensiController::class, 'recapPdf'])->name('absensi.recap');
+    Route::get('/absensi/recap/excel', [AbsensiController::class, 'recapExcel'])->name('absensi.recap.excel');
 
     // LMS - Mata Pelajaran
     Route::get('/mapel/{mapel}', [\App\Http\Controllers\MapelController::class, 'show'])->name('mapel.show');

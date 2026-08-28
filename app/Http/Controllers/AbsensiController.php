@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Absensi;
 use App\Models\User;
+use App\Models\Kelas;
 use App\Models\Setting;
 use App\Helpers\NotificationHelper;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -122,5 +124,170 @@ class AbsensiController extends Controller
 
             return back()->with('success', 'Absensi pulang berhasil dicatat.');
         }
+    }
+
+    /**
+     * Otorisasi unduh rekap absensi: admin selalu boleh, guru hanya untuk kelasnya.
+     */
+    protected function authorizeRecap(?int $kelasId): void
+    {
+        $role = session('user_role');
+        $userId = session('user_id');
+
+        if ($role === 'admin') return;
+
+        abort_unless($role === 'guru', 403);
+
+        abort_unless(
+            $kelasId === null
+            || Kelas::where('id', $kelasId)->where('pembina_id', $userId)->exists()
+            || User::where('id', $userId)->where('kelas_id', $kelasId)->exists(),
+            403
+        );
+    }
+
+    /**
+     * Kumpulkan data rekap absensi per siswa untuk periode bulanan/tahunan.
+     */
+    protected function dataRecapAbsensi(string $periode, int $tahun, ?int $bulan, ?int $kelasId): array
+    {
+        $students = User::where('role', 'siswa')
+            ->when($kelasId, fn ($q) => $q->where('kelas_id', $kelasId))
+            ->orderBy('name')
+            ->get();
+
+        $query = Absensi::query()->whereYear('tanggal', $tahun);
+        if ($periode === 'bulanan' && $bulan) {
+            $query->whereMonth('tanggal', $bulan);
+        }
+        if ($kelasId) {
+            $query->where('kelas_id', $kelasId);
+        }
+        $recs = $query->get();
+
+        $rows = $students->map(function ($s) use ($recs) {
+            $rs = $recs->where('user_id', $s->id);
+            $hadir    = $rs->where('status', 'hadir')->count();
+            $terlambat= $rs->where('status', 'terlambat')->count();
+            $izin     = $rs->where('status', 'izin')->count();
+            $sakit    = $rs->where('status', 'sakit')->count();
+            $alpha    = $rs->where('status', 'alpha')->count();
+            $masuk    = $rs->whereIn('status', ['hadir', 'terlambat'])->count();
+            $total    = $rs->count();
+            $pct      = $total > 0 ? round(($masuk / $total) * 100, 1) : 0;
+
+            return [
+                'user'        => $s,
+                'hadir'       => $hadir,
+                'terlambat'   => $terlambat,
+                'izin'        => $izin,
+                'sakit'       => $sakit,
+                'alpha'       => $alpha,
+                'total'       => $total,
+                'hadir_persen'=> $pct,
+            ];
+        });
+
+        return [
+            'periode'  => $periode,
+            'tahun'    => $tahun,
+            'bulan'    => $bulan,
+            'kelasId'  => $kelasId,
+            'kelas'    => $kelasId ? Kelas::find($kelasId) : null,
+            'rows'     => $rows,
+            'today'    => now()->translatedFormat('d F Y'),
+        ];
+    }
+
+    protected function esc(string $value): string
+    {
+        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    }
+
+    public function recapPdf(Request $request)
+    {
+        $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
+        $tahun   = (int) ($request->tahun ?: now()->year);
+        $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
+        $kelasId = $request->kelas_id ? (int) $request->kelas_id : null;
+
+        $this->authorizeRecap($kelasId);
+        $data = $this->dataRecapAbsensi($periode, $tahun, $bulan, $kelasId);
+
+        $pdf = Pdf::loadView('pdf.rekap-absensi', $data);
+        $pdf->setPaper('a4', 'landscape');
+
+        $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.$tahun;
+        return $pdf->download('rekap-absensi-'.$label.'.pdf');
+    }
+
+    public function recapExcel(Request $request)
+    {
+        $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
+        $tahun   = (int) ($request->tahun ?: now()->year);
+        $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
+        $kelasId = $request->kelas_id ? (int) $request->kelas_id : null;
+
+        $this->authorizeRecap($kelasId);
+        $d = $this->dataRecapAbsensi($periode, $tahun, $bulan, $kelasId);
+
+        $namaKelas = $d['kelas'] ? $d['kelas']->nama : 'Semua Kelas';
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<?mso-application progid="Excel.Sheet"?>'."\n";
+        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
+
+        $xml .= '<Styles>';
+        $xml .= '<Style ss:ID="Default"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style>';
+        $xml .= '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/><Interior ss:Color="#0F172A" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="subtitle"><Font ss:Color="#475569" ss:Size="11"/><Interior ss:Color="#F1F5F9" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="header"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/><Interior ss:Color="#2563EB" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="bordered"><Borders>'
+            .'<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'</Borders></Style>';
+        $xml .= '<Style ss:ID="cell"><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="left"><Alignment ss:Horizontal="Left"/></Style>';
+        $xml .= '</Styles>';
+
+        $xml .= '<Worksheet ss:Name="Rekap Absensi"><Table>';
+        $xml .= '<Column ss:Width="50"/><Column ss:Width="220"/>';
+        foreach (range(1, 7) as $i) { $xml .= '<Column ss:Width="80"/>'; }
+
+        $periodeLabel = $periode === 'bulanan'
+            ? 'Bulan '.now()->month($bulan)->translatedFormat('F').' '.$tahun
+            : 'Tahun Ajaran / Tahun '.$tahun;
+
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="7"><Data ss:Type="String">REKAPITULASI KEHADIRAN SISWA</Data></Cell></Row>';
+        $xml .= '<Row ss:Height="20"><Cell ss:StyleID="subtitle" ss:MergeAcross="7"><Data ss:Type="String">'.$this->esc($namaKelas).' | '.$this->esc($periodeLabel).'</Data></Cell></Row>';
+
+        $xml .= '<Row ss:Height="22">';
+        foreach (['No','Nama Siswa','Hadir','Terlambat','Izin','Sakit','Alpha','% Hadir'] as $h) {
+            $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">'.$h.'</Data></Cell>';
+        }
+        $xml .= '</Row>';
+
+        $d['rows']->each(function ($r, $i) use (&$xml) {
+            $xml .= '<Row>';
+            $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="Number">'.($i + 1).'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered left"><Data ss:Type="String">'.$this->esc($r['user']->name).'</Data></Cell>';
+            foreach (['hadir','terlambat','izin','sakit','alpha'] as $k) {
+                $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="Number">'.$r[$k].'</Data></Cell>';
+            }
+            $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="Number">'.$r['hadir_persen'].'</Data></Cell>';
+            $xml .= '</Row>';
+        });
+
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="subtitle" ss:MergeAcross="7"><Data ss:Type="String">Dicetak pada '.$this->esc($d['today']).'</Data></Cell></Row>';
+        $xml .= '</Table></Worksheet></Workbook>';
+
+        $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.$tahun;
+        return response($xml, 200, [
+            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Disposition' => 'attachment; filename="rekap-absensi-'.$label.'.xls"',
+        ]);
     }
 }

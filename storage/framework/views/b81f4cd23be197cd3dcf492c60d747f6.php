@@ -90,6 +90,65 @@
 
     <main class="mobile-content px-3">
         <?php if($isGuru): ?>
+            
+            <div class="ai-card mb-4" style="background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%); color:#fff; overflow:hidden;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-calendar3" style="color:#fde68a;"></i>
+                        <div class="fw-bold" style="font-size: 15px;">Rekap Bulanan & Tahunan</div>
+                    </div>
+                    <div class="small mb-3" style="color: rgba(255,255,255,.75);">
+                        Unduh rekap nilai seluruh siswa (lintas mapel) berdasarkan periode bulan atau tahun dalam format PDF / Excel.
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <select id="perRecapPeriode" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                            <option value="bulanan">Bulanan</option>
+                            <option value="tahunan">Tahunan</option>
+                        </select>
+                        <select id="perRecapTahun" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                            <?php for($y = now()->year; $y >= now()->year - 4; $y--): ?>
+                                <option value="<?php echo e($y); ?>" <?php echo e($y == now()->year ? 'selected' : ''); ?>><?php echo e($y); ?></option>
+                            <?php endfor; ?>
+                        </select>
+                        <select id="perRecapBulan" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                            <?php for($m = 1; $m <= 12; $m++): ?>
+                                <option value="<?php echo e($m); ?>" <?php echo e($m == now()->month ? 'selected' : ''); ?>><?php echo e(\Carbon\Carbon::create()->month($m)->translatedFormat('F')); ?></option>
+                            <?php endfor; ?>
+                        </select>
+                        <select id="perRecapTA" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none; display:none;">
+                            <?php for($y = now()->year; $y >= now()->year - 3; $y--): ?>
+                                <option value="<?php echo e($y); ?>/<?php echo e($y + 1); ?>"><?php echo e($y); ?>/<?php echo e($y + 1); ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" onclick="goPerRecap('pdf'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#f59e0b; color:#0f172a;"><i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF</button>
+                        <button type="button" onclick="goPerRecap('excel'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#22c55e; color:#0f172a;"><i class="bi bi-file-earmark-excel-fill me-1"></i> Excel</button>
+                    </div>
+                </div>
+            </div>
+            <script>
+                var perRecapPeriode = document.getElementById('perRecapPeriode');
+                function syncPerRecap() {
+                    document.getElementById('perRecapTA').style.display = perRecapPeriode.value === 'tahunan' ? '' : 'none';
+                    document.getElementById('perRecapBulan').parentElement.style.display = perRecapPeriode.value === 'bulanan' ? '' : 'none';
+                }
+                perRecapPeriode.addEventListener('change', syncPerRecap);
+                syncPerRecap();
+                function goPerRecap(type) {
+                    var periode = perRecapPeriode.value;
+                    var tahun = document.getElementById('perRecapTahun').value;
+                    var bulan = document.getElementById('perRecapBulan').value;
+                    var ta = document.getElementById('perRecapTA').value;
+                    var url = "<?php echo e(route('nilai.recap.periode')); ?>"
+                        + (type === 'excel' ? '/excel' : '')
+                        + '?periode=' + periode;
+                    if (periode === 'bulanan') url += '&tahun=' + tahun + '&bulan=' + bulan;
+                    else url += '&tahun_ajaran=' + encodeURIComponent(ta);
+                    window.open(url, '_blank');
+                }
+            </script>
+
             <?php if(!$selectedSubject): ?>
                 <div class="d-flex align-items-center gap-2 mb-3 px-1">
                     <div style="width: 4px; height: 16px; background: var(--blue); border-radius: 2px;"></div>
@@ -164,8 +223,9 @@
                     <div class="card ai-card" style="animation: slideUp 0.4s ease both;">
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center gap-3 mb-3">
-                                <img src="<?php echo e($siswa->foto ? asset('storage/'.$siswa->foto) : 'https://ui-avatars.com/api/?name='.urlencode($siswa->name).'&background=f1f5f9&color=94a3b8'); ?>"
-                                     class="rounded-4" style="width: 44px; height: 44px; object-fit: cover;">
+                                <img src="<?php echo e($siswa->foto ? asset('storage/'.$siswa->foto) : ''); ?>" data-name="<?php echo e($siswa->name); ?>"
+                                     onerror="nilaiAvatarFallback(this);"
+                                     class="rounded-4" style="width: 44px; height: 44px; object-fit: cover;" alt="<?php echo e($siswa->name); ?>">
                                 <div class="flex-grow-1">
                                     <div class="fw-bold" style="font-size: 14px; color: #1e293b;"><?php echo e($siswa->name); ?></div>
                                     <div class="small text-muted fw-bold" style="font-size: 10px;">NIS: <?php echo e($siswa->nik ?? '-'); ?></div>
@@ -346,6 +406,20 @@
         document.getElementById('modalSemester').addEventListener('change', setNilaiFields);
     </script>
 <?php endif; ?>
+<script>
+function nilaiAvatarFallback(el) {
+    var name = el.getAttribute('data-name') || 'U';
+    var letter = (name.charAt(0) || 'U').toUpperCase();
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">'
+        + '<defs><linearGradient id="ng" x1="0" y1="0" x2="1" y2="1">'
+        + '<stop offset="0%" stop-color="#eef2ff"/><stop offset="100%" stop-color="#e0e7ff"/>'
+        + '</linearGradient></defs>'
+        + '<rect width="100%" height="100%" fill="url(#ng)"/>'
+        + '<text x="50%" y="54%" font-family="sans-serif" font-size="46" font-weight="800" fill="#4f46e5" text-anchor="middle" dominant-baseline="middle">' + letter + '</text></svg>';
+    el.onerror = null;
+    el.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+</script>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.mobile-app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views\mobile\nilai.blade.php ENDPATH**/ ?>
