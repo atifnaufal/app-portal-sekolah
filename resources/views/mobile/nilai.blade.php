@@ -152,8 +152,8 @@
         @else
             {{-- Siswa View --}}
             @forelse($nilais as $mpId => $mpNilais)
-                @php($mp = $mpNilais->first()->mataPelajaran)
                 @php
+                    $mp = $mpNilais->first()->mataPelajaran;
                     $avg = $mpNilais->avg(function($n) {
                         return ($n->tugas + $n->uts + $n->uas) / 3;
                     });
