@@ -127,7 +127,7 @@
                                 $eskulChat = \App\Models\ChatGroup::where('type', 'eskul')->where('related_id', $eskul->id)->first();
                             ?>
                             <?php if($eskulChat): ?>
-                                <a href="<?php echo e(route('chat.index', ['group_id' => $eskulChat->id])); ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" style="font-size: 11px;">
+                                <a href="<?php echo e(route('chat.show', $eskulChat)); ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" style="font-size: 11px;">
                                     <i class="bi bi-chat-dots-fill me-1"></i> Masuk Chat
                                 </a>
                             <?php endif; ?>

@@ -13,7 +13,7 @@ use Illuminate\View\View;
 
 class ChatController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
         $userId = session('user_id');
         $user = User::with(['kelas', 'eskuls'])->findOrFail($userId);
@@ -50,21 +50,34 @@ class ChatController extends Controller
         $classGroups = $groups->filter(fn ($g) => in_array($g->type, ['school', 'class']));
         $eskulGroups = $groups->filter(fn ($g) => $g->type === 'eskul');
 
-        // Default to first group if no group selected
-        $activeGroupId = $request->query('group_id') ?: ($groups->first()?->id);
-        $activeGroup = $activeGroupId ? ChatGroup::with('members')->findOrFail($activeGroupId) : null;
-
-        $messages = $activeGroup
-            ? ChatMessage::with('user')->where('chat_group_id', $activeGroup->id)->oldest()->get()
-            : collect();
-
         return view('mobile.chat', [
             'user' => $user,
-            'groups' => $groups,
             'classGroups' => $classGroups,
             'eskulGroups' => $eskulGroups,
-            'activeGroup' => $activeGroup,
-            'messages' => $messages
+        ]);
+    }
+
+    /**
+     * Halaman percakapan untuk SATU grup tertentu.
+     */
+    public function show(ChatGroup $group): View
+    {
+        $userId = session('user_id');
+        $user = User::findOrFail($userId);
+
+        // Hanya member grup yang boleh membuka percakapan
+        abort_unless($group->members()->where('user_id', $userId)->exists(), 403);
+
+        $group->load(['members', 'lastMessage']);
+        $messages = ChatMessage::with('user')
+            ->where('chat_group_id', $group->id)
+            ->oldest()
+            ->get();
+
+        return view('mobile.chat-thread', [
+            'user' => $user,
+            'group' => $group,
+            'messages' => $messages,
         ]);
     }
 
