@@ -219,42 +219,6 @@
         </div>
     </div>
 
-    {{-- LMS Section --}}
-    <div class="db-section fade-up" style="animation-delay:0.08s;">
-        <div class="db-section-header">
-            <div class="db-section-title">{{ $isGuru ? 'Mata Pelajaran Diampu' : 'Mata Pelajaran Saya' }}</div>
-        </div>
-        <div class="db-mapel-grid">
-            @forelse($mapels as $m)
-                <a href="{{ route('mapel.show', $m->id) }}" class="db-mapel-card">
-                    @php
-                        $colors = [
-                            ['#eff6ff', '#2563eb'], ['#f0fdf4', '#16a34a'],
-                            ['#fefce8', '#ca8a04'], ['#fef2f2', '#dc2626'],
-                            ['#f5f3ff', '#7c3aed'], ['#fff1f2', '#db2777']
-                        ];
-                        $c = $colors[$loop->index % count($colors)];
-                    @endphp
-                    <div class="db-mapel-icon" style="background:{{ $c[0] }}; color:{{ $c[1] }};">
-                        <i class="bi bi-journal-bookmark-fill"></i>
-                    </div>
-                    <div class="db-mapel-name">{{ $m->nama }}</div>
-                    <div class="db-mapel-meta">
-                        @if($isGuru)
-                            <i class="bi bi-people-fill"></i> {{ $m->kelas->nama }}
-                        @else
-                            <i class="bi bi-person-badge-fill"></i> {{ explode(' ', $m->guru->name)[0] }}
-                        @endif
-                    </div>
-                </a>
-            @empty
-                <div class="text-center py-3 w-100" style="grid-column: span 2;">
-                    <p class="small text-muted">Belum ada mata pelajaran.</p>
-                </div>
-            @endforelse
-        </div>
-    </div>
-
     {{-- Quick Menu --}}
     <div class="db-section fade-up" style="animation-delay:0.1s;">
         <div class="db-section-header">
@@ -337,6 +301,43 @@
             </div>
         </div>
     @endif
+
+
+    {{-- LMS Section --}}
+    <div class="db-section fade-up" style="animation-delay:0.08s;">
+        <div class="db-section-header">
+            <div class="db-section-title">{{ $isGuru ? 'Mata Pelajaran Diampu' : 'Mata Pelajaran Saya' }}</div>
+        </div>
+        <div class="db-mapel-grid">
+            @forelse($mapels as $m)
+                <a href="{{ route('mapel.show', $m->id) }}" class="db-mapel-card">
+                    @php
+                        $colors = [
+                            ['#eff6ff', '#2563eb'], ['#f0fdf4', '#16a34a'],
+                            ['#fefce8', '#ca8a04'], ['#fef2f2', '#dc2626'],
+                            ['#f5f3ff', '#7c3aed'], ['#fff1f2', '#db2777']
+                        ];
+                        $c = $colors[$loop->index % count($colors)];
+                    @endphp
+                    <div class="db-mapel-icon" style="background:{{ $c[0] }}; color:{{ $c[1] }};">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                    <div class="db-mapel-name">{{ $m->nama }}</div>
+                    <div class="db-mapel-meta">
+                        @if($isGuru)
+                            <i class="bi bi-people-fill"></i> {{ $m->kelas->nama }}
+                        @else
+                            <i class="bi bi-person-badge-fill"></i> {{ explode(' ', $m->guru->name)[0] }}
+                        @endif
+                    </div>
+                </a>
+            @empty
+                <div class="text-center py-3 w-100" style="grid-column: span 2;">
+                    <p class="small text-muted">Belum ada mata pelajaran.</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
 
     {{-- Tugas Terbaru --}}
     <div class="db-section fade-up" style="animation-delay:0.2s;">
