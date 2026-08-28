@@ -6,6 +6,9 @@ use App\Models\Kelas;
 use App\Models\Spp;
 use App\Models\User;
 use App\Models\Setting;
+use App\Models\MataPelajaran;
+use App\Models\Tugas;
+use App\Models\Materi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -26,6 +29,11 @@ class AdminController extends Controller
             ->reverse()
             ->values();
 
+        $totalMapel = MataPelajaran::count();
+        $totalTugas = Tugas::count();
+        $totalMateri = Materi::count();
+        $tugasBelumDinilai = \App\Models\PengumpulanTugas::whereNull('nilai')->where('revisi_aktif', false)->count();
+
         $data = [
             'totalGuru' => User::where('role', 'guru')->count(),
             'totalSiswa' => User::where('role', 'siswa')->count(),
@@ -38,22 +46,24 @@ class AdminController extends Controller
             'chartTerbayar' => $sppData->map(fn ($item) => $item->terbayar),
             'registrationGuruEnabled' => (bool) Setting::getValue('registration_guru_enabled', false),
             'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false),
+            // Statistik LMS
+            'totalMapel' => $totalMapel,
+            'totalTugas' => $totalTugas,
+            'totalMateri' => $totalMateri,
+            'tugasBelumDinilai' => $tugasBelumDinilai,
         ];
 
-        // Hanya view desktop yang memakai dua query berat ini.
-        if (! $isMobile) {
-            // View hanya membaca agregat guru_count / siswa_count, jadi tidak perlu
-            // ikut memuat koleksi users lengkap untuk setiap kelas.
-            $data['kelasSummaries'] = Kelas::withCount([
-                    'users as guru_count' => fn ($query) => $query->where('role', 'guru'),
-                    'users as siswa_count' => fn ($query) => $query->where('role', 'siswa'),
-                ])
-                ->orderBy('tingkat')
-                ->orderBy('nama')
-                ->get();
+        // View hanya membaca agregat guru_count / siswa_count, jadi tidak perlu
+        // ikut memuat koleksi users lengkap untuk setiap kelas.
+        $data['kelasSummaries'] = Kelas::withCount([
+                'users as guru_count' => fn ($query) => $query->where('role', 'guru'),
+                'users as siswa_count' => fn ($query) => $query->where('role', 'siswa'),
+            ])
+            ->orderBy('tingkat')
+            ->orderBy('nama')
+            ->get();
 
-            $data['recentUsers'] = User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get();
-        }
+        $data['recentUsers'] = User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get();
 
         return view($isMobile ? 'mobile.admin-dashboard' : 'admin.dashboard', $data);
     }

@@ -63,6 +63,9 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
 
     // LMS - Mata Pelajaran
     Route::get('/mapel/{mapel}', [\App\Http\Controllers\MapelController::class, 'show'])->name('mapel.show');
+
+    // LMS - Materi (semua role dapat melihat detail materi)
+    Route::get('/mapel/{mapel}/materi/{materi}', [\App\Http\Controllers\MateriController::class, 'show'])->name('materi.show');
 });
 
 Route::middleware('role:guru,siswa')->group(function () {
@@ -133,6 +136,13 @@ Route::middleware('role:guru')->group(function () {
     Route::post('/pengumpulan/{pengumpulan}/review', [TugasController::class, 'review'])->name('tugas.review');
     Route::get('/tugas-notifikasi', [NotifikasiController::class, 'tugas'])->name('tugas.notifikasi');
     Route::post('/spp/{spp}/remind', [SppController::class, 'remind'])->name('spp.remind');
+
+    // LMS - Materi CRUD (hanya guru)
+    Route::get('/mapel/{mapel}/materi/create', [\App\Http\Controllers\MateriController::class, 'create'])->name('materi.create');
+    Route::post('/mapel/{mapel}/materi', [\App\Http\Controllers\MateriController::class, 'store'])->name('materi.store');
+    Route::get('/mapel/{mapel}/materi/{materi}/edit', [\App\Http\Controllers\MateriController::class, 'edit'])->name('materi.edit');
+    Route::put('/mapel/{mapel}/materi/{materi}', [\App\Http\Controllers\MateriController::class, 'update'])->name('materi.update');
+    Route::delete('/mapel/{mapel}/materi/{materi}', [\App\Http\Controllers\MateriController::class, 'destroy'])->name('materi.destroy');
 });
 
 Route::middleware('role:admin,guru')->group(function () {

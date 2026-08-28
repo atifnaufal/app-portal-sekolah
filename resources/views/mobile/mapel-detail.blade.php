@@ -73,16 +73,22 @@
     {{-- Content: Materi --}}
     <div id="tab-materi" class="tab-content fade-up" style="animation-delay:0.1s;">
         @forelse($materi as $m)
-            <div class="md-card">
+            <a href="{{ route('materi.show', [$mapel, $m]) }}" class="md-card">
                 <div class="md-card-icon" style="background:#eff6ff; color:#2563eb;">
-                    <i class="bi bi-file-earmark-play-fill"></i>
+                    @if($m->video_url)
+                        <i class="bi bi-play-circle-fill"></i>
+                    @elseif($m->file_materi)
+                        <i class="bi bi-file-earmark-play-fill"></i>
+                    @else
+                        <i class="bi bi-journal-text"></i>
+                    @endif
                 </div>
                 <div style="flex:1;">
                     <div class="md-card-title">{{ $m->judul }}</div>
-                    <div class="md-card-sub">{{ $m->created_at->translatedFormat('d M Y') }}</div>
+                    <div class="md-card-sub">{{ $m->created_at->translatedFormat('d M Y') }} · {{ $m->guru->name }}</div>
                 </div>
                 <i class="bi bi-chevron-right text-muted"></i>
-            </div>
+            </a>
         @empty
             <div style="text-align:center; padding:40px 20px;">
                 <i class="bi bi-journal-x" style="font-size:48px; color:#cbd5e1;"></i>
@@ -91,9 +97,9 @@
         @endforelse
 
         @if($user->role === 'guru')
-            <button class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm mt-2">
+            <a href="{{ route('materi.create', $mapel) }}" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm mt-2 text-decoration-none d-block text-center">
                 + Tambah Materi
-            </button>
+            </a>
         @endif
     </div>
 

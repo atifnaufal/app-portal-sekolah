@@ -69,6 +69,37 @@
         </div>
     @endif
 
+    {{-- LMS Overview --}}
+    <div class="am-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:800;">
+                <i class="bi bi-mortarboard-fill" style="color:#7c3aed;"></i> E-Learning (LMS)
+            </div>
+            <span style="font-size:9px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:99px;">Active</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+            <div style="background:#f5f8ff;border-radius:14px;padding:14px;text-align:center;">
+                <div style="font-size:24px;font-weight:800;color:#2563eb;">{{ $totalMapel }}</div>
+                <div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Mapel</div>
+            </div>
+            <div style="background:#f0fdf4;border-radius:14px;padding:14px;text-align:center;">
+                <div style="font-size:24px;font-weight:800;color:#16a34a;">{{ $totalMateri }}</div>
+                <div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Materi</div>
+            </div>
+            <div style="background:#fffbeb;border-radius:14px;padding:14px;text-align:center;">
+                <div style="font-size:24px;font-weight:800;color:#d97706;">{{ $totalTugas }}</div>
+                <div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Tugas</div>
+            </div>
+            <div style="background:#fff5f6;border-radius:14px;padding:14px;text-align:center;">
+                <div style="font-size:24px;font-weight:800;color:{{ $tugasBelumDinilai > 0 ? '#dc2626' : '#94a3b8' }};">{{ $tugasBelumDinilai }}</div>
+                <div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Perlu Nilai</div>
+            </div>
+        </div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:10px;line-height:1.5;">
+            <i class="bi bi-info-circle me-1"></i> Kelola mata pelajaran &amp; materi secara lengkap tersedia di dashboard desktop.
+        </div>
+    </div>
+
     <div style="font-size:13px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">
         Aksi Cepat
     </div>

@@ -100,6 +100,46 @@
     </div>
 </div>
 
+{{-- LMS Overview --}}
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="ad-card shadow-sm">
+            <div class="ad-card-head d-flex justify-content-between align-items-center">
+                <h2 class="ad-card-title"><i class="bi bi-mortarboard text-primary"></i> E-Learning (LMS) Overview</h2>
+                <span class="badge rounded-pill bg-primary-subtle text-primary px-3" style="font-size:11px; font-weight:800;">Learning Management System</span>
+            </div>
+            <div class="ad-card-body">
+                <div class="row g-3 text-center">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="border rounded-4 p-4 h-100" style="background:#f5f8ff;">
+                            <div class="fw-extrabold text-primary" style="font-size:34px;">{{ number_format($totalMapel) }}</div>
+                            <div class="small fw-bold text-muted text-uppercase mt-1" style="letter-spacing:0.06em;">Mata Pelajaran</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="border rounded-4 p-4 h-100" style="background:#f0fdf4;">
+                            <div class="fw-extrabold text-success" style="font-size:34px;">{{ number_format($totalMateri) }}</div>
+                            <div class="small fw-bold text-muted text-uppercase mt-1" style="letter-spacing:0.06em;">Materi Dibagikan</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="border rounded-4 p-4 h-100" style="background:#fffbeb;">
+                            <div class="fw-extrabold text-warning" style="font-size:34px;">{{ number_format($totalTugas) }}</div>
+                            <div class="small fw-bold text-muted text-uppercase mt-1" style="letter-spacing:0.06em;">Total Tugas</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="border rounded-4 p-4 h-100" style="background:#fff5f6;">
+                            <div class="fw-extrabold {{ $tugasBelumDinilai > 0 ? 'text-danger' : 'text-muted' }}" style="font-size:34px;">{{ number_format($tugasBelumDinilai) }}</div>
+                            <div class="small fw-bold text-muted text-uppercase mt-1" style="letter-spacing:0.06em;">Jawaban Perlu Dinilai</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Statistic Grid --}}
 <div class="row g-4 mb-5">
     <div class="col-lg-3 col-md-6">
