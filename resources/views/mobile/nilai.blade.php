@@ -103,7 +103,9 @@
                 </div>
 
                 @forelse($students as $siswa)
-                    @php($nilaiRecord = $siswa->nilai_records->first())
+                    @php
+                        $nilaiRecord = $siswa->nilai_records->first();
+                    @endphp
                     <div class="card ai-card" style="animation: slideUp 0.4s ease both;">
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center gap-3 mb-3">

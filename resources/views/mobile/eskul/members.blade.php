@@ -36,9 +36,19 @@
 </div>
 
 <div class="page-container">
-    <header class="px-4 py-3">
-        <h5 class="fw-bold mb-1">{{ $eskul->nama }}</h5>
-        <p class="small text-muted mb-0">Manajemen permohonan bergabung dan daftar anggota.</p>
+    <header class="px-4 py-3 d-flex justify-content-between align-items-start">
+        <div>
+            <h5 class="fw-bold mb-1">{{ $eskul->nama }}</h5>
+            <p class="small text-muted mb-0">Manajemen permohonan bergabung dan daftar anggota.</p>
+        </div>
+        @php
+            $eskulChat = \App\Models\ChatGroup::where('type', 'eskul')->where('related_id', $eskul->id)->first();
+        @endphp
+        @if($eskulChat)
+            <a href="{{ route('chat.index', ['group_id' => $eskulChat->id]) }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+                <i class="bi bi-chat-dots-fill me-1"></i> Chat Grup
+            </a>
+        @endif
     </header>
 
     <main class="mobile-content px-3 mt-2">
