@@ -66,6 +66,11 @@ class LmsSeeder extends Seeder
             $guru[$name] = $u;
         }
 
+        // ===== Wali Kelas (guru kelas) =====
+        $kelas['X RPL']->update(['pembina_id' => $guru['Budi Santoso']->id]);
+        $kelas['X TKJ']->update(['pembina_id' => $guru['Rudi Hartono']->id]);
+        $kelas['XI RPL']->update(['pembina_id' => $guru['Maya Anggraini']->id]);
+
         // ===== Siswa =====
         $namaSiswa = ['Agus Pratama', 'Bella Seputri', 'Citra Kirana', 'Dedi Kurniawan', 'Eka Putri',
                       'Fajar Nugroho', 'Gita Savitri', 'Hendra Gunawan', 'Intan Ayu', 'Joko Susilo',

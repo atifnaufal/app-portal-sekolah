@@ -100,8 +100,14 @@ class AdminController extends Controller
     public function destroyUser(User $user): RedirectResponse
     {
         abort_unless(in_array($user->role, ['guru', 'siswa'], true), 404);
-        $user->delete();
-        return back()->with('success', 'Akun berhasil dihapus permanen.');
+
+        try {
+            $user->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', 'Akun tidak dapat dihapus karena masih terhubung ke data lain (nilai, tugas, materi, pengumpulan, dst). Pindahkan atau hapus data terkait terlebih dahulu.');
+        }
+
+        return back()->with('success', 'Akun berhasil dihapus permanen beserta seluruh data tautannya.');
     }
 
     public function toggleRegistration(Request $request): RedirectResponse

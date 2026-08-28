@@ -221,44 +221,6 @@
     </div>
 
     
-    <div class="db-section fade-up" style="animation-delay:0.08s;">
-        <div class="db-section-header">
-            <div class="db-section-title"><?php echo e($isGuru ? 'Mata Pelajaran Diampu' : 'Mata Pelajaran Saya'); ?></div>
-        </div>
-        <div class="db-mapel-grid">
-            <?php $__empty_1 = true; $__currentLoopData = $mapels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                <a href="<?php echo e(route('mapel.show', $m->id)); ?>" class="db-mapel-card">
-                    <?php
-                        $colors = [
-                            ['#eff6ff', '#2563eb'], ['#f0fdf4', '#16a34a'],
-                            ['#fefce8', '#ca8a04'], ['#fef2f2', '#dc2626'],
-                            ['#f5f3ff', '#7c3aed'], ['#fff1f2', '#db2777']
-                        ];
-                        $c = $colors[$loop->index % count($colors)];
-                    ?>
-                    <div class="db-mapel-icon" style="background:<?php echo e($c[0]); ?>; color:<?php echo e($c[1]); ?>;">
-                        <i class="bi bi-journal-bookmark-fill"></i>
-                    </div>
-                    <div class="db-mapel-name"><?php echo e($m->nama); ?></div>
-                    <div class="db-mapel-meta">
-                        <?php if($isGuru): ?>
-                            <i class="bi bi-people-fill"></i> <?php echo e($m->kelas->nama); ?>
-
-                        <?php else: ?>
-                            <i class="bi bi-person-badge-fill"></i> <?php echo e(explode(' ', $m->guru->name)[0]); ?>
-
-                        <?php endif; ?>
-                    </div>
-                </a>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                <div class="text-center py-3 w-100" style="grid-column: span 2;">
-                    <p class="small text-muted">Belum ada mata pelajaran.</p>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    
     <div class="db-section fade-up" style="animation-delay:0.1s;">
         <div class="db-section-header">
             <div class="db-section-title">Menu Cepat</div>
@@ -340,6 +302,45 @@
             </div>
         </div>
     <?php endif; ?>
+
+
+    
+    <div class="db-section fade-up" style="animation-delay:0.08s;">
+        <div class="db-section-header">
+            <div class="db-section-title"><?php echo e($isGuru ? 'Mata Pelajaran Diampu' : 'Mata Pelajaran Saya'); ?></div>
+        </div>
+        <div class="db-mapel-grid">
+            <?php $__empty_1 = true; $__currentLoopData = $mapels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <a href="<?php echo e(route('mapel.show', $m->id)); ?>" class="db-mapel-card">
+                    <?php
+                        $colors = [
+                            ['#eff6ff', '#2563eb'], ['#f0fdf4', '#16a34a'],
+                            ['#fefce8', '#ca8a04'], ['#fef2f2', '#dc2626'],
+                            ['#f5f3ff', '#7c3aed'], ['#fff1f2', '#db2777']
+                        ];
+                        $c = $colors[$loop->index % count($colors)];
+                    ?>
+                    <div class="db-mapel-icon" style="background:<?php echo e($c[0]); ?>; color:<?php echo e($c[1]); ?>;">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                    <div class="db-mapel-name"><?php echo e($m->nama); ?></div>
+                    <div class="db-mapel-meta">
+                        <?php if($isGuru): ?>
+                            <i class="bi bi-people-fill"></i> <?php echo e($m->kelas->nama); ?>
+
+                        <?php else: ?>
+                            <i class="bi bi-person-badge-fill"></i> <?php echo e(explode(' ', $m->guru->name)[0]); ?>
+
+                        <?php endif; ?>
+                    </div>
+                </a>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                <div class="text-center py-3 w-100" style="grid-column: span 2;">
+                    <p class="small text-muted">Belum ada mata pelajaran.</p>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 
     
     <div class="db-section fade-up" style="animation-delay:0.2s;">

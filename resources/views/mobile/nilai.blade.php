@@ -61,11 +61,25 @@
         </div>
         <div class="hero-title mt-2 text-white" style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">{{ $isGuru ? 'Penilaian Siswa' : 'Laporan Nilai' }}</div>
         @if($isGuru && $managedClass)
-            <div class="mt-3">
-                <a href="{{ route('nilai.recap', $managedClass->id) }}" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold shadow-sm">
-                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Cetak Rekap Kelas {{ $managedClass->nama }}
+            <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
+                <select id="rekapSemester" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                </select>
+                <a href="#" id="btnRecapPdf" onclick="goRecap('pdf'); return false;" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
+                </a>
+                <a href="#" id="btnRecapExcel" onclick="goRecap('excel'); return false;" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
                 </a>
             </div>
+            <script>
+                function goRecap(type) {
+                    var sem = document.getElementById('rekapSemester').value;
+                    var base = '{{ route('nilai.recap', $managedClass->id) }}';
+                    window.open(base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem, '_blank');
+                }
+            </script>
         @endif
         <div class="mt-2" style="font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.6;">
             {{ $isGuru ? 'Monitor dan evaluasi performa akademik siswa di kelas Anda secara real-time.' : 'Rekapitulasi pencapaian tugas, UTS, dan UAS Anda sepanjang semester ini.' }}
@@ -123,7 +137,7 @@
                                     <div class="small text-muted fw-bold" style="font-size: 10px;">NIS: {{ $siswa->nik ?? '-' }}</div>
                                 </div>
                                 <button type="button" class="btn btn-primary btn-sm rounded-pill px-3"
-                                    onclick="openInputNilai(@json($siswa), @json($nilaiRecord))">
+                                    onclick="openInputNilai(@json($siswa), @json($siswa->nilai_records->values()->all()))">
                                     Input
                                 </button>
                             </div>
@@ -234,7 +248,20 @@
                 @csrf
                 <input type="hidden" name="siswa_id" id="modalSiswaId">
                 <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedSubject->id }}">
-                <input type="hidden" name="semester" value="1"> {{-- Default semester --}}
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">Semester</label>
+                        <select name="semester" id="modalSemester" class="form-select rounded-4 border-2">
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">Tahun Ajaran</label>
+                        <input type="text" name="tahun_ajaran" id="modalTahunAjaranInput" value="{{ $selectedSubject->kelas?->tahun_ajaran ?? '' }}" class="form-control rounded-4 border-2" placeholder="2025/2026">
+                    </div>
+                </div>
 
                 <div class="row g-3 mb-4">
                     <div class="col-4">
@@ -258,17 +285,30 @@
     </div>
 
     <script>
-        function openInputNilai(siswa, nilai) {
+        var currentSiswaRecords = [];
+        function setNilaiFields() {
+            var sem = parseInt(document.getElementById('modalSemester').value);
+            var rec = currentSiswaRecords.find(function(r){ return parseInt(r.semester) === sem; });
+            document.getElementById('modalTugas').value = rec ? (rec.tugas ?? '') : '';
+            document.getElementById('modalUts').value = rec ? (rec.uts ?? '') : '';
+            document.getElementById('modalUas').value = rec ? (rec.uas ?? '') : '';
+            if (rec && rec.tahun_ajaran) {
+                document.getElementById('modalTahunAjaranInput').value = rec.tahun_ajaran;
+            }
+        }
+        function openInputNilai(siswa, records) {
+            currentSiswaRecords = records || [];
             document.getElementById('modalSiswaId').value = siswa.id;
             document.getElementById('modalSiswaName').innerText = siswa.name;
-            document.getElementById('modalTugas').value = nilai ? nilai.tugas : '';
-            document.getElementById('modalUts').value = nilai ? nilai.uts : '';
-            document.getElementById('modalUas').value = nilai ? nilai.uas : '';
+            var sem = currentSiswaRecords.length ? currentSiswaRecords[0].semester : 1;
+            document.getElementById('modalSemester').value = sem;
+            setNilaiFields();
             document.getElementById('inputNilaiModal').classList.add('open');
         }
         function closeInputNilai() {
             document.getElementById('inputNilaiModal').classList.remove('open');
         }
+        document.getElementById('modalSemester').addEventListener('change', setNilaiFields);
     </script>
 @endif
 @endsection
