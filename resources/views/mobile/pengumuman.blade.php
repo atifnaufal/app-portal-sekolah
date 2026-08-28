@@ -8,7 +8,12 @@
     }
     .tag-general { background: #fee2e2; color: #ef4444; }
     .tag-class { background: #dcfce7; color: #22c55e; }
-    .tag-eskul { background: #f3e8ff; color: #a855f7; }
+    .announcement-img { width: 100%; height: 180px; object-fit: cover; }
+    .announcement-img-placeholder {
+        width: 100%; height: 120px; background: #f8fafc;
+        display: flex; align-items: center; justify-content: center;
+        color: #e2e8f0; font-size: 40px;
+    }
 </style>
 
 <div class="p-3 pb-0">
@@ -27,8 +32,12 @@
     <div class="stagger">
         @forelse($pengumumans as $item)
             <article class="card mobile-card mb-3 overflow-hidden border-0 shadow-sm">
-                @if($item->gambar)
-                    <img src="{{ asset('storage/'.$item->gambar) }}" alt="{{ $item->judul }}" style="width:100%;height:180px;object-fit:cover">
+                @if($item->gambar && file_exists(public_path('storage/'.$item->gambar)))
+                    <img src="{{ asset('storage/'.$item->gambar) }}" alt="{{ $item->judul }}" class="announcement-img">
+                @else
+                    <div class="announcement-img-placeholder">
+                        <i class="bi bi-megaphone"></i>
+                    </div>
                 @endif
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">

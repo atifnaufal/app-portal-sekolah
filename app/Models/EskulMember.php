@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EskulMember extends Model
 {
-    protected $fillable = ['user_id', 'eskul_id', 'is_admin'];
+    protected $fillable = ['user_id', 'eskul_id', 'is_admin', 'status'];
 
     public function user(): BelongsTo
     {

@@ -37,6 +37,20 @@ class NotificationHelper
     }
 
     /**
+     * Send a notification to all members of an extracurricular.
+     */
+    public static function sendToEskul($eskulId, $title, $message, $url = null, $type = 'general')
+    {
+        $users = User::whereHas('eskuls', function($q) use ($eskulId) {
+            $q->where('eskul_id', $eskulId)->where('status', 'approved');
+        })->get();
+
+        foreach ($users as $user) {
+            self::send($user->id, $title, $message, $url, $type);
+        }
+    }
+
+    /**
      * Send a notification to all users or specific roles.
      */
     public static function sendToAll($title, $message, $url = null, $type = 'general', $role = null, $excludeUserId = null)

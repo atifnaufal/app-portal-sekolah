@@ -193,10 +193,16 @@
     const chatInput = document.getElementById('chatInput');
     const currentUserId = @json((int) $user->id);
     const activeGroupId = @json((int) $activeGroup->id);
+    let lastMsgId = @json($messages->last()?->id ?? 0);
 
     function appendMessage(data, mine) {
+        // Prevent duplicate if already exists in DOM
+        if (data.id && document.querySelector(`[data-msg-id="${data.id}"]`)) return;
+
         const row = document.createElement('div');
         row.className = 'msg-row ' + (mine ? 'mine' : 'other');
+        if (data.id) row.setAttribute('data-msg-id', data.id);
+
         let html = '<div class="msg-bubble">';
         if (!mine) html += '<div style="font-size:10px; font-weight:800; color:var(--blue); margin-bottom:2px;">'+data.nama+'</div>';
 
@@ -248,9 +254,28 @@
         window.Echo.private('portal-chat-group.' + activeGroupId)
             .listen('.new-message', (e) => {
                 if (e.user_id !== currentUserId) {
-                    appendMessage({ nama: e.nama, pesan: e.pesan, waktu: e.waktu, file_url: e.file_url }, false);
+                    appendMessage({ id: e.id, nama: e.nama, pesan: e.pesan, waktu: e.waktu, file_url: e.file_url }, false);
+                    if(e.id > lastMsgId) lastMsgId = e.id;
                 }
             });
+    } else {
+        // Fallback Polling if Echo/Broadcasting is not available
+        setInterval(() => {
+            fetch(`{{ route('chat.poll') }}?group_id=${activeGroupId}&last_id=${lastMsgId}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.length > 0) {
+                    data.forEach(msg => {
+                        if (msg.user_id !== currentUserId) {
+                            appendMessage(msg, false);
+                        }
+                        if (msg.id > lastMsgId) lastMsgId = msg.id;
+                    });
+                }
+            });
+        }, 3000);
     }
     @endif
 </script>

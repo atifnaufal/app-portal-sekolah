@@ -36,9 +36,19 @@
     .eskul-name { font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
     .eskul-meta { font-size: 12px; color: #94a3b8; font-weight: 600; }
 
+    .eskul-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .eskul-logo-placeholder {
+        width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+        background: #f1f5f9; color: #94a3b8; font-size: 24px;
+    }
+
     .btn-join {
-        padding: 8px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;
-        transition: all 0.2s;
+        padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 700;
+        transition: all 0.2s; min-width: 80px;
+    }
+    .status-badge {
+        font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 100px;
+        text-transform: uppercase; letter-spacing: 0.05em;
     }
 </style>
 
@@ -60,29 +70,47 @@
 
     <main class="mobile-content px-3 mt-4">
         @forelse($eskuls as $eskul)
-            @php $isJoined = in_array($eskul->id, $myEskuls); @endphp
+            @php
+                $myMember = \App\Models\EskulMember::where('eskul_id', $eskul->id)->where('user_id', session('user_id'))->first();
+                $isJoined = $myMember && $myMember->status === 'approved';
+                $isPending = $myMember && $myMember->status === 'pending';
+                $isEskulAdmin = $myMember && $myMember->is_admin;
+            @endphp
             <div class="eskul-card">
                 <div class="d-flex align-items-center gap-3">
                     <div class="eskul-logo">
-                        @if($eskul->logo)
-                            <img src="{{ asset('storage/'.$eskul->logo) }}" class="w-100 h-100 object-fit-cover">
+                        @if($eskul->logo && file_exists(public_path('storage/'.$eskul->logo)))
+                            <img src="{{ asset('storage/'.$eskul->logo) }}" alt="{{ $eskul->nama }}">
                         @else
-                            <i class="bi bi-flag-fill text-primary" style="font-size: 24px; opacity: 0.3;"></i>
+                            <div class="eskul-logo-placeholder">
+                                <i class="bi bi-flag-fill"></i>
+                            </div>
                         @endif
                     </div>
                     <div class="flex-grow-1 min-width-0">
                         <div class="eskul-name text-truncate">{{ $eskul->nama }}</div>
-                        <div class="eskul-meta">
-                            <i class="bi bi-people-fill me-1"></i> {{ $eskul->members_count }} Anggota
+                        <div class="eskul-meta d-flex align-items-center gap-2">
+                            <span><i class="bi bi-people-fill me-1"></i> {{ $eskul->members_count }} Anggota</span>
+                            @if($isPending)
+                                <span class="status-badge bg-warning text-dark">Pending</span>
+                            @elseif($isJoined)
+                                <span class="status-badge bg-success text-white">Member</span>
+                            @endif
                         </div>
                     </div>
                     <div>
-                        <form action="{{ route('eskul.join', $eskul) }}" method="POST">
-                            @csrf
-                            <button class="btn btn-join {{ $isJoined ? 'btn-outline-danger' : 'btn-primary shadow-sm' }}">
-                                {{ $isJoined ? 'Keluar' : 'Gabung' }}
-                            </button>
-                        </form>
+                        @if(!$isEskulAdmin)
+                            <form action="{{ route('eskul.join', $eskul) }}" method="POST">
+                                @csrf
+                                <button class="btn btn-join {{ ($isJoined || $isPending) ? 'btn-outline-danger' : 'btn-primary shadow-sm' }}">
+                                    {{ $isPending ? 'Batal' : ($isJoined ? 'Keluar' : 'Gabung') }}
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('eskul.members', $eskul) }}" class="btn btn-join btn-dark">
+                                Kelola
+                            </a>
+                        @endif
                     </div>
                 </div>
                 @if($eskul->deskripsi)

@@ -114,4 +114,34 @@ class ChatController extends Controller
 
         return back();
     }
+
+    public function poll(Request $request): JsonResponse
+    {
+        $userId = session('user_id');
+        $groupId = $request->query('group_id');
+        $lastId = $request->query('last_id', 0);
+
+        abort_unless($groupId, 400);
+
+        // Check if user is member
+        $group = ChatGroup::findOrFail($groupId);
+        abort_unless($group->members()->where('user_id', $userId)->exists(), 403);
+
+        $messages = ChatMessage::with('user')
+            ->where('chat_group_id', $groupId)
+            ->where('id', '>', $lastId)
+            ->oldest()
+            ->get();
+
+        $data = $messages->map(fn($msg) => [
+            'id' => $msg->id,
+            'user_id' => $msg->user_id,
+            'nama' => $msg->user->name,
+            'pesan' => $msg->pesan,
+            'file_url' => $msg->file ? asset('storage/'.$msg->file) : null,
+            'waktu' => $msg->created_at->format('H:i'),
+        ]);
+
+        return response()->json($data);
+    }
 }

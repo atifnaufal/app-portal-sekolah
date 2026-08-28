@@ -51,6 +51,9 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
     // Eskul
     Route::get('/eskul', [EskulController::class, 'index'])->name('eskul.index');
     Route::post('/eskul/{eskul}/join', [EskulController::class, 'join'])->name('eskul.join');
+    Route::get('/eskul/{eskul}/members', [EskulController::class, 'members'])->name('eskul.members');
+    Route::post('/eskul/members/{member}/approve', [EskulController::class, 'approveMember'])->name('eskul.members.approve');
+    Route::post('/eskul/members/{member}/reject', [EskulController::class, 'rejectMember'])->name('eskul.members.reject');
 
     // Nilai & Jadwal
     Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');

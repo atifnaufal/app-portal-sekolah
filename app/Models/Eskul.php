@@ -19,12 +19,17 @@ class Eskul extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'eskul_members')
-                    ->withPivot('is_admin')
+                    ->withPivot(['is_admin', 'status'])
                     ->withTimestamps();
     }
 
     public function pengumuman(): HasMany
     {
         return $this->hasMany(Pengumuman::class);
+    }
+
+    public function approvedMembers(): BelongsToMany
+    {
+        return $this->members()->wherePivot('status', 'approved');
     }
 }
