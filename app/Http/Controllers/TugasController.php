@@ -258,7 +258,8 @@ class TugasController extends Controller
         return redirect()->route('tugas.index')->with('success', 'Tugas berhasil dihapus beserta seluruh pengumpulan siswa.');
     }
 
-    public function exportGrades(Tugas $tugas)
+
+    public function exportPdf(Tugas $tugas)
     {
         $request = request();
 
@@ -273,56 +274,144 @@ class TugasController extends Controller
             ->where('tugas_id', $tugas->id)
             ->get();
 
-        $filename = 'nilai_tugas_'.Str::slug($tugas->judul).'_'.date('Y-m-d').'.csv';
+        $siswaIds = $submissions->pluck('siswa_id');
+        $belum = User::where('role', 'siswa')
+            ->where('kelas_id', $tugas->kelas_id)
+            ->whereNotIn('id', $siswaIds)
+            ->orderBy('name')
+            ->get();
 
-        $headers = [
-            'Content-type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename='.$filename,
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
+        $data = [
+            'tugas'       => $tugas,
+            'submissions' => $submissions,
+            'belum'       => $belum,
+            'today'       => now()->translatedFormat('d F Y'),
         ];
 
-        $callback = function () use ($submissions, $tugas) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['No', 'Nama Siswa', 'NIK', 'Status', 'Nilai', 'Feedback Guru', 'Dikumpulkan Pada']);
+        try {
+            app()->setLocale('id');
+            \Carbon\Carbon::setLocale('id');
 
-            foreach ($submissions as $key => $sub) {
-                fputcsv($file, [
-                    $key + 1,
-                    $sub->siswa->name ?? '-',
-                    $sub->siswa->nik ?? '-',
-                    $sub->status,
-                    $sub->nilai !== null ? $sub->nilai : 'Belum dinilai',
-                    $sub->feedback_guru ?: '-',
-                    $sub->dikumpulkan_pada ? $sub->dikumpulkan_pada->format('d/m/Y H:i') : '-',
-                ]);
-            }
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rekap-tugas', $data);
+            $pdf->setPaper('a4', 'portrait');
 
-            $siswaIds = $submissions->pluck('siswa_id');
-            $belum = User::where('role', 'siswa')
-                ->where('kelas_id', $tugas->kelas_id)
-                ->whereNotIn('id', $siswaIds)
-                ->orderBy('name')
-                ->get();
-
-            foreach ($belum as $siswa) {
-                fputcsv($file, [
-                    $submissions->count() + $belum->search($siswa) + 1,
-                    $siswa->name,
-                    $siswa->nik ?? '-',
-                    'belum_mengumpulkan',
-                    '-',
-                    '-',
-                    '-',
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+            $filename = 'rekap-tugas-'.\Illuminate\Support\Str::slug($tugas->judul).'-'.date('Y-m-d').'.pdf';
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Export PDF tugas gagal: '.$e->getMessage());
+            return back()->with('error', 'Gagal membuat PDF. Silakan coba download Excel.');
+        }
     }
+
+    public function exportExcel(Tugas $tugas)
+    {
+        $request = request();
+
+        $userId = $request->session()->get('user_id');
+        if (!$userId && Auth::guard('web')->check()) {
+            $userId = Auth::guard('web')->id();
+        }
+
+        abort_unless((int) $tugas->user_id === (int) $userId, 403);
+
+        $submissions = PengumpulanTugas::with('siswa')
+            ->where('tugas_id', $tugas->id)
+            ->get();
+
+        $siswaIds = $submissions->pluck('siswa_id');
+        $belum = User::where('role', 'siswa')
+            ->where('kelas_id', $tugas->kelas_id)
+            ->whereNotIn('id', $siswaIds)
+            ->orderBy('name')
+            ->get();
+
+        $filename = 'rekap-tugas-'.\Illuminate\Support\Str::slug($tugas->judul).'-'.date('Y-m-d').'.xls';
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<?mso-application progid="Excel.Sheet"?>'."\n";
+        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+            xmlns:html="http://www.w3.org/TR/REC-html40">';
+
+        $xml .= '<Styles>';
+        $xml .= '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style>';
+        $xml .= '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/><Interior ss:Color="#0F172A" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="subtitle"><Font ss:Color="#475569" ss:Size="11"/><Interior ss:Color="#F1F5F9" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="header"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/><Interior ss:Color="#2563EB" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>';
+        $xml .= '<Style ss:ID="bordered"><Borders>'
+            .'<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>'
+            .'</Borders></Style>';
+        $xml .= '<Style ss:ID="cell"><Alignment ss:Horizontal="Center"/></Style>';
+        $xml .= '<Style ss:ID="alt"><Interior ss:Color="#F8FAFC" ss:Pattern="Solid"/></Style>';
+        $xml .= '<Style ss:ID="left"><Alignment ss:Horizontal="Left"/></Style>';
+        $xml .= '<Style ss:ID="footer"><Font ss:Italic="1" ss:Color="#64748B"/></Style>';
+        $xml .= '<Style ss:ID="score"><Font ss:Bold="1" ss:Color="#0F172A"/></Style>';
+        $xml .= '</Styles>';
+
+        $xml .= '<Worksheet ss:Name="Rekap Tugas"><Table>';
+        $xml .= '<Column ss:Width="50"/><Column ss:Width="240"/><Column ss:Width="120"/><Column ss:Width="90"/><Column ss:Width="200"/><Column ss:Width="140"/>';
+
+        $judulEsc = htmlspecialchars($tugas->judul, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $mapelEsc = htmlspecialchars($tugas->mataPelajaran?->nama ?? 'Umum', ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $kelasEsc = htmlspecialchars($tugas->kelas?->nama ?? '-', ENT_XML1 | ENT_QUOTES, 'UTF-8');
+
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="5"><Data ss:Type="String">REKAPITULASI PENUMPULAN TUGAS</Data></Cell></Row>';
+        $xml .= '<Row ss:Height="20"><Cell ss:StyleID="subtitle" ss:MergeAcross="5"><Data ss:Type="String">'.$judulEsc.' | '.$mapelEsc.' | Kelas '.$kelasEsc.'</Data></Cell></Row>';
+
+        $xml .= '<Row ss:Height="22">';
+        foreach (['No','Nama Siswa','Status','Nilai','Feedback Guru','Dikumpulkan Pada'] as $hdr) {
+            $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">'.$hdr.'</Data></Cell>';
+        }
+        $xml .= '</Row>';
+
+        $rowNum = 1;
+        foreach ($submissions as $sub) {
+            $rowStyle = (($rowNum % 2) === 0) ? 'alt' : 'default';
+            $status = match($sub->status) {
+                'terkirim' => 'Terkirim',
+                'dinilai' => 'Dinilai',
+                'perlu_revisi' => 'Perlu Revisi',
+                'tidak_mengumpulkan' => 'Tidak Mengumpulkan',
+                default => ucfirst(str_replace('_', ' ', $sub->status)),
+            };
+            $xml .= '<Row>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.$rowNum.'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered left '.$rowStyle.'"><Data ss:Type="String">'.htmlspecialchars($sub->siswa->name ?? '-', ENT_XML1 | ENT_QUOTES, 'UTF-8').'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">'.htmlspecialchars($status, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">'.($sub->nilai !== null ? $sub->nilai : '-').'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered left '.$rowStyle.'"><Data ss:Type="String">'.htmlspecialchars($sub->feedback_guru ?: '-', ENT_XML1 | ENT_QUOTES, 'UTF-8').'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">'.($sub->dikumpulkan_pada ? $sub->dikumpulkan_pada->format('d/m/Y H:i') : '-').'</Data></Cell>';
+            $xml .= '</Row>';
+            $rowNum++;
+        }
+
+        foreach ($belum as $siswa) {
+            $rowStyle = (($rowNum % 2) === 0) ? 'alt' : 'default';
+            $xml .= '<Row>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.$rowNum.'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered left '.$rowStyle.'"><Data ss:Type="String">'.htmlspecialchars($siswa->name, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">Belum Mengumpulkan</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered left '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+            $xml .= '</Row>';
+            $rowNum++;
+        }
+
+        $xml .= '<Row ss:Height="30"><Cell ss:StyleID="footer" ss:MergeAcross="5"><Data ss:Type="String">Dicetak pada '.htmlspecialchars(now()->translatedFormat('d F Y'), ENT_XML1 | ENT_QUOTES, 'UTF-8').'</Data></Cell></Row>';
+        $xml .= '</Table></Worksheet></Workbook>';
+
+        return response($xml, 200, [
+            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
+    }
+    
 
     public function submit(Request $request, Tugas $tugas): RedirectResponse
     {
