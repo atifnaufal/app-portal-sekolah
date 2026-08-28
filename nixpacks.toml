@@ -1,3 +1,9 @@
+[phases.setup]
+cmds = [
+    # Install PHP extensions required by Laravel + dompdf
+    "nix-env -iA nixpkgs.php83Packages.pdo_mysql nixpkgs.php83Packages.gd nixpkgs.php83Packages.zip nixpkgs.php83Packages.intl nixpkgs.php83Packages.opcache"
+]
+
 [phases.build]
 cmds = [
     # Pastikan .env & APP_KEY ada SEBELUM tool apa pun yang memanggil
