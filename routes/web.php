@@ -94,12 +94,18 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::get('/chat/poll', [ChatController::class, 'poll'])->name('chat.poll');
     Route::get('/chat/{group}', [ChatController::class, 'show'])->name('chat.show');
     Route::get('/notifikasi-saya', [NotifikasiController::class, 'mine'])->name('notifications.index');
-    Route::get('/notifikasi/poll', [NotifikasiController::class, 'poll'])->name('notifications.poll');
-    Route::get('/session/status', [SessionController::class, 'status'])->name('session.status');
     Route::get('/mahasiswa', [MahasiswaController::class, 'index'])->name('mahasiswa.index');
     Route::get('/tugas', [TugasController::class, 'index'])->name('tugas.index');
     Route::get('/tugas/{tugas}', [TugasController::class, 'show'])->whereNumber('tugas')->name('tugas.show');
 });
+
+// Endpoint JSON realtime (heartbeat sesi & polling notifikasi). Sengaja DI LUAR
+// middleware role: harus mengembalikan JSON (bukan redirect 302) saat sesi mati
+// supaya client aplikasi bisa mendeteksi expiry & diarahkan ke login realtime.
+// Aman: controller memeriksa `session('user_id')` & mengembalikan authenticated:false.
+Route::get('/notifikasi/poll', [NotifikasiController::class, 'poll'])->name('notifications.poll');
+Route::get('/session/status', [SessionController::class, 'status'])->name('session.status');
+
 
 // Admin, Wali Kelas, dan Pembina Eskul dapat membuat/kelola pengumuman (termasuk privat per-siswa).
 Route::middleware('role:admin,guru')->group(function () {

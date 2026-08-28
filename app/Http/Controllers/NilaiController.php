@@ -482,9 +482,9 @@ class NilaiController extends Controller
         ]);
     }
 
-    protected function esc(string $value): string
+    protected function esc(?string $value): string
     {
-        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        return htmlspecialchars((string) ($value ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8');
     }
 
     protected function authorizePeriode(): void
