@@ -16,4 +16,4 @@
         </form>
     </div>
 </div>
-<?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views/admin/jadwal/modal-edit.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views\admin\jadwal\modal-edit.blade.php ENDPATH**/ ?>

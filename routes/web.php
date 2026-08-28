@@ -98,8 +98,8 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::get('/tugas/{tugas}', [TugasController::class, 'show'])->whereNumber('tugas')->name('tugas.show');
 });
 
-// Admin tetap dapat membuat/kelola pengumuman dari mobile.
-Route::middleware('role:admin')->group(function () {
+// Admin, Wali Kelas, dan Pembina Eskul dapat membuat/kelola pengumuman (termasuk privat per-siswa).
+Route::middleware('role:admin,guru')->group(function () {
     Route::resource('pengumuman', PengumumanController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
 });
 

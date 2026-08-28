@@ -61,4 +61,4 @@
         <input type="time" name="jam_selesai" value="<?php echo e($val('jam_selesai')); ?>" class="form-control" required>
     </div>
 </div>
-<?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views/admin/jadwal/fields.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views\admin\jadwal\fields.blade.php ENDPATH**/ ?>

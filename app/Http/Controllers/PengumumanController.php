@@ -120,12 +120,15 @@ class PengumumanController extends Controller
             'gambar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'tanggal_acara' => ['nullable', 'date'],
             'is_landing' => ['nullable', 'boolean'],
-            'target' => ['required', 'string'] // 'general', 'class', 'eskul:{id}'
+            'target' => ['required', 'string'], // 'general', 'class', 'eskul:{id}', 'private'
+            'siswa_ids' => ['nullable', 'array'],
+            'siswa_ids.*' => ['integer', 'exists:users,id'],
         ]);
 
         $data['user_id'] = $userId;
         $data['publik'] = true;
         $data['is_landing'] = $request->boolean('is_landing');
+        $privateSiswaIds = [];
 
         // Logic target
         if ($data['target'] === 'general') {
@@ -143,6 +146,27 @@ class PengumumanController extends Controller
             abort_unless($role === 'admin' || $isAdminEskul, 403);
             $data['kelas_id'] = null;
             $data['eskul_id'] = $eskulId;
+        } elseif ($data['target'] === 'private') {
+            // Pengumuman privat per-siswa: hanya guru (wali kelas) boleh.
+            $isWaliKelas = Kelas::where('pembina_id', $userId)->first();
+            abort_unless($role === 'admin' || $isWaliKelas, 403);
+
+            $privateSiswaIds = $request->input('siswa_ids', []);
+            abort_unless(count($privateSiswaIds) > 0, 422, 'Pilih minimal satu siswa penerima.');
+
+            // Wali kelas hanya boleh menargetkan siswa di kelasnya.
+            if ($isWaliKelas) {
+                $validIds = User::where('kelas_id', $isWaliKelas->id)
+                    ->where('role', 'siswa')
+                    ->pluck('id')
+                    ->all();
+                $privateSiswaIds = array_values(array_intersect($privateSiswaIds, $validIds));
+                abort_unless(count($privateSiswaIds) > 0, 403);
+            }
+
+            $data['kelas_id'] = null;
+            $data['eskul_id'] = null;
+            $data['publik'] = false; // privat
         }
 
         if ($request->hasFile('gambar')) {
@@ -152,19 +176,24 @@ class PengumumanController extends Controller
 
         $pengumuman = Pengumuman::create($data);
 
-        // Send Notifications
+        // Kirim notifikasi sesuai target
         $targetName = "Semua";
-        if ($pengumuman->kelas_id) $targetName = "Kelas " . $pengumuman->kelas->nama;
-        if ($pengumuman->eskul_id) $targetName = "Eskul " . $pengumuman->eskul->nama;
-
-        NotificationHelper::sendToAll(
-            "Pengumuman ($targetName)",
-            $pengumuman->judul,
-            route('pengumuman.index'),
-            'announcement',
-            null,
-            $userId
-        );
+        if ($pengumuman->kelas_id) {
+            $targetName = "Kelas " . $pengumuman->kelas->nama;
+            NotificationHelper::sendToClass($pengumuman->kelas_id, "Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'announcement');
+        } elseif ($pengumuman->eskul_id) {
+            $targetName = "Eskul " . $pengumuman->eskul->nama;
+            NotificationHelper::sendToEskul($pengumuman->eskul_id, "Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'announcement');
+        } elseif (!empty($privateSiswaIds)) {
+            // Privat: lampirkan penerima + kirim notifikasi individu.
+            $pengumuman->users()->sync($privateSiswaIds);
+            foreach ($privateSiswaIds as $sid) {
+                NotificationHelper::send($sid, "Pengumuman Pribadi", $pengumuman->judul, route('pengumuman.index'), 'announcement');
+            }
+        } else {
+            // Umum
+            NotificationHelper::sendToAll("Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'announcement', null, $userId);
+        }
 
         return redirect()->route('pengumuman.index')->with('success', 'Pengumuman berhasil dibuat.');
     }
@@ -182,7 +211,14 @@ class PengumumanController extends Controller
             $q->where('user_id', $userId)->where('is_admin', true);
         })->get();
 
-        return view('pengumuman.form', compact('pengumuman', 'isWaliKelas', 'adminEskuls'));
+        // Siswa penerima untuk pengumuman privat.
+        $siswaList = collect();
+        if ($isWaliKelas) {
+            $siswaList = User::where('kelas_id', $isWaliKelas->id)->where('role', 'siswa')->orderBy('name')->get(['id', 'name']);
+        }
+        $selectedSiswa = $pengumuman->isPrivate() ? $pengumuman->users()->pluck('users.id')->all() : [];
+
+        return view('pengumuman.form', compact('pengumuman', 'isWaliKelas', 'adminEskuls', 'siswaList', 'selectedSiswa'));
     }
 
     public function update(Request $request, Pengumuman $pengumuman): RedirectResponse
@@ -196,10 +232,59 @@ class PengumumanController extends Controller
             'isi' => ['required'],
             'gambar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'tanggal_acara' => ['nullable', 'date'],
-            'is_landing' => ['nullable', 'boolean']
+            'is_landing' => ['nullable', 'boolean'],
+            'target' => ['nullable', 'string'],
+            'siswa_ids' => ['nullable', 'array'],
+            'siswa_ids.*' => ['integer', 'exists:users,id'],
         ]);
 
         $data['is_landing'] = $request->boolean('is_landing');
+
+        // Perbarui jangkauan bila target diubah.
+        if ($request->target) {
+            $data['publik'] = true;
+            if ($request->target === 'general') {
+                abort_unless($role === 'admin', 403);
+                $data['kelas_id'] = null;
+                $data['eskul_id'] = null;
+                $pengumuman->users()->sync([]);
+            } elseif ($request->target === 'class') {
+                $kelas = Kelas::where('pembina_id', $userId)->first();
+                abort_unless($role === 'admin' || $kelas, 403);
+                $data['kelas_id'] = $kelas ? $kelas->id : $request->kelas_id;
+                $data['eskul_id'] = null;
+                $pengumuman->users()->sync([]);
+            } elseif (str_starts_with($request->target, 'eskul:')) {
+                $eskulId = explode(':', $request->target)[1];
+                $isAdminEskul = EskulMember::where('user_id', $userId)->where('eskul_id', $eskulId)->where('is_admin', true)->exists();
+                abort_unless($role === 'admin' || $isAdminEskul, 403);
+                $data['kelas_id'] = null;
+                $data['eskul_id'] = $eskulId;
+                $pengumuman->users()->sync([]);
+            } elseif ($request->target === 'private') {
+                $isWaliKelas = Kelas::where('pembina_id', $userId)->first();
+                abort_unless($role === 'admin' || $isWaliKelas, 403);
+                $ids = $request->input('siswa_ids', []);
+                abort_unless(count($ids) > 0, 422, 'Pilih minimal satu siswa penerima.');
+                if ($isWaliKelas) {
+                    $validIds = User::where('kelas_id', $isWaliKelas->id)->where('role', 'siswa')->pluck('id')->all();
+                    $ids = array_values(array_intersect($ids, $validIds));
+                    abort_unless(count($ids) > 0, 403);
+                }
+                $data['kelas_id'] = null;
+                $data['eskul_id'] = null;
+                $data['publik'] = false;
+                $pengumuman->users()->sync($ids);
+            }
+        } elseif ($pengumuman->isPrivate()) {
+            $isWaliKelas = Kelas::where('pembina_id', $userId)->first();
+            if ($isWaliKelas) {
+                $ids = $request->input('siswa_ids', []);
+                $validIds = User::where('kelas_id', $isWaliKelas->id)->where('role', 'siswa')->pluck('id')->all();
+                $pengumuman->users()->sync(array_values(array_intersect($ids, $validIds)));
+            }
+        }
+
         if ($request->hasFile('gambar')) {
             $data['gambar'] = $request->file('gambar')->store('pengumuman', 'public');
             $data['gambar_nama'] = $request->file('gambar')->getClientOriginalName();
@@ -210,9 +295,8 @@ class PengumumanController extends Controller
 
     public function destroy(Request $request, Pengumuman $pengumuman): RedirectResponse
     {
-        $userId = session('user_id');
-        $role = session('user_role');
-        abort_unless($role === 'admin' || $pengumuman->user_id === $userId, 403);
+        // Hanya Admin yang boleh menghapus pengumuman (guru/pembina eskul tidak).
+        abort_unless(session('user_role') === 'admin', 403);
 
         $pengumuman->delete();
         return back()->with('success', 'Pengumuman berhasil dihapus.');

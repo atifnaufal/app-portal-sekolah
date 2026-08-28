@@ -188,4 +188,4 @@
 </script>
 </body>
 </html>
-<?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\laragon\www\app-portal-sekolah\resources\views\layouts\app.blade.php ENDPATH**/ ?>

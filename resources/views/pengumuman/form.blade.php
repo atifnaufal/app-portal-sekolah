@@ -15,22 +15,40 @@
 
             <div class="mb-3">
                 <label class="form-label fw-bold">Target Pengumuman</label>
-                <select name="target" class="form-select" required>
+                @php
+                    $isPrivateEdit = $pengumuman->exists && method_exists($pengumuman,'isPrivate') && $pengumuman->isPrivate();
+                    $currentTarget = old('target', $isPrivateEdit ? 'private' : ($pengumuman->eskul_id ? 'eskul:'.$pengumuman->eskul_id : ($pengumuman->kelas_id ? 'class' : (!$pengumuman->exists ? '' : 'general'))));
+                @endphp
+                <select name="target" id="targetSelect" class="form-select" required>
                     @if(session('user_role') === 'admin')
-                        <option value="general" @selected(old('target', !$pengumuman->kelas_id && !$pengumuman->eskul_id ? 'general' : '') == 'general')>Umum (Seluruh Sekolah)</option>
+                        <option value="general" @selected($currentTarget === 'general')>Umum (Seluruh Sekolah)</option>
                     @endif
 
                     @if(isset($isWaliKelas) && $isWaliKelas)
-                        <option value="class" @selected(old('target', $pengumuman->kelas_id ? 'class' : '') == 'class')>Wali Kelas ({{ $isWaliKelas->nama }})</option>
+                        <option value="class" @selected($currentTarget === 'class')>Wali Kelas ({{ $isWaliKelas->nama }})</option>
                     @endif
 
                     @if(isset($adminEskuls))
                         @foreach($adminEskuls as $ae)
-                            <option value="eskul:{{ $ae->id }}" @selected(old('target', $pengumuman->eskul_id == $ae->id ? 'eskul:'.$ae->id : '') == 'eskul:'.$ae->id)>Admin Eskul ({{ $ae->nama }})</option>
+                            <option value="eskul:{{ $ae->id }}" @selected($currentTarget === 'eskul:'.$ae->id)>Admin Eskul ({{ $ae->nama }})</option>
                         @endforeach
+                    @endif
+
+                    @if(session('user_role') === 'admin' || (isset($isWaliKelas) && $isWaliKelas))
+                        <option value="private" @selected($currentTarget === 'private')>Pribadi (Siswa Tertentu)</option>
                     @endif
                 </select>
                 <div class="small text-muted mt-1">Pilih jangkauan informasi yang akan Anda bagikan.</div>
+            </div>
+
+            <div class="mb-3" id="privateBox" style="{{ $currentTarget === 'private' ? '' : 'display:none;' }}">
+                <label class="form-label fw-bold">Pilih Siswa Penerima</label>
+                <select name="siswa_ids[]" id="siswaSelect" class="form-select" multiple size="8">
+                    @foreach($siswaList ?? collect() as $s)
+                        <option value="{{ $s->id }}" @selected(in_array($s->id, old('siswa_ids', $selectedSiswa ?? []), true))>{{ $s->name }}</option>
+                    @endforeach
+                </select>
+                <div class="small text-muted mt-1">Tahan Ctrl (atau sentuh) untuk memilih beberapa siswa. Pengumuman privat hanya terlihat oleh siswa terpilih.</div>
             </div>
 
             <div class="mb-3">
@@ -68,4 +86,21 @@
         </form>
     </div>
 </div>
+
+<script>
+(function () {
+    const sel = document.getElementById('targetSelect');
+    const box = document.getElementById('privateBox');
+    const siswa = document.getElementById('siswaSelect');
+    if (!sel || !box || !siswa) return;
+
+    function sync() {
+        const isPrivate = sel.value === 'private';
+        box.style.display = isPrivate ? '' : 'none';
+        siswa.required = isPrivate;
+    }
+    sel.addEventListener('change', sync);
+    sync();
+})();
+</script>
 @endsection
