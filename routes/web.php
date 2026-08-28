@@ -57,6 +57,7 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
 
     // Nilai & Jadwal
     Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
+    Route::post('/nilai/upsert', [NilaiController::class, 'upsert'])->name('nilai.upsert');
     Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
 });
 

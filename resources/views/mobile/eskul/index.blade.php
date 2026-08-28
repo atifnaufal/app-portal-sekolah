@@ -112,11 +112,24 @@
                 </div>
 
                 @if($isPending || $isJoined)
-                    <div class="mt-2 d-flex gap-2">
-                        @if($isPending)
-                            <span class="status-badge bg-warning text-dark" style="background: #fef3c7 !important;">Menunggu Persetujuan</span>
-                        @elseif($isJoined)
-                            <span class="status-badge bg-success text-white" style="background: #10b981 !important;">Sudah Bergabung</span>
+                    <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                        <div class="d-flex gap-2">
+                            @if($isPending)
+                                <span class="status-badge bg-warning text-dark" style="background: #fef3c7 !important;">Menunggu Persetujuan</span>
+                            @elseif($isJoined)
+                                <span class="status-badge bg-success text-white" style="background: #10b981 !important;">Sudah Bergabung</span>
+                            @endif
+                        </div>
+
+                        @if($isJoined)
+                            @php
+                                $eskulChat = \App\Models\ChatGroup::where('type', 'eskul')->where('related_id', $eskul->id)->first();
+                            @endphp
+                            @if($eskulChat)
+                                <a href="{{ route('chat.index', ['group_id' => $eskulChat->id]) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" style="font-size: 11px;">
+                                    <i class="bi bi-chat-dots-fill me-1"></i> Masuk Chat
+                                </a>
+                            @endif
                         @endif
                     </div>
                 @endif

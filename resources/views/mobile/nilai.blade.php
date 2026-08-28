@@ -30,6 +30,17 @@
         display: flex; align-items: center; justify-content: center;
     }
     @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .tugas-modal {
+        position: fixed; inset: 0; z-index: 2000; display: none;
+        align-items: flex-end; justify-content: center;
+        background: rgba(15, 23, 42, .45);
+    }
+    .tugas-modal.open { display: flex; }
+    .tugas-modal-card {
+        width: 100%; max-width: 680px; background: #fff;
+        border-radius: 28px 28px 0 0; padding: 24px 20px 32px;
+    }
 </style>
 
 <div class="page-header">
@@ -91,28 +102,41 @@
                     <a href="{{ route('nilai.index') }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">Ganti Mapel</a>
                 </div>
 
-                @forelse($students as $siswaId => $studentNilais)
-                    @php($siswa = $studentNilais->first()->siswa)
+                @forelse($students as $siswa)
+                    @php($nilaiRecord = $siswa->nilai_records->first())
                     <div class="card ai-card" style="animation: slideUp 0.4s ease both;">
                         <div class="card-body p-3">
-                            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                            <div class="d-flex align-items-center gap-3 mb-3">
                                 <img src="{{ $siswa->foto ? asset('storage/'.$siswa->foto) : 'https://ui-avatars.com/api/?name='.urlencode($siswa->name).'&background=f1f5f9&color=94a3b8' }}"
-                                     class="rounded-4" style="width: 44px; height: 44px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                                     class="rounded-4" style="width: 44px; height: 44px; object-fit: cover;">
                                 <div class="flex-grow-1">
                                     <div class="fw-bold" style="font-size: 14px; color: #1e293b;">{{ $siswa->name }}</div>
                                     <div class="small text-muted fw-bold" style="font-size: 10px;">NIS: {{ $siswa->nik ?? '-' }}</div>
                                 </div>
+                                <button type="button" class="btn btn-primary btn-sm rounded-pill px-3"
+                                    onclick="openInputNilai(@json($siswa), @json($nilaiRecord))">
+                                    Input
+                                </button>
                             </div>
                             <div class="row g-2">
-                                @foreach($studentNilais as $n)
-                                    <div class="col-4">
-                                        <div class="p-2 rounded-4 text-center" style="background: #f8fafc; border: 1px solid #f1f5f9;">
-                                            <div class="small text-muted fw-extrabold" style="font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">SMT {{ $n->semester }}</div>
-                                            <div class="fw-black text-primary" style="font-size: 16px;">{{ $n->uas ?? $n->uts ?? $n->tugas }}</div>
-                                            <div class="text-muted" style="font-size: 8px; font-weight: 700;">UAS/UTS/TGS</div>
-                                        </div>
+                                <div class="col-4">
+                                    <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
+                                        <div class="fw-black text-primary" style="font-size: 15px;">{{ $nilaiRecord->tugas ?? '-' }}</div>
+                                        <div class="text-muted fw-bold" style="font-size: 8px; text-transform: uppercase;">Tugas</div>
                                     </div>
-                                @endforeach
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
+                                        <div class="fw-black text-primary" style="font-size: 15px;">{{ $nilaiRecord->uts ?? '-' }}</div>
+                                        <div class="text-muted fw-bold" style="font-size: 8px; text-transform: uppercase;">UTS</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
+                                        <div class="fw-black text-primary" style="font-size: 15px;">{{ $nilaiRecord->uas ?? '-' }}</div>
+                                        <div class="text-muted fw-bold" style="font-size: 8px; text-transform: uppercase;">UAS</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -192,4 +216,50 @@
         @endif
     </main>
 </div>
+
+@if($isGuru && $selectedSubject)
+    <div class="tugas-modal" id="inputNilaiModal" onclick="if(event.target===this)closeInputNilai()">
+        <div class="tugas-modal-card">
+            <div class="fw-bold h5 mb-3">Input Nilai: <span id="modalSiswaName"></span></div>
+            <form action="{{ route('nilai.upsert') }}" method="POST">
+                @csrf
+                <input type="hidden" name="siswa_id" id="modalSiswaId">
+                <input type="hidden" name="mata_pelajaran_id" value="{{ $selectedSubject->id }}">
+                <input type="hidden" name="semester" value="1"> {{-- Default semester --}}
+
+                <div class="row g-3 mb-4">
+                    <div class="col-4">
+                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">Tugas</label>
+                        <input type="number" name="tugas" id="modalTugas" class="form-control rounded-4 border-2" min="0" max="100" placeholder="0">
+                    </div>
+                    <div class="col-4">
+                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">UTS</label>
+                        <input type="number" name="uts" id="modalUts" class="form-control rounded-4 border-2" min="0" max="100" placeholder="0">
+                    </div>
+                    <div class="col-4">
+                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">UAS</label>
+                        <input type="number" name="uas" id="modalUas" class="form-control rounded-4 border-2" min="0" max="100" placeholder="0">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm">Simpan Nilai</button>
+                <button type="button" class="btn btn-light w-100 py-3 rounded-pill mt-2" onclick="closeInputNilai()">Batal</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openInputNilai(siswa, nilai) {
+            document.getElementById('modalSiswaId').value = siswa.id;
+            document.getElementById('modalSiswaName').innerText = siswa.name;
+            document.getElementById('modalTugas').value = nilai ? nilai.tugas : '';
+            document.getElementById('modalUts').value = nilai ? nilai.uts : '';
+            document.getElementById('modalUas').value = nilai ? nilai.uas : '';
+            document.getElementById('inputNilaiModal').classList.add('open');
+        }
+        function closeInputNilai() {
+            document.getElementById('inputNilaiModal').classList.remove('open');
+        }
+    </script>
+@endif
 @endsection
