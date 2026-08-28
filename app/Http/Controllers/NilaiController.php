@@ -164,10 +164,17 @@ class NilaiController extends Controller
     protected function authorizeRecap(Kelas $kelas): void
     {
         $userId = session('user_id') ?: Auth::id();
+        $userRole = session('user_role') ?: optional(Auth::user())->role;
+
+        $isWaliKelas   = $kelas->pembina_id == $userId;
+        $isMapelGuru   = MataPelajaran::where('kelas_id', $kelas->id)->where('guru_id', $userId)->exists();
+        $isHomeGuru    = optional(User::find($userId))->kelas_id == $kelas->id;
+
         abort_unless(
-            $kelas->pembina_id == $userId
-            || session('user_role') === 'admin'
-            || MataPelajaran::where('kelas_id', $kelas->id)->where('guru_id', $userId)->exists(),
+            $isWaliKelas
+            || $isMapelGuru
+            || $isHomeGuru
+            || $userRole === 'admin',
             403
         );
     }
@@ -178,8 +185,18 @@ class NilaiController extends Controller
     protected function authorizeMapel(MataPelajaran $mp): void
     {
         $userId = session('user_id') ?: Auth::id();
+        $userRole = session('user_role') ?: optional(Auth::user())->role;
+
         $isWaliKelas = $mp->kelas && $mp->kelas->pembina_id == $userId;
-        abort_unless($mp->guru_id == $userId || $isWaliKelas || session('user_role') === 'admin', 403);
+        $isHomeGuru  = optional(User::find($userId))->kelas_id == $mp->kelas_id;
+
+        abort_unless(
+            $mp->guru_id == $userId
+            || $isWaliKelas
+            || $isHomeGuru
+            || $userRole === 'admin',
+            403
+        );
     }
 
     /**
@@ -215,15 +232,21 @@ class NilaiController extends Controller
     {
         $this->authorizeMapel($mp);
 
-        $semester = (int) ($request->semester ?: 1);
-        $data = $this->dataRecapMapel($mp, $semester, $request->tahun_ajaran);
+        try {
+            $this->prepPdf();
+            $semester = (int) ($request->semester ?: 1);
+            $data = $this->dataRecapMapel($mp, $semester, $request->tahun_ajaran);
 
-        $pdf = Pdf::loadView('pdf.rekap-nilai-mapel', $data);
-        $pdf->setPaper('a4', 'landscape');
+            $pdf = Pdf::loadView('pdf.rekap-nilai-mapel', $data);
+            $pdf->setPaper('a4', 'landscape');
 
-        return $pdf->download(
-            'rekap-nilai-'.Str::slug($mp->nama).'-smt-'.$semester.'-'.str_replace('/', '_', $data['tahunAjaran']).'.pdf'
-        );
+            return $pdf->download(
+                'rekap-nilai-'.Str::slug($mp->nama).'-smt-'.$semester.'-'.str_replace('/', '_', $data['tahunAjaran']).'.pdf'
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Recap PDF gagal, fallback ke Excel: '.$e->getMessage());
+            return $this->recapMapelExcel($request, $mp);
+        }
     }
 
     public function recapMapelExcel(Request $request, MataPelajaran $mp)
@@ -313,15 +336,21 @@ class NilaiController extends Controller
     {
         $this->authorizeRecap($kelas);
 
-        $semester = (int) ($request->semester ?: 1);
-        $data = $this->dataRecap($kelas, $semester, $request->tahun_ajaran);
+        try {
+            $this->prepPdf();
+            $semester = (int) ($request->semester ?: 1);
+            $data = $this->dataRecap($kelas, $semester, $request->tahun_ajaran);
 
-        $pdf = Pdf::loadView('pdf.rekap-nilai', $data);
-        $pdf->setPaper('a4', 'landscape');
+            $pdf = Pdf::loadView('pdf.rekap-nilai', $data);
+            $pdf->setPaper('a4', 'landscape');
 
-        return $pdf->download(
-            'rekap-nilai-'.$kelas->nama.'-smt-'.$semester.'-'.str_replace('/', '_', $data['tahunAjaran']).'.pdf'
-        );
+            return $pdf->download(
+                'rekap-nilai-'.$kelas->nama.'-smt-'.$semester.'-'.str_replace('/', '_', $data['tahunAjaran']).'.pdf'
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Recap kelas PDF gagal, fallback ke Excel: '.$e->getMessage());
+            return $this->recapExcel($request, $kelas);
+        }
     }
 
     /**
@@ -458,8 +487,17 @@ class NilaiController extends Controller
     protected function authorizePeriode(): void
     {
         $userId = session('user_id') ?: Auth::id();
-        $role = session('user_role');
+        $role = session('user_role') ?: optional(Auth::user())->role;
         abort_unless($role === 'admin' || $role === 'guru', 403);
+    }
+
+    /**
+     * Pastikan locale Indonesia untuk tanggal PDF + lokasi font dompdf aman di produksi.
+     */
+    protected function prepPdf(): void
+    {
+        app()->setLocale('id');
+        \Carbon\Carbon::setLocale('id');
     }
 
     /**
@@ -512,17 +550,24 @@ class NilaiController extends Controller
     {
         $this->authorizePeriode();
 
-        $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
-        $tahun   = (int) ($request->tahun ?: now()->year);
-        $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
-        $tahunAjaran = $periode === 'tahunan' ? ($request->tahun_ajaran ?: (now()->format('Y').'/'.(now()->format('Y')+1))) : null;
+        try {
+            $this->prepPdf();
 
-        $data = $this->dataRecapPeriode($periode, $tahun, $bulan, $tahunAjaran);
-        $pdf = Pdf::loadView('pdf.rekap-nilai-periode', $data);
-        $pdf->setPaper('a4', 'landscape');
+            $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
+            $tahun   = (int) ($request->tahun ?: now()->year);
+            $bulan   = $periode === 'bulanan' ? (int) ($request->bulan ?: now()->month) : null;
+            $tahunAjaran = $periode === 'tahunan' ? ($request->tahun_ajaran ?: (now()->format('Y').'/'.(now()->format('Y')+1))) : null;
 
-        $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.str_replace('/', '_', $tahunAjaran);
-        return $pdf->download('rekap-nilai-'.$label.'.pdf');
+            $data = $this->dataRecapPeriode($periode, $tahun, $bulan, $tahunAjaran);
+            $pdf = Pdf::loadView('pdf.rekap-nilai-periode', $data);
+            $pdf->setPaper('a4', 'landscape');
+
+            $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.str_replace('/', '_', $tahunAjaran);
+            return $pdf->download('rekap-nilai-'.$label.'.pdf');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Recap periode PDF gagal, fallback ke Excel: '.$e->getMessage());
+            return $this->recapPeriodeExcel($request);
+        }
     }
 
     public function recapPeriodeExcel(Request $request)

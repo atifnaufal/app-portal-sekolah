@@ -212,13 +212,22 @@ class AbsensiController extends Controller
         $kelasId = $request->kelas_id ? (int) $request->kelas_id : null;
 
         $this->authorizeRecap($kelasId);
-        $data = $this->dataRecapAbsensi($periode, $tahun, $bulan, $kelasId);
 
-        $pdf = Pdf::loadView('pdf.rekap-absensi', $data);
-        $pdf->setPaper('a4', 'landscape');
+        try {
+            app()->setLocale('id');
+            \Carbon\Carbon::setLocale('id');
 
-        $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.$tahun;
-        return $pdf->download('rekap-absensi-'.$label.'.pdf');
+            $data = $this->dataRecapAbsensi($periode, $tahun, $bulan, $kelasId);
+
+            $pdf = Pdf::loadView('pdf.rekap-absensi', $data);
+            $pdf->setPaper('a4', 'landscape');
+
+            $label = $periode === 'bulanan' ? 'bulan-'.$bulan.'-'.$tahun : 'tahun-'.$tahun;
+            return $pdf->download('rekap-absensi-'.$label.'.pdf');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Absensi recap PDF gagal, fallback ke Excel: '.$e->getMessage());
+            return $this->recapExcel($request);
+        }
     }
 
     public function recapExcel(Request $request)

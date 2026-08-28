@@ -59,21 +59,25 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
     // Nilai & Jadwal
     Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
     Route::post('/nilai/upsert', [NilaiController::class, 'upsert'])->name('nilai.upsert');
-    Route::get('/nilai/recap/{kelas}', [NilaiController::class, 'recapPdf'])->name('nilai.recap');
-    Route::get('/nilai/recap/{kelas}/excel', [NilaiController::class, 'recapExcel'])->name('nilai.recap.excel');
-    Route::get('/nilai/recap-mapel/{mapel}', [NilaiController::class, 'recapMapelPdf'])->name('nilai.recap.mapel');
-    Route::get('/nilai/recap-mapel/{mapel}/excel', [NilaiController::class, 'recapMapelExcel'])->name('nilai.recap.mapel.excel');
-    Route::get('/nilai/recap-periode', [NilaiController::class, 'recapPeriodePdf'])->name('nilai.recap.periode');
-    Route::get('/nilai/recap-periode/excel', [NilaiController::class, 'recapPeriodeExcel'])->name('nilai.recap.periode.excel');
     Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
-    Route::get('/absensi/recap', [AbsensiController::class, 'recapPdf'])->name('absensi.recap');
-    Route::get('/absensi/recap/excel', [AbsensiController::class, 'recapExcel'])->name('absensi.recap.excel');
 
     // LMS - Mata Pelajaran
     Route::get('/mapel/{mapel}', [\App\Http\Controllers\MapelController::class, 'show'])->name('mapel.show');
 
     // LMS - Materi (semua role dapat melihat detail materi)
     Route::get('/mapel/{mapel}/materi/{materi}', [\App\Http\Controllers\MateriController::class, 'show'])->name('materi.show');
+});
+
+// Unduhan rekap (nilai & absensi) hanya untuk staf (admin/guru) — prevent siswa 403.
+Route::middleware('role:admin,guru')->group(function () {
+    Route::get('/nilai/recap/{kelas}', [NilaiController::class, 'recapPdf'])->name('nilai.recap');
+    Route::get('/nilai/recap/{kelas}/excel', [NilaiController::class, 'recapExcel'])->name('nilai.recap.excel');
+    Route::get('/nilai/recap-mapel/{mapel}', [NilaiController::class, 'recapMapelPdf'])->name('nilai.recap.mapel');
+    Route::get('/nilai/recap-mapel/{mapel}/excel', [NilaiController::class, 'recapMapelExcel'])->name('nilai.recap.mapel.excel');
+    Route::get('/nilai/recap-periode', [NilaiController::class, 'recapPeriodePdf'])->name('nilai.recap.periode');
+    Route::get('/nilai/recap-periode/excel', [NilaiController::class, 'recapPeriodeExcel'])->name('nilai.recap.periode.excel');
+    Route::get('/absensi/recap', [AbsensiController::class, 'recapPdf'])->name('absensi.recap');
+    Route::get('/absensi/recap/excel', [AbsensiController::class, 'recapExcel'])->name('absensi.recap.excel');
 });
 
 Route::middleware('role:guru,siswa')->group(function () {

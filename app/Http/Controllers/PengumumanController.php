@@ -15,6 +15,9 @@ use App\Helpers\NotificationHelper;
 
 class PengumumanController extends Controller
 {
+    /**
+     * Menghitung siapa penerima pengumuman publik (umum/kelas/eskul) untuk otorisasi.
+     */
     public function index(Request $request): View
     {
         $userId = $request->session()->get('user_id');
@@ -24,19 +27,16 @@ class PengumumanController extends Controller
         $kelasId = $user->kelas_id;
         $myEskulIds = $user->eskuls()->pluck('eskuls.id')->toArray();
 
-        // Get announcements based on scope
+        // Pengumuman publik berdasarkan scope (umum / kelas / eskul) milik user.
         $pengumumans = Pengumuman::with(['kelas', 'eskul', 'user'])
             ->where('publik', true)
             ->where(function($query) use ($kelasId, $myEskulIds) {
-                // Public (General)
                 $query->whereNull('kelas_id')->whereNull('eskul_id');
 
-                // Class Specific
                 if ($kelasId) {
                     $query->orWhere('kelas_id', $kelasId);
                 }
 
-                // Eskul Specific
                 if (!empty($myEskulIds)) {
                     $query->orWhereIn('eskul_id', $myEskulIds);
                 }
@@ -44,19 +44,41 @@ class PengumumanController extends Controller
             ->latest()
             ->get();
 
+        // Pengumuman privat yang ditujukan khusus user ini.
+        $privat = Pengumuman::with(['user'])
+            ->with(['users' => fn($q) => $q->where('users.id', $userId)])
+            ->where('publik', false)
+            ->whereHas('users', fn($q) => $q->where('users.id', $userId))
+            ->latest()
+            ->get();
+
+        // Gabungkan: privat tampil paling atas (lebih mendesak), sisanya kronologis.
+        $semua = $privat->merge($pengumumans)->unique('id');
+
+        // Tandai status dibaca untuk pengumuman privat, lalu tandai dibaca.
+        foreach ($privat as $p) {
+            $pivot = $p->users->first()?->pivot;
+            $p->user_read_at = $pivot?->read_at;
+        }
+
         if ($role !== 'admin') {
-            // Cek apakah guru adalah Wali Kelas atau Admin Eskul untuk menampilkan tombol "Buat"
-            $canCreate = ($role === 'guru' && Kelas::where('pembina_id', $userId)->exists()) ||
-                          EskulMember::where('user_id', $userId)->where('is_admin', true)->exists();
+            $isWaliKelas = Kelas::where('pembina_id', $userId)->exists();
+            $pembinaEskuls = Eskul::whereHas('members', fn($q) => $q->where('user_id', $userId)->where('is_admin', true))->get();
+            $canCreate = ($role === 'guru' && $isWaliKelas) || $pembinaEskuls->isNotEmpty();
+            $canManage = $role === 'guru' && ($isWaliKelas || $pembinaEskuls->isNotEmpty());
 
             return view('mobile.pengumuman', [
-                'pengumumans' => $pengumumans,
+                'pengumumans' => $semua,
+                'privat' => $privat,
                 'user' => $user,
-                'canCreate' => $canCreate
+                'canCreate' => $canCreate,
+                'canManage' => $canManage,
+                'isWaliKelas' => $isWaliKelas ? Kelas::where('pembina_id', $userId)->first() : null,
+                'pembinaEskuls' => $pembinaEskuls,
             ]);
         }
 
-        return view('pengumuman.index', compact('pengumumans'));
+        return view('pengumuman.index', ['pengumumans' => $pengumumans, 'semua' => $semua]);
     }
 
     public function create(Request $request): View
@@ -64,7 +86,7 @@ class PengumumanController extends Controller
         $role = session('user_role');
         $userId = session('user_id');
 
-        // Admin IT, Wali Kelas, or Admin Eskul
+        // Admin IT, Wali Kelas, atau Admin Eskul
         $isWaliKelas = Kelas::where('pembina_id', $userId)->first();
         $adminEskuls = Eskul::whereHas('members', function($q) use ($userId) {
             $q->where('user_id', $userId)->where('is_admin', true);
@@ -72,10 +94,18 @@ class PengumumanController extends Controller
 
         abort_unless($role === 'admin' || $isWaliKelas || $adminEskuls->isNotEmpty(), 403);
 
+        // Daftar siswa untuk pengumuman privat (penerima per-student).
+        $siswaList = collect();
+        if ($isWaliKelas) {
+            $siswaList = User::where('kelas_id', $isWaliKelas->id)->where('role', 'siswa')->orderBy('name')->get(['id', 'name']);
+        }
+
         return view('pengumuman.form', [
             'pengumuman' => new Pengumuman,
             'isWaliKelas' => $isWaliKelas,
-            'adminEskuls' => $adminEskuls
+            'adminEskuls' => $adminEskuls,
+            'siswaList' => $siswaList,
+            'selectedSiswa' => [],
         ]);
     }
 
