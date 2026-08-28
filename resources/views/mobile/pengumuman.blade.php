@@ -32,8 +32,11 @@
     <div class="stagger">
         @forelse($pengumumans as $item)
             <article class="card mobile-card mb-3 overflow-hidden border-0 shadow-sm">
-                @if($item->gambar && file_exists(public_path('storage/'.$item->gambar)))
-                    <img src="{{ asset('storage/'.$item->gambar) }}" alt="{{ $item->judul }}" class="announcement-img">
+                @if($item->gambar)
+                    <img src="{{ asset('storage/'.$item->gambar) }}"
+                         alt="{{ $item->judul }}"
+                         class="announcement-img"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Info&background=f1f5f9&color=94a3b8';">
                 @else
                     <div class="announcement-img-placeholder">
                         <i class="bi bi-megaphone"></i>

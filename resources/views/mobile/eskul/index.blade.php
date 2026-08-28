@@ -79,8 +79,10 @@
             <div class="eskul-card">
                 <div class="d-flex align-items-center gap-3">
                     <div class="eskul-logo">
-                        @if($eskul->logo && file_exists(public_path('storage/'.$eskul->logo)))
-                            <img src="{{ asset('storage/'.$eskul->logo) }}" alt="{{ $eskul->nama }}">
+                        @if($eskul->logo)
+                            <img src="{{ asset('storage/'.$eskul->logo) }}"
+                                 alt="{{ $eskul->nama }}"
+                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"eskul-logo-placeholder\"><i class=\"bi bi-flag-fill\"></i></div>';">
                         @else
                             <div class="eskul-logo-placeholder">
                                 <i class="bi bi-flag-fill"></i>
