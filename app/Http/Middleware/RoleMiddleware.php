@@ -55,9 +55,16 @@ class RoleMiddleware
         }
 
         if (!$userRole || !in_array($userRole, $roles, true)) {
-            return redirect()
-                ->route('login')
-                ->with('error', 'Sesi tidak lengkap. Silakan login kembali.');
+            // User sudah login (sesi sah) namun role-nya tidak diizinkan.
+            // Beri 403 Forbidden — bukan redirect ke login — supaya user yang
+            // tercatat sebagai guru/siswa tidak "terusir" hanya karena membuka
+            // halaman admin. Pengecualian: permintaan AJAX/JSON tetap dapat
+            // memilih bentuk respon sendiri.
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Forbidden', 'message' => 'Kamu tidak memiliki akses ke halaman ini.'], 403);
+            }
+
+            return abort(403, 'Kamu tidak memiliki akses ke halaman ini.');
         }
 
         return $next($request);

@@ -6,6 +6,7 @@ use App\Models\Kelas;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -69,7 +70,10 @@ class RegistrationTest extends TestCase
         $this->post('/login', [
             'email' => 'menunggu@sekolah.com',
             'password' => 'password123',
-        ])->assertGuest();
+        ])->assertRedirect();
+
+        $this->assertFalse(Auth::check());
+        $this->assertNull(session('user_id'));
     }
 
     public function test_guru_cannot_register_when_only_siswa_registration_is_enabled(): void
