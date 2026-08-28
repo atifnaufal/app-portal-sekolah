@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChatGroup;
 use App\Models\ChatMessage;
 use App\Models\User;
 use App\Events\ChatMessageEvent;
@@ -14,37 +15,84 @@ class ChatController extends Controller
 {
     public function index(Request $request): View
     {
-        $user = User::with('kelas')->findOrFail($request->session()->get('user_id'));
-        abort_unless(in_array($user->role, ['guru', 'siswa'], true), 403);
-        abort_unless($user->kelas_id, 403, 'Akun belum memiliki kelas.');
-        return view('mobile.chat', ['user' => $user, 'messages' => ChatMessage::with('user')->where('kelas_id', $user->kelas_id)->oldest()->get()]);
+        $userId = session('user_id');
+        $user = User::with(['kelas', 'eskuls'])->findOrFail($userId);
+
+        // Ensure School Group exists
+        $schoolGroup = ChatGroup::firstOrCreate(
+            ['type' => 'school'],
+            ['name' => 'Grup Sekolah', 'avatar' => null]
+        );
+
+        // Ensure user is in School Group
+        if (!$schoolGroup->members()->where('user_id', $userId)->exists()) {
+            $schoolGroup->members()->attach($userId);
+        }
+
+        // Ensure Class Group exists
+        if ($user->kelas_id) {
+            $classGroup = ChatGroup::firstOrCreate(
+                ['type' => 'class', 'related_id' => $user->kelas_id],
+                ['name' => 'Grup ' . $user->kelas->nama]
+            );
+            if (!$classGroup->members()->where('user_id', $userId)->exists()) {
+                $classGroup->members()->attach($userId);
+            }
+        }
+
+        // Get all groups user belongs to
+        $groups = $user->chatGroups()->with('lastMessage')->get();
+
+        // Default to first group if no group selected
+        $activeGroupId = $request->query('group_id') ?: ($groups->first()?->id);
+        $activeGroup = $activeGroupId ? ChatGroup::with('members')->findOrFail($activeGroupId) : null;
+
+        $messages = $activeGroup
+            ? ChatMessage::with('user')->where('chat_group_id', $activeGroup->id)->oldest()->get()
+            : collect();
+
+        return view('mobile.chat', [
+            'user' => $user,
+            'groups' => $groups,
+            'activeGroup' => $activeGroup,
+            'messages' => $messages
+        ]);
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse
     {
-        $user = User::findOrFail($request->session()->get('user_id'));
-        abort_unless(in_array($user->role, ['guru', 'siswa'], true), 403);
-        abort_unless($user->kelas_id, 403);
-        $data = $request->validate(['pesan' => ['required', 'string', 'max:1000']]);
-        $message = ChatMessage::create(['user_id' => $user->id, 'kelas_id' => $user->kelas_id, 'pesan' => $data['pesan']]);
+        $userId = session('user_id');
+        $user = User::findOrFail($userId);
+
+        $data = $request->validate([
+            'pesan' => ['required', 'string', 'max:1000'],
+            'chat_group_id' => ['required', 'exists:chat_groups,id']
+        ]);
+
+        // Check if user is member of the group
+        $group = ChatGroup::findOrFail($data['chat_group_id']);
+        abort_unless($group->members()->where('user_id', $userId)->exists(), 403);
+
+        $message = ChatMessage::create([
+            'user_id' => $userId,
+            'chat_group_id' => $group->id,
+            'pesan' => $data['pesan']
+        ]);
+
         $message->load('user');
 
-        // Kirim pesan ke channel realtime. Dibungkus try/catch agar kegagalan
-        // Reverb TIDAK pernah membuat respons pengirim error (pesan tetap tersimpan).
         try {
             broadcast(new ChatMessageEvent($message));
         } catch (\Throwable $e) {
             report($e);
         }
 
-        // Kirim JSON untuk AJAX/fetch (tanpa redirect penuh halaman) -> respons cepat.
-        // Pengirim sudah melihat pesannya secara instan lewat optimistic UI di frontend.
         if ($request->ajax() || $request->expectsJson()) {
             return response()->json([
                 'ok' => true,
                 'id' => $message->id,
                 'user_id' => $message->user_id,
-                'kelas_id' => $message->kelas_id,
+                'chat_group_id' => $message->chat_group_id,
                 'pesan' => $message->pesan,
                 'nama' => $message->user?->name,
                 'foto' => $message->user?->foto ? asset('storage/' . $message->user->foto) : null,

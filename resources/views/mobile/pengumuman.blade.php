@@ -1,9 +1,64 @@
 @extends('layouts.mobile-app')
+
 @section('content')
+<style>
+    .announcement-tag {
+        font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px;
+        text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .tag-general { background: #fee2e2; color: #ef4444; }
+    .tag-class { background: #dcfce7; color: #22c55e; }
+    .tag-eskul { background: #f3e8ff; color: #a855f7; }
+</style>
+
 <div class="p-3 pb-0">
-    <a href="javascript:history.back()" class="text-decoration-none text-muted d-inline-flex align-items-center gap-2 small fw-bold">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
-        Kembali
+    <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted d-inline-flex align-items-center gap-2 small fw-bold">
+        <i class="bi bi-arrow-left"></i> Kembali
     </a>
 </div>
-<header class="mobile-hero"><div class="eyebrow">INFORMASI RESMI</div><div class="hero-title mt-2">Pengumuman sekolah</div><div class="class-pill mt-3">Agenda dan berita publik</div></header><main class="mobile-content"><p class="text-secondary small mb-4">Informasi resmi dari sekolah untuk seluruh warga sekolah.</p><div class="stagger">@forelse($pengumumans as $item)<article class="card mobile-card mb-3 overflow-hidden">@if($item->gambar)<img src="{{ asset('storage/'.$item->gambar) }}" alt="{{ $item->judul }}" style="width:100%;height:180px;object-fit:cover">@endif<div class="card-body"><div class="small text-primary fw-bold">{{ $item->tanggal_acara?->format('d M Y') ?? $item->created_at->format('d M Y') }}</div><h2 class="h5 fw-bold mt-2">{{ $item->judul }}</h2><p class="small text-secondary mb-0 mt-2" style="white-space:pre-line">{{ $item->isi }}</p></div></article>@empty<div class="card mobile-card"><div class="card-body text-secondary">Belum ada pengumuman sekolah.</div></div>@endforelse</div></main>@endsection
+
+<header class="mobile-hero">
+    <div class="eyebrow">INFORMASI RESMI</div>
+    <div class="hero-title mt-2">Pengumuman</div>
+    <div class="class-pill mt-3">Agenda dan berita terkini</div>
+</header>
+
+<main class="mobile-content">
+    <div class="stagger">
+        @forelse($pengumumans as $item)
+            <article class="card mobile-card mb-3 overflow-hidden border-0 shadow-sm">
+                @if($item->gambar)
+                    <img src="{{ asset('storage/'.$item->gambar) }}" alt="{{ $item->judul }}" style="width:100%;height:180px;object-fit:cover">
+                @endif
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="small text-muted fw-bold">{{ $item->created_at->format('d M Y') }}</div>
+                        @if($item->kelas_id)
+                            <span class="announcement-tag tag-class">KELAS {{ $item->kelas->nama }}</span>
+                        @elseif($item->eskul_id)
+                            <span class="announcement-tag tag-eskul">{{ $item->eskul->nama }}</span>
+                        @else
+                            <span class="announcement-tag tag-general">UMUM</span>
+                        @endif
+                    </div>
+                    <h2 class="h5 fw-bold">{{ $item->judul }}</h2>
+                    <p class="small text-secondary mb-0 mt-2" style="white-space:pre-line">{{ $item->isi }}</p>
+                </div>
+            </article>
+        @empty
+            <div class="text-center py-5">
+                <i class="bi bi-megaphone h1 opacity-25 d-block mb-3"></i>
+                <div class="text-secondary">Belum ada pengumuman untuk Anda.</div>
+            </div>
+        @endforelse
+    </div>
+</main>
+
+@if(isset($canCreate) && $canCreate)
+    <a href="{{ route('pengumuman.create') }}" class="btn btn-primary shadow-lg d-flex align-items-center justify-content-center"
+       style="position:fixed; bottom:80px; right:20px; width:56px; height:56px; border-radius:18px; z-index:1000;">
+        <i class="bi bi-plus-lg h3 mb-0"></i>
+    </a>
+@endif
+
+@endsection

@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kelas extends Model
 {
-    protected $fillable = ['nama', 'tingkat', 'tahun_ajaran'];
+    protected $fillable = ['nama', 'tingkat', 'tahun_ajaran', 'pembina_id'];
+
+    public function pembina(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pembina_id');
+    }
 
     public function mahasiswa(): HasMany
     {

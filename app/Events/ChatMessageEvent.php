@@ -24,7 +24,7 @@ class ChatMessageEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('portal-chat.'.$this->message->kelas_id),
+            new PrivateChannel('portal-chat-group.'.$this->message->chat_group_id),
         ];
     }
 
@@ -40,7 +40,7 @@ class ChatMessageEvent implements ShouldBroadcast
         return [
             'id' => $this->message->id,
             'user_id' => $this->message->user_id,
-            'kelas_id' => $this->message->kelas_id,
+            'chat_group_id' => $this->message->chat_group_id,
             'pesan' => $this->message->pesan,
             'nama' => $sender?->name,
             'foto' => $sender?->foto ? asset('storage/'.$sender->foto) : null,

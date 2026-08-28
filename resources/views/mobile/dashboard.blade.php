@@ -232,6 +232,10 @@
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;"><i class="bi bi-book-half"></i></div>
                 <div class="db-menu-label">Perpus</div>
             </a>
+            <a href="{{ route('eskul.index') }}" class="db-menu-item">
+                <div class="db-menu-icon" style="background:linear-gradient(135deg,#f472b6,#db2777);color:#fff;"><i class="bi bi-flag-fill"></i></div>
+                <div class="db-menu-label">Eskul</div>
+            </a>
             <!-- <a href="{{ route('pengumuman.index') }}" class="db-menu-item">
                 <div class="db-menu-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#dc2626;"><i class="bi bi-megaphone-fill"></i></div>
                 <div class="db-menu-label">Info</div>

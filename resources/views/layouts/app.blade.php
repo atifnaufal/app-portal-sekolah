@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="id">
 <head>
-    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Admin | App Mahasiswa' }}</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#246bfe">
@@ -10,69 +11,175 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        :root{--navy:#14213d;--blue:#246bfe;--surface:#f4f7fb;--muted:#6d7a90}
-        body{background:var(--surface);color:var(--navy);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.admin-nav{background:var(--navy);min-height:68px}.brand-mark{width:38px;height:38px;border-radius:12px;background:var(--blue);display:grid;place-items:center;font-weight:800}.admin-nav .nav-link{color:#c8d2e4;font-size:14px;padding:.55rem .75rem;border-radius:8px}.admin-nav .nav-link:hover,.admin-nav .nav-link.active{background:#ffffff18;color:#fff}.admin-container{max-width:1240px}.page-heading{letter-spacing:-.02em}.stat-card,.table-card,.form-card{border:0;border-radius:14px;box-shadow:0 5px 20px #14213d0d}.stat-card{border-top:3px solid var(--blue)}.metric-label{color:var(--muted);font-size:12px}.metric-value{font-size:26px;font-weight:800}.table thead th{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom-width:1px}.table td{font-size:14px}.admin-footer{color:var(--muted);font-size:12px}@media(max-width:767px){.admin-nav .navbar-collapse{padding-top:12px}.admin-container{padding-left:16px;padding-right:16px}.table-card{overflow-x:auto}}
+        :root {
+            --navy: #0f172a;
+            --blue: #246bfe;
+            --blue-soft: #e8f0fe;
+            --surface: #f8fafc;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 16px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            background: var(--surface);
+            color: var(--navy);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .admin-nav {
+            background: var(--navy);
+            min-height: 72px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .brand-mark {
+            width: 40px; height: 40px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--blue), #60a5fa);
+            display: grid; place-items: center; font-weight: 800; color: #fff;
+            box-shadow: 0 4px 12px rgba(36,107,254,0.3);
+        }
+
+        .admin-nav .nav-link {
+            color: #94a3b8; font-size: 14px; font-weight: 500;
+            padding: 0.6rem 1rem; border-radius: 10px; transition: all 0.2s;
+        }
+
+        .admin-nav .nav-link:hover, .admin-nav .nav-link.active {
+            background: rgba(255,255,255,0.08); color: #fff;
+        }
+
+        .admin-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+
+        .card {
+            border: 0; border-radius: var(--radius); background: #fff;
+            box-shadow: var(--shadow); transition: box-shadow 0.3s ease;
+        }
+        .card:hover { box-shadow: var(--shadow-lg); }
+
+        .btn-primary {
+            background: var(--blue); border: 0; border-radius: 12px;
+            padding: 0.6rem 1.25rem; font-weight: 600; transition: all 0.2s;
+        }
+        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+        .admin-footer { color: var(--muted); font-size: 13px; font-weight: 500; }
+
+        @media(max-width:767px) {
+            .admin-container { padding-left: 1rem; padding-right: 1rem; }
+            .admin-nav .navbar-brand { font-size: 1.1rem; }
+            #portal-toast { width: 92% !important; right: 4% !important; left: 4% !important; }
+        }
+
+        /* Toast UI Refinement */
+        #portal-toast {
+            position: fixed; top: 24px; right: 24px; width: 360px; z-index: 10000;
+            background: #fff; border-radius: 18px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            border: 1px solid var(--border); border-left: 6px solid var(--blue); padding: 16px;
+        }
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg admin-nav navbar-dark"><div class="container admin-container"><a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ route('dashboard') }}"><span class="brand-mark">A</span><span>App Mahasiswa</span></a><button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminMenu" aria-controls="adminMenu" aria-expanded="false" aria-label="Buka menu"><span class="navbar-toggler-icon"></span></button><div class="collapse navbar-collapse" id="adminMenu"><div class="navbar-nav ms-lg-4 me-auto">@if(session('user_role') === 'admin')<a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a><a class="nav-link {{ request()->routeIs('pengumuman.*') ? 'active' : '' }}" href="{{ route('pengumuman.index') }}">Pengumuman</a><a class="nav-link {{ request()->routeIs('spp.*') ? 'active' : '' }}" href="{{ route('spp.index') }}">SPP</a><a class="nav-link {{ request()->routeIs('kelas.*') ? 'active' : '' }}" href="{{ route('kelas.index') }}">Kelas</a><a class="nav-link {{ request()->routeIs('admin.perpustakaan.*') ? 'active' : '' }}" href="{{ route('admin.perpustakaan.index') }}">Perpustakaan</a><a class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}">Akun</a><a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}">Pengaturan</a>@else<a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a><a class="nav-link" href="{{ route('pengumuman.index') }}">Pengumuman</a><a class="nav-link" href="{{ route('tugas.index') }}">Tugas</a>@endif</div><div class="d-flex align-items-center gap-3 mt-3 mt-lg-0"><span class="text-white small">{{ session('admin_name') }}</span><form method="POST" action="{{ route('logout') }}">@csrf<button class="btn btn-sm btn-outline-light">Keluar</button></form></div></div></div></nav>
+<nav class="navbar navbar-expand-lg admin-nav navbar-dark">
+    <div class="container admin-container">
+        <a class="navbar-brand d-flex align-items-center gap-3 fw-bold" href="{{ route('dashboard') }}">
+            <div class="brand-mark">A</div>
+            <span>App Mahasiswa</span>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#adminMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminMenu">
+            <div class="navbar-nav ms-lg-4 me-auto">
+                @if(session('user_role') === 'admin')
+                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
+                    <a class="nav-link {{ request()->routeIs('pengumuman.*') ? 'active' : '' }}" href="{{ route('pengumuman.index') }}">Pengumuman</a>
+                    <a class="nav-link {{ request()->routeIs('spp.*') ? 'active' : '' }}" href="{{ route('spp.index') }}">SPP</a>
+                    <a class="nav-link {{ request()->routeIs('kelas.*') ? 'active' : '' }}" href="{{ route('kelas.index') }}">Kelas</a>
+                    <a class="nav-link {{ request()->routeIs('admin.perpustakaan.*') ? 'active' : '' }}" href="{{ route('admin.perpustakaan.index') }}">Perpustakaan</a>
+                    <a class="nav-link {{ request()->routeIs('admin.eskul.*') ? 'active' : '' }}" href="{{ route('admin.eskul.index') }}">Eskul</a>
+                    <a class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}">Akun</a>
+                    <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}">Pengaturan</a>
+                @else
+                    <a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a>
+                    <a class="nav-link" href="{{ route('pengumuman.index') }}">Pengumuman</a>
+                    <a class="nav-link" href="{{ route('tugas.index') }}">Tugas</a>
+                @endif
+            </div>
+            <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                <div class="d-flex flex-column text-end d-none d-lg-flex">
+                    <span class="text-white small fw-bold">{{ session('admin_name') }}</span>
+                    <span class="text-muted small" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;">Administrator</span>
+                </div>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="btn btn-sm btn-outline-light rounded-pill px-3">Keluar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
 
-<!-- Global Notification UI -->
-<div id="portal-toast" class="animate__animated animate__fadeInDown" style="display:none; position:fixed; top:20px; right:20px; width: 350px; z-index: 10000; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-left: 5px solid #246bfe; padding: 15px;">
+<div id="portal-toast" class="animate__animated animate__fadeInDown" style="display:none;">
     <div class="d-flex align-items-center gap-3">
-        <div id="toast-icon" style="width: 40px; height: 40px; background: #e8f0fe; border-radius: 10px; display: grid; place-items: center; color: #246bfe;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/></svg>
+        <div id="toast-icon" style="width: 44px; height: 44px; background: var(--blue-soft); border-radius: 12px; display: grid; place-items: center; color: var(--blue);">
+            <i class="bi bi-bell-fill"></i>
         </div>
         <div style="flex: 1;">
             <div id="toast-title" class="fw-bold text-dark" style="font-size: 14px;">Notifikasi</div>
             <div id="toast-msg" class="text-muted" style="font-size: 13px;">Ada pesan baru untuk Anda.</div>
         </div>
-        <div class="ms-auto"><button onclick="document.getElementById('portal-toast').style.display='none'" class="btn-close btn-close-sm"></button></div>
+        <button onclick="document.getElementById('portal-toast').style.display='none'" class="btn-close btn-close-sm"></button>
     </div>
 </div>
 
 <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
+<main class="container admin-container py-5">
+    @if(session('success'))
+        <div class="alert alert-success border-0 rounded-4 shadow-sm animate__animated animate__fadeIn">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger border-0 rounded-4 shadow-sm animate__animated animate__fadeIn">
+            <i class="bi bi-exclamation-circle-fill me-2"></i> {{ session('error') }}
+        </div>
+    @endif
+    @yield('content')
+</main>
+
+<footer class="container admin-container pb-5 text-center">
+    <div class="admin-footer">
+        App Mahasiswa &bull; Panel Administrasi Terintegrasi &bull; &copy; {{ date('Y') }}
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     function showNotification(title, message) {
         const toast = document.getElementById('portal-toast');
         document.getElementById('toast-title').innerText = title;
         document.getElementById('toast-msg').innerText = message;
-        document.getElementById('notif-sound').play().catch(e => console.log("Sound interaction required"));
+        document.getElementById('notif-sound').play().catch(e => {});
 
         toast.style.display = 'block';
         setTimeout(() => {
-            toast.classList.remove('animate__fadeInDown');
-            toast.classList.add('animate__fadeOutUp');
+            toast.classList.replace('animate__fadeInDown', 'animate__fadeOutUp');
             setTimeout(() => {
                 toast.style.display = 'none';
-                toast.classList.remove('animate__fadeOutUp');
-                toast.classList.add('animate__fadeInDown');
+                toast.classList.replace('animate__fadeOutUp', 'animate__fadeInDown');
             }, 500);
         }, 5000);
     }
 
-    window.addEventListener('load', () => {
-        if (window.Echo) {
-            const userId = @json((int) session('user_id'));
-            window.Echo.private('portal-notifications.' + userId)
-                .listen('.new-notification', (e) => {
-                    showNotification(e.title, e.message);
-
-                    // Permission Check
-                    if (Notification.permission === 'default') {
-                        Notification.requestPermission();
-                    }
-                });
-        }
-    });
-</script>
-<main class="container admin-container py-4">@if(session('success'))<div class="alert alert-success border-0">{{ session('success') }}</div>@endif @if(session('error'))<div class="alert alert-danger border-0">{{ session('error') }}</div>@endif @if($errors->any())<div class="alert alert-danger border-0"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif @yield('content')</main><footer class="container admin-container pb-4 admin-footer">App Mahasiswa · Panel administrasi sekolah</footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js');
-        });
+    if (window.Echo) {
+        const userId = @json((int) session('user_id'));
+        window.Echo.private('portal-notifications.' + userId)
+            .listen('.new-notification', (e) => showNotification(e.title, e.message));
     }
 </script>
 </body>

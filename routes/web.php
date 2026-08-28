@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PerpustakaanController;
 use App\Http\Controllers\AdminPerpustakaanController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\EskulController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
@@ -44,6 +45,10 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
     Route::get('/perpustakaan', [PerpustakaanController::class, 'index'])->name('perpustakaan.index');
     Route::get('/perpustakaan/{buku:slug}', [PerpustakaanController::class, 'show'])->name('perpustakaan.show');
     Route::get('/perpustakaan/{buku:slug}/read', [PerpustakaanController::class, 'read'])->name('perpustakaan.read');
+
+    // Eskul
+    Route::get('/eskul', [EskulController::class, 'index'])->name('eskul.index');
+    Route::post('/eskul/{eskul}/join', [EskulController::class, 'join'])->name('eskul.join');
 });
 
 Route::middleware('role:guru,siswa')->group(function () {
@@ -88,6 +93,13 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::get('/admin/perpustakaan/kategori', [AdminPerpustakaanController::class, 'kategoriIndex'])->name('admin.perpustakaan.kategori.index');
     Route::post('/admin/perpustakaan/kategori', [AdminPerpustakaanController::class, 'kategoriStore'])->name('admin.perpustakaan.kategori.store');
     Route::delete('/admin/perpustakaan/kategori/{kategori}', [AdminPerpustakaanController::class, 'kategoriDestroy'])->name('admin.perpustakaan.kategori.destroy');
+
+    // Admin Eskul
+    Route::get('/admin/eskul', [EskulController::class, 'adminIndex'])->name('admin.eskul.index');
+    // Admin IT only can store
+    Route::post('/admin/eskul', [EskulController::class, 'store'])->name('admin.eskul.store');
+    Route::patch('/admin/eskul/{eskul}/toggle', [EskulController::class, 'toggle'])->name('admin.eskul.toggle');
+    Route::post('/admin/eskul/{eskul}/set-admin', [EskulController::class, 'setAdmin'])->name('admin.eskul.set-admin');
 
     Route::resource('jurusan', JurusanController::class)->except('show');
     Route::resource('kelas', KelasController::class)->except('show');

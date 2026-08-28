@@ -32,6 +32,16 @@ class User extends Authenticatable
         return $this->hasMany(Notifikasi::class);
     }
 
+    public function eskuls(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Eskul::class, 'eskul_members')->withPivot('is_admin')->withTimestamps();
+    }
+
+    public function chatGroups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(ChatGroup::class, 'chat_group_members');
+    }
+
     /**
      * Akun harus disetujui admin sebelum bisa dipakai.
      * Kolom `aktif` menggantikan verifikasi email sebagai gerbang akses.
