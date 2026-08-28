@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
+# Pastikan .env & APP_KEY ada (Railway menyuplai env lewat platform, bukan file .env).
+# Mencegah error: file_get_contents(/app/.env): Failed to open stream.
+bash ensure-env.sh
+
 # Pastikan direktori penyimpanan runtime tersedia (fresh clone di Railway).
 mkdir -p storage/framework/{cache,sessions,views,testing} storage/logs storage/fonts storage/app/public bootstrap/cache
 

@@ -1,5 +1,9 @@
 [phases.build]
 cmds = [
+    # Pastikan .env & APP_KEY ada SEBELUM tool apa pun yang memanggil
+    # `php artisan key:generate` (mis. Nixpacks/Composer) — mencegah error
+    # "file_get_contents(/app/.env): Failed to open stream" saat deploy.
+    "chmod +x ensure-env.sh && bash ensure-env.sh",
     "composer install --no-dev --optimize-autoloader",
     "npm ci",
     "npm run build"
@@ -22,4 +26,4 @@ cmds = [
 # `php artisan serve` (development server single-thread) yang menjadi
 # dugaan penyebab dashboard blank intermiten karena worker kehabisan memori.
 [start]
-cmd = "php-fpm -D && nginx -g 'daemon off;'"
+cmd = "php-fpm -D && bash ensure-env.sh && nginx -g 'daemon off;'"
