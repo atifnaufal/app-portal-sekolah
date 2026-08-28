@@ -322,8 +322,15 @@
                         </div>
                     </div>
 
-                    <div style="display:flex;justify-content:space-between;margin-bottom:18px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+                        <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#64748b;cursor:pointer;user-select:none;">
+                            <input type="checkbox" name="remember" value="1" checked
+                                   style="width:16px;height:16px;accent-color:#246bfe;cursor:pointer;">
+                            <span><strong>Tetap masuk</strong> di perangkat ini</span>
+                        </label>
                         <a href="{{ route('password.request') }}" style="font-size:11px;font-weight:600;color:#246bfe;text-decoration:none;">Lupa Password?</a>
+                    </div>
+                    <div style="text-align:right;margin:-8px 0 16px;">
                         <a href="{{ route('email.request') }}" style="font-size:11px;font-weight:600;color:#94a3b8;text-decoration:none;">Lupa Email?</a>
                     </div>
 

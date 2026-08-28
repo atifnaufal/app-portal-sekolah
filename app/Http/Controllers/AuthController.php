@@ -50,8 +50,10 @@ public function login(Request $request): RedirectResponse
         'admin_name' => $user->name,
     ]);
 
-    // Persistent login hanya untuk Guru dan Siswa (Kecuali Admin)
-    $remember = ($user->role !== 'admin');
+    // Persistent login untuk SEMUA role (default ON). Dengan remember-token
+    // yang berumur panjang, sesi tetap hidup layaknya aplikasi native sampai
+    // user benar-benar logout — bahkan saat tab/popup ditutup.
+    $remember = $request->boolean('remember', true);
     Auth::login($user, $remember);
 
     // Pastikan session langsung disimpan
