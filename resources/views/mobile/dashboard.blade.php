@@ -14,16 +14,16 @@
 <style>
     .db-body { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
 
-    /* Hero Card - Dark gradient like banking card */
+    /* Hero Card - Dark premium design */
     .db-hero-card {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
-        border-radius: 28px;
-        padding: 24px 22px;
-        margin-bottom: 18px;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: 30px;
+        padding: 26px;
+        margin-bottom: 20px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.3);
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.2);
     }
     .db-hero-card::before {
         content: ''; position: absolute; top: -50%; right: -30%;
@@ -93,29 +93,22 @@
     .db-section-link { font-size: 12px; font-weight: 700; color: #6366f1; text-decoration: none; }
 
     /* Quick Menu Grid */
-    .db-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 6px; }
+    .db-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .db-menu-item {
         display: flex; flex-direction: column; align-items: center;
-        padding: 12px 4px 10px; border-radius: 16px; text-decoration: none;
-        transition: all 0.15s; -webkit-tap-highlight-color: transparent;
-        background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
-        border: 1px solid rgba(15,23,42,0.04);
-        box-shadow: 0 4px 14px rgba(15,23,42,0.04);
+        padding: 12px 2px; border-radius: 20px; text-decoration: none;
+        transition: all 0.2s; background: #fff;
+        border: 1px solid rgba(15,23,42,0.05);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
     }
-    .db-menu-item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,23,42,0.08); }
-    .db-menu-item:active { transform: scale(0.94); }
+    .db-menu-item:active { transform: scale(0.94); background: #f8fafc; }
     .db-menu-icon {
-        width: 46px; height: 46px; border-radius: 15px;
+        width: 48px; height: 48px; border-radius: 16px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 19px; margin-bottom: 7px; position: relative;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 5px 12px rgba(15,23,42,0.08);
+        font-size: 20px; margin-bottom: 8px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
     }
-    .db-menu-icon::after {
-        content: ''; position: absolute; top: 4px; right: 4px;
-        width: 8px; height: 8px; border-radius: 50%;
-        background: rgba(255,255,255,0.55); filter: blur(1px);
-    }
-    .db-menu-label { font-size: 10px; font-weight: 700; color: #475569; text-align: center; }
+    .db-menu-label { font-size: 10px; font-weight: 700; color: #64748b; }
 
     /* List Items */
     .db-list-item {

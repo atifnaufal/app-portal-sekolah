@@ -61,21 +61,23 @@
             margin-bottom: 36px;
         }
         .welcome-features {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-            margin-bottom: 36px; text-align: left;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+            margin-bottom: 32px; text-align: center;
         }
         .welcome-feature {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 18px; padding: 16px;
+            border-radius: 16px; padding: 12px 6px;
+            transition: all 0.2s;
         }
+        .welcome-feature:active { background: rgba(255,255,255,0.1); transform: scale(0.96); }
         .welcome-feature-icon {
-            width: 32px; height: 32px; border-radius: 10px;
+            width: 28px; height: 28px; border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 15px; margin-bottom: 8px;
+            font-size: 14px; margin: 0 auto 8px;
         }
-        .welcome-feature-title { font-size: 12px; font-weight: 700; }
-        .welcome-feature-desc { font-size: 10px; opacity: 0.5; margin-top: 2px; }
+        .welcome-feature-title { font-size: 9.5px; font-weight: 800; letter-spacing: 0.01em; color: #fff; line-height: 1.2; }
+        .welcome-feature-desc { font-size: 8px; opacity: 0.4; margin-top: 3px; line-height: 1.1; }
 
         .btn-welcome {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -173,8 +175,8 @@
 
         @media (max-width: 480px) {
             body { padding: 12px; align-items: flex-start; padding-top: 40px; }
-            .welcome-card { padding: 32px 20px 24px; border-radius: 28px; }
-            .welcome-features { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .welcome-card { padding: 32px 16px 24px; border-radius: 28px; }
+            .welcome-features { grid-template-columns: repeat(3, 1fr); gap: 6px; }
             .login-body { padding: 20px; }
         }
     </style>
@@ -202,29 +204,43 @@
                     <div class="welcome-feature-icon" style="background:rgba(59,130,246,0.2);color:#60a5fa;">
                         <i class="bi bi-journal-check"></i>
                     </div>
-                    <div class="welcome-feature-title">Tugas Online</div>
-                    <div class="welcome-feature-desc">Kerjakan & kumpul tugas</div>
+                    <div class="welcome-feature-title">Tugas</div>
+                    <div class="welcome-feature-desc">Kumpul Tugas</div>
                 </div>
                 <div class="welcome-feature">
                     <div class="welcome-feature-icon" style="background:rgba(16,185,129,0.2);color:#34d399;">
                         <i class="bi bi-calendar-check"></i>
                     </div>
-                    <div class="welcome-feature-title">Absensi Digital</div>
-                    <div class="welcome-feature-desc">Catat kehadiran realtime</div>
+                    <div class="welcome-feature-title">Absensi</div>
+                    <div class="welcome-feature-desc">Catat Hadir</div>
                 </div>
                 <div class="welcome-feature">
                     <div class="welcome-feature-icon" style="background:rgba(251,191,36,0.2);color:#fbbf24;">
                         <i class="bi bi-wallet2"></i>
                     </div>
-                    <div class="welcome-feature-title">Pembayaran SPP</div>
-                    <div class="welcome-feature-desc">Monitor tagihan & bayar</div>
+                    <div class="welcome-feature-title">SPP</div>
+                    <div class="welcome-feature-desc">Cek Tagihan</div>
                 </div>
                 <div class="welcome-feature">
                     <div class="welcome-feature-icon" style="background:rgba(139,92,246,0.2);color:#a78bfa;">
                         <i class="bi bi-chat-dots"></i>
                     </div>
-                    <div class="welcome-feature-title">Chat Grup</div>
-                    <div class="welcome-feature-desc">Komunikasi dengan kelas</div>
+                    <div class="welcome-feature-title">Chat</div>
+                    <div class="welcome-feature-desc">Grup Kelas</div>
+                </div>
+                <div class="welcome-feature">
+                    <div class="welcome-feature-icon" style="background:rgba(6,182,212,0.2);color:#22d3ee;">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="welcome-feature-title">Perpus</div>
+                    <div class="welcome-feature-desc">Buku Digital</div>
+                </div>
+                <div class="welcome-feature">
+                    <div class="welcome-feature-icon" style="background:rgba(244,114,182,0.2);color:#f472b6;">
+                        <i class="bi bi-flag"></i>
+                    </div>
+                    <div class="welcome-feature-title">Eskul</div>
+                    <div class="welcome-feature-desc">Minat Bakat</div>
                 </div>
             </div>
 
