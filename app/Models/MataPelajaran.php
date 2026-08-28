@@ -30,4 +30,14 @@ class MataPelajaran extends Model
     {
         return $this->hasMany(Jadwal::class);
     }
+
+    public function tugas(): HasMany
+    {
+        return $this->hasMany(Tugas::class, 'mata_pelajaran_id');
+    }
+
+    public function materi(): HasMany
+    {
+        return $this->hasMany(Materi::class, 'mata_pelajaran_id');
+    }
 }

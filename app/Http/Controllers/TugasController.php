@@ -98,9 +98,13 @@ class TugasController extends Controller
 
     public function create(): View
     {
+        $userId = session('user_id') ?: Auth::id();
+        $mapels = \App\Models\MataPelajaran::where('guru_id', $userId)->get();
+
         return view('mobile.tugas-form', [
-            'tugas' => new Tugas(['tipe' => 'file']),
+            'tugas' => new Tugas(['tipe' => 'file', 'mata_pelajaran_id' => request('mapel_id')]),
             'kelases' => Kelas::orderBy('nama')->get(),
+            'mapels' => $mapels,
             'hasSubmissions' => false,
         ]);
     }
@@ -108,10 +112,13 @@ class TugasController extends Controller
     public function edit(Request $request, Tugas $tugas): View
     {
         $this->assertOwner($request, $tugas);
+        $userId = session('user_id') ?: Auth::id();
+        $mapels = \App\Models\MataPelajaran::where('guru_id', $userId)->get();
 
         return view('mobile.tugas-form', [
             'tugas' => $tugas,
             'kelases' => Kelas::orderBy('nama')->get(),
+            'mapels' => $mapels,
             'hasSubmissions' => $tugas->pengumpulan()->exists(),
         ]);
     }
@@ -423,6 +430,7 @@ class TugasController extends Controller
             'tipe' => ['required', 'in:file,form'],
             'batas_pengumpulan' => ['nullable', 'date'],
             'kelas_id' => ['required', 'exists:kelas,id'],
+            'mata_pelajaran_id' => ['required', 'exists:mata_pelajaran,id'],
             'lampiran' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,doc,docx,xlsx,xls,ppt,pptx,csv,txt,zip', 'max:10240'],
         ]);
 

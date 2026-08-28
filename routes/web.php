@@ -58,7 +58,11 @@ Route::middleware('role:admin,guru,siswa')->group(function () {
     // Nilai & Jadwal
     Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai.index');
     Route::post('/nilai/upsert', [NilaiController::class, 'upsert'])->name('nilai.upsert');
+    Route::get('/nilai/recap/{kelas}', [NilaiController::class, 'recapPdf'])->name('nilai.recap');
     Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
+
+    // LMS - Mata Pelajaran
+    Route::get('/mapel/{mapel}', [\App\Http\Controllers\MapelController::class, 'show'])->name('mapel.show');
 });
 
 Route::middleware('role:guru,siswa')->group(function () {

@@ -24,6 +24,10 @@ class DashboardController extends Controller
 
         $user = User::with('kelas')->findOrFail($userId);
 
+        $mapels = $user->role === 'guru'
+            ? \App\Models\MataPelajaran::where('guru_id', $user->id)->with('kelas')->get()
+            : \App\Models\MataPelajaran::where('kelas_id', $user->kelas_id)->with('guru')->get();
+
         $tugasQuery = $user->role === 'guru'
             ? Tugas::where('user_id', $user->id)
             : Tugas::where('kelas_id', $user->kelas_id);
@@ -55,6 +59,7 @@ class DashboardController extends Controller
 
         return view('mobile.dashboard', [
             'user' => $user,
+            'mapels' => $mapels,
             'notifications' => Notifikasi::where('user_id', $user->id)->latest()->take(5)->get(),
             'unreadNotificationsCount' => Notifikasi::where('user_id', $user->id)->whereNull('dibaca_pada')->count(),
             'publicPengumumans' => Pengumuman::where('publik', true)->latest()->take(3)->get(),

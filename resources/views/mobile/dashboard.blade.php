@@ -54,6 +54,23 @@
     }
     .db-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
+    /* LMS Mapel Grid */
+    .db-mapel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .db-mapel-card {
+        background: #fff; border-radius: 24px; padding: 16px;
+        text-decoration: none; border: 1px solid rgba(15,23,42,0.04);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        transition: all 0.3s;
+    }
+    .db-mapel-card:active { transform: scale(0.96); }
+    .db-mapel-icon {
+        width: 44px; height: 44px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; margin-bottom: 12px;
+    }
+    .db-mapel-name { font-size: 14px; font-weight: 800; color: #1e293b; line-height: 1.3; margin-bottom: 4px; }
+    .db-mapel-meta { font-size: 10px; color: #94a3b8; font-weight: 600; }
+
     /* Premium Stat "Glass Chip" - compact blended tinted tiles */
     .db-stat-row { display: flex; gap: 8px; margin-bottom: 16px; }
     .db-stat-card {
@@ -199,6 +216,42 @@
             <div class="db-stat-icon" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);color:#d97706;"><i class="bi bi-graph-up-arrow"></i></div>
             <div class="db-stat-num" style="color:#92400e;">{{ $pctHadir }}<span style="font-size:12px;">%</span></div>
             <div class="db-stat-lbl" style="color:#92400e;">Hadir</div>
+        </div>
+    </div>
+
+    {{-- LMS Section --}}
+    <div class="db-section fade-up" style="animation-delay:0.08s;">
+        <div class="db-section-header">
+            <div class="db-section-title">{{ $isGuru ? 'Mata Pelajaran Diampu' : 'Mata Pelajaran Saya' }}</div>
+        </div>
+        <div class="db-mapel-grid">
+            @forelse($mapels as $m)
+                <a href="{{ route('mapel.show', $m->id) }}" class="db-mapel-card">
+                    @php
+                        $colors = [
+                            ['#eff6ff', '#2563eb'], ['#f0fdf4', '#16a34a'],
+                            ['#fefce8', '#ca8a04'], ['#fef2f2', '#dc2626'],
+                            ['#f5f3ff', '#7c3aed'], ['#fff1f2', '#db2777']
+                        ];
+                        $c = $colors[$loop->index % count($colors)];
+                    @endphp
+                    <div class="db-mapel-icon" style="background:{{ $c[0] }}; color:{{ $c[1] }};">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                    <div class="db-mapel-name">{{ $m->nama }}</div>
+                    <div class="db-mapel-meta">
+                        @if($isGuru)
+                            <i class="bi bi-people-fill"></i> {{ $m->kelas->nama }}
+                        @else
+                            <i class="bi bi-person-badge-fill"></i> {{ explode(' ', $m->guru->name)[0] }}
+                        @endif
+                    </div>
+                </a>
+            @empty
+                <div class="text-center py-3 w-100" style="grid-column: span 2;">
+                    <p class="small text-muted">Belum ada mata pelajaran.</p>
+                </div>
+            @endforelse
         </div>
     </div>
 

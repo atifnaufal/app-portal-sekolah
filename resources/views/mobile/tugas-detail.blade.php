@@ -96,8 +96,7 @@
     <div class="td-card fade-up" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; padding: 24px 20px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
             <span style="background:rgba(255,255,255,0.08); padding:4px 10px; border-radius:8px; font-size:9px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase;">
-                <i class="bi {{ $tugas->isForm() ? 'bi-ui-checks-grid' : 'bi-file-earmark-text' }} me-1"></i>
-                {{ $tugas->isForm() ? 'Formulir' : 'File' }}
+                <i class="bi bi-journal-bookmark me-1"></i> {{ $tugas->mataPelajaran->nama }}
             </span>
             <span style="background:rgba(255,255,255,0.08); padding:4px 10px; border-radius:8px; font-size:9px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase;">
                 <i class="bi bi-people me-1"></i> {{ $tugas->kelas->nama }}

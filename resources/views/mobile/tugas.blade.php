@@ -169,8 +169,8 @@
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div class="d-flex flex-wrap gap-2">
                                         <div class="glass-pill">
-                                            <i class="bi {{ $item->isForm() ? 'bi-ui-checks' : 'bi-file-earmark-text' }} me-1"></i>
-                                            {{ $item->isForm() ? 'FORMULIR ONLINE' : 'PENGIRIMAN FILE' }}
+                                            <i class="bi bi-journal-bookmark me-1"></i>
+                                            {{ $item->mataPelajaran?->nama ?? 'Umum' }}
                                         </div>
                                         <div class="glass-pill" style="color:#475569;background:#f8fafc;border-color:#e2e8f0;">{{ $item->kelas?->nama }}</div>
                                     </div>
@@ -225,8 +225,8 @@
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div class="d-flex flex-wrap gap-2">
                                     <div class="glass-pill">
-                                        <i class="bi {{ $item->isForm() ? 'bi-ui-checks' : 'bi-file-earmark-text' }} me-1"></i>
-                                        {{ $item->isForm() ? 'FORMULIR ONLINE' : 'PENGIRIMAN FILE' }}
+                                        <i class="bi bi-journal-bookmark me-1"></i>
+                                        {{ $item->mataPelajaran?->nama ?? 'Umum' }}
                                     </div>
                                     @if($needsRevision)
                                         <span class="revise-badge"><i class="bi bi-arrow-repeat me-1"></i>PERLU REVISI</span>

@@ -6,6 +6,7 @@ use App\Models\MataPelajaran;
 use App\Models\Nilai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class NilaiController extends Controller
 {
@@ -14,6 +15,9 @@ class NilaiController extends Controller
         $userId = session('user_id') ?: Auth::id();
         $user = \App\Models\User::with('kelas')->findOrFail($userId);
         $isGuru = $user->role === 'guru';
+
+        // Check if user is a Wali Kelas
+        $managedClass = \App\Models\Kelas::where('pembina_id', $user->id)->first();
 
         if ($isGuru) {
             $mataPelajarans = MataPelajaran::where('guru_id', $user->id)
@@ -46,7 +50,7 @@ class NilaiController extends Controller
                 });
             }
 
-            return view('mobile.nilai', compact('user', 'isGuru', 'mataPelajarans', 'selectedSubject', 'students'));
+            return view('mobile.nilai', compact('user', 'isGuru', 'mataPelajarans', 'selectedSubject', 'students', 'managedClass'));
         }
 
         // For Siswa
@@ -56,6 +60,33 @@ class NilaiController extends Controller
             ->groupBy('mata_pelajaran_id');
 
         return view('mobile.nilai', compact('user', 'isGuru', 'nilais'));
+    }
+
+    public function recapPdf(Request $request, \App\Models\Kelas $kelas)
+    {
+        $userId = session('user_id') ?: Auth::id();
+        abort_unless($kelas->pembina_id == $userId || session('user_role') === 'admin', 403);
+
+        $semester = $request->semester ?: 1;
+        $students = \App\Models\User::where('role', 'siswa')->where('kelas_id', $kelas->id)->orderBy('name')->get();
+        $mapels = MataPelajaran::where('kelas_id', $kelas->id)->get();
+
+        $nilais = Nilai::where('kelas_id', $kelas->id)
+            ->where('semester', $semester)
+            ->get()
+            ->groupBy('siswa_id');
+
+        $data = [
+            'kelas' => $kelas,
+            'semester' => $semester,
+            'students' => $students,
+            'mapels' => $mapels,
+            'nilais' => $nilais,
+            'today' => now()->translatedFormat('d F Y')
+        ];
+
+        $pdf = Pdf::loadView('pdf.rekap-nilai', $data);
+        return $pdf->download('rekap-nilai-'.$kelas->nama.'-smt-'.$semester.'.pdf');
     }
 
     public function upsert(Request $request): \Illuminate\Http\RedirectResponse

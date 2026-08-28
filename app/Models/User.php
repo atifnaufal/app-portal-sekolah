@@ -47,6 +47,11 @@ class User extends Authenticatable
         return $this->hasMany(MataPelajaran::class, 'guru_id');
     }
 
+    public function materi(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Materi::class, 'user_id');
+    }
+
     public function nilais(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Nilai::class, 'siswa_id');

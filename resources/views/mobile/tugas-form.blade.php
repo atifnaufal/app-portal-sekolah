@@ -116,6 +116,15 @@
                 <label class="pf-label">Deskripsi / Instruksi</label>
                 <textarea name="deskripsi" rows="3" class="pf-input" style="resize:none;" placeholder="Tuliskan instruksi pengerjaan...">{{ old('deskripsi', $tugas->deskripsi) }}</textarea>
             </div>
+            <div style="margin-bottom:12px;">
+                <label class="pf-label">Mata Pelajaran *</label>
+                <select name="mata_pelajaran_id" class="pf-input" required>
+                    <option value="">Pilih mata pelajaran</option>
+                    @foreach($mapels as $m)
+                        <option value="{{ $m->id }}" @selected(old('mata_pelajaran_id', $tugas->mata_pelajaran_id) == $m->id)>{{ $m->nama }} ({{ $m->kelas->nama }})</option>
+                    @endforeach
+                </select>
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
                     <label class="pf-label">Kelas *</label>
