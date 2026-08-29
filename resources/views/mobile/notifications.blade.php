@@ -1,62 +1,60 @@
 @extends('layouts.mobile-app')
 
 @section('content')
-<div class="p-3 pb-0">
-    <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted d-inline-flex align-items-center gap-2 small fw-bold">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
-        Kembali
-    </a>
+<div class="pui-topbar">
+    <a href="{{ route('dashboard') }}" class="back"><i class="bi bi-arrow-left"></i> Kembali</a>
+    <div class="spacer"></div>
 </div>
 
-<header class="mobile-hero mt-3" style="border-radius: 25px;">
-    <div class="eyebrow">PEMBERITAHUAN</div>
-    <div class="hero-title mt-2">Notifikasi</div>
+<header class="p-hero" style="max-width:640px;margin:0 auto;padding:16px 20px 6px;">
+    <div class="eyebrow" style="font-size:11px;letter-spacing:.14em;font-weight:800;text-transform:uppercase;color:var(--indigo);">
+        PEMBERITAHUAN
+    </div>
+    <div class="hero-title mt-2" style="font-size:28px;font-weight:800;letter-spacing:-.02em;color:var(--ink);">Notifikasi</div>
     <div class="mt-3">
-        <span class="badge bg-white bg-opacity-25 rounded-pill px-3 py-2 fw-normal" style="font-size: 11px;">
-            Info penting untukmu
-        </span>
+        <span class="pui-chip pui-chip-primary"><i class="bi bi-bell-fill"></i> Info penting untukmu</span>
     </div>
 </header>
 
-<main class="mobile-content">
+<main style="max-width:640px;margin:0 auto;padding:18px 20px 60px;">
     <div class="stagger">
         @forelse($notifications as $notification)
             @php
                 $isSpp = str_contains(strtolower($notification->judul), 'spp');
                 $isUnread = is_null($notification->dibaca_pada);
             @endphp
-            <a href="{{ $notification->url ?: route('dashboard') }}" class="card mobile-card shadow-sm border-0 mb-3 {{ $isUnread ? 'bg-primary-subtle bg-opacity-10' : '' }}" style="border-radius: 20px;">
-                <div class="card-body p-3">
-                    <div class="d-flex gap-3 align-items-start">
-                        <div class="icon-box flex-shrink-0" style="background: {{ $isSpp ? '#fff9ed' : '#f0f7ff' }}; color: {{ $isSpp ? '#a66b00' : '#246bfe' }}; width: 44px; height: 44px; border-radius: 12px;">
-                            @if($isSpp)
-                                <i class="bi bi-wallet2 h5 mb-0"></i>
-                            @else
-                                <i class="bi bi-chat-left-text h5 mb-0"></i>
-                            @endif
-                        </div>
-                        <div class="flex-grow-1 min-w-0">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <h3 class="h6 fw-bold mb-0 text-truncate pe-2">{{ $notification->judul }}</h3>
-                                @if($isUnread)
-                                    <span class="badge bg-primary p-1 rounded-circle" style="width: 8px; height: 8px;"></span>
-                                @endif
-                            </div>
-                            <p class="small text-secondary mb-2 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                {{ $notification->pesan }}
-                            </p>
-                            <div class="d-flex align-items-center gap-1 text-muted" style="font-size: 10px;">
-                                <i class="bi bi-clock"></i>
-                                <span>{{ $notification->created_at->diffForHumans() }}</span>
-                            </div>
-                        </div>
+            <a href="{{ $notification->url ?: route('dashboard') }}"
+               class="pui-card p-3 d-flex gap-3 align-items-start text-decoration-none mb-3 {{ $isUnread ? 'border-start border-4' : '' }}"
+               style="border-color: {{ $isUnread ? 'var(--indigo) !important' : 'var(--line)' }}; box-shadow: var(--shadow-card); display:flex;">
+                <div class="pui-icon-box flex-shrink-0"
+                     style="background: {{ $isSpp ? '#fff9ed' : '#eef2ff' }}; color: {{ $isSpp ? '#a66b00' : 'var(--indigo)' }}; width: 44px; height: 44px; border-radius: 12px; display:grid; place-items:center;">
+                    @if($isSpp)
+                        <i class="bi bi-wallet2" style="font-size:20px;"></i>
+                    @else
+                        <i class="bi bi-chat-left-text" style="font-size:20px;"></i>
+                    @endif
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h3 class="h6 fw-bold mb-0 text-truncate pe-2" style="color:var(--ink);">{{ $notification->judul }}</h3>
+                        @if($isUnread)
+                            <span class="pui-dot" style="width:8px;height:8px;border-radius:50%;background:var(--indigo);box-shadow:0 0 0 3px rgba(79,70,229,.15);flex-shrink:0;display:inline-block;"></span>
+                        @endif
+                    </div>
+                    <p class="small mb-2 line-clamp-2" style="color:var(--mist);display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ $notification->pesan }}
+                    </p>
+                    <div class="d-flex align-items-center gap-1" style="font-size:10px;color:var(--faint);">
+                        <i class="bi bi-clock"></i>
+                        <span>{{ $notification->created_at->diffForHumans() }}</span>
                     </div>
                 </div>
             </a>
         @empty
-            <div class="text-center py-5 opacity-50">
-                <i class="bi bi-bell-slash h1"></i>
-                <div class="small mt-2">Belum ada notifikasi baru.</div>
+            <div class="pui-empty py-5">
+                <i class="bi bi-bell-slash ico"></i>
+                <h4>Belum ada notifikasi</h4>
+                <p>Belum ada notifikasi baru untukmu.</p>
             </div>
         @endforelse
     </div>

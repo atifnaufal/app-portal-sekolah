@@ -8,75 +8,52 @@
 @endphp
 
 <style>
-    .page-header {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(226,232,240,0.7);
-        padding: 12px 20px; display: flex; align-items: center; gap: 12px;
-    }
-    .page-container { padding-top: 70px; padding-bottom: 48px; }
+    .glass-card { padding: 0; background: var(--surface-card); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-card); overflow: hidden; margin-bottom: 16px; }
 
-    .glass-card {
-        background: #fff; border: none; border-radius: 24px;
-        box-shadow: 0 8px 28px rgba(0,0,0,0.04);
-        overflow: hidden; margin-bottom: 16px;
-    }
-
-    .month-grid {
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-    }
+    .month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .month-btn {
-        border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 12px;
+        border: 1px solid var(--line-strong); background: var(--surface); border-radius: 12px;
         padding: 10px 4px; text-align: center; cursor: pointer; transition: all 0.2s;
-        font-size: 11px; font-weight: 700; color: #64748b;
+        font-size: 11px; font-weight: 700; color: var(--mist);
     }
-    .month-btn:hover { border-color: #246bfe; color: #246bfe; }
-    .month-btn.selected { background: #246bfe; color: #fff; border-color: #246bfe; }
+    .month-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .month-btn.selected { background: var(--blue); color: #fff; border-color: var(--blue); }
 
-    .currency-input {
-        position: relative;
-    }
+    .currency-input { position: relative; }
     .currency-input::before {
         content: 'Rp'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-        font-size: 13px; font-weight: 700; color: #64748b; z-index: 1;
+        font-size: 13px; font-weight: 700; color: var(--mist); z-index: 1;
     }
-    .currency-input input {
-        padding-left: 40px !important;
-    }
+    .currency-input input { padding-left: 40px !important; }
 
     .submit-area {
         position: sticky; bottom: 0; left: 0; right: 0;
         background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
-        border-top: 1px solid #edf2f7; padding: 16px 20px;
-        z-index: 100;
+        border-top: 1px solid var(--line); padding: 16px 20px; z-index: 100;
     }
 
     @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     .slide-up { animation: slideUp 0.4s ease both; }
 </style>
 
-<div class="page-header">
-    <a href="{{ route('spp.index') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-        <i class="bi bi-chevron-left h5 mb-0"></i>
-    </a>
-    <div class="fw-bold" style="font-size: 18px;">{{ $isEdit ? 'Edit SPP' : 'Catat SPP Baru' }}</div>
+<div class="pui-topbar" style="padding-top:16px;">
+    <a href="{{ route('spp.index') }}" class="back"><i class="bi bi-chevron-left"></i></a>
+    <h1>{{ $isEdit ? 'Edit SPP' : 'Catat SPP Baru' }}</h1>
+    <div class="spacer"></div>
 </div>
 
-<div class="page-container px-3 pt-3">
-    <form method="POST" action="{{ $isEdit ? route('spp.update', $spp) : route('spp.store') }}" id="sppForm">
-        @csrf
-        @if($isEdit) @method('PUT') @endif
+<form method="POST" action="{{ $isEdit ? route('spp.update', $spp) : route('spp.store') }}" id="sppForm">
+    @csrf
+    @if($isEdit) @method('PUT') @endif
 
+    <div class="mobile-content px-3 pt-3">
         {{-- Pilih Siswa --}}
         <div class="glass-card slide-up">
             <div class="p-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <div style="width:28px;height:28px;border-radius:10px;background:#eef4ff;color:#246bfe;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi bi-person" style="font-size:14px;"></i>
-                    </div>
-                    <span class="fw-bold" style="font-size:14px;">Data Siswa</span>
+                <div class="pui-section" style="margin-top:0;">
+                    <h3 style="display:flex;align-items:center;gap:8px;"><i class="bi bi-person" style="color:var(--blue);"></i> Data Siswa</h3>
                 </div>
-                <select name="siswa_id" class="form-select border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;" required>
+                <select name="siswa_id" class="pui-select" required>
                     <option value="">Pilih siswa</option>
                     @foreach($siswas as $siswa)
                         <option value="{{ $siswa->id }}" @selected(old('siswa_id', $spp->siswa_id ?? '') == $siswa->id)>
@@ -91,14 +68,11 @@
         {{-- Periode --}}
         <div class="glass-card slide-up" style="animation-delay: 0.1s;">
             <div class="p-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <div style="width:28px;height:28px;border-radius:10px;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi bi-calendar3" style="font-size:14px;"></i>
-                    </div>
-                    <span class="fw-bold" style="font-size:14px;">Periode Pembayaran</span>
+                <div class="pui-section" style="margin-top:0;">
+                    <h3 style="display:flex;align-items:center;gap:8px;"><i class="bi bi-calendar3" style="color:#7c3aed;"></i> Periode Pembayaran</h3>
                 </div>
 
-                <label class="x-small fw-bold text-muted mb-2 d-block">BULAN</label>
+                <label class="pui-label" style="text-transform:uppercase;font-size:10.5px;color:var(--faint);">Bulan</label>
                 <input type="hidden" name="bulan" id="bulanInput" value="{{ old('bulan', $spp->bulan ?? '') }}">
                 <div class="month-grid mb-3" id="monthGrid">
                     @for($m = 1; $m <= 12; $m++)
@@ -108,66 +82,63 @@
                     @endfor
                 </div>
 
-                <label class="x-small fw-bold text-muted mb-1 d-block">TAHUN</label>
-                <input name="tahun" type="number" min="2020" max="2050" value="{{ old('tahun', $spp->tahun ?? date('Y')) }}" class="form-control border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;" required>
+                <label class="pui-label" style="text-transform:uppercase;font-size:10.5px;color:var(--faint);">Tahun</label>
+                <input name="tahun" type="number" min="2020" max="2050" value="{{ old('tahun', $spp->tahun ?? date('Y')) }}" class="pui-input" required>
             </div>
         </div>
 
         {{-- Nominal --}}
         <div class="glass-card slide-up" style="animation-delay: 0.2s;">
             <div class="p-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <div style="width:28px;height:28px;border-radius:10px;background:#f0fdf4;color:#16a34a;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi bi-cash-stack" style="font-size:14px;"></i>
-                    </div>
-                    <span class="fw-bold" style="font-size:14px;">Jumlah Pembayaran</span>
+                <div class="pui-section" style="margin-top:0;">
+                    <h3 style="display:flex;align-items:center;gap:8px;"><i class="bi bi-cash-stack" style="color:#16a34a;"></i> Jumlah Pembayaran</h3>
                 </div>
 
                 <div class="row g-3">
                     <div class="col-6">
-                        <label class="x-small fw-bold text-muted mb-1">TAGIHAN</label>
+                        <label class="pui-label" style="text-transform:uppercase;font-size:10.5px;color:var(--faint);">Tagihan</label>
                         <div class="currency-input">
-                            <input name="nominal" type="number" min="0" id="nominalInput" value="{{ old('nominal', $spp->nominal ?? '') }}" class="form-control border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;" required oninput="updatePreview()">
+                            <input name="nominal" type="number" min="0" id="nominalInput" value="{{ old('nominal', $spp->nominal ?? '') }}" class="pui-input" required oninput="updatePreview()">
                         </div>
                     </div>
                     <div class="col-6">
-                        <label class="x-small fw-bold text-muted mb-1">SUDAH DIBAYAR</label>
+                        <label class="pui-label" style="text-transform:uppercase;font-size:10.5px;color:var(--faint);">Sudah Dibayar</label>
                         <div class="currency-input">
-                            <input name="dibayar" type="number" min="0" id="dibayarInput" value="{{ old('dibayar', $spp->dibayar ?? 0) }}" class="form-control border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;" oninput="updatePreview()">
+                            <input name="dibayar" type="number" min="0" id="dibayarInput" value="{{ old('dibayar', $spp->dibayar ?? 0) }}" class="pui-input" oninput="updatePreview()">
                         </div>
                     </div>
                 </div>
 
-                <div id="paymentPreview" class="mt-3 p-3 rounded-4" style="background:#f8fafc;display:none;">
+                <div id="paymentPreview" class="mt-3 p-3 rounded-4" style="background:var(--surface);display:none;">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="small text-muted">Status</span>
+                        <span class="small" style="color:var(--mist);">Status</span>
                         <span id="statusPreview" class="fw-bold" style="font-size:13px;"></span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-1">
-                        <span class="small text-muted">Kekurangan</span>
+                        <span class="small" style="color:var(--mist);">Kekurangan</span>
                         <span id="kekuranganPreview" class="fw-bold" style="font-size:13px;color:#dc2626;"></span>
                     </div>
                 </div>
 
-                <div class="mt-3">
-                    <label class="x-small fw-bold text-muted mb-1">JATUH TEMPO (OPSIONAL)</label>
-                    <input name="jatuh_tempo" type="date" value="{{ old('jatuh_tempo', $isEdit && $spp->jatuh_tempo ? $spp->jatuh_tempo->format('Y-m-d') : '') }}" class="form-control border-0 shadow-sm" style="border-radius:14px;background:#f8fafc;font-size:14px;">
+                <div class="mt-3 pui-field" style="margin-bottom:0;">
+                    <label class="pui-label" style="text-transform:uppercase;font-size:10.5px;color:var(--faint);">Jatuh Tempo (Opsional)</label>
+                    <input name="jatuh_tempo" type="date" value="{{ old('jatuh_tempo', $isEdit && $spp->jatuh_tempo ? $spp->jatuh_tempo->format('Y-m-d') : '') }}" class="pui-input">
                 </div>
             </div>
         </div>
 
         <div style="height: 80px;"></div>
-    </form>
-</div>
-
-<div class="submit-area">
-    <div class="d-flex gap-2">
-        <a href="{{ route('spp.index') }}" class="btn btn-light rounded-pill px-4 fw-bold">Batal</a>
-        <button type="submit" form="sppForm" class="btn btn-primary rounded-pill flex-grow-1 py-2 fw-bold" style="font-size:15px;">
-            <i class="bi bi-check2-circle me-1"></i> {{ $isEdit ? 'Simpan Perubahan' : 'Simpan SPP' }}
-        </button>
     </div>
-</div>
+
+    <div class="submit-area">
+        <div class="d-flex gap-2" style="max-width:640px;margin:0 auto;">
+            <a href="{{ route('spp.index') }}" class="pui-btn pui-btn-ghost pui-btn-round" style="padding:12px 20px;">Batal</a>
+            <button type="submit" class="pui-btn pui-btn-primary pui-btn-block pui-btn-round" style="font-size:15px;flex:1;">
+                <i class="bi bi-check2-circle me-1"></i> {{ $isEdit ? 'Simpan Perubahan' : 'Simpan SPP' }}
+            </button>
+        </div>
+    </div>
+</form>
 
 <script>
     function selectMonth(m) {

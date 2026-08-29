@@ -2,92 +2,45 @@
 
 @section('content')
 <style>
-    .page-header {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: rgba(255,255,255,0.88); backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(226, 232, 240, 0.7);
-        padding: 12px 20px; display: flex; align-items: center; gap: 12px;
-    }
-    .page-container { padding-top: 70px; padding-bottom: 48px; }
-
     .eskul-hero {
-        background: linear-gradient(135deg, #7c3aed, #a78bfa);
-        padding: 32px 24px 36px; border-radius: 0 0 40px 40px;
+        background: var(--grad-primary);
         color: #fff; position: relative; overflow: hidden;
+        padding: 30px 24px 34px;
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     }
     .eskul-hero::after {
         content: ''; position: absolute; top: -20px; right: -20px;
         width: 120px; height: 120px; border-radius: 30px;
         background: rgba(255,255,255,0.15); transform: rotate(20deg);
     }
-    .eskul-hero::before {
-        content: ''; position: absolute; bottom: -40px; left: -30px;
-        width: 140px; height: 140px; border-radius: 50%;
-        background: rgba(255,255,255,0.08);
-    }
-
-    .limit-chip {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25);
-        color: #fff; font-size: 11px; font-weight: 700;
-        padding: 6px 12px; border-radius: 100px; backdrop-filter: blur(4px);
-    }
-
-    .eskul-card {
-        background: #fff; border-radius: 24px; padding: 18px;
-        margin-bottom: 16px; border: 1px solid #f1f5f9;
-        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative; overflow: hidden;
-    }
+    .eskul-card { padding: 18px; }
     .eskul-card:active { transform: scale(0.98); }
     .eskul-logo {
         width: 58px; height: 58px; border-radius: 18px;
-        background: #f8fafc; flex-shrink: 0; overflow: hidden;
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-        position: relative;
+        background: var(--surface); flex-shrink: 0; overflow: hidden;
+        display: flex; align-items: center; justify-content: center; position: relative;
     }
     .eskul-logo img { width: 100%; height: 100%; object-fit: cover; }
     .eskul-logo-placeholder {
         width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-        background: linear-gradient(135deg, #ede9fe, #e0e7ff); color: #7c3aed; font-size: 22px;
+        background: var(--grad-primary); color: #fff; font-size: 22px;
     }
-    .eskul-name { font-size: 17px; font-weight: 800; color: #0f172a; margin-bottom: 3px; line-height: 1.25; }
-    .eskul-meta { font-size: 12px; color: #64748b; font-weight: 600; }
-
-    .pembina-line {
-        display: inline-flex; align-items: center; gap: 5px;
-        background: #f5f3ff; color: #6d28d9;
-        font-size: 11px; font-weight: 700;
-        padding: 4px 10px; border-radius: 100px;
-    }
-
-    .btn-join {
-        padding: 9px 16px; border-radius: 13px; font-size: 13px; font-weight: 700;
-        transition: all 0.2s; min-width: 86px; border: none; text-align: center;
-    }
-    .btn-join:disabled { opacity: 0.55; cursor: not-allowed; }
-
-    .status-badge {
-        font-size: 9px; font-weight: 800; padding: 4px 11px; border-radius: 100px;
-        text-transform: uppercase; letter-spacing: 0.05em;
-    }
-
+    .eskul-name { font-size: 17px; font-weight: 800; color: var(--ink); margin-bottom: 3px; line-height: 1.25; }
+    .eskul-meta { font-size: 12px; color: var(--mist); font-weight: 600; }
     .eskul-desc {
-        background: #f8fafc; border-radius: 14px; padding: 12px 14px;
-        font-size: 12.5px; color: #475569; line-height: 1.55; border: 1px solid #f1f5f9;
+        background: var(--surface); border-radius: var(--radius-sm); padding: 12px 14px;
+        font-size: 12.5px; color: var(--mist); line-height: 1.55; border: 1px solid var(--line);
     }
+    .btn-join { min-width: 86px; }
 </style>
 
-<div class="page-header">
-    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-        <i class="bi bi-chevron-left h5 mb-0"></i>
-    </a>
-    <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px;">Ekstrakurikuler</div>
+<div class="pui-topbar" style="padding-top:16px;">
+    <a href="{{ route('dashboard') }}" class="back"><i class="bi bi-chevron-left"></i></a>
+    <h1>Ekstrakurikuler</h1>
+    <div class="spacer"></div>
 </div>
 
-<div class="page-container">
+<div class="mobile-content">
     <header class="eskul-hero">
         <div class="eyebrow" style="color: rgba(255,255,255,0.75);">MINAT & BAKAT</div>
         <h1 class="hero-title mt-2 text-white" style="font-size: 26px;">Eksplorasi Eskul</h1>
@@ -96,7 +49,7 @@
         </p>
         @if(session('user_role') === 'siswa')
             <div class="mt-3">
-                <span class="limit-chip">
+                <span class="pui-chip" style="background: rgba(255,255,255,0.18); color:#fff; border:1px solid rgba(255,255,255,0.3);">
                     <i class="bi bi-patch-check-fill"></i>
                     {{ $myCount }}/{{ $maxEskul }} eskul maksimal
                 </span>
@@ -111,7 +64,7 @@
         <div class="alert alert-danger border-0 shadow-sm rounded-4 mx-3 mt-3 mb-0">{{ session('error') }}</div>
     @endif
 
-    <main class="mobile-content px-3 mt-4">
+    <main class="px-3 mt-4">
         @php
             $atLimit = session('user_role') === 'siswa' && $myCount >= $maxEskul;
         @endphp
@@ -123,7 +76,7 @@
                 $isEskulAdmin = $myMember && $myMember->is_admin;
                 $joinDisabled = !$isJoined && !$isPending && !$isEskulAdmin && $atLimit;
             @endphp
-            <div class="eskul-card">
+            <div class="eskul-card pui-card">
                 <div class="d-flex align-items-center gap-3">
                     <div class="eskul-logo">
                         @if($eskul->logo)
@@ -138,9 +91,9 @@
                     <div class="flex-grow-1 min-width-0">
                         <div class="eskul-name text-truncate">{{ $eskul->nama }}</div>
                         <div class="eskul-meta d-flex align-items-center gap-2 flex-wrap">
-                            <span><i class="bi bi-people-fill me-1 text-primary"></i> {{ $eskul->members_count }} Anggota</span>
+                            <span><i class="bi bi-people-fill me-1" style="color:var(--blue);"></i> {{ $eskul->members_count }} Anggota</span>
                             @if($eskul->pembina)
-                                <span class="pembina-line"><i class="bi bi-person-badge"></i> {{ $eskul->pembina->name }}</span>
+                                <span class="pui-chip pui-chip-violet" style="font-size:11px;"><i class="bi bi-person-badge"></i> {{ $eskul->pembina->name }}</span>
                             @endif
                         </div>
                     </div>
@@ -148,17 +101,17 @@
                         @if(!$isEskulAdmin)
                             <form action="{{ route('eskul.join', $eskul) }}" method="POST">
                                 @csrf
-                                <button class="btn btn-join {{ ($isJoined || $isPending) ? 'btn-light text-danger' : 'btn-primary shadow-sm' }}"
-                                        style="{{ ($isJoined || $isPending) ? 'background:#fef2f2; border:1px solid #fee2e2;' : '' }}"
+                                <button class="pui-btn pui-btn-sm btn-join {{ ($isJoined || $isPending) ? 'pui-btn-ghost' : 'pui-btn-primary' }}"
+                                        style="{{ ($isJoined || $isPending) ? 'border-color:#fee2e2; color:#dc2626;' : '' }}"
                                         @if($joinDisabled) disabled title="Maksimal {{ $maxEskul }} eskul" @endif>
                                     {{ $isPending ? 'Batal' : ($isJoined ? 'Keluar' : 'Gabung') }}
                                 </button>
                             </form>
                             @if($joinDisabled)
-                                <div class="small text-muted mt-1" style="font-size: 9px; font-weight: 600;">Maks {{ $maxEskul }} eskul</div>
+                                <div class="small mt-1" style="color:var(--faint); font-size:9px; font-weight:600;">Maks {{ $maxEskul }} eskul</div>
                             @endif
                         @else
-                            <a href="{{ route('eskul.members', $eskul) }}" class="btn btn-join btn-dark shadow-sm">
+                            <a href="{{ route('eskul.members', $eskul) }}" class="pui-btn pui-btn-ink pui-btn-sm btn-join">
                                 <i class="bi bi-shield-check me-1"></i> Kelola
                             </a>
                         @endif
@@ -169,12 +122,12 @@
                     <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
                         <div class="d-flex gap-2">
                             @if($isPending)
-                                <span class="status-badge text-dark" style="background: #fef3c7 !important; color:#92400e !important;">Menunggu Persetujuan</span>
+                                <span class="pui-chip pui-chip-amber">Menunggu Persetujuan</span>
                             @elseif($isJoined)
-                                <span class="status-badge text-white" style="background: #10b981 !important;">Sudah Bergabung</span>
+                                <span class="pui-chip pui-chip-green">Sudah Bergabung</span>
                             @endif
                             @if($isEskulAdmin)
-                                <span class="status-badge text-white" style="background: #0f172a !important;"><i class="bi bi-shield-fill-check"></i> Admin</span>
+                                <span class="pui-chip" style="background:var(--navy); color:#fff;"><i class="bi bi-shield-fill-check"></i> Admin</span>
                             @endif
                         </div>
 
@@ -183,7 +136,7 @@
                                 $eskulChat = \App\Models\ChatGroup::where('type', 'eskul')->where('related_id', $eskul->id)->first();
                             @endphp
                             @if($eskulChat)
-                                <a href="{{ route('chat.show', $eskulChat) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" style="font-size: 11px;">
+                                <a href="{{ route('chat.show', $eskulChat) }}" class="pui-btn pui-btn-soft pui-btn-sm pui-btn-round" style="font-size: 11px;">
                                     <i class="bi bi-chat-dots-fill me-1"></i> Masuk Chat
                                 </a>
                             @endif
@@ -193,15 +146,15 @@
 
                 @if($eskul->deskripsi)
                     <div class="eskul-desc mt-3">
-                        <i class="bi bi-quote me-1 text-primary"></i>{{ \Illuminate\Support\Str::limit($eskul->deskripsi, 90) }}
+                        <i class="bi bi-quote me-1" style="color:var(--blue);"></i>{{ \Illuminate\Support\Str::limit($eskul->deskripsi, 90) }}
                     </div>
                 @endif
             </div>
         @empty
-            <div class="empty-box">
-                <i class="bi bi-flag h1 text-muted opacity-25"></i>
-                <div class="fw-bold mt-2">Belum ada eskul</div>
-                <div class="small text-secondary mt-1">Kegiatan ekstrakurikuler belum tersedia saat ini.</div>
+            <div class="pui-empty">
+                <div class="ico"><i class="bi bi-flag"></i></div>
+                <h4>Belum ada eskul</h4>
+                <p>Kegiatan ekstrakurikuler belum tersedia saat ini.</p>
             </div>
         @endforelse
     </main>
@@ -213,7 +166,7 @@ function eskulLogoFallback(el) {
     var letter = (name.charAt(0) || 'E').toUpperCase();
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">'
         + '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
-        + '<stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#a78bfa"/>'
+        + '<stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#6366f1"/>'
         + '</linearGradient></defs>'
         + '<rect width="100%" height="100%" fill="url(#g)"/>'
         + '<text x="50%" y="54%" font-family="sans-serif" font-size="90" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="middle">' + letter + '</text></svg>';

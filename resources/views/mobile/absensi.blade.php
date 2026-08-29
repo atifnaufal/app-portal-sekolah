@@ -14,7 +14,7 @@
     .page-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
         background: rgba(255,255,255,0.88); backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+        border-bottom: 1px solid var(--line-strong);
         padding: 12px 20px; display: flex; align-items: center; gap: 12px;
     }
     .page-container { padding-top: 70px; padding-bottom: 48px; }
@@ -22,14 +22,14 @@
     .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .stat-chip {
         background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.16);
-        border-radius: 16px; padding: 10px 8px; text-align: center;
+        border-radius: var(--radius-sm); padding: 10px 8px; text-align: center;
     }
     .stat-chip .num { font-size: 18px; font-weight: 800; color: #fff; line-height: 1.1; }
     .stat-chip .lbl { font-size: 9px; font-weight: 700; letter-spacing: .04em; color: rgba(255,255,255,.72); margin-top: 4px; text-transform: uppercase; }
 
     .absen-card {
-        background: #fff; border: none; border-radius: 24px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        background: var(--surface-card); border: none; border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
         position: relative; overflow: hidden; margin-bottom: 16px;
     }
     .absen-card::before {
@@ -40,14 +40,14 @@
     .absen-card.warning::before { background: #f59e0b; }
 
     .icon-box {
-        width: 48px; height: 48px; border-radius: 16px;
+        width: 48px; height: 48px; border-radius: var(--radius-sm);
         display: flex; align-items: center; justify-content: center;
         font-size: 20px; flex-shrink: 0;
     }
 
     /* Face Scanner UI */
     #camera-container {
-        border-radius: 24px; position: relative; overflow: hidden;
+        border-radius: var(--radius-md); position: relative; overflow: hidden;
         aspect-ratio: 3/4; background: #000; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
     }
     .face-scanner {
@@ -67,7 +67,7 @@
     @keyframes scan { 0% { top: 0% } 50% { top: 100% } 100% { top: 0% } }
 
     .btn-premium {
-        padding: 16px; border-radius: 18px; font-weight: 800; font-size: 15px;
+        padding: 16px; border-radius: var(--radius-sm); font-weight: 800; font-size: 15px;
         box-shadow: 0 8px 20px rgba(36, 107, 254, 0.2);
     }
 </style>
@@ -76,11 +76,11 @@
     <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
         <i class="bi bi-chevron-left h5 mb-0"></i>
     </a>
-    <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px;">Kehadiran</div>
+    <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px; color: var(--ink);">Kehadiran</div>
 </div>
 
 <div class="page-container">
-    <header class="mobile-hero" style="border-radius: 0 0 40px 40px; margin-bottom: 24px; background: linear-gradient(135deg, #0f172a, #246bfe); padding: 32px 24px 40px;">
+    <header class="mobile-hero" style="border-radius: 0 0 40px 40px; margin-bottom: 24px; background: linear-gradient(135deg, var(--navy), var(--blue)); padding: 32px 24px 40px;">
         <div class="eyebrow" style="color: #94a3b8;">{{ $user->kelas?->nama ?? 'Akademik' }}</div>
         <div class="hero-title mt-2 text-white" style="font-size: 26px;">Absensi & Vermuk</div>
         <p class="mb-3 mt-1" style="font-size: 12px; color: rgba(255,255,255,.7);">
@@ -96,10 +96,10 @@
 
     <main class="mobile-content px-3">
         @if(!$attendanceActive)
-            <div class="empty-box">
-                <i class="bi bi-exclamation-octagon h1 text-warning"></i>
-                <div class="fw-bold mt-2">Absensi Nonaktif</div>
-                <div class="small text-secondary mt-1">Fitur absensi sedang dinonaktifkan oleh Admin.</div>
+            <div class="pui-empty">
+                <i class="bi bi-exclamation-octagon ico"></i>
+                <h4>Absensi Nonaktif</h4>
+                <p>Fitur absensi sedang dinonaktifkan oleh Admin.</p>
             </div>
         @else
             <div class="card absen-card success">

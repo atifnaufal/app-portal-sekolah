@@ -26,58 +26,60 @@
     .page-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
         background: rgba(255,255,255,0.88); backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+        border-bottom: 1px solid var(--line-strong);
         padding: 12px 20px; display: flex; align-items: center; gap: 12px;
     }
     .page-container { padding-top: 70px; padding-bottom: 48px; }
-    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .stat-chip {
-        background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.16);
-        border-radius: 16px; padding: 10px 8px; text-align: center;
+    .hero-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .hero-stat {
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+        border-radius: var(--radius-sm); padding: 8px; text-align: center;
     }
-    .stat-chip .num { font-size: 18px; font-weight: 800; color: #fff; line-height: 1.1; }
-    .stat-chip .lbl { font-size: 9px; font-weight: 700; letter-spacing: .04em; color: rgba(255,255,255,.72); margin-top: 4px; text-transform: uppercase; }
+    .hero-stat .num { font-size: 16px; font-weight: 800; color: #fff; line-height: 1.1; }
+    .hero-stat .lbl { font-size: 9px; font-weight: 700; letter-spacing: .04em; color: rgba(255,255,255,.7); margin-top: 4px; text-transform: uppercase; }
     .search-wrap {
-        background: #fff; border-radius: 16px; display: flex; align-items: center; gap: 10px;
-        padding: 10px 14px; box-shadow: 0 8px 24px rgba(20,33,61,.06);
+        background: var(--surface-card); border-radius: var(--radius-md);
+        display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+        box-shadow: var(--shadow-card); border: 1px solid var(--line);
     }
-    .search-wrap input { border: 0; outline: none; width: 100%; font-size: 14px; background: transparent; }
+    .search-wrap input { border: 0; outline: none; width: 100%; font-size: 14px; background: transparent; color: var(--ink); }
     .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
     .filter-row::-webkit-scrollbar { display: none; }
     .filter-chip {
-        border: 1px solid #e2e8f0; background: #fff; color: #64748b;
+        border: 1px solid var(--line-strong); background: var(--surface-card); color: var(--mist);
         border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 700;
-        white-space: nowrap; cursor: pointer;
+        white-space: nowrap; cursor: pointer; transition: background .18s, color .18s, border-color .18s;
     }
-    .filter-chip.active { background: #14213d; color: #fff; border-color: #14213d; }
+    .filter-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
     .ai-card {
-        background: #fff; border: none; border-radius: 24px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        background: var(--surface-card); border: 1px solid var(--line);
+        border-radius: var(--radius-md); box-shadow: var(--shadow-card);
         position: relative; overflow: hidden;
     }
     .ai-card::before {
         content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%;
         background: var(--blue); opacity: 0.85;
     }
-    .ai-card.urgent::before { background: var(--danger); }
+    .ai-card.urgent::before { background: #dc2626; }
     .ai-card.completed::before { background: #10b981; }
     .ai-card.pending::before { background: #f59e0b; }
     .ai-card.revise::before { background: #f59e0b; }
     .glass-pill {
-        background: rgba(36, 107, 254, 0.06); color: var(--blue);
-        border: 1px solid rgba(36, 107, 254, 0.12);
+        background: rgba(99, 102, 241, 0.08); color: var(--indigo);
+        border: 1px solid rgba(99, 102, 241, 0.15);
         padding: 4px 10px; border-radius: 100px; font-size: 10px; font-weight: 800; letter-spacing: .02em;
     }
+    .glass-pill.neutral { color: var(--mist); background: #f8fafc; border-color: var(--line-strong); }
     .revise-badge {
         background: #fef3c7; color: #b45309; border: 1px solid #fde68a;
         padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 800;
     }
     .progress-slim { height: 7px; border-radius: 99px; background: #eef2f7; overflow: hidden; }
-    .progress-slim > span { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #246bfe, #60a5fa); }
+    .progress-slim > span { display: block; height: 100%; border-radius: 99px; background: var(--grad-primary); }
     .icon-action {
-        width: 36px; height: 36px; border-radius: 12px; border: 1px solid #e2e8f0;
-        background: #fff; display: inline-flex; align-items: center; justify-content: center;
-        color: #475569; text-decoration: none;
+        width: 36px; height: 36px; border-radius: 12px; border: 1px solid var(--line-strong);
+        background: var(--surface-card); display: inline-flex; align-items: center; justify-content: center;
+        color: var(--mist); text-decoration: none; flex-shrink: 0;
     }
     .icon-action.danger { color: #d94b61; border-color: #f8d7de; background: #fff5f6; }
     .tugas-modal {
@@ -87,73 +89,57 @@
     }
     .tugas-modal.open { display: flex; }
     .tugas-modal-card {
-        width: 100%; max-width: 680px; background: #fff;
-        border-radius: 28px 28px 0 0; padding: 24px 20px 32px;
+        width: 100%; max-width: 680px; background: var(--surface-card);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px 20px 32px;
     }
-    .empty-box { text-align: center; padding: 48px 20px; background: #fff; border-radius: 24px; }
+    .grade-ico { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
     @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 </style>
 
 <div class="page-header">
-    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-        <i class="bi bi-chevron-left h5 mb-0"></i>
+    <a href="{{ route('dashboard') }}" class="icon-action">
+        <i class="bi bi-chevron-left"></i>
     </a>
-    <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px;">Pusat Tugas</div>
+    <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px; color: var(--ink);">Pusat Tugas</div>
     @if($isGuru)
-        <a href="{{ route('tugas.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto" style="font-weight: 700;">+ Buat</a>
-        <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
-                <select id="rekapSemester" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
-                    <option value="1">Semester 1</option>
-                    <option value="2">Semester 2</option>
-                </select>
-                <a href="#" id="btnRecapPdf" onclick="goRecapTugas('pdf'); return false;" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold shadow-sm">
-                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
-                </a>
-                <a href="#" id="btnRecapExcel" onclick="goRecapTugas('excel'); return false;" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm">
-                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
-                </a>
-            </div>
-            <script>
-                function goRecapTugas(type) {
-                    if (type === 'excel') {
-                        var tugasId = prompt('Masukkan ID Tugas untuk export Excel:', '');
-                        if (tugasId) {
-                            var excelUrl = '{{ route('tugas.export.excel', ['tugas' => '__TID__']) }}'.replace('__TID__', tugasId);
-                            window.open(excelUrl, '_blank');
-                        }
-                        return false;
-                    }
-                    if (window.tugasList && window.tugasList.length > 0) {
-                        var pdfUrl = '{{ route('tugas.export.pdf', ['tugas' => '__TID__']) }}'.replace('__TID__', window.tugasList[0]);
-                        window.open(pdfUrl, '_blank');
-                    } else {
-                        alert('Pilih tugas terlebih dahulu untuk export PDF.');
-                    }
-                }
-            </script>
+        <a href="{{ route('tugas.create') }}" class="pui-btn pui-btn-primary pui-btn-sm pui-btn-round ms-auto">+ Buat</a>
+        <div class="ms-2 d-flex">
+            <select id="rekapSemester" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:1px solid var(--line-strong);">
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="#" id="btnRecapPdf" onclick="goRecapTugas('pdf'); return false;" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="color:#dc2626;">
+                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+            </a>
+            <a href="#" id="btnRecapExcel" onclick="goRecapTugas('excel'); return false;" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="color:#16a34a;">
+                <i class="bi bi-file-earmark-excel-fill"></i> Excel
+            </a>
+        </div>
     @endif
 </div>
 
 <div class="page-container">
-    <header class="mobile-hero" style="border-radius: 0 0 28px 28px; margin-bottom: 20px; background: linear-gradient(135deg, #0f172a, #1e293b); padding: 32px 24px 28px;">
-        <div class="eyebrow" style="color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">
+    <header class="mobile-hero" style="margin-bottom: 20px;">
+        <div class="eyebrow">
             {{ $user->kelas?->nama ?? ($isGuru ? 'Panel Pengajar' : 'Akademik') }}
         </div>
-        <div class="hero-title mt-2 text-white" style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">{{ $isGuru ? 'Kelola Tugas Kelas' : 'Tugas Saya' }}</div>
+        <div class="hero-title">{{ $isGuru ? 'Kelola Tugas Kelas' : 'Tugas Saya' }}</div>
         <p class="mb-3 mt-1" style="font-size: 12px; color: rgba(255,255,255,.6); line-height: 1.5;">
             {{ $isGuru ? 'Pantau pengumpulan, nilai, dan kelola instruksi tugas.' : 'Pantau deadline dan kirim jawaban tugas Anda tepat waktu.' }}
         </p>
-        <div class="stat-grid" style="gap: 10px;">
+        <div class="hero-stat-grid">
             @if($isGuru)
-                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statTotal }}</div><div class="lbl">Total</div></div>
-                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statPending }}</div><div class="lbl">Nilai</div></div>
-                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statRevisi }}</div><div class="lbl">Revisi</div></div>
-                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statExpired }}</div><div class="lbl">Lewat</div></div>
+                <div class="hero-stat"><div class="num">{{ $statTotal }}</div><div class="lbl">Total</div></div>
+                <div class="hero-stat"><div class="num">{{ $statPending }}</div><div class="lbl">Nilai</div></div>
+                <div class="hero-stat"><div class="num">{{ $statRevisi }}</div><div class="lbl">Revisi</div></div>
+                <div class="hero-stat"><div class="num">{{ $statExpired }}</div><div class="lbl">Lewat</div></div>
             @else
-                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statTotal }}</div><div class="lbl">Aktif</div></div>
-                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statPending }}</div><div class="lbl">Review</div></div>
-                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statDone }}</div><div class="lbl">Skor</div></div>
-                <div class="stat-chip" style="background: rgba(255,255,255,0.05); border-radius: 14px; padding: 8px;"><div class="num" style="font-size: 16px;">{{ $statExpired }}</div><div class="lbl">Telat</div></div>
+                <div class="hero-stat"><div class="num">{{ $statTotal }}</div><div class="lbl">Aktif</div></div>
+                <div class="hero-stat"><div class="num">{{ $statPending }}</div><div class="lbl">Review</div></div>
+                <div class="hero-stat"><div class="num">{{ $statDone }}</div><div class="lbl">Skor</div></div>
+                <div class="hero-stat"><div class="num">{{ $statExpired }}</div><div class="lbl">Telat</div></div>
             @endif
         </div>
     </header>
@@ -203,14 +189,14 @@
                                             <i class="bi bi-journal-bookmark me-1"></i>
                                             {{ $item->mataPelajaran?->nama ?? 'Umum' }}
                                         </div>
-                                        <div class="glass-pill" style="color:#475569;background:#f8fafc;border-color:#e2e8f0;">{{ $item->kelas?->nama }}</div>
+                                        <div class="glass-pill neutral">{{ $item->kelas?->nama }}</div>
                                     </div>
                                     <div class="text-end">
                                         <div class="small fw-bold text-{{ $deadline['tone'] === 'muted' ? 'muted' : $deadline['tone'] }}" style="font-size: 10px;">DEADLINE</div>
-                                        <div class="fw-bold" style="font-size: 12px;">{{ $item->batas_pengumpulan?->format('d M Y') ?? 'Terbuka' }}</div>
+                                        <div class="fw-bold" style="font-size: 12px; color: var(--ink);">{{ $item->batas_pengumpulan?->format('d M Y') ?? 'Terbuka' }}</div>
                                     </div>
                                 </div>
-                                <h3 class="h6 fw-bold mb-1" style="font-size: 16px; line-height: 1.4;">{{ $item->judul }}</h3>
+                                <h3 class="h6 fw-bold mb-1" style="font-size: 16px; line-height: 1.4; color: var(--ink);">{{ $item->judul }}</h3>
                                 <p class="small text-secondary mb-3" style="line-height: 1.55;">{{ \Illuminate\Support\Str::limit($item->deskripsi ?: 'Tidak ada deskripsi tambahan.', 90) }}</p>
                                 <div class="d-flex justify-content-between small mb-1">
                                     <span class="fw-bold text-{{ $deadline['tone'] === 'muted' ? 'muted' : $deadline['tone'] }}">{{ $deadline['label'] }}</span>
@@ -225,8 +211,8 @@
                                     @endif
                                 </div>
                             </a>
-                            <div class="d-flex gap-2 mt-3 pt-3 border-top">
-                                <a href="{{ route('tugas.show', $item) }}" class="btn btn-primary btn-sm rounded-pill px-3 flex-grow-1">Kelola</a>
+                            <div class="d-flex gap-2 mt-3 pt-3 border-top" style="border-color: var(--line) !important;">
+                                <a href="{{ route('tugas.show', $item) }}" class="pui-btn pui-btn-primary pui-btn-sm pui-btn-round flex-grow-1">Kelola</a>
                                 <a href="{{ route('tugas.edit', $item) }}" class="icon-action" title="Edit tugas"><i class="bi bi-pencil-square"></i></a>
                                 <button type="button" class="icon-action danger" title="Hapus tugas"
                                     onclick="openDeleteTugas(@json(route('tugas.destroy', $item)), @json($item->judul), @json($submitted.' pengumpulan akan ikut terhapus'))">
@@ -236,11 +222,11 @@
                         </div>
                     </article>
                 @empty
-                    <div class="empty-box">
-                        <i class="bi bi-journal-plus h1 text-primary"></i>
-                        <div class="fw-bold mt-2">Belum ada tugas</div>
-                        <div class="small text-secondary mt-1 mb-3">Buat tugas pertama untuk kelas Anda.</div>
-                        <a href="{{ route('tugas.create') }}" class="btn btn-primary rounded-pill px-4">+ Buat Tugas</a>
+                    <div class="pui-empty">
+                        <i class="bi bi-journal-plus ico"></i>
+                        <h4>Belum ada tugas</h4>
+                        <p class="mb-3">Buat tugas pertama untuk kelas Anda.</p>
+                        <a href="{{ route('tugas.create') }}" class="pui-btn pui-btn-primary pui-btn-round">+ Buat Tugas</a>
                     </div>
                 @endforelse
             </div>
@@ -265,10 +251,10 @@
                                 </div>
                                 <div class="text-end">
                                     <div class="small fw-bold text-{{ $deadline['tone'] === 'muted' ? 'muted' : $deadline['tone'] }}" style="font-size: 10px;">DEADLINE</div>
-                                    <div class="fw-bold" style="font-size: 13px;">{{ $item->batas_pengumpulan?->format('d M') ?? 'Terbuka' }}</div>
+                                    <div class="fw-bold" style="font-size: 13px; color: var(--ink);">{{ $item->batas_pengumpulan?->format('d M') ?? 'Terbuka' }}</div>
                                 </div>
                             </div>
-                            <h3 class="h6 fw-bold mb-2" style="font-size: 16px; line-height: 1.4;">{{ $item->judul }}</h3>
+                            <h3 class="h6 fw-bold mb-2" style="font-size: 16px; line-height: 1.4; color: var(--ink);">{{ $item->judul }}</h3>
                             <p class="small text-secondary mb-3" style="line-height: 1.6;">{{ \Illuminate\Support\Str::limit($item->deskripsi ?: 'Buka modul untuk panduan lengkap.', 85) }}</p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="fw-bold text-{{ $needsRevision ? 'warning' : 'primary' }}" style="font-size: 12px;">
@@ -285,15 +271,15 @@
                     <a href="{{ route('tugas.show', $item) }}" class="card ai-card pending mb-3 text-decoration-none" data-card data-filter="pending" data-search="{{ strtolower($item->judul) }}">
                         <div class="card-body p-3 d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #fffbeb; color: #f59e0b;">
-                                    <i class="bi bi-hourglass-split h6 mb-0"></i>
+                                <div class="grade-ico" style="background: #fffbeb; color: #f59e0b;">
+                                    <i class="bi bi-hourglass-split"></i>
                                 </div>
                                 <div>
-                                    <div class="fw-bold text-dark" style="font-size: 14px;">{{ $item->judul }}</div>
+                                    <div class="fw-bold" style="font-size: 14px; color: var(--ink);">{{ $item->judul }}</div>
                                     <div class="small text-muted" style="font-size: 11px;">Dikirim {{ $submission->dikumpulkan_pada?->format('d M Y, H:i') ?? 'Baru saja' }}</div>
                                 </div>
                             </div>
-                            <span class="badge rounded-pill" style="background: #fffbeb; color: #b45309; font-size: 10px; font-weight: 800;">MENUNGGU</span>
+                            <span class="pui-chip pui-chip-amber">MENUNGGU</span>
                         </div>
                     </a>
                 @endforeach
@@ -309,7 +295,7 @@
                                     <i class="bi bi-check2-circle h5 mb-0"></i>
                                 </div>
                                 <div>
-                                    <div class="fw-bold text-dark" style="font-size: 14px;">{{ $item->judul }}</div>
+                                    <div class="fw-bold" style="font-size: 14px; color: var(--ink);">{{ $item->judul }}</div>
                                     <div class="small text-muted" style="font-size: 11px;">Dinilai {{ $submission->dinilai_pada?->format('d M Y') ?? 'Baru saja' }}</div>
                                 </div>
                             </div>
@@ -325,8 +311,8 @@
                     <a href="{{ route('tugas.show', $item) }}" class="card ai-card urgent mb-3 text-decoration-none text-dark" data-card data-filter="expired" data-search="{{ strtolower($item->judul) }}">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between">
-                                <div class="fw-bold">{{ $item->judul }}</div>
-                                <span class="badge text-bg-danger rounded-pill" style="font-size: 10px;">TERLEWAT</span>
+                                <div class="fw-bold" style="color: var(--ink);">{{ $item->judul }}</div>
+                                <span class="pui-chip pui-chip-red">TERLEWAT</span>
                             </div>
                             <div class="small text-secondary mt-1">Batas {{ $item->batas_pengumpulan?->format('d M Y') }} · Tugas tidak dapat dikumpulkan</div>
                         </div>
@@ -334,18 +320,18 @@
                 @endforeach
 
                 @if($tugas->isEmpty() && $pendingTugas->isEmpty() && $completedTugas->isEmpty() && $expiredTugas->isEmpty())
-                    <div class="empty-box">
-                        <i class="bi bi-stars h1 text-primary"></i>
-                        <div class="fw-bold mt-2">Semua tugas selesai!</div>
-                        <div class="small mt-1 text-secondary">Belum ada tugas baru untukmu.</div>
+                    <div class="pui-empty">
+                        <i class="bi bi-stars ico"></i>
+                        <h4>Semua tugas selesai!</h4>
+                        <p>Belum ada tugas baru untukmu.</p>
                     </div>
                 @endif
             </div>
         @endif
 
-        <div id="emptyFilter" class="empty-box d-none">
-            <div class="fw-bold">Tidak ada tugas pada filter ini</div>
-            <div class="small text-secondary mt-1">Coba kata kunci atau filter lain.</div>
+        <div id="emptyFilter" class="pui-empty d-none">
+            <h4>Tidak ada tugas pada filter ini</h4>
+            <p class="mt-1">Coba kata kunci atau filter lain.</p>
         </div>
     </main>
 </div>
@@ -353,27 +339,44 @@
 <div class="tugas-modal" id="deleteModal" onclick="if(event.target===this)closeDeleteTugas()">
     <div class="tugas-modal-card">
         <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:#fff5f6;color:#d94b61;">
-                <i class="bi bi-trash3 h4 mb-0"></i>
+            <div class="grade-ico" style="background:#fff5f6;color:#d94b61;">
+                <i class="bi bi-trash3"></i>
             </div>
             <div>
-                <div class="fw-bold">Hapus tugas?</div>
+                <div class="fw-bold" style="color: var(--ink);">Hapus tugas?</div>
                 <div class="small text-secondary">Tindakan ini tidak dapat dibatalkan.</div>
             </div>
         </div>
-        <div class="p-3 rounded-4 mb-3" style="background:#f8fafc;">
-            <div class="fw-bold" id="deleteTitle">Tugas</div>
+        <div class="pui-card p-3 mb-3" style="background:#f8fafc;">
+            <div class="fw-bold" id="deleteTitle" style="color: var(--ink);">Tugas</div>
             <div class="small text-danger mt-1" id="deleteMeta"></div>
         </div>
         <form id="deleteForm" method="POST">
             @csrf @method('DELETE')
-            <button class="btn btn-danger w-100 py-2 rounded-pill fw-bold mb-2">Hapus permanen</button>
-            <button type="button" class="btn btn-light w-100 py-2 rounded-pill" onclick="closeDeleteTugas()">Batal</button>
+            <button class="pui-btn pui-btn-danger pui-btn-block pui-btn-round mb-2">Hapus permanen</button>
+            <button type="button" class="pui-btn pui-btn-ghost pui-btn-block pui-btn-round" onclick="closeDeleteTugas()">Batal</button>
         </form>
     </div>
 </div>
 
 <script>
+    function goRecapTugas(type) {
+        if (type === 'excel') {
+            var tugasId = prompt('Masukkan ID Tugas untuk export Excel:', '');
+            if (tugasId) {
+                var excelUrl = '{{ route('tugas.export.excel', ['tugas' => '__TID__']) }}'.replace('__TID__', tugasId);
+                window.open(excelUrl, '_blank');
+            }
+            return false;
+        }
+        if (window.tugasList && window.tugasList.length > 0) {
+            var pdfUrl = '{{ route('tugas.export.pdf', ['tugas' => '__TID__']) }}'.replace('__TID__', window.tugasList[0]);
+            window.open(pdfUrl, '_blank');
+        } else {
+            alert('Pilih tugas terlebih dahulu untuk export PDF.');
+        }
+    }
+
     function openDeleteTugas(url, title, meta) {
         document.getElementById('deleteForm').action = url;
         document.getElementById('deleteTitle').innerText = title;

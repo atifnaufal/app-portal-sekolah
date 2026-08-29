@@ -16,11 +16,24 @@
     <style>
         :root {
             --navy: #0f172a;
-            --blue: #246bfe;
-            --surface: #f8fafc;
-            --border: rgba(15, 23, 42, 0.05);
+            --navy-2: #1e1b4b;
+            --indigo: #6366f1;
+            --blue: #2563eb;
+            --blue-bright: #246bfe;
+            --surface: #f6f7fb;
+            --surface-card: #ffffff;
+            --ink: #0f172a;
+            --mist: #64748b;
+            --faint: #94a3b8;
+            --line: rgba(15, 23, 42, 0.07);
+            --line-strong: rgba(15, 23, 42, 0.1);
             --radius-lg: 28px;
             --radius-md: 20px;
+            --radius-sm: 14px;
+            --shadow-card: 0 6px 20px rgba(15, 23, 42, 0.05);
+            --shadow-hover: 0 14px 34px rgba(15, 23, 42, 0.1);
+            --grad-primary: linear-gradient(135deg, #4f46e5 0%, #6366f1 55%, #2563eb 100%);
+            --grad-hero: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -102,6 +115,117 @@
             border: 1px solid rgba(15, 23, 42, 0.05); border-left: 6px solid var(--blue);
             transition: all 0.3s;
         }
+
+        /* ============================================================
+           UI KIT — komponen premium terpusat (dipakai seluruh halaman)
+           ============================================================ */
+        .pui-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            border: 0; cursor: pointer; text-decoration: none;
+            font-weight: 700; border-radius: var(--radius-sm);
+            padding: 13px 20px; font-size: 14px; line-height: 1;
+            transition: transform .16s, box-shadow .18s, filter .18s, background .18s;
+            box-shadow: 0 6px 16px rgba(15,23,42,.08);
+        }
+        .pui-btn:active { transform: scale(.96); }
+        .pui-btn:disabled { opacity: .5; pointer-events: none; }
+        .pui-btn-primary {
+            color: #fff; background: var(--grad-primary);
+            box-shadow: 0 10px 24px rgba(79,70,229,.32);
+        }
+        .pui-btn-primary:active { box-shadow: 0 6px 14px rgba(79,70,229,.28); }
+        .pui-btn-ghost { color: var(--ink); background: #fff; border: 1px solid var(--line-strong); }
+        .pui-btn-soft { color: var(--indigo); background: #eef2ff; }
+        .pui-btn-danger { color: #fff; background: linear-gradient(135deg,#dc2626,#ef4444); box-shadow: 0 10px 24px rgba(220,38,38,.28); }
+        .pui-btn-block { width: 100%; }
+        .pui-btn-sm { padding: 9px 14px; font-size: 12.5px; border-radius: 12px; }
+        .pui-btn-round { border-radius: 999px; }
+
+        .pui-card {
+            background: var(--surface-card); border: 1px solid var(--line);
+            border-radius: var(--radius-md); box-shadow: var(--shadow-card);
+        }
+
+        .pui-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 13px; border-radius: 999px;
+            font-size: 11.5px; font-weight: 700; letter-spacing: .01em;
+            background: #f1f5f9; color: var(--mist); border: 1px solid transparent;
+        }
+        .pui-chip i { font-size: 12px; }
+        .pui-chip-primary { background: #eef2ff; color: #4f46e5; }
+        .pui-chip-green    { background: #ecfdf5; color: #059669; }
+        .pui-chip-amber    { background: #fffbeb; color: #d97706; }
+        .pui-chip-red      { background: #fef2f2; color: #dc2626; }
+        .pui-chip-sky      { background: #f0f9ff; color: #0284c7; }
+        .pui-chip-violet   { background: #f5f3ff; color: #7c3aed; }
+        .pui-chip-ink      { background: rgba(15,23,42,.6); color: #fff; }
+
+        .pui-avatar {
+            width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+            display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 15px;
+            background: var(--grad-primary);
+            box-shadow: 0 4px 12px rgba(79,70,229,.25);
+        }
+        .pui-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+        .pui-section {
+            display: flex; align-items: baseline; justify-content: space-between;
+            gap: 10px; margin: 22px 2px 12px;
+        }
+        .pui-section h3 { font-size: 16px; font-weight: 800; color: var(--ink); margin: 0; letter-spacing: -.01em; }
+        .pui-section p  { margin: 2px 0 0; font-size: 12px; color: var(--faint); }
+        .pui-section a.link { margin-left: auto; font-size: 12.5px; font-weight: 700; color: var(--indigo); text-decoration: none; }
+
+        .pui-input, .pui-select, .pui-textarea {
+            width: 100%; padding: 13px 15px; border-radius: var(--radius-sm);
+            border: 1.5px solid var(--line-strong); background: #fff; color: var(--ink);
+            font-size: 14px; font-weight: 500; outline: none;
+            transition: border-color .18s, box-shadow .18s;
+        }
+        .pui-input:focus, .pui-select:focus, .pui-textarea:focus {
+            border-color: var(--indigo); box-shadow: 0 0 0 4px rgba(99,102,241,.14);
+        }
+        .pui-label { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+        .pui-field { margin-bottom: 16px; }
+        .pui-stat {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 14px 8px; border-radius: var(--radius-md);
+            background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-card);
+        }
+        .pui-stat .num { font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+        .pui-stat .lb { font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--faint); text-transform: uppercase; margin-top: 5px; }
+
+        .pui-row {
+            display: flex; align-items: center; gap: 14px; padding: 13px 0;
+            text-decoration: none; color: var(--ink);
+        }
+        .pui-row + .pui-row { border-top: 1px solid var(--line); }
+        .pui-row .grow { flex: 1; min-width: 0; }
+        .pui-row .t { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pui-row .s { font-size: 11.5px; color: var(--faint); }
+
+        .pui-empty {
+            text-align: center; padding: 48px 24px; color: var(--faint);
+        }
+        .pui-empty .ico { font-size: 42px; opacity: .45; }
+        .pui-empty h4 { color: var(--ink); font-weight: 800; margin: 12px 0 4px; font-size: 15.5px; }
+        .pui-empty p { font-size: 13px; margin: 0; }
+
+        .pui-topbar {
+            display: flex; align-items: center; gap: 12px;
+            padding: 16px 18px 0; max-width: 640px; margin: 0 auto;
+        }
+        .pui-topbar .back {
+            display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+            color: var(--mist); font-weight: 800; font-size: 13px; text-decoration: none;
+            padding: 9px 12px; border-radius: 12px; background: rgba(255,255,255,.8);
+            border: 1px solid var(--line-strong); box-shadow: 0 2px 8px rgba(15,23,42,.04);
+            backdrop-filter: blur(8px); transition: all .18s;
+        }
+        .pui-topbar .back:active { transform: scale(.97); background: #fff; }
+        .pui-topbar h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin: 0; color: var(--ink); }
+        .pui-topbar .spacer { flex: 1; }
     </style>
 </head>
 <body>

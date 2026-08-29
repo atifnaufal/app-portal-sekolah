@@ -12,164 +12,149 @@
 @endphp
 
 <style>
-    .db-body { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
+    .db-body { padding: 12px 16px 120px; max-width: 640px; margin: 0 auto; }
 
-    /* Hero Card - Dark premium design */
-    .db-hero-card {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        border-radius: 30px;
+    /* Kartu section = `.pui-card` dari kit + spacing saja di sini */
+    .db-section { padding: 20px 18px; }
+
+    /* ==== Hero premium (background dialihkan ke token --grad-hero) ==== */
+    .hero-card {
+        background: var(--grad-hero);
+        border-radius: var(--radius-lg);
         padding: 26px;
         margin-bottom: 20px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.2);
+        box-shadow: var(--shadow-hover);
     }
-    .db-hero-card::before {
-        content: ''; position: absolute; top: -50%; right: -30%;
-        width: 200px; height: 200px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+    .hero-card::before, .hero-card::after {
+        content: ''; position: absolute; border-radius: 50%; pointer-events: none;
     }
-    .db-hero-card::after {
-        content: ''; position: absolute; bottom: -40%; left: -20%;
-        width: 180px; height: 180px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+    .hero-card::before {
+        top: -50%; right: -30%; width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.32) 0%, transparent 70%);
     }
-
-    .db-hero-greeting { font-size: 13px; opacity: 0.6; font-weight: 600; letter-spacing: 0.05em; }
-    .db-hero-name { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-top: 2px; }
-    .db-hero-class {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
-        border-radius: 12px; padding: 6px 14px; font-size: 12px; font-weight: 600;
-        margin-top: 12px; backdrop-filter: blur(8px);
+    .hero-card::after {
+        bottom: -40%; left: -20%; width: 180px; height: 180px;
+        background: radial-gradient(circle, rgba(37, 99, 235, 0.24) 0%, transparent 70%);
     }
-
-    .db-hero-avatar {
-        width: 50px; height: 50px; border-radius: 18px; overflow: hidden;
-        background: transparent;
-        display: flex; align-items: center; justify-content: center;
+    .hero-avatar {
+        width: 52px; height: 52px; border-radius: var(--radius-md);
+        overflow: hidden; display: flex; align-items: center; justify-content: center;
         font-size: 20px; font-weight: 800; flex-shrink: 0;
-        filter: drop-shadow(0 3px 8px rgba(0,0,0,0.2));
+        background: var(--grad-primary);
+        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
     }
-    .db-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .hero-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md); }
+    .hero-greeting { font-size: 12.5px; opacity: 0.65; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+    .hero-name { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-top: 2px; }
+    .hero-class {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 700; margin-top: 14px;
+    }
+    .hero-bell {
+        width: 42px; height: 42px; border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.14);
+        display: flex; align-items: center; justify-content: center; color: #fff;
+        text-decoration: none; position: relative;
+    }
 
-    /* LMS Mapel Grid */
-    .db-mapel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .db-mapel-card {
-        background: #fff; border-radius: 24px; padding: 16px;
-        text-decoration: none; border: 1px solid rgba(15,23,42,0.04);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        transition: all 0.3s;
+    /* ==== Stat chips (radius/palet diseragamkan lewat token) ==== */
+    .stat-row { display: flex; gap: 10px; margin-bottom: 16px; }
+    .stat-card {
+        flex: 1; position: relative; overflow: hidden;
+        padding: 16px 10px 14px; border-radius: var(--radius-md);
+        background: var(--surface-card); border: 1px solid var(--line);
+        box-shadow: var(--shadow-card); transition: transform 0.13s;
     }
-    .db-mapel-card:active { transform: scale(0.96); }
-    .db-mapel-icon {
-        width: 44px; height: 44px; border-radius: 14px;
+    .stat-card:active { transform: scale(0.96); }
+    .stat-card::before {
+        content: ''; position: absolute; top: -18px; right: -18px;
+        width: 60px; height: 60px; border-radius: 50%;
+        background: var(--stat-glow, rgba(99, 102, 241, 0.12)); filter: blur(3px);
+    }
+    .stat-icon {
+        width: 36px; height: 36px; border-radius: var(--radius-sm); margin: 0 auto 8px;
+        display: flex; align-items: center; justify-content: center; font-size: 15px;
+        color: #fff; background: var(--grad-primary);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+    .stat-num { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); line-height: 1.05; }
+    .stat-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; color: var(--faint); margin-top: 5px; text-transform: uppercase; }
+
+    /* ==== Quick Menu grid ==== */
+    .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .menu-item {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 14px 2px; border-radius: var(--radius-md); text-decoration: none;
+        background: var(--surface-card); border: 1px solid var(--line);
+        box-shadow: var(--shadow-card); transition: transform 0.16s; color: var(--ink);
+    }
+    .menu-item:active { transform: scale(0.94); }
+    .menu-icon {
+        width: 50px; height: 50px; border-radius: var(--radius-md);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; margin-bottom: 8px;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1); transition: transform 0.16s;
+    }
+    .menu-item:hover .menu-icon { transform: translateY(-2px); }
+    .menu-label { font-size: 11px; font-weight: 700; color: var(--mist); }
+
+    /* ==== Mapel grid ==== */
+    .mapel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .mapel-card {
+        background: var(--surface-card); border-radius: var(--radius-md); padding: 16px;
+        text-decoration: none; border: 1px solid var(--line); box-shadow: var(--shadow-card);
+        transition: transform 0.16s;
+    }
+    .mapel-card:active { transform: scale(0.96); }
+    .mapel-icon {
+        width: 44px; height: 44px; border-radius: var(--radius-sm);
         display: flex; align-items: center; justify-content: center;
         font-size: 20px; margin-bottom: 12px;
     }
-    .db-mapel-name { font-size: 14px; font-weight: 800; color: #1e293b; line-height: 1.3; margin-bottom: 4px; }
-    .db-mapel-meta { font-size: 10px; color: #94a3b8; font-weight: 600; }
+    .mapel-name { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.3; margin-bottom: 4px; }
+    .mapel-meta { font-size: 10px; color: var(--faint); font-weight: 600; }
 
-    /* Premium Stat "Glass Chip" - compact blended tinted tiles */
-    .db-stat-row { display: flex; gap: 8px; margin-bottom: 16px; }
-    .db-stat-card {
-        flex: 1; border-radius: 18px; padding: 13px 10px 12px;
-        text-align: center; position: relative; overflow: hidden;
-        background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.55));
-        border: 1px solid rgba(15,23,42,0.05);
-        box-shadow: 0 6px 18px rgba(15,23,42,0.05);
-        backdrop-filter: blur(10px);
-        -webkit-tap-highlight-color: transparent;
-        transition: transform 0.13s;
-    }
-    .db-stat-card:active { transform: scale(0.95); }
-    .db-stat-card::before {
-        content: ''; position: absolute; top: -16px; right: -16px;
-        width: 56px; height: 56px; border-radius: 50%;
-        background: var(--stat-glow, rgba(99,102,241,0.12)); filter: blur(2px);
-    }
-    .db-stat-icon {
-        width: 34px; height: 34px; border-radius: 11px; margin: 0 auto 8px;
-        display: flex; align-items: center; justify-content: center; font-size: 15px;
-        box-shadow: 0 3px 8px rgba(15,23,42,0.06);
-    }
-    .db-stat-num { font-size: 21px; font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
-    .db-stat-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 0.03em; margin-top: 4px; opacity: 0.6; }
-
-    /* Section Card */
-    .db-section {
-        background: #fff; border-radius: 22px; padding: 18px;
-        margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    }
-    .db-section-header {
-        display: flex; align-items: center; justify-content: space-between;
-        margin-bottom: 14px;
-    }
-    .db-section-title { font-size: 15px; font-weight: 800; color: #1e293b; }
-    .db-section-link { font-size: 12px; font-weight: 700; color: #6366f1; text-decoration: none; }
-
-    /* Quick Menu Grid */
-    .db-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .db-menu-item {
-        display: flex; flex-direction: column; align-items: center;
-        padding: 14px 2px; border-radius: 22px; text-decoration: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: #fff;
-        border: 1px solid rgba(15,23,42,0.03);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    }
-    .db-menu-item:active { transform: scale(0.92); background: #f8fafc; }
-    .db-menu-icon {
-        width: 50px; height: 50px; border-radius: 18px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 22px; margin-bottom: 8px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        transition: all 0.3s;
-    }
-    .db-menu-item:hover .db-menu-icon { transform: translateY(-2px); }
-    .db-menu-label { font-size: 11px; font-weight: 700; color: #475569; letter-spacing: -0.2px; }
-
-    /* List Items */
-    .db-list-item {
-        display: flex; align-items: center; gap: 12px; padding: 10px 0;
-        text-decoration: none; color: #1e293b;
-    }
-    .db-list-item + .db-list-item { border-top: 1px solid #f1f5f9; }
-    .db-list-icon {
-        width: 42px; height: 42px; border-radius: 14px; flex-shrink: 0;
+    /* ==== Icon kecil untuk list item (.pui-row) ==== */
+    .list-ico {
+        width: 40px; height: 40px; border-radius: var(--radius-sm); flex-shrink: 0;
         display: flex; align-items: center; justify-content: center; font-size: 18px;
     }
-    .db-list-text { flex: 1; min-width: 0; }
-    .db-list-title { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .db-list-sub { font-size: 11px; color: #94a3b8; }
 
-    /* Attendance Bar */
-    .db-absen-bar { height: 10px; border-radius: 99px; background: #f1f5f9; overflow: hidden; display: flex; margin-bottom: 10px; }
-    .db-absen-legend { display: flex; gap: 12px; flex-wrap: wrap; }
-    .db-absen-legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: #64748b; }
-    .db-absen-dot { width: 8px; height: 8px; border-radius: 50%; }
+    /* ==== Absensi bar + legend ==== */
+    .absen-bar {
+        height: 10px; border-radius: 99px; background: var(--line);
+        overflow: hidden; display: flex; margin-bottom: 10px;
+    }
+    .absen-legend { display: flex; gap: 12px; flex-wrap: wrap; }
+    .absen-legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--mist); }
+    .absen-dot { width: 8px; height: 8px; border-radius: 50%; }
 
-    /* Alert Card */
-    .db-alert {
-        border-radius: 18px; padding: 14px 16px; margin-bottom: 14px;
+    /* ==== Alert SPP (warning amber) ==== */
+    .alert-spp {
+        border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 14px;
         display: flex; align-items: center; gap: 12px;
+        background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a;
     }
-    .db-alert-icon {
-        width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+    .alert-spp .ico {
+        width: 40px; height: 40px; border-radius: var(--radius-sm); flex-shrink: 0;
         display: flex; align-items: center; justify-content: center; font-size: 18px;
+        background: #fef3c7; color: #d97706;
     }
 
-    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-    .fade-up { animation: fadeUp 0.4s ease both; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp 0.45s ease both; }
 </style>
 
-<div class="db-body" style="padding-top: 12px;">
+<div class="db-body">
     {{-- Hero Card --}}
-    <div class="db-hero-card fade-up">
+    <div class="hero-card fade-up">
         <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;">
             <div style="display:flex;align-items:center;gap:12px;">
-                <div class="db-hero-avatar">
+                <div class="hero-avatar">
                     @if($user->foto)
                         <img src="{{ asset('storage/'.$user->foto) }}">
                     @else
@@ -177,102 +162,102 @@
                     @endif
                 </div>
                 <div>
-                    <div class="db-hero-greeting">PORTAL AKADEMIK</div>
-                    <div class="db-hero-name">Halo, {{ explode(' ', $user->name)[0] }}!</div>
+                    <div class="hero-greeting">Portal Akademik</div>
+                    <div class="hero-name">Halo, {{ explode(' ', $user->name)[0] }}!</div>
                 </div>
             </div>
-            <div style="display:flex;gap:8px;">
-                <a href="{{ route('notifications.index') }}" style="width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;position:relative;border:1px solid rgba(255,255,255,0.1);">
+            <div>
+                <a href="{{ route('notifications.index') }}" class="hero-bell">
                     <i class="bi bi-bell-fill" style="font-size:17px;"></i>
-                    <span data-live-dot id="notif-dot" style="display:none; position:absolute; top:8px; right:8px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#ef4444; border:2px solid #1e1b4b; color:#fff; font-size:10px; font-weight:800; place-items:center; line-height:1;">0</span>
+                    <span data-live-dot id="notif-dot" style="display:none; position:absolute; top:8px; right:8px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#ef4444; border:2px solid var(--navy-2); color:#fff; font-size:10px; font-weight:800; place-items:center; line-height:1;">0</span>
                 </a>
             </div>
         </div>
         @if($user->kelas)
-            <div class="db-hero-class" style="position:relative;z-index:1;">
+            <div class="hero-class" style="position:relative;z-index:1;">
                 <i class="bi bi-mortarboard-fill" style="color:#fbbf24;font-size:14px;"></i>
                 {{ $user->kelas->nama }}
             </div>
         @endif
     </div>
 
-    {{-- Stat Cards (premium chips) --}}
-    <div class="db-stat-row fade-up" style="animation-delay:0.05s;">
-        <a href="{{ route('tugas.index') }}" class="db-stat-card text-decoration-none" style="--stat-glow:rgba(37,99,235,0.14);">
-            <div class="db-stat-icon" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#2563eb;"><i class="bi bi-journal-check"></i></div>
-            <div class="db-stat-num" style="color:#1e40af;">{{ $tugasAktif }}</div>
-            <div class="db-stat-lbl" style="color:#1e40af;">Tugas Aktif</div>
+    {{-- Stat Cards (premium chips, aksen diseragamkan indigo/blue) --}}
+    <div class="stat-row fade-up" style="animation-delay:0.05s;">
+        <a href="{{ route('tugas.index') }}" class="stat-card text-decoration-none" style="--stat-glow:rgba(37,99,235,0.14);">
+            <div class="stat-icon"><i class="bi bi-journal-check"></i></div>
+            <div class="stat-num">{{ $tugasAktif }}</div>
+            <div class="stat-lbl">Tugas Aktif</div>
         </a>
         @if($spp)
-            <a href="{{ route('spp.index') }}" class="db-stat-card text-decoration-none" style="--stat-glow:rgba(16,185,129,0.14);">
-                <div class="db-stat-icon" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);color:#059669;"><i class="bi bi-wallet2"></i></div>
-                <div class="db-stat-num" style="color:#065f46;">{{ $spp['lunas'] }}<span style="font-size:12px;opacity:0.5;">/{{ $spp['total'] }}</span></div>
-                <div class="db-stat-lbl" style="color:#065f46;">SPP Lunas</div>
+            <a href="{{ route('spp.index') }}" class="stat-card text-decoration-none" style="--stat-glow:rgba(16,185,129,0.14);">
+                <div class="stat-icon"><i class="bi bi-wallet2"></i></div>
+                <div class="stat-num">{{ $spp['lunas'] }}<span style="font-size:12px;opacity:0.5;">/{{ $spp['total'] }}</span></div>
+                <div class="stat-lbl">SPP Lunas</div>
             </a>
         @endif
-        <div class="db-stat-card" style="--stat-glow:rgba(245,158,11,0.15);">
-            <div class="db-stat-icon" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);color:#d97706;"><i class="bi bi-graph-up-arrow"></i></div>
-            <div class="db-stat-num" style="color:#92400e;">{{ $pctHadir }}<span style="font-size:12px;">%</span></div>
-            <div class="db-stat-lbl" style="color:#92400e;">Hadir</div>
+        <div class="stat-card" style="--stat-glow:rgba(245,158,11,0.15);">
+            <div class="stat-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="stat-num">{{ $pctHadir }}<span style="font-size:12px;">%</span></div>
+            <div class="stat-lbl">Hadir</div>
         </div>
     </div>
 
     {{-- Quick Menu --}}
-    <div class="db-section fade-up" style="animation-delay:0.1s;">
-        <div class="db-section-header">
-            <div class="db-section-title">Menu Cepat</div>
+    <div class="pui-card db-section fade-up" style="animation-delay:0.1s;">
+        <div class="pui-section" style="margin-top:0;">
+            <h3>Menu Cepat</h3>
         </div>
-        <div class="db-menu-grid">
-            <a href="{{ route('absensi.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#4f7cff,#2563eb);color:#fff;"><i class="bi bi-calendar-check-fill"></i></div>
-                <div class="db-menu-label">Absensi</div>
+        <div class="menu-grid">
+            <a href="{{ route('absensi.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#4f7cff,#2563eb);color:#fff;"><i class="bi bi-calendar-check-fill"></i></div>
+                <div class="menu-label">Absensi</div>
             </a>
-            <a href="{{ route('tugas.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;"><i class="bi bi-journal-check"></i></div>
-                <div class="db-menu-label">Tugas</div>
+            <a href="{{ route('tugas.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;"><i class="bi bi-journal-check"></i></div>
+                <div class="menu-label">Tugas</div>
             </a>
-            <a href="{{ route('spp.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#34d399,#10b981);color:#fff;"><i class="bi bi-wallet2"></i></div>
-                <div class="db-menu-label">SPP</div>
+            <a href="{{ route('spp.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#34d399,#10b981);color:#fff;"><i class="bi bi-wallet2"></i></div>
+                <div class="menu-label">SPP</div>
             </a>
-            <a href="{{ route('chat.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;"><i class="bi bi-chat-dots-fill"></i></div>
-                <div class="db-menu-label">Chat</div>
+            <a href="{{ route('chat.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;"><i class="bi bi-chat-dots-fill"></i></div>
+                <div class="menu-label">Chat</div>
             </a>
-            <a href="{{ route('perpustakaan.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;"><i class="bi bi-book-half"></i></div>
-                <div class="db-menu-label">Perpus</div>
+            <a href="{{ route('perpustakaan.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;"><i class="bi bi-book-half"></i></div>
+                <div class="menu-label">Perpus</div>
             </a>
-            <a href="{{ route('jadwal.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;"><i class="bi bi-calendar3"></i></div>
-                <div class="db-menu-label">Jadwal</div>
+            <a href="{{ route('jadwal.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;"><i class="bi bi-calendar3"></i></div>
+                <div class="menu-label">Jadwal</div>
             </a>
-            <a href="{{ route('nilai.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#f472b6,#db2777);color:#fff;"><i class="bi bi-mortarboard-fill"></i></div>
-                <div class="db-menu-label">Nilai</div>
+            <a href="{{ route('nilai.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#f472b6,#db2777);color:#fff;"><i class="bi bi-mortarboard-fill"></i></div>
+                <div class="menu-label">Nilai</div>
             </a>
-            <a href="{{ route('eskul.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;"><i class="bi bi-flag-fill"></i></div>
-                <div class="db-menu-label">Eskul</div>
+            <a href="{{ route('eskul.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;"><i class="bi bi-flag-fill"></i></div>
+                <div class="menu-label">Eskul</div>
             </a>
-            <!-- <a href="{{ route('pengumuman.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#dc2626;"><i class="bi bi-megaphone-fill"></i></div>
-                <div class="db-menu-label">Info</div>
+            <!-- <a href="{{ route('pengumuman.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca);color:#dc2626;"><i class="bi bi-megaphone-fill"></i></div>
+                <div class="menu-label">Info</div>
             </a>
 
             @if($isGuru)
-               <a href="{{ route('mahasiswa.index') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#cffafe,#a5f3fc);color:#0891b2;"><i class="bi bi-people-fill"></i></div>
-                <div class="db-menu-label">Siswa</div>
+               <a href="{{ route('mahasiswa.index') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#cffafe,#a5f3fc);color:#0891b2;"><i class="bi bi-people-fill"></i></div>
+                <div class="menu-label">Siswa</div>
                 </a>
-                <a href="{{ route('tugas.create') }}" class="db-menu-item">
-                    <div class="db-menu-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#059669;"><i class="bi bi-plus-circle-fill"></i></div>
-                    <div class="db-menu-label">Buat Tugas</div>
+                <a href="{{ route('tugas.create') }}" class="menu-item">
+                    <div class="menu-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#059669;"><i class="bi bi-plus-circle-fill"></i></div>
+                    <div class="menu-label">Buat Tugas</div>
                 </a>
             @endif
-            <a href="{{ route('profile.show') }}" class="db-menu-item">
-                <div class="db-menu-icon" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0);color:#64748b;"><i class="bi bi-gear-fill"></i></div>
-                <div class="db-menu-label">Profil</div>
+            <a href="{{ route('profile.show') }}" class="menu-item">
+                <div class="menu-icon" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0);color:#64748b;"><i class="bi bi-gear-fill"></i></div>
+                <div class="menu-label">Profil</div>
             </a> -->
 
         </div>
@@ -280,35 +265,35 @@
 
     {{-- Absensi Bulan Ini --}}
     @if($totalAbsen > 0)
-        <div class="db-section fade-up" style="animation-delay:0.15s;">
-            <div class="db-section-header">
-                <div class="db-section-title">Absensi Bulan Ini</div>
-                <span style="font-size:11px;color:#94a3b8;font-weight:600;">{{ $totalAbsen }} hari</span>
+        <div class="pui-card db-section fade-up" style="animation-delay:0.15s;">
+            <div class="pui-section" style="margin-top:0;">
+                <h3>Absensi Bulan Ini</h3>
+                <p style="margin-top:0;">{{ $totalAbsen }} hari</p>
             </div>
-            <div class="db-absen-bar">
+            <div class="absen-bar">
                 <span style="width:{{ ($hadir/$totalAbsen)*100 }}%;background:linear-gradient(90deg,#16a34a,#4ade80);"></span>
                 <span style="width:{{ ($sakit/$totalAbsen)*100 }}%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></span>
                 <span style="width:{{ ($izin/$totalAbsen)*100 }}%;background:linear-gradient(90deg,#3b82f6,#60a5fa);"></span>
                 <span style="width:{{ ($alpha/$totalAbsen)*100 }}%;background:linear-gradient(90deg,#ef4444,#f87171);"></span>
             </div>
-            <div class="db-absen-legend">
-                <div class="db-absen-legend-item"><span class="db-absen-dot" style="background:#16a34a;"></span> Hadir {{ $hadir }}</div>
-                <div class="db-absen-legend-item"><span class="db-absen-dot" style="background:#f59e0b;"></span> Sakit {{ $sakit }}</div>
-                <div class="db-absen-legend-item"><span class="db-absen-dot" style="background:#3b82f6;"></span> Izin {{ $izin }}</div>
-                <div class="db-absen-legend-item"><span class="db-absen-dot" style="background:#ef4444;"></span> Alpha {{ $alpha }}</div>
+            <div class="absen-legend">
+                <div class="absen-legend-item"><span class="absen-dot" style="background:#16a34a;"></span> Hadir {{ $hadir }}</div>
+                <div class="absen-legend-item"><span class="absen-dot" style="background:#f59e0b;"></span> Sakit {{ $sakit }}</div>
+                <div class="absen-legend-item"><span class="absen-dot" style="background:#3b82f6;"></span> Izin {{ $izin }}</div>
+                <div class="absen-legend-item"><span class="absen-dot" style="background:#ef4444;"></span> Alpha {{ $alpha }}</div>
             </div>
         </div>
     @endif
 
 
     {{-- LMS Section --}}
-    <div class="db-section fade-up" style="animation-delay:0.08s;">
-        <div class="db-section-header">
-            <div class="db-section-title">{{ $isGuru ? 'Mata Pelajaran Diampu' : 'Mata Pelajaran Saya' }}</div>
+    <div class="pui-card db-section fade-up" style="animation-delay:0.08s;">
+        <div class="pui-section" style="margin-top:0;">
+            <h3>{{ $isGuru ? 'Mata Pelajaran Diampu' : 'Mata Pelajaran Saya' }}</h3>
         </div>
-        <div class="db-mapel-grid">
+        <div class="mapel-grid">
             @forelse($mapels as $m)
-                <a href="{{ route('mapel.show', $m->id) }}" class="db-mapel-card">
+                <a href="{{ route('mapel.show', $m->id) }}" class="mapel-card">
                     @php
                         $colors = [
                             ['#eff6ff', '#2563eb'], ['#f0fdf4', '#16a34a'],
@@ -317,11 +302,11 @@
                         ];
                         $c = $colors[$loop->index % count($colors)];
                     @endphp
-                    <div class="db-mapel-icon" style="background:{{ $c[0] }}; color:{{ $c[1] }};">
+                    <div class="mapel-icon" style="background:{{ $c[0] }}; color:{{ $c[1] }};">
                         <i class="bi bi-journal-bookmark-fill"></i>
                     </div>
-                    <div class="db-mapel-name">{{ $m->nama }}</div>
-                    <div class="db-mapel-meta">
+                    <div class="mapel-name">{{ $m->nama }}</div>
+                    <div class="mapel-meta">
                         @if($isGuru)
                             <i class="bi bi-people-fill"></i> {{ $m->kelas->nama }}
                         @else
@@ -331,17 +316,17 @@
                 </a>
             @empty
                 <div class="text-center py-3 w-100" style="grid-column: span 2;">
-                    <p class="small text-muted">Belum ada mata pelajaran.</p>
+                    <p class="small" style="color:var(--faint);">Belum ada mata pelajaran.</p>
                 </div>
             @endforelse
         </div>
     </div>
 
     {{-- Tugas Terbaru --}}
-    <div class="db-section fade-up" style="animation-delay:0.2s;">
-        <div class="db-section-header">
-            <div class="db-section-title">Tugas Terbaru</div>
-            <a href="{{ route('tugas.index') }}" class="db-section-link">Lihat Semua</a>
+    <div class="pui-card db-section fade-up" style="animation-delay:0.2s;">
+        <div class="pui-section" style="margin-top:0;">
+            <h3>Tugas Terbaru</h3>
+            <a href="{{ route('tugas.index') }}" class="link">Lihat Semua</a>
         </div>
         @forelse($tugas as $t)
             @php
@@ -351,46 +336,46 @@
                 $bg = $bgColors[$dl['key']] ?? '#f8fafc';
                 $tx = $txColors[$dl['key']] ?? '#64748b';
             @endphp
-            <a href="{{ route('tugas.show', $t) }}" class="db-list-item">
-                <div class="db-list-icon" style="background:{{ $bg }};color:{{ $tx }};">
+            <a href="{{ route('tugas.show', $t) }}" class="pui-row">
+                <div class="list-ico" style="background:{{ $bg }};color:{{ $tx }};">
                     <i class="bi {{ $t->isForm() ? 'bi-ui-checks-grid' : 'bi-file-earmark-text-fill' }}"></i>
                 </div>
-                <div class="db-list-text">
-                    <div class="db-list-title">{{ $t->judul }}</div>
-                    <div class="db-list-sub">{{ $dl['label'] }}</div>
+                <div class="grow">
+                    <div class="t">{{ $t->judul }}</div>
+                    <div class="s">{{ $dl['label'] }}</div>
                 </div>
-                <i class="bi bi-chevron-right" style="font-size:12px;color:#cbd5e1;"></i>
+                <i class="bi bi-chevron-right" style="font-size:12px;color:var(--faint);"></i>
             </a>
         @empty
-            <div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Belum ada tugas</div>
+            <div style="text-align:center;padding:24px;color:var(--faint);font-size:13px;">Belum ada tugas</div>
         @endforelse
     </div>
 
     {{-- Pengumuman --}}
-    <div class="db-section fade-up" style="animation-delay:0.25s;">
-        <div class="db-section-header">
-            <div class="db-section-title">Pengumuman</div>
-            <a href="{{ route('pengumuman.index') }}" class="db-section-link">Lihat Semua</a>
+    <div class="pui-card db-section fade-up" style="animation-delay:0.25s;">
+        <div class="pui-section" style="margin-top:0;">
+            <h3>Pengumuman</h3>
+            <a href="{{ route('pengumuman.index') }}" class="link">Lihat Semua</a>
         </div>
         @forelse($publicPengumumans as $p)
-            <a href="{{ route('pengumuman.index') }}" class="db-list-item">
-                <div class="db-list-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#d97706;">
+            <a href="{{ route('pengumuman.index') }}" class="pui-row">
+                <div class="list-ico" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#d97706;">
                     <i class="bi bi-megaphone-fill"></i>
                 </div>
-                <div class="db-list-text">
-                    <div class="db-list-title">{{ $p->judul }}</div>
-                    <div class="db-list-sub">{{ \Illuminate\Support\Str::limit(strip_tags($p->isi), 50) }}</div>
+                <div class="grow">
+                    <div class="t">{{ $p->judul }}</div>
+                    <div class="s">{{ \Illuminate\Support\Str::limit(strip_tags($p->isi), 50) }}</div>
                 </div>
             </a>
         @empty
-            <div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Belum ada pengumuman</div>
+            <div style="text-align:center;padding:24px;color:var(--faint);font-size:13px;">Belum ada pengumuman</div>
         @endforelse
     </div>
 
     {{-- Alert SPP --}}
     @if($spp && $spp['kekurangan'] > 0)
-        <div class="db-alert fade-up" style="animation-delay:0.3s;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;">
-            <div class="db-alert-icon" style="background:#fef3c7;color:#d97706;">
+        <div class="alert-spp fade-up" style="animation-delay:0.3s;">
+            <div class="ico">
                 <i class="bi bi-exclamation-triangle-fill"></i>
             </div>
             <div style="flex:1;">

@@ -9,58 +9,40 @@
 @endphp
 
 <style>
-    .pf-header {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
-        border-bottom: 1px solid #e2e8f0;
-        padding: 12px 16px; display: flex; align-items: center; gap: 12px;
-    }
-    .pf-body { padding: 68px 16px 100px; max-width: 640px; margin: 0 auto; }
-
+    .pf-body { padding: 72px 16px 100px; max-width: 640px; margin: 0 auto; }
     .pf-section {
-        background: #fff; border-radius: 20px; padding: 20px;
-        margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        background: var(--surface-card); border: 1px solid var(--line);
+        border-radius: var(--radius-md); padding: 20px; margin-bottom: 14px;
+        box-shadow: var(--shadow-card);
     }
     .pf-section-title {
-        font-size: 15px; font-weight: 800; margin-bottom: 16px;
+        font-size: 15px; font-weight: 800; margin-bottom: 16px; color: var(--ink);
         display: flex; align-items: center; gap: 8px;
     }
     .pf-section-icon {
         width: 30px; height: 30px; border-radius: 10px;
         display: flex; align-items: center; justify-content: center; font-size: 15px;
+        background: #eef4ff; color: var(--indigo);
     }
-
-    .pf-input {
-        width: 100%; border: 1.5px solid #e2e8f0; border-radius: 14px;
-        padding: 12px 14px; font-size: 14px; background: #f8fafc;
-        transition: border-color 0.2s;
-        -webkit-appearance: none; appearance: none;
-    }
-    .pf-input:focus { outline: none; border-color: #246bfe; background: #fff; box-shadow: 0 0 0 3px rgba(36,107,254,0.08); }
-
-    .pf-label { font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.03em; }
-
     .pf-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .pf-type-btn {
-        border: 2px solid #e2e8f0; border-radius: 16px; padding: 16px 12px;
-        text-align: center; cursor: pointer; transition: all 0.2s; background: #fafbfc;
+        border: 2px solid var(--line-strong); border-radius: var(--radius-md); padding: 16px 12px;
+        text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface);
         -webkit-tap-highlight-color: transparent;
     }
-    .pf-type-btn.active { border-color: #246bfe; background: #eef4ff; }
+    .pf-type-btn.active { border-color: var(--indigo); background: #eef4ff; }
     .pf-type-btn .icon { font-size: 24px; margin-bottom: 6px; }
-    .pf-type-btn .label { font-size: 13px; font-weight: 700; }
-    .pf-type-btn .desc { font-size: 10px; color: #94a3b8; margin-top: 2px; }
-
+    .pf-type-btn .label { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .pf-type-btn .desc { font-size: 10px; color: var(--faint); margin-top: 2px; }
     .pf-file-zone {
-        border: 2px dashed #cbd5e1; border-radius: 16px; padding: 24px 16px;
+        border: 2px dashed #cbd5e1; border-radius: var(--radius-md); padding: 24px 16px;
         text-align: center; cursor: pointer; transition: all 0.2s;
         -webkit-tap-highlight-color: transparent;
     }
-    .pf-file-zone:active { border-color: #246bfe; background: #f0f5ff; }
+    .pf-file-zone:active { border-color: var(--indigo); background: #f0f5ff; }
     .pf-file-zone.has-file { border-color: #16a34a; border-style: solid; background: #f0fdf4; }
-
     .pf-q-card {
-        background: #f8fafc; border: 1px solid #e8ecf1; border-radius: 16px;
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
         padding: 16px; margin-bottom: 10px; position: relative;
     }
     .pf-q-remove {
@@ -69,32 +51,27 @@
         background: #fee2e2; color: #dc2626; font-size: 12px;
         display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
-
     .pf-q-type-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .pf-q-type-btn {
-        border: 1px solid #e2e8f0; background: #fff; border-radius: 8px;
+        border: 1px solid var(--line-strong); background: #fff; border-radius: 8px;
         padding: 5px 10px; font-size: 11px; font-weight: 600; cursor: pointer;
-        color: #64748b; -webkit-tap-highlight-color: transparent;
+        color: var(--mist); -webkit-tap-highlight-color: transparent;
     }
-    .pf-q-type-btn.active { background: #246bfe; color: #fff; border-color: #246bfe; }
-
+    .pf-q-type-btn.active { background: var(--indigo); color: #fff; border-color: var(--indigo); }
     .pf-opt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-    .pf-opt-row input { flex: 1; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+    .pf-opt-row input { flex: 1; border: 1px solid var(--line-strong); border-radius: 10px; padding: 8px 10px; font-size: 13px; color: var(--ink); }
     .pf-opt-rm { width: 26px; height: 26px; border-radius: 50%; border: none; background: #fee2e2; color: #dc2626; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
     .pf-bottom {
         position: fixed; bottom: 0; left: 0; right: 0;
         background: rgba(255,255,255,0.95); backdrop-filter: blur(16px);
-        border-top: 1px solid #e2e8f0; padding: 12px 16px;
-        z-index: 100; display: flex; gap: 10px;
+        border-top: 1px solid var(--line-strong); padding: 12px 16px;
+        z-index: 100; display: flex; gap: 10px; max-width: 640px; margin: 0 auto;
     }
 </style>
 
-<div class="pf-header">
-    <a href="{{ $isEdit ? route('tugas.show', $tugas) : route('tugas.index') }}" style="width:38px;height:38px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#475569;">
-        <i class="bi bi-chevron-left"></i>
-    </a>
-    <div style="font-weight:800;font-size:17px;flex:1;">{{ $isEdit ? 'Edit Tugas' : 'Buat Tugas' }}</div>
+<div class="pui-topbar">
+    <a href="{{ $isEdit ? route('tugas.show', $tugas) : route('tugas.index') }}" class="back"><i class="bi bi-chevron-left"></i></a>
+    <h1 style="flex:1;">{{ $isEdit ? 'Edit Tugas' : 'Buat Tugas' }}</h1>
 </div>
 
 <div class="pf-body">
@@ -105,20 +82,20 @@
         {{-- Detail --}}
         <div class="pf-section">
             <div class="pf-section-title">
-                <div class="pf-section-icon" style="background:#eef4ff;color:#246bfe;"><i class="bi bi-pencil-square"></i></div>
+                <div class="pf-section-icon"><i class="bi bi-pencil-square"></i></div>
                 Detail Tugas
             </div>
-            <div style="margin-bottom:12px;">
-                <label class="pf-label">Judul *</label>
-                <input type="text" name="judul" class="pf-input" placeholder="Contoh: Tugas Matematika Bab 5" value="{{ old('judul', $tugas->judul) }}" required>
+            <div class="pui-field">
+                <label class="pui-label">Judul *</label>
+                <input type="text" name="judul" class="pui-input" placeholder="Contoh: Tugas Matematika Bab 5" value="{{ old('judul', $tugas->judul) }}" required>
             </div>
-            <div style="margin-bottom:12px;">
-                <label class="pf-label">Deskripsi / Instruksi</label>
-                <textarea name="deskripsi" rows="3" class="pf-input" style="resize:none;" placeholder="Tuliskan instruksi pengerjaan...">{{ old('deskripsi', $tugas->deskripsi) }}</textarea>
+            <div class="pui-field">
+                <label class="pui-label">Deskripsi / Instruksi</label>
+                <textarea name="deskripsi" rows="3" class="pui-textarea" style="resize:none;" placeholder="Tuliskan instruksi pengerjaan...">{{ old('deskripsi', $tugas->deskripsi) }}</textarea>
             </div>
-            <div style="margin-bottom:12px;">
-                <label class="pf-label">Mata Pelajaran *</label>
-                <select name="mata_pelajaran_id" class="pf-input" required>
+            <div class="pui-field">
+                <label class="pui-label">Mata Pelajaran *</label>
+                <select name="mata_pelajaran_id" class="pui-select" required>
                     <option value="">Pilih mata pelajaran</option>
                     @foreach($mapels as $m)
                         <option value="{{ $m->id }}" @selected(old('mata_pelajaran_id', $tugas->mata_pelajaran_id) == $m->id)>{{ $m->nama }} ({{ $m->kelas->nama }})</option>
@@ -127,8 +104,8 @@
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div>
-                    <label class="pf-label">Kelas *</label>
-                    <select name="kelas_id" class="pf-input" required>
+                    <label class="pui-label">Kelas *</label>
+                    <select name="kelas_id" class="pui-select" required>
                         <option value="">Pilih kelas</option>
                         @foreach($kelases as $k)
                             <option value="{{ $k->id }}" @selected(old('kelas_id', $tugas->kelas_id) == $k->id)>{{ $k->nama }}</option>
@@ -136,8 +113,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="pf-label">Batas Pengumpulan</label>
-                    <input type="date" name="batas_pengumpulan" class="pf-input" value="{{ old('batas_pengumpulan', $tugas->batas_pengumpulan?->format('Y-m-d')) }}">
+                    <label class="pui-label">Batas Pengumpulan</label>
+                    <input type="date" name="batas_pengumpulan" class="pui-input" value="{{ old('batas_pengumpulan', $tugas->batas_pengumpulan?->format('Y-m-d')) }}">
                 </div>
             </div>
         </div>
@@ -151,7 +128,7 @@
             <input type="hidden" name="tipe" id="tipeInput" value="{{ $currentTipe }}">
             <div class="pf-type-grid">
                 <div class="pf-type-btn {{ $currentTipe === 'file' ? 'active' : '' }}" data-type="file" onclick="pilihTipe('file')">
-                    <div class="icon"><i class="bi bi-cloud-arrow-up-fill" style="color:#246bfe;"></i></div>
+                    <div class="icon"><i class="bi bi-cloud-arrow-up-fill" style="color:var(--indigo);"></i></div>
                     <div class="label">Upload File</div>
                     <div class="desc">PDF, Word, Excel</div>
                 </div>
@@ -167,14 +144,14 @@
         <div class="pf-section">
             <div class="pf-section-title">
                 <div class="pf-section-icon" style="background:#fef3c7;color:#d97706;"><i class="bi bi-paperclip"></i></div>
-                Lampiran <span style="font-size:11px;font-weight:400;color:#94a3b8;">(opsional)</span>
+                Lampiran <span style="font-size:11px;font-weight:400;color:var(--faint);">(opsional)</span>
             </div>
             @if($isEdit && $tugas->lampiran)
-                <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f0fdf4;border-radius:14px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f0fdf4;border-radius:var(--radius-sm);margin-bottom:10px;">
                     <i class="bi bi-file-earmark-check-fill" style="font-size:20px;color:#16a34a;"></i>
                     <div style="flex:1;min-width:0;">
-                        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $tugas->lampiran_nama }}</div>
-                        <div style="font-size:11px;color:#94a3b8;">File saat ini</div>
+                        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);">{{ $tugas->lampiran_nama }}</div>
+                        <div style="font-size:11px;color:var(--faint);">File saat ini</div>
                     </div>
                     <label style="font-size:11px;color:#dc2626;display:flex;align-items:center;gap:4px;">
                         <input type="checkbox" name="hapus_lampiran" value="1"> Hapus
@@ -184,9 +161,9 @@
             <div class="pf-file-zone" id="lampiranZone" onclick="document.getElementById('lampiranFile').click()">
                 <input type="file" name="lampiran" id="lampiranFile" style="display:none" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx,.csv,.txt,.zip" onchange="previewLampiran(this)">
                 <div id="lampiranPreview">
-                    <i class="bi bi-cloud-arrow-up" style="font-size:28px;color:#94a3b8;"></i>
-                    <div style="font-size:13px;font-weight:600;color:#475569;margin-top:8px;">Tap untuk upload</div>
-                    <div style="font-size:11px;color:#94a3b8;margin-top:2px;">PDF, Word, Excel, PPT, Gambar, ZIP (Maks 10MB)</div>
+                    <i class="bi bi-cloud-arrow-up" style="font-size:28px;color:var(--faint);"></i>
+                    <div style="font-size:13px;font-weight:600;color:var(--mist);margin-top:8px;">Tap untuk upload</div>
+                    <div style="font-size:11px;color:var(--faint);margin-top:2px;">PDF, Word, Excel, PPT, Gambar, ZIP (Maks 10MB)</div>
                 </div>
             </div>
         </div>
@@ -200,7 +177,7 @@
                 </div>
                 <input type="hidden" name="form_data" id="formDataInput" value="{{ $existingForm }}">
                 <div id="qContainer"></div>
-                <button type="button" onclick="tambahPertanyaan()" style="width:100%;border:2px dashed #cbd5e1;background:transparent;border-radius:14px;padding:14px;font-size:13px;font-weight:700;color:#64748b;cursor:pointer;margin-top:8px;">
+                <button type="button" onclick="tambahPertanyaan()" class="pui-btn pui-btn-ghost pui-btn-block" style="border:2px dashed #cbd5e1;background:transparent;border-radius:var(--radius-sm);color:var(--mist);margin-top:8px;">
                     <i class="bi bi-plus-circle"></i> Tambah Pertanyaan
                 </button>
             </div>
@@ -209,8 +186,8 @@
         <div style="height: 80px;"></div>
 
         <div class="pf-bottom">
-            <a href="{{ $isEdit ? route('tugas.show', $tugas) : route('tugas.index') }}" style="flex:0 0 auto;padding:12px 20px;border-radius:14px;background:#f1f5f9;font-weight:700;font-size:14px;text-decoration:none;color:#475569;text-align:center;">Batal</a>
-            <button type="submit" style="flex:1;padding:12px;border-radius:14px;background:#246bfe;color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;">
+            <a href="{{ $isEdit ? route('tugas.show', $tugas) : route('tugas.index') }}" class="pui-btn pui-btn-ghost" style="flex:0 0 auto;">Batal</a>
+            <button type="submit" class="pui-btn pui-btn-primary pui-btn-block">
                 <i class="bi bi-send-fill"></i> {{ $isEdit ? 'Simpan' : 'Terbitkan' }}
             </button>
         </div>
@@ -262,7 +239,7 @@ function esc(s) { var d=document.createElement('div'); d.textContent=s; return d
 function renderQ() {
     var c = document.getElementById('qContainer');
     if (questions.length === 0) {
-        c.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Belum ada pertanyaan</div>';
+        c.innerHTML = '<div style="text-align:center;padding:20px;color:var(--faint);font-size:13px;">Belum ada pertanyaan</div>';
         return;
     }
     var html = '';
@@ -272,31 +249,31 @@ function renderQ() {
         html += '<div class="pf-q-card">';
         html += '<button type="button" class="pf-q-remove" onclick="hapusPertanyaan('+i+')"><i class="bi bi-x"></i></button>';
         html += '<div style="display:flex;align-items:start;gap:8px;margin-bottom:8px;">';
-        html += '<span style="min-width:24px;height:24px;border-radius:8px;background:#246bfe;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">'+(i+1)+'</span>';
-        html += '<input type="text" class="pf-input" style="padding:10px 12px;font-size:14px;font-weight:600;" placeholder="Tulis pertanyaan..." value="'+esc(q.text)+'" oninput="ubahTeks('+i+',this.value)">';
+        html += '<span style="min-width:24px;height:24px;border-radius:8px;background:var(--indigo);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;">'+(i+1)+'</span>';
+        html += '<input type="text" class="pui-input" style="padding:10px 12px;font-size:14px;font-weight:600;" placeholder="Tulis pertanyaan..." value="'+esc(q.text)+'" oninput="ubahTeks('+i+',this.value)">';
         html += '</div>';
         html += '<div class="pf-q-type-row">';
         for (var j=0; j<qTypes.length; j++) {
-            html += '<button type="button" class="pf-q-type-btn'+(q.type===qTypes[j].k?' active':'')+'" onclick="ubahTipe('+i+',\''+qTypes[j].k+'\')">'+qTypes[j].l+'</button>';
+            html += '<button type="button" class="pf-q-type-btn'+(q.type===qTypes[j].k?' active':'')+'" onclick="ubahTipe('+i+',\\''+qTypes[j].k+'\\')">'+qTypes[j].l+'</button>';
         }
         html += '</div>';
         if (hasOpt) {
             html += '<div style="margin-top:10px;">';
             for (var oi=0; oi<q.options.length; oi++) {
                 html += '<div class="pf-opt-row">';
-                html += '<span style="width:18px;text-align:center;color:#94a3b8;font-size:11px;font-weight:700;">'+String.fromCharCode(65+oi)+'</span>';
+                html += '<span style="width:18px;text-align:center;color:var(--faint);font-size:11px;font-weight:700;">'+String.fromCharCode(65+oi)+'</span>';
                 html += '<input type="text" placeholder="Opsi '+(oi+1)+'" value="'+esc(q.options[oi])+'" oninput="ubahOpsi('+i+','+oi+',this.value)">';
                 html += '<button type="button" class="pf-opt-rm" onclick="hapusOpsi('+i+','+oi+')"'+(q.options.length<=2?' disabled style="opacity:0.3"':'')+'><i class="bi bi-x"></i></button>';
                 html += '</div>';
             }
-            html += '<button type="button" onclick="tambahOpsi('+i+')" style="width:100%;border:1px dashed #cbd5e1;background:transparent;border-radius:8px;padding:6px;font-size:11px;font-weight:600;color:#64748b;cursor:pointer;margin-top:4px;">+ Tambah opsi</button>';
+            html += '<button type="button" onclick="tambahOpsi('+i+')" style="width:100%;border:1px dashed #cbd5e1;background:transparent;border-radius:8px;padding:6px;font-size:11px;font-weight:600;color:var(--mist);cursor:pointer;margin-top:4px;">+ Tambah opsi</button>';
             html += '</div>';
         }
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid #e8ecf1;">';
-        html += '<span style="font-size:11px;color:#94a3b8;">Wajib diisi</span>';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);">';
+        html += '<span style="font-size:11px;color:var(--faint);">Wajib diisi</span>';
         html += '<label style="position:relative;width:40px;height:22px;cursor:pointer;">';
         html += '<input type="checkbox"'+(q.required?' checked':'')+' onchange="ubahWajib('+i+')" style="opacity:0;width:0;height:0;">';
-        html += '<span style="position:absolute;inset:0;background:'+(q.required?'#246bfe':'#e2e8f0')+';border-radius:99px;transition:0.2s;"></span>';
+        html += '<span style="position:absolute;inset:0;background:'+(q.required?'var(--indigo)':'var(--line-strong)')+';border-radius:99px;transition:0.2s;"></span>';
         html += '<span style="position:absolute;width:16px;height:16px;left:'+(q.required?'21':'3')+'px;top:3px;background:#fff;border-radius:50%;transition:0.2s;box-shadow:0 1px 2px rgba(0,0,0,0.15);"></span>';
         html += '</label></div></div>';
     }
@@ -308,7 +285,7 @@ function previewLampiran(input) {
         var f = input.files[0];
         var sz = (f.size/1024/1024).toFixed(1);
         document.getElementById('lampiranZone').classList.add('has-file');
-        document.getElementById('lampiranPreview').innerHTML = '<i class="bi bi-file-earmark-check-fill" style="font-size:28px;color:#16a34a;"></i><div style="font-size:13px;font-weight:600;color:#15803d;margin-top:8px;word-break:break-all;">'+f.name+'</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">'+sz+' MB</div>';
+        document.getElementById('lampiranPreview').innerHTML = '<i class="bi bi-file-earmark-check-fill" style="font-size:28px;color:#16a34a;"></i><div style="font-size:13px;font-weight:600;color:#15803d;margin-top:8px;word-break:break-all;">'+f.name+'</div><div style="font-size:11px;color:var(--faint);margin-top:2px;">'+sz+' MB</div>';
     }
 }
 

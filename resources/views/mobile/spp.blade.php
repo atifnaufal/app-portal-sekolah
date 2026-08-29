@@ -15,19 +15,19 @@
     .page-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
         background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(226,232,240,0.7);
+        border-bottom: 1px solid var(--line-strong);
         padding: 12px 20px; display: flex; align-items: center; gap: 12px;
     }
     .page-container { padding-top: 70px; padding-bottom: 48px; }
 
     .glass-card {
-        background: #fff; border: none; border-radius: 24px;
-        box-shadow: 0 8px 28px rgba(0,0,0,0.04);
+        background: var(--surface-card); border: none; border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
         overflow: hidden; margin-bottom: 16px;
     }
 
     .stat-card {
-        border-radius: 20px; padding: 16px; text-align: center; flex: 1;
+        border-radius: var(--radius-md); padding: 16px; text-align: center; flex: 1;
         position: relative; overflow: hidden;
     }
     .stat-card::before {
@@ -38,21 +38,21 @@
     .stat-card .stat-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 4px; opacity: 0.7; }
 
     .spp-row {
-        background: #fff; border: 1px solid #e8ecf1; border-radius: 20px;
+        background: var(--surface-card); border: 1px solid var(--line-strong); border-radius: var(--radius-md);
         padding: 16px; margin-bottom: 10px; transition: all 0.2s;
     }
-    .spp-row:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+    .spp-row:hover { border-color: var(--faint); box-shadow: var(--shadow-hover); }
 
-    .progress-slim { height: 6px; border-radius: 99px; background: #eef2f7; overflow: hidden; }
+    .progress-slim { height: 6px; border-radius: 99px; background: var(--surface); overflow: hidden; }
     .progress-slim > span { display: block; height: 100%; border-radius: 99px; }
 
     .month-group-header {
-        font-size: 12px; font-weight: 800; color: #64748b; letter-spacing: 0.06em;
+        font-size: 12px; font-weight: 800; color: var(--mist); letter-spacing: 0.06em;
         text-transform: uppercase; padding: 8px 0; margin-top: 8px;
         display: flex; align-items: center; gap: 8px;
     }
     .month-group-header::after {
-        content: ''; flex: 1; height: 1px; background: #e2e8f0;
+        content: ''; flex: 1; height: 1px; background: var(--line-strong);
     }
 
     .status-badge {
@@ -71,7 +71,7 @@
     <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
         <i class="bi bi-chevron-left h5 mb-0"></i>
     </a>
-    <div class="fw-bold" style="font-size: 18px;">SPP & Pembayaran</div>
+    <div class="fw-bold" style="font-size: 18px; color: var(--ink);">SPP & Pembayaran</div>
     @if($isGuru)
         <a href="{{ route('spp.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto" style="font-weight: 700;">+ Catat</a>
     @endif
@@ -79,7 +79,7 @@
 
 <div class="page-container px-3 pt-3">
     {{-- Hero --}}
-    <div class="slide-up" style="background: linear-gradient(135deg, #1e293b, #0f766e); border-radius: 28px; padding: 24px 20px; margin-bottom: 18px; color: #fff; position: relative; overflow: hidden;">
+    <div class="slide-up" style="background: linear-gradient(135deg, #1e293b, #0f766e); border-radius: var(--radius-lg); padding: 24px 20px; margin-bottom: 18px; color: #fff; position: relative; overflow: hidden;">
         <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.06);"></div>
         <div style="position:absolute;bottom:-30px;right:40px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.04);"></div>
 
@@ -117,7 +117,7 @@
                     <div style="width:28px;height:28px;border-radius:10px;background:#f0fdf4;color:#16a34a;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-piggy-bank" style="font-size:14px;"></i>
                     </div>
-                    <span class="fw-bold" style="font-size:14px;">Ringkasan Pembayaran</span>
+                    <span class="fw-bold" style="font-size:14px;color:var(--ink);">Ringkasan Pembayaran</span>
                 </div>
                 @php
                     $pctBayar = $stats['total_nominal'] > 0 ? round(($stats['total_terbayar'] / $stats['total_nominal']) * 100) : 0;
@@ -213,7 +213,7 @@
         @empty
             <div class="glass-card">
                 <div class="p-5 text-center">
-                    <i class="bi bi-receipt" style="font-size:40px;color:#cbd5e1;"></i>
+                    <i class="bi bi-receipt" style="font-size:40px;color:var(--faint);"></i>
                     <div class="fw-bold mt-2 text-muted">Belum ada data SPP</div>
                     <div class="x-small text-muted mt-1">
                         @if($isGuru)

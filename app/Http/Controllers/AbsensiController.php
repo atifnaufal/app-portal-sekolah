@@ -228,6 +228,10 @@ class AbsensiController extends Controller
             app()->setLocale('id');
             Carbon::setLocale('id');
 
+            // Optimasi memori
+            ini_set('memory_limit', '256M');
+            ini_set('max_execution_time', '120');
+
             $data = $this->dataRecapAbsensi($periode, $tahun, $bulan, $kelasId);
 
             $pdf = Pdf::loadView('pdf.rekap-absensi', $data);

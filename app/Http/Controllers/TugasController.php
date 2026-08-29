@@ -317,6 +317,10 @@ class TugasController extends Controller
             app()->setLocale('id');
             \Carbon\Carbon::setLocale('id');
 
+            // Optimasi memori
+            ini_set('memory_limit', '256M');
+            ini_set('max_execution_time', '120');
+
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rekap-tugas', $data);
             $pdf->setPaper('a4', 'portrait');
 
@@ -456,7 +460,7 @@ class TugasController extends Controller
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
-    
+
 
     public function submit(Request $request, Tugas $tugas): RedirectResponse
     {

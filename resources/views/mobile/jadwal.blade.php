@@ -3,66 +3,65 @@
 
 @section('content')
 <style>
-    .page-header {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: rgba(255,255,255,0.88); backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(226, 232, 240, 0.7);
-        padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+    .lms-topbar {
+        position: sticky; top: 0; z-index: 1000;
+        background: rgba(255,255,255,0.9); backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--line);
+        padding: 12px 16px; display: flex; align-items: center; gap: 12px;
     }
-    .page-container { padding-top: 70px; padding-bottom: 48px; }
+    .lms-body { max-width: 640px; margin: 0 auto; padding: 16px 16px 48px; }
+
     .day-header {
-        position: sticky; top: 65px; z-index: 900;
-        background: #f8fafc; padding: 12px 4px;
-        font-weight: 800; font-size: 13px; text-transform: uppercase;
-        letter-spacing: 0.1em; color: #64748b;
         display: flex; align-items: center; gap: 8px;
+        font-weight: 800; font-size: 13px; text-transform: uppercase;
+        letter-spacing: 0.1em; color: var(--mist);
     }
-    .day-header::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+    .day-header::after { content: ''; flex: 1; height: 1px; background: var(--line-strong); }
 
     .schedule-card {
-        background: #fff; border: none; border-radius: 22px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        background: var(--surface-card); border: 1px solid var(--line);
+        border-radius: var(--radius-md); box-shadow: var(--shadow-card);
         margin-bottom: 14px; display: flex; overflow: hidden;
-        border: 1px solid rgba(15, 23, 42, 0.04);
+        animation: fadeUp 0.4s ease both;
     }
     .time-strip {
-        width: 75px; background: #f8fafc; padding: 20px 8px;
+        width: 78px; background: var(--surface); padding: 20px 8px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        border-right: 1px dashed #e2e8f0;
+        border-right: 1px dashed var(--line-strong); flex-shrink: 0;
     }
-    .time-val { font-weight: 800; color: #0f172a; font-size: 14px; letter-spacing: -0.5px; }
-    .time-end { font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 2px; }
+    .time-val { font-weight: 800; color: var(--ink); font-size: 14px; letter-spacing: -0.5px; }
+    .time-end { font-size: 10px; color: var(--faint); font-weight: 700; margin-top: 2px; }
 
     .content-area { padding: 18px 20px; flex: 1; position: relative; }
-    .subject-name { font-weight: 800; color: #1e293b; font-size: 16px; margin-bottom: 4px; letter-spacing: -0.2px; }
-    .meta-info { font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .subject-name { font-weight: 800; color: var(--ink); font-size: 16px; margin-bottom: 4px; letter-spacing: -0.2px; }
+    .meta-info { font-size: 11px; color: var(--mist); display: flex; align-items: center; gap: 8px; font-weight: 600; }
     .meta-info i { color: var(--blue); }
 
     .status-dot {
         width: 8px; height: 8px; border-radius: 50%;
-        background: #cbd5e1; position: absolute; top: 20px; right: 20px;
+        background: var(--faint); position: absolute; top: 20px; right: 20px;
     }
     .status-dot.active { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.4); }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 
-<div class="page-header">
-    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-        <i class="bi bi-chevron-left h5 mb-0"></i>
+<div class="lms-topbar">
+    <a href="{{ route('dashboard') }}" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="padding:0;width:40px;height:40px;">
+        <i class="bi bi-chevron-left"></i>
     </a>
-    <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px;">Jadwal Pelajaran</div>
+    <div class="fw-bold" style="font-size:18px;letter-spacing:-0.4px;">Jadwal Pelajaran</div>
 </div>
 
-<div class="page-container">
-    <header class="mobile-hero" style="border-radius: 0 0 28px 28px; margin-bottom: 10px; background: linear-gradient(135deg, #0f172a, #1e293b); padding: 32px 24px 28px;">
-        <div class="eyebrow" style="color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">
+<div class="lms-body">
+    <header class="mobile-hero" style="margin-bottom:16px;">
+        <div class="eyebrow">
             {{ $user->kelas?->nama ?? ($isGuru ? 'Guru Pengampu' : 'Akademik') }}
         </div>
-        <div class="hero-title mt-2 text-white" style="font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">{{ $isGuru ? 'Agenda Mengajar' : 'Agenda Belajar' }}</div>
-        <p class="mb-0 mt-1" style="font-size: 12px; color: rgba(255,255,255,.6); line-height: 1.5;">
+        <div class="hero-title mt-2">{{ $isGuru ? 'Agenda Mengajar' : 'Agenda Belajar' }}</div>
+        <div class="hero-sub" style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;margin-top:4px;">
             {{ $isGuru ? 'Pantau jadwal mengajar Anda setiap harinya.' : 'Lihat jadwal mata pelajaran Anda minggu ini.' }}
-        </p>
+        </div>
 
         @if(isset($stat) && $stat['total'] > 0)
             <div style="display:flex;gap:10px;margin-top:18px;">
@@ -82,7 +81,7 @@
         @endif
     </header>
 
-    <main class="mobile-content px-3">
+    <main class="mobile-content">
         @php($currentDay = \Carbon\Carbon::now()->translatedFormat('l'))
         @php($currentTime = \Carbon\Carbon::now()->format('H:i'))
 
@@ -91,7 +90,7 @@
 
             @foreach($list as $j)
                 @php($isActive = ($hari === $currentDay && $currentTime >= $j->jam_mulai && $currentTime <= $j->jam_selesai))
-                <div class="schedule-card" style="animation: fadeIn 0.4s ease both;">
+                <div class="schedule-card">
                     <div class="time-strip">
                         <div class="time-val">{{ \Carbon\Carbon::parse($j->jam_mulai)->format('H:i') }}</div>
                         <div class="time-end">{{ \Carbon\Carbon::parse($j->jam_selesai)->format('H:i') }}</div>
@@ -112,10 +111,10 @@
                 </div>
             @endforeach
         @empty
-            <div class="text-center py-5">
-                <i class="bi bi-calendar-x h1 text-muted"></i>
-                <div class="fw-bold mt-2">Belum ada jadwal</div>
-                <p class="small text-muted">Hubungi bagian kurikulum untuk informasi jadwal.</p>
+            <div class="pui-empty">
+                <i class="bi bi-calendar-x ico"></i>
+                <h4>Belum ada jadwal</h4>
+                <p>Hubungi bagian kurikulum untuk informasi jadwal.</p>
             </div>
         @endforelse
     </main>

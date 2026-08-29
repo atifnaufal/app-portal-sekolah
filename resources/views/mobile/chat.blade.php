@@ -3,48 +3,48 @@
 
 @section('content')
 <style>
-    .chat-app { min-height: 100vh; background: #f0f2f5; display: flex; flex-direction: column; }
+    .chat-app { min-height: 100vh; background: var(--surface); display: flex; flex-direction: column; }
     .page-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
         background: rgba(255,255,255,0.88); backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+        border-bottom: 1px solid var(--line-strong);
         padding: 12px 20px; display: flex; align-items: center; gap: 12px;
     }
     .page-container { padding-top: 64px; flex: 1; }
     .inbox-hero {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        background: var(--grad-hero);
         padding: 28px 24px 32px; color: #fff; position: relative; overflow: hidden;
     }
     .inbox-hero::after {
         content: ''; position: absolute; top: -30px; right: -20px;
         width: 130px; height: 130px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(36,107,254,.25) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(99,102,241,.25) 0%, transparent 70%);
     }
     .search-box {
-        background: #fff; border-radius: 18px; display: flex; align-items: center;
-        gap: 10px; padding: 4px 16px; box-shadow: 0 6px 18px rgba(15,23,42,.08);
+        background: #fff; border-radius: var(--radius-sm); display: flex; align-items: center;
+        gap: 10px; padding: 4px 16px; box-shadow: var(--shadow-card);
     }
-    .search-box input { border: 0; outline: 0; width: 100%; padding: 10px 0; font-size: 14px; background: transparent; }
-    .search-box input::placeholder { color: #94a3b8; }
+    .search-box input { border: 0; outline: 0; width: 100%; padding: 10px 0; font-size: 14px; background: transparent; color: var(--ink); }
+    .search-box input::placeholder { color: var(--faint); }
     .section-label {
         padding: 16px 20px 8px; display: flex; align-items: center; gap: 8px;
         font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em;
-        color: #64748b;
+        color: var(--mist);
     }
     .section-label .pill {
         display: inline-flex; align-items: center; justify-content: center;
         min-width: 20px; height: 20px; border-radius: 8px; font-size: 10px;
-        padding: 0 5px; color: #fff;
+        padding: 0 5px; color: #fff; background: var(--blue);
     }
-    .section-label::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--line-strong); }
     .group-item {
         display: flex; align-items: center; gap: 14px; padding: 13px 20px;
-        background: #fff; text-decoration: none; color: inherit;
-        border-bottom: 1px solid #f1f5f9; transition: background .15s;
+        background: var(--surface-card); text-decoration: none; color: inherit;
+        border-bottom: 1px solid var(--line); transition: background .15s;
     }
-    .group-item:active { background: #f8fafc; }
+    .group-item:active { background: var(--surface); }
     .group-avatar {
-        width: 50px; height: 50px; border-radius: 16px; flex-shrink: 0;
+        width: 50px; height: 50px; border-radius: var(--radius-sm); flex-shrink: 0;
         display: flex; align-items: center; justify-content: center;
         color: #fff; font-weight: 800; font-size: 19px; overflow: hidden;
     }
@@ -53,22 +53,20 @@
     .group-avatar.eskul { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
     .group-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .group-info { flex: 1; min-width: 0; }
-    .group-name { font-weight: 800; font-size: 15px; color: #0f172a; }
-    .group-last-msg { font-size: 13px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .group-time { font-size: 11px; color: #94a3b8; font-weight: 600; flex-shrink: 0; }
+    .group-name { font-weight: 800; font-size: 15px; color: var(--ink); }
+    .group-last-msg { font-size: 13px; color: var(--mist); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .group-time { font-size: 11px; color: var(--faint); font-weight: 600; flex-shrink: 0; }
     .chev {
-        width: 26px; height: 26px; border-radius: 50%; background: #f8fafc;
-        display: flex; align-items: center; justify-content: center; color: #94a3b8; flex-shrink: 0;
+        width: 26px; height: 26px; border-radius: 50%; background: var(--surface);
+        display: flex; align-items: center; justify-content: center; color: var(--faint); flex-shrink: 0;
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 
 <div class="chat-app">
-    <div class="page-header">
-        <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-            <i class="bi bi-chevron-left h5 mb-0"></i>
-        </a>
-        <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px;">Pesan Grup</div>
+    <div class="pui-topbar mt-2">
+        <a href="{{ route('dashboard') }}" class="back"><i class="bi bi-chevron-left"></i> Beranda</a>
+        <h1 class="spacer">Pesan Grup</h1>
     </div>
 
     <div class="page-container">
@@ -88,7 +86,7 @@
             {{-- Grup Kelas --}}
             <div class="section-label">
                 <i class="bi bi-person-lines-fill" style="color: var(--blue);"></i> Grup Kelas
-                <span class="pill" style="background: #2563eb;">{{ $classGroups->count() }}</span>
+                <span class="pill">{{ $classGroups->count() }}</span>
             </div>
             @forelse($classGroups as $g)
                 <a href="{{ route('chat.show', $g) }}" class="group-item chat-row" data-name="{{ strtolower($g->name) }}" style="animation: fadeIn .3s ease both;">
@@ -116,9 +114,9 @@
                     <div class="chev"><i class="bi bi-chevron-right" style="font-size: 12px;"></i></div>
                 </a>
             @empty
-                <div class="text-center py-4 opacity-40">
-                    <i class="bi bi-people" style="font-size: 40px;"></i>
-                    <div class="fw-bold mt-1 small">Belum ada grup kelas</div>
+                <div class="pui-empty">
+                    <i class="bi bi-people ico"></i>
+                    <h4>Belum ada grup kelas</h4>
                 </div>
             @endforelse
 
@@ -153,9 +151,9 @@
                     <div class="chev"><i class="bi bi-chevron-right" style="font-size: 12px;"></i></div>
                 </a>
             @empty
-                <div class="text-center py-4 opacity-40">
-                    <i class="bi bi-flag" style="font-size: 40px;"></i>
-                    <div class="fw-bold mt-1 small">Belum ada grup eskul</div>
+                <div class="pui-empty">
+                    <i class="bi bi-flag ico"></i>
+                    <h4>Belum ada grup eskul</h4>
                 </div>
             @endforelse
         </main>

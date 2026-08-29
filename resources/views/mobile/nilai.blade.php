@@ -3,74 +3,62 @@
 
 @section('content')
 <style>
-    .page-header {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: rgba(255,255,255,0.88); backdrop-filter: blur(16px);
-        border-bottom: 1px solid rgba(226, 232, 240, 0.7);
-        padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+    .lms-topbar {
+        position: sticky; top: 0; z-index: 1000;
+        background: rgba(255,255,255,0.9); backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--line);
+        padding: 12px 16px; display: flex; align-items: center; gap: 12px;
     }
-    .page-container { padding-top: 70px; padding-bottom: 48px; }
-    .ai-card {
-        background: #fff; border: none; border-radius: 24px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-        position: relative; overflow: hidden; margin-bottom: 16px;
+    .lms-body { max-width: 640px; margin: 0 auto; padding: 16px 16px 48px; }
+    .lms-avatar {
+        width: 44px; height: 44px; border-radius: var(--radius-sm);
+        object-fit: cover; flex-shrink: 0;
     }
-    .ai-card::before {
-        content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%;
-        background: var(--blue); opacity: 0.85;
-    }
-    .grade-badge {
-        width: 44px; height: 44px; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: 800; font-size: 16px;
-    }
-    .subject-icon {
-        width: 40px; height: 40px; border-radius: 12px;
-        background: #f1f5f9; color: #475569;
-        display: flex; align-items: center; justify-content: center;
-    }
-    @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .tab-pane { animation: fadeUp 0.3s ease both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
-    .tugas-modal {
+    /* Modal bottom sheet */
+    .sheet {
         position: fixed; inset: 0; z-index: 2000; display: none;
         align-items: flex-end; justify-content: center;
         background: rgba(15, 23, 42, .45);
     }
-    .tugas-modal.open { display: flex; }
-    .tugas-modal-card {
-        width: 100%; max-width: 680px; background: #fff;
-        border-radius: 28px 28px 0 0; padding: 24px 20px 32px;
+    .sheet.open { display: flex; }
+    .sheet-card {
+        width: 100%; max-width: 640px; background: var(--surface-card);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        padding: 24px 20px 32px;
     }
 </style>
 
-<div class="page-header">
-    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-        <i class="bi bi-chevron-left h5 mb-0"></i>
+<div class="lms-topbar">
+    <a href="{{ route('dashboard') }}" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="padding:0;width:40px;height:40px;">
+        <i class="bi bi-chevron-left"></i>
     </a>
-    <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px;">Nilai Akademik</div>
+    <div class="fw-bold" style="font-size:18px;letter-spacing:-0.4px;">Nilai Akademik</div>
 </div>
 
-<div class="page-container">
-    <header class="mobile-hero" style="border-radius: 0 0 32px 32px; margin-bottom: 24px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px 24px 40px; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.15);">
-        <div class="eyebrow" style="color: rgba(255,255,255,0.6); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em;">
+<div class="lms-body">
+    <header class="mobile-hero" style="margin-bottom:20px;">
+        <div class="eyebrow">
             @if($isGuru)
                 MANAJEMEN AKADEMIK
             @else
                 {{ $user->kelas?->nama ?? 'INFORMASI AKADEMIK' }}
             @endif
         </div>
-        <div class="hero-title mt-2 text-white" style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">{{ $isGuru ? 'Penilaian Siswa' : 'Laporan Nilai' }}</div>
+        <div class="hero-title mt-2">{{ $isGuru ? 'Penilaian Siswa' : 'Laporan Nilai' }}</div>
         @if($isGuru && $managedClass)
             <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
-                <select id="rekapSemester" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                <select id="rekapSemester" class="pui-select" style="width:auto;background:#fff;border:none;">
                     <option value="1">Semester 1</option>
                     <option value="2">Semester 2</option>
                 </select>
-                <a href="#" id="btnRecapPdf" onclick="goRecap('pdf'); return false;" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold shadow-sm">
-                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
+                <a href="#" id="btnRecapPdf" onclick="goRecap('pdf'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#f59e0b;color:#0f172a;">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> PDF
                 </a>
-                <a href="#" id="btnRecapExcel" onclick="goRecap('excel'); return false;" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm">
-                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
+                <a href="#" id="btnRecapExcel" onclick="goRecap('excel'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#22c55e;color:#0f172a;">
+                    <i class="bi bi-file-earmark-excel-fill"></i> Excel
                 </a>
             </div>
             <script>
@@ -78,11 +66,9 @@
                     var sem = document.getElementById('rekapSemester').value;
                     var base = '{{ route('nilai.recap', $managedClass->id) }}';
                     var url = base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem;
-                    
-                    // Try window.open first, but show fallback message
+
                     var win = window.open(url, '_blank');
                     if (win) {
-                        // Window opened successfully - track progress
                         var timer = setInterval(function() {
                             if (win.document.readyState === 'complete') {
                                 clearInterval(timer);
@@ -90,52 +76,51 @@
                             }
                         }, 100);
                     } else {
-                        // Pop-up blocked - provide instructions
                         alert('Pop-up diblokir by browser. Izinkan pop-up untuk situs ini, lalu coba lagi.\n\nAtau: Buka menu desktop dan gunakan link download yang tersedia.');
                     }
                 }
         @endif
-        <div class="mt-2" style="font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.6;">
+        <div class="mt-2" style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6;">
             {{ $isGuru ? 'Monitor dan evaluasi performa akademik siswa di kelas Anda secara real-time.' : 'Rekapitulasi pencapaian tugas, UTS, dan UAS Anda sepanjang semester ini.' }}
         </div>
     </header>
 
-    <main class="mobile-content px-3">
+    <main class="mobile-content">
         @if($isGuru)
             {{-- Rekap Bulanan / Tahunan (lintas mapel) --}}
-            <div class="ai-card mb-4" style="background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%); color:#fff; overflow:hidden;">
-                <div class="card-body p-4">
+            <div class="pui-card pui-card-hero mb-3" style="background:linear-gradient(135deg,#7c3aed 0%,#a78bfa 100%);color:#fff;overflow:hidden;">
+                <div style="padding:20px;">
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <i class="bi bi-calendar3" style="color:#fde68a;"></i>
-                        <div class="fw-bold" style="font-size: 15px;">Rekap Bulanan & Tahunan</div>
+                        <div class="fw-bold" style="font-size:15px;">Rekap Bulanan & Tahun</div>
                     </div>
-                    <div class="small mb-3" style="color: rgba(255,255,255,.75);">
+                    <div class="small mb-3" style="color:rgba(255,255,255,.75);">
                         Unduh rekap nilai seluruh siswa (lintas mapel) berdasarkan periode bulan atau tahun dalam format PDF / Excel.
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <select id="perRecapPeriode" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                        <select id="perRecapPeriode" class="pui-select" style="width:auto;background:#fff;border:none;">
                             <option value="bulanan">Bulanan</option>
                             <option value="tahunan">Tahunan</option>
                         </select>
-                        <select id="perRecapTahun" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                        <select id="perRecapTahun" class="pui-select" style="width:auto;background:#fff;border:none;">
                             @for($y = now()->year; $y >= now()->year - 4; $y--)
                                 <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }}>{{ $y }}</option>
                             @endfor
                         </select>
-                        <select id="perRecapBulan" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                        <select id="perRecapBulan" class="pui-select" style="width:auto;background:#fff;border:none;">
                             @for($m = 1; $m <= 12; $m++)
                                 <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
                             @endfor
                         </select>
-                        <select id="perRecapTA" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none; display:none;">
+                        <select id="perRecapTA" class="pui-select" style="width:auto;background:#fff;border:none;display:none;">
                             @for($y = now()->year; $y >= now()->year - 3; $y--)
                                 <option value="{{ $y }}/{{ $y + 1 }}">{{ $y }}/{{ $y + 1 }}</option>
                             @endfor
                         </select>
                     </div>
                     <div class="d-flex gap-2 flex-wrap">
-                        <button type="button" onclick="goPerRecap('pdf'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#f59e0b; color:#0f172a;"><i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF</button>
-                        <button type="button" onclick="goPerRecap('excel'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#22c55e; color:#0f172a;"><i class="bi bi-file-earmark-excel-fill me-1"></i> Excel</button>
+                        <button type="button" onclick="goPerRecap('pdf'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#f59e0b;color:#0f172a;"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+                        <button type="button" onclick="goPerRecap('excel'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#22c55e;color:#0f172a;"><i class="bi bi-file-earmark-excel-fill"></i> Excel</button>
                     </div>
                 </div>
             </div>
@@ -162,60 +147,57 @@
             </script>
 
             @if(!$selectedSubject)
-                <div class="d-flex align-items-center gap-2 mb-3 px-1">
-                    <div style="width: 4px; height: 16px; background: var(--blue); border-radius: 2px;"></div>
-                    <h6 class="fw-bold mb-0" style="font-size: 14px; color: #475569;">MATA PELAJARAN ANDA</h6>
+                <div class="pui-section">
+                    <h3>Mata Pelajaran Anda</h3>
                 </div>
                 @forelse($mataPelajarans as $mp)
-                    <a href="{{ route('nilai.index', ['subject_id' => $mp->id]) }}" class="card ai-card text-decoration-none text-dark" style="animation: slideUp 0.4s ease both;">
-                        <div class="card-body p-3 d-flex align-items-center gap-3">
-                            <div class="subject-icon" style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0);">
-                                <i class="bi bi-journal-text text-primary"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-bold" style="font-size: 15px; color: #1e293b;">{{ $mp->nama }}</div>
-                                <div class="small text-muted fw-semibold" style="font-size: 11px;">{{ $mp->kelas?->nama ?? 'Umum' }} · {{ $mp->kode }}</div>
-                            </div>
-                            <div class="btn btn-light rounded-pill p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                <i class="bi bi-chevron-right text-muted" style="font-size: 12px;"></i>
-                            </div>
+                    <a href="{{ route('nilai.index', ['subject_id' => $mp->id]) }}" class="pui-card pui-row text-decoration-none mb-2" style="padding:14px 16px;text-decoration:none;color:var(--ink);">
+                        <div style="width:44px;height:44px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#f1f5f9,#e2e8f0);display:flex;align-items:center;justify-content:center;color:var(--blue);flex-shrink:0;">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                        <div class="grow">
+                            <div class="t" style="font-size:15px;color:var(--ink);">{{ $mp->nama }}</div>
+                            <div class="s fw-semibold">{{ $mp->kelas?->nama ?? 'Umum' }} · {{ $mp->kode }}</div>
+                        </div>
+                        <div class="pui-btn pui-btn-ghost pui-btn-sm" style="padding:0;width:32px;height:32px;border-radius:999px;">
+                            <i class="bi bi-chevron-right" style="font-size:12px;"></i>
                         </div>
                     </a>
                 @empty
-                    <div class="text-center py-5 opacity-50">
-                        <i class="bi bi-journal-x h1"></i>
-                        <p class="mt-2 fw-bold">Belum ada mapel.</p>
+                    <div class="pui-empty">
+                        <i class="bi bi-journal-x ico"></i>
+                        <h4>Belum ada mapel</h4>
                     </div>
                 @endforelse
             @else
-                <div class="d-flex align-items-center justify-content-between mb-4 px-2 py-3 bg-white rounded-4 border shadow-sm">
+                <div class="pui-card d-flex align-items-center justify-content-between mb-3" style="padding:14px 16px;">
                     <div>
-                        <div class="fw-bold" style="font-size: 15px;">{{ $selectedSubject->nama }}</div>
-                        <div class="small text-muted fw-semibold">{{ $selectedSubject->kelas?->nama ?? 'Semua Kelas' }}</div>
+                        <div class="fw-bold" style="font-size:15px;">{{ $selectedSubject->nama }}</div>
+                        <div class="small fw-semibold" style="color:var(--faint);">{{ $selectedSubject->kelas?->nama ?? 'Semua Kelas' }}</div>
                     </div>
-                    <a href="{{ route('nilai.index') }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm">Ganti Mapel</a>
+                    <a href="{{ route('nilai.index') }}" class="pui-btn pui-btn-primary pui-btn-sm pui-btn-round">Ganti Mapel</a>
                 </div>
 
                 {{-- Premium Rekap & Unduhan Guru per Mapel --}}
-                <div class="ai-card mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#fff; overflow:hidden;">
-                    <div class="card-body p-4">
+                <div class="pui-card mb-3" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;overflow:hidden;">
+                    <div style="padding:20px;">
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <i class="bi bi-file-earmark-bar-graph-fill" style="color:#fbbf24;"></i>
-                            <div class="fw-bold" style="font-size: 15px;">Rekap & Unduhan Nilai</div>
+                            <div class="fw-bold" style="font-size:15px;">Rekap & Unduhan Nilai</div>
                         </div>
                         <div class="small mb-3" style="color:rgba(255,255,255,.65);">
                             Unduh rekap nilai siswa untuk mapel <b class="text-white">{{ $selectedSubject->nama }}</b> dalam format PDF atau Excel.
                         </div>
                         <div class="d-flex flex-wrap align-items-center gap-2">
-                            <select id="rekapMapelSemester" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none; color:#0f172a !important;">
+                            <select id="rekapMapelSemester" class="pui-select" style="width:auto;background:#fff;border:none;color:#0f172a !important;">
                                 <option value="1">Semester 1</option>
                                 <option value="2">Semester 2</option>
                             </select>
-                            <a href="#" onclick="goRecapMapel('pdf'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#f59e0b; color:#0f172a;">
-                                <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
+                            <a href="#" onclick="goRecapMapel('pdf'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#f59e0b;color:#0f172a;">
+                                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
                             </a>
-                            <a href="#" onclick="goRecapMapel('excel'); return false;" class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm" style="background:#22c55e; color:#0f172a;">
-                                <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
+                            <a href="#" onclick="goRecapMapel('excel'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#22c55e;color:#0f172a;">
+                                <i class="bi bi-file-earmark-excel-fill"></i> Excel
                             </a>
                         </div>
                     </div>
@@ -232,47 +214,47 @@
                     @php
                         $nilaiRecord = $siswa->nilai_records->first();
                     @endphp
-                    <div class="card ai-card" style="animation: slideUp 0.4s ease both;">
-                        <div class="card-body p-3">
+                    <div class="pui-card mb-3">
+                        <div style="padding:16px;">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <img src="{{ $siswa->foto ? asset('storage/'.$siswa->foto) : '' }}" data-name="{{ $siswa->name }}"
                                      onerror="nilaiAvatarFallback(this);"
-                                     class="rounded-4" style="width: 44px; height: 44px; object-fit: cover;" alt="{{ $siswa->name }}">
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold" style="font-size: 14px; color: #1e293b;">{{ $siswa->name }}</div>
-                                    <div class="small text-muted fw-bold" style="font-size: 10px;">NIS: {{ $siswa->nik ?? '-' }}</div>
+                                     class="lms-avatar" alt="{{ $siswa->name }}">
+                                <div class="grow" style="flex:1;min-width:0;">
+                                    <div class="fw-bold" style="font-size:14px;color:var(--ink);">{{ $siswa->name }}</div>
+                                    <div class="small fw-bold" style="font-size:10px;color:var(--faint);">NIS: {{ $siswa->nik ?? '-' }}</div>
                                 </div>
-                                <button type="button" class="btn btn-primary btn-sm rounded-pill px-3"
+                                <button type="button" class="pui-btn pui-btn-primary pui-btn-sm pui-btn-round"
                                     onclick="openInputNilai(@json($siswa), @json($siswa->nilai_records->values()->all()))">
                                     Input
                                 </button>
                             </div>
                             <div class="row g-2">
                                 <div class="col-4">
-                                    <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
-                                        <div class="fw-black text-primary" style="font-size: 15px;">{{ $nilaiRecord->tugas ?? '-' }}</div>
-                                        <div class="text-muted fw-bold" style="font-size: 8px; text-transform: uppercase;">Tugas</div>
+                                    <div class="pui-stat" style="background:var(--surface);border:1px solid var(--line);box-shadow:none;">
+                                        <div class="num" style="font-size:15px;color:var(--blue);">{{ $nilaiRecord->tugas ?? '-' }}</div>
+                                        <div class="lb">Tugas</div>
                                     </div>
                                 </div>
                                 <div class="col-4">
-                                    <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
-                                        <div class="fw-black text-primary" style="font-size: 15px;">{{ $nilaiRecord->uts ?? '-' }}</div>
-                                        <div class="text-muted fw-bold" style="font-size: 8px; text-transform: uppercase;">UTS</div>
+                                    <div class="pui-stat" style="background:var(--surface);border:1px solid var(--line);box-shadow:none;">
+                                        <div class="num" style="font-size:15px;color:var(--blue);">{{ $nilaiRecord->uts ?? '-' }}</div>
+                                        <div class="lb">UTS</div>
                                     </div>
                                 </div>
                                 <div class="col-4">
-                                    <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
-                                        <div class="fw-black text-primary" style="font-size: 15px;">{{ $nilaiRecord->uas ?? '-' }}</div>
-                                        <div class="text-muted fw-bold" style="font-size: 8px; text-transform: uppercase;">UAS</div>
+                                    <div class="pui-stat" style="background:var(--surface);border:1px solid var(--line);box-shadow:none;">
+                                        <div class="num" style="font-size:15px;color:var(--blue);">{{ $nilaiRecord->uas ?? '-' }}</div>
+                                        <div class="lb">UAS</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-5 opacity-25">
-                        <i class="bi bi-people h1"></i>
-                        <p class="mt-2 fw-bold">Data siswa kosong.</p>
+                    <div class="pui-empty">
+                        <i class="bi bi-people ico"></i>
+                        <h4>Data siswa kosong</h4>
                     </div>
                 @endforelse
             @endif
@@ -298,48 +280,48 @@
                         'danger' => '#dc2626',
                     };
                 @endphp
-                <div class="card ai-card" style="animation: slideUp 0.4s ease both;">
-                    <div class="card-body p-3">
+                <div class="pui-card mb-3">
+                    <div style="padding:16px;">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
-                                <h3 class="fw-bold mb-1" style="font-size: 16px; color: #1e293b;">{{ $mp->nama }}</h3>
+                                <h3 class="fw-bold mb-1" style="font-size:16px;color:var(--ink);">{{ $mp->nama }}</h3>
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-light text-muted border fw-bold" style="font-size: 9px;">SEMESTER {{ $mpNilais->first()->semester }}</span>
-                                    <span class="small text-muted fw-bold" style="font-size: 10px;">KKM: {{ $mp->kkm ?? 75 }}</span>
+                                    <span class="pui-chip" style="font-size:9px;">SEMESTER {{ $mpNilais->first()->semester }}</span>
+                                    <span class="small fw-bold" style="font-size:10px;color:var(--faint);">KKM: {{ $mp->kkm ?? 75 }}</span>
                                 </div>
                             </div>
-                            <div class="grade-badge shadow-sm border" style="background: {{ $bgColor }}; color: {{ $textColor }}; border-color: rgba(0,0,0,0.05) !important;">
+                            <div class="grade-badge" style="width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;background:{{ $bgColor }};color:{{ $textColor }};">
                                 {{ round($avg) }}
                             </div>
                         </div>
 
                         <div class="row g-2">
                             <div class="col-4">
-                                <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
-                                    <div class="fw-black" style="font-size: 15px; color: #1e293b;">{{ $mpNilais->avg('tugas') ?: '-' }}</div>
-                                    <div class="text-muted fw-extrabold" style="font-size: 9px; text-transform: uppercase;">Tugas</div>
+                                <div class="pui-stat" style="background:var(--surface);border:1px solid var(--line);box-shadow:none;">
+                                    <div class="num" style="font-size:15px;color:var(--ink);">{{ $mpNilais->avg('tugas') ?: '-' }}</div>
+                                    <div class="lb">Tugas</div>
                                 </div>
                             </div>
                             <div class="col-4">
-                                <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
-                                    <div class="fw-black" style="font-size: 15px; color: #1e293b;">{{ $mpNilais->avg('uts') ?: '-' }}</div>
-                                    <div class="text-muted fw-extrabold" style="font-size: 9px; text-transform: uppercase;">UTS</div>
+                                <div class="pui-stat" style="background:var(--surface);border:1px solid var(--line);box-shadow:none;">
+                                    <div class="num" style="font-size:15px;color:var(--ink);">{{ $mpNilais->avg('uts') ?: '-' }}</div>
+                                    <div class="lb">UTS</div>
                                 </div>
                             </div>
                             <div class="col-4">
-                                <div class="text-center p-2 rounded-4" style="background: #f8fafc;">
-                                    <div class="fw-black" style="font-size: 15px; color: #1e293b;">{{ $mpNilais->avg('uas') ?: '-' }}</div>
-                                    <div class="text-muted fw-extrabold" style="font-size: 9px; text-transform: uppercase;">UAS</div>
+                                <div class="pui-stat" style="background:var(--surface);border:1px solid var(--line);box-shadow:none;">
+                                    <div class="num" style="font-size:15px;color:var(--ink);">{{ $mpNilais->avg('uas') ?: '-' }}</div>
+                                    <div class="lb">UAS</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             @empty
-                <div class="text-center py-5">
-                    <i class="bi bi-award h1 text-muted"></i>
-                    <div class="fw-bold mt-2">Belum ada nilai</div>
-                    <p class="small text-muted mt-1">Nilai Anda akan muncul di sini setelah diproses guru.</p>
+                <div class="pui-empty">
+                    <i class="bi bi-award ico"></i>
+                    <h4>Belum ada nilai</h4>
+                    <p>Nilai Anda akan muncul di sini setelah diproses guru.</p>
                 </div>
             @endforelse
         @endif
@@ -347,8 +329,8 @@
 </div>
 
 @if($isGuru && $selectedSubject)
-    <div class="tugas-modal" id="inputNilaiModal" onclick="if(event.target===this)closeInputNilai()">
-        <div class="tugas-modal-card">
+    <div class="sheet" id="inputNilaiModal" onclick="if(event.target===this)closeInputNilai()">
+        <div class="sheet-card">
             <div class="fw-bold h5 mb-3">Input Nilai: <span id="modalSiswaName"></span></div>
             <form action="{{ route('nilai.upsert') }}" method="POST">
                 @csrf
@@ -357,35 +339,35 @@
 
                 <div class="row g-3 mb-3">
                     <div class="col-6">
-                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">Semester</label>
-                        <select name="semester" id="modalSemester" class="form-select rounded-4 border-2">
+                        <label class="pui-label">Semester</label>
+                        <select name="semester" id="modalSemester" class="pui-select">
                             <option value="1">Semester 1</option>
                             <option value="2">Semester 2</option>
                         </select>
                     </div>
                     <div class="col-6">
-                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">Tahun Ajaran</label>
-                        <input type="text" name="tahun_ajaran" id="modalTahunAjaranInput" value="{{ $selectedSubject->kelas?->tahun_ajaran ?? '' }}" class="form-control rounded-4 border-2" placeholder="2025/2026">
+                        <label class="pui-label">Tahun Ajaran</label>
+                        <input type="text" name="tahun_ajaran" id="modalTahunAjaranInput" value="{{ $selectedSubject->kelas?->tahun_ajaran ?? '' }}" class="pui-input" placeholder="2025/2026">
                     </div>
                 </div>
 
                 <div class="row g-3 mb-4">
                     <div class="col-4">
-                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">Tugas</label>
-                        <input type="number" name="tugas" id="modalTugas" class="form-control rounded-4 border-2" min="0" max="100" placeholder="0">
+                        <label class="pui-label">Tugas</label>
+                        <input type="number" name="tugas" id="modalTugas" class="pui-input" min="0" max="100" placeholder="0">
                     </div>
                     <div class="col-4">
-                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">UTS</label>
-                        <input type="number" name="uts" id="modalUts" class="form-control rounded-4 border-2" min="0" max="100" placeholder="0">
+                        <label class="pui-label">UTS</label>
+                        <input type="number" name="uts" id="modalUts" class="pui-input" min="0" max="100" placeholder="0">
                     </div>
                     <div class="col-4">
-                        <label class="small fw-bold text-muted mb-1 d-block text-uppercase">UAS</label>
-                        <input type="number" name="uas" id="modalUas" class="form-control rounded-4 border-2" min="0" max="100" placeholder="0">
+                        <label class="pui-label">UAS</label>
+                        <input type="number" name="uas" id="modalUas" class="pui-input" min="0" max="100" placeholder="0">
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm">Simpan Nilai</button>
-                <button type="button" class="btn btn-light w-100 py-3 rounded-pill mt-2" onclick="closeInputNilai()">Batal</button>
+                <button type="submit" class="pui-btn pui-btn-primary pui-btn-block pui-btn-round" style="padding:15px;">Simpan Nilai</button>
+                <button type="button" class="pui-btn pui-btn-ghost pui-btn-block pui-btn-round mt-2" onclick="closeInputNilai()">Batal</button>
             </form>
         </div>
     </div>

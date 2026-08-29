@@ -508,6 +508,14 @@ class NilaiController extends Controller
     {
         app()->setLocale('id');
         Carbon::setLocale('id');
+
+        // Optimasi memori untuk PDF yang besar
+        ini_set('memory_limit', '256M');
+        ini_set('max_execution_time', '120');
+
+        // Konfigurasi DomPDF jika diperlukan via config() atau setOptions
+        config(['dompdf.options.isHtml5ParserEnabled' => true]);
+        config(['dompdf.options.isRemoteEnabled' => true]);
     }
 
     /**

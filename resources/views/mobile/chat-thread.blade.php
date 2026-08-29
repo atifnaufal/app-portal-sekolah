@@ -6,18 +6,18 @@
     .chat-thread { display: flex; flex-direction: column; height: 100vh; }
     .chat-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: #fff; border-bottom: 1px solid #f0f0f0;
+        background: var(--surface-card); border-bottom: 1px solid var(--line);
         padding: 10px 14px; display: flex; align-items: center; gap: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,.03);
+        box-shadow: 0 2px 10px rgba(15,23,42,.04);
     }
     .chat-header .back-btn {
         width: 36px; height: 36px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        color: #0f172a; font-size: 18px; text-decoration: none;
+        color: var(--ink); font-size: 18px; text-decoration: none;
     }
-    .chat-header .back-btn:active { background: #f1f5f9; }
+    .chat-header .back-btn:active { background: var(--surface); }
     .hdr-avatar {
-        width: 38px; height: 38px; border-radius: 12px; color: #fff; font-weight: 800;
+        width: 38px; height: 38px; border-radius: var(--radius-sm); color: #fff; font-weight: 800;
         display: flex; align-items: center; justify-content: center; font-size: 14px; overflow: hidden; flex-shrink: 0;
     }
     .hdr-avatar.school { background: linear-gradient(135deg, #0088cc, #00aaff); }
@@ -33,18 +33,18 @@
     .msg-row { display: flex; margin-bottom: 12px; max-width: 85%; }
     .msg-row.mine { align-self: flex-end; flex-direction: row-reverse; }
     .msg-bubble {
-        padding: 8px 12px; border-radius: 14px; position: relative;
+        padding: 8px 12px; border-radius: var(--radius-sm); position: relative;
         box-shadow: 0 1px 2px rgba(0,0,0,.1); font-size: 14px;
     }
     .msg-row.mine .msg-bubble { background: #dcf8c6; color: #303030; border-top-right-radius: 2px; }
     .msg-row.other .msg-bubble { background: #fff; color: #303030; border-top-left-radius: 2px; }
     .chat-footer {
         position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
-        background: #f8fafc; padding: 12px 16px; display: flex; align-items: center; gap: 10px;
-        border-top: 1px solid #e2e8f0;
+        background: var(--surface-card); padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+        border-top: 1px solid var(--line-strong);
     }
     .chat-input {
-        flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 20px;
+        flex: 1; background: var(--surface-card); border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
         padding: 10px 16px; font-size: 14px; outline: none;
     }
 </style>
@@ -60,7 +60,7 @@
             @endif
         </div>
         <div style="flex: 1; min-width: 0;">
-            <div class="fw-bold text-truncate" style="font-size: 15px;">{{ $group->name }}</div>
+            <div class="fw-bold text-truncate" style="font-size: 15px; color: var(--ink);">{{ $group->name }}</div>
             <div style="font-size: 10px; color: #10b981; font-weight: 700;">{{ $group->members->count() }} Anggota</div>
         </div>
         <div class="badge bg-light text-muted rounded-pill" style="font-size: 9px; text-transform: uppercase;">

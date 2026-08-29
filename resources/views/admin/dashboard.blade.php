@@ -380,27 +380,35 @@
         var lineCtx = document.getElementById('sppChart');
         if (lineCtx) {
             var g1 = lineCtx.getContext('2d').createLinearGradient(0,0,0,300);
-            g1.addColorStop(0, 'rgba(36,107,254,0.15)'); g1.addColorStop(1, 'rgba(36,107,254,0)');
+            g1.addColorStop(0, 'rgba(37,99,235,0.2)'); g1.addColorStop(1, 'rgba(37,99,235,0)');
             var g2 = lineCtx.getContext('2d').createLinearGradient(0,0,0,300);
-            g2.addColorStop(0, 'rgba(22,163,74,0.15)'); g2.addColorStop(1, 'rgba(22,163,74,0)');
+            g2.addColorStop(0, 'rgba(22,163,74,0.2)'); g2.addColorStop(1, 'rgba(22,163,74,0)');
 
             new Chart(lineCtx, {
                 type: 'line',
                 data: {
                     labels: {!! json_encode($chartLabels) !!},
                     datasets: [{
-                        label: 'Invoiced', data: {!! json_encode($chartTagihan) !!},
-                        borderColor: '#246bfe', backgroundColor: g1, borderWidth: 3, fill: true, tension: 0.4,
-                        pointBackgroundColor: '#fff', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
+                        label: 'Tagihan', data: {!! json_encode($chartTagihan) !!},
+                        borderColor: '#2563eb', backgroundColor: g1, borderWidth: 3, fill: true, tension: 0.4,
+                        pointBackgroundColor: '#fff', pointBorderColor: '#2563eb', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
                     }, {
-                        label: 'Received', data: {!! json_encode($chartTerbayar) !!},
+                        label: 'Terbayar', data: {!! json_encode($chartTerbayar) !!},
                         borderColor: '#16a34a', backgroundColor: g2, borderWidth: 3, fill: true, tension: 0.4,
-                        pointBackgroundColor: '#fff', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
+                        pointBackgroundColor: '#fff', pointBorderColor: '#16a34a', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, padding: 25, font: { weight: '700', size: 12 } } } },
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: {
+                        legend: { position: 'top', align: 'end', labels: { usePointStyle: true, padding: 25, font: { weight: '700', size: 12 } } },
+                        tooltip: {
+                            backgroundColor: '#0f172a', titleFont: { size: 13, weight: '700' },
+                            bodyFont: { size: 13 }, padding: 12, cornerRadius: 10,
+                            callbacks: { label: function(c) { return ' ' + c.dataset.label + ': Rp ' + c.raw.toLocaleString('id-ID'); } }
+                        }
+                    },
                     scales: {
                         y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false }, ticks: { callback: v => 'Rp ' + (v/1000) + 'k', padding: 10 } },
                         x: { grid: { display: false, drawBorder: false }, ticks: { padding: 10 } }
@@ -445,10 +453,20 @@
                     labels: {!! json_encode($kelasNames) !!},
                     datasets: [{
                         label: 'Siswa', data: {!! json_encode($kelasSiswa) !!},
-                        backgroundColor: 'rgba(37,99,235,0.75)', borderRadius: 8, maxBarThickness: 34
+                        backgroundColor: '#3b82f6', hoverBackgroundColor: '#2563eb', borderRadius: 8, maxBarThickness: 34
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#0f172a', padding: 12, cornerRadius: 10 }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' } } }
+                    }
+                }
             });
         }
 
@@ -460,28 +478,44 @@
                     labels: ['Hadir', 'Terlambat', 'Izin', 'Sakit', 'Alpha'],
                     datasets: [{
                         data: [{{ $distAbsensi['hadir'] }}, {{ $distAbsensi['terlambat'] }}, {{ $distAbsensi['izin'] }}, {{ $distAbsensi['sakit'] }}, {{ $distAbsensi['alpha'] }}],
-                        backgroundColor: ['#16a34a', '#f59e0b', '#3b82f6', '#f97316', '#dc2626'],
-                        borderWidth: 0, hoverOffset: 8
+                        backgroundColor: ['#22c55e', '#f59e0b', '#3b82f6', '#ec4899', '#ef4444'],
+                        borderWidth: 0, hoverOffset: 12
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { weight: '600', size: 11 } } } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { weight: '600', size: 11 } } },
+                        tooltip: { backgroundColor: '#0f172a', padding: 12, cornerRadius: 10 }
+                    }
+                }
             });
         }
 
         var regCtx = document.getElementById('regChart');
         if (regCtx) {
             var rg = regCtx.getContext('2d').createLinearGradient(0,0,0,280);
-            rg.addColorStop(0, 'rgba(124,58,237,0.35)'); rg.addColorStop(1, 'rgba(124,58,237,0)');
+            rg.addColorStop(0, 'rgba(139,92,246,0.3)'); rg.addColorStop(1, 'rgba(139,92,246,0)');
             new Chart(regCtx, {
                 type: 'bar',
                 data: {
                     labels: {!! json_encode($regLabels) !!},
                     datasets: [{
                         label: 'Pendaftar', data: {!! json_encode($regCounts) !!},
-                        backgroundColor: rg, borderColor: '#7c3aed', borderWidth: 2, borderRadius: 8, maxBarThickness: 50
+                        backgroundColor: rg, borderColor: '#8b5cf6', borderWidth: 2, borderRadius: 8, maxBarThickness: 50
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, grid: { color: '#f1f5f9', drawBorder: false } } }, x: { grid: { display: false } } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#0f172a', padding: 12, cornerRadius: 10 }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0, padding: 10 }, grid: { color: '#f1f5f9', drawBorder: false } },
+                        x: { grid: { display: false }, ticks: { padding: 10 } }
+                    }
+                }
             });
         }
     });

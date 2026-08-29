@@ -3,16 +3,11 @@
 
 @section('content')
 <style>
-    :root {
-        --read-bg: #0f172a;
-        --read-ui: rgba(30, 41, 59, 0.9);
-    }
-
-    body { background: var(--read-bg); margin: 0; padding: 0; height: 100vh; overflow: hidden; position: relative; }
+    body { background: var(--navy); margin: 0; padding: 0; height: 100vh; overflow: hidden; position: relative; }
 
     .reader-top-bar {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: var(--read-ui); backdrop-filter: blur(20px);
+        background: var(--navy-2); backdrop-filter: blur(20px);
         padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         color: #fff;
@@ -29,32 +24,27 @@
 
     .reader-canvas {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        padding-top: 64px; /* Space for top bar */
-        display: flex; flex-direction: column;
+        padding-top: 64px; display: flex; flex-direction: column;
     }
 
-    .pdf-frame {
-        flex: 1; border: none; width: 100%; height: 100%;
-        background: #f1f5f9;
-    }
+    .pdf-frame { flex: 1; border: none; width: 100%; height: 100%; background: var(--surface); }
 
     .pdf-fallback {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        height: 100%; padding: 40px; text-align: center; color: #94a3b8;
+        height: 100%; padding: 40px; text-align: center; color: var(--faint);
     }
 
     .immersive-header-txt { text-align: center; flex: 1; padding: 0 10px; }
     .book-name-small { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 1px; }
-    .reader-badge-pro { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.15em; }
+    .reader-badge-pro { font-size: 9px; font-weight: 800; color: var(--faint); text-transform: uppercase; letter-spacing: 0.15em; }
 
-    /* UI Hint for Mobile Reader */
     .reader-hint {
         position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-        background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px);
-        padding: 8px 16px; border-radius: 100px;
+        background: rgba(15,23,42,.8); backdrop-filter: blur(10px);
+        padding: 8px 16px; border-radius: 999px;
         color: #fff; font-size: 11px; font-weight: 700;
         z-index: 1001; pointer-events: none;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        box-shadow: 0 10px 20px rgba(0,0,0,.2);
         animation: fadeOut 3s forwards ease-in-out;
     }
     @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
@@ -66,14 +56,13 @@
     </a>
     <div class="immersive-header-txt">
         <div class="book-name-small text-truncate">{{ $buku->judul }}</div>
-        <div class="reader-badge-pro"><i class="bi bi-stars text-primary me-1"></i> Intellectual Reader</div>
+        <div class="reader-badge-pro"><i class="bi bi-stars me-1" style="color:var(--indigo);"></i> Intellectual Reader</div>
     </div>
     <div style="width: 36px;"></div>
 </div>
 
 <div class="reader-canvas">
     @if($buku->file_pdf)
-        {{-- Google Docs Viewer is very robust for mobile web apps --}}
         <iframe
             class="pdf-frame"
             src="https://docs.google.com/viewer?url={{ urlencode($pdfUrl) }}&embedded=true"
@@ -101,7 +90,6 @@
 </div>
 
 <script>
-    // Ensure the body doesn't bounce on iOS
     document.body.addEventListener('touchmove', function (e) {
         if (!e.target.closest('.pdf-frame')) {
             e.preventDefault();

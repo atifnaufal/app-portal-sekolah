@@ -5,8 +5,8 @@
     .pf-page { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
 
     .pf-hero {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #3730a3 100%);
-        border-radius: 28px; padding: 30px 20px 26px; margin-bottom: 16px;
+        background: linear-gradient(135deg, var(--navy) 0%, #1e1b4b 55%, #3730a3 100%);
+        border-radius: var(--radius-lg); padding: 30px 20px 26px; margin-bottom: 16px;
         color: #fff; text-align: center; position: relative; overflow: hidden;
         box-shadow: 0 14px 40px rgba(30,27,75,0.3);
     }
@@ -26,7 +26,7 @@
         width: 104px; height: 104px; margin: 0 auto 14px; position: relative;
     }
     .pf-avatar {
-        width: 100%; height: 100%; border-radius: 34px; overflow: hidden;
+        width: 100%; height: 100%; border-radius: var(--radius-lg); overflow: hidden;
         background: transparent; display: flex; align-items: center; justify-content: center;
         position: relative; cursor: pointer;
         border: 3px solid rgba(255,255,255,0.22);
@@ -38,7 +38,7 @@
     /* Floating camera "ganti foto" badge (bawah kanan avatar) */
     .pf-cam-badge {
         position:absolute; right:-7px; bottom:-7px; width:38px; height:38px;
-        border-radius:50%; background:linear-gradient(135deg,#6366f1,#4f46e5);
+        border-radius:50%; background:var(--grad-primary);
         border:3px solid #fff; color:#fff; display:flex; align-items:center;
         justify-content:center; font-size:16px; cursor:pointer; z-index:2;
         box-shadow:0 6px 16px rgba(79,70,229,0.45);
@@ -55,23 +55,23 @@
     }
 
     .pf-info-card {
-        background: #fff; border-radius: 22px; padding: 18px;
-        margin-bottom: 12px; box-shadow: 0 6px 20px rgba(15,23,42,0.05);
-        border: 1px solid rgba(15,23,42,0.03);
+        background: var(--surface-card); border-radius: var(--radius-md); padding: 18px;
+        margin-bottom: 12px; box-shadow: var(--shadow-card);
+        border: 1px solid var(--line);
     }
     .pf-info-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
-    .pf-info-row + .pf-info-row { border-top: 1px solid #f1f5f9; }
+    .pf-info-row + .pf-info-row { border-top: 1px solid var(--line); }
     .pf-info-icon {
-        width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+        width: 38px; height: 38px; border-radius: var(--radius-sm); flex-shrink: 0;
         display: flex; align-items: center; justify-content: center; font-size: 16px;
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(15,23,42,0.05);
     }
-    .pf-info-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
-    .pf-info-value { font-size: 14px; font-weight: 700; color: #1e293b; }
+    .pf-info-label { font-size: 10px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: 0.04em; }
+    .pf-info-value { font-size: 14px; font-weight: 700; color: var(--ink); }
 
     .pf-toast {
         position: fixed; top: 16px; left: 16px; right: 16px; z-index: 9999;
-        background: #fff; border-radius: 14px; padding: 12px 16px;
+        background: var(--surface-card); border-radius: var(--radius-sm); padding: 12px 16px;
         box-shadow: 0 8px 24px rgba(0,0,0,0.12); display: none;
         max-width: 640px; margin: 0 auto;
     }
@@ -113,7 +113,7 @@
     {{-- Info Cards --}}
     <div class="pf-info-card">
         <div class="pf-info-row">
-            <div class="pf-info-icon" style="background:#eef4ff;color:#246bfe;"><i class="bi bi-person-badge"></i></div>
+            <div class="pf-info-icon" style="background:#eef4ff;color:var(--blue);"><i class="bi bi-person-badge"></i></div>
             <div>
                 <div class="pf-info-label">Nama Lengkap</div>
                 <div class="pf-info-value" id="infoName">{{ $user->name }}</div>
@@ -137,18 +137,16 @@
         </div>
     </div>
 
-    {{-- Aksi --}}
-
     {{-- Action Buttons --}}
-    <a href="{{ route('profile.edit') }}" style="display:block;width:100%;padding:14px;border-radius:16px;background:#246bfe;color:#fff;font-weight:700;font-size:14px;text-decoration:none;text-align:center;margin-bottom:10px;">
+    <a href="{{ route('profile.edit') }}" class="pui-btn pui-btn-primary pui-btn-block" style="padding:14px;border-radius:var(--radius-sm);margin-bottom:10px;">
         <i class="bi bi-pencil-square"></i> Edit Profil
     </a>
 
     {{-- Logout --}}
-    <div style="background:#fff5f5;border:1px solid #fee2e2;border-radius:16px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
+    <div style="background:#fff5f5;border:1px solid #fee2e2;border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
         <div>
             <div style="font-size:13px;font-weight:700;color:#dc2626;">Keluar Akun?</div>
-            <div style="font-size:11px;color:#94a3b8;">Hentikan sesi aktif.</div>
+            <div style="font-size:11px;color:var(--faint);">Hentikan sesi aktif.</div>
         </div>
         <form method="POST" action="{{ route('logout') }}">
             @csrf

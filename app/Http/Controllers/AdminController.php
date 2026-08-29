@@ -150,9 +150,26 @@ class AdminController extends Controller
 
     public function users(Request $request): View
     {
-        $users = User::with('kelas')->whereIn('role', ['guru', 'siswa'])->when($request->search, fn ($query, $search) => $query->where(fn ($q) => $q->where('name', 'like', "%$search%")->orWhere('nik', 'like', "%$search%")->orWhere('email', 'like', "%$search%")))->latest()->get();
+        $search = $request->search;
+        $usersQuery = User::with('kelas')
+            ->whereIn('role', ['guru', 'siswa'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
+                      ->orWhere('nik', 'like', "%$search%")
+                      ->orWhere('email', 'like', "%$search%");
+                });
+            });
 
-        $data = ['users' => $users, 'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get()];
+        $users = $usersQuery->latest()->get();
+
+        $data = [
+            'users' => $users,
+            'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
+            'totalGuru' => User::where('role', 'guru')->count(),
+            'totalSiswa' => User::where('role', 'siswa')->count(),
+            'pendingUsers' => User::where('aktif', false)->whereIn('role', ['guru', 'siswa'])->count(),
+        ];
 
         return view($this->isMobileRequest() ? 'mobile.admin-users' : 'admin.users', $data);
     }
