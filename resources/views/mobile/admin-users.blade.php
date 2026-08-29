@@ -24,9 +24,28 @@
                                 {{ strtoupper(substr($user->name,0,1)) }}
                             @endif
                         </div>
-                        <div>
+                        <div style="min-width:0;">
                             <div class="fw-bold" style="color:var(--ink);">{{ $user->name }}</div>
-                            <div class="small" style="color:var(--faint);">{{ ucfirst($user->role) }} · {{ $user->kelas?->nama ?? '-' }}</div>
+                            <div class="small" style="color:var(--faint);">{{ ucfirst($user->role) }}</div>
+                            @if($user->role === 'guru')
+                                @php
+                                    $guruClasses = collect([$user->kelas])
+                                        ->merge($user->mataPelajarans->pluck('kelas'))
+                                        ->filter()->unique('id')
+                                        ->sortBy([['tingkat','asc'],['nama','asc']])->values();
+                                @endphp
+                                @if($guruClasses->isNotEmpty())
+                                    <div class="d-flex align-items-center gap-1 flex-wrap mt-1">
+                                        @foreach($guruClasses as $availClass)
+                                            <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;background:#eef2ff;color:#4f46e5;border:1px solid #e0e7ff;font-size:10.5px;font-weight:800;">
+                                                {{ $availClass->nama }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            @else
+                                <div class="small" style="color:var(--faint);">{{ $user->kelas?->nama ?? '-' }}</div>
+                            @endif
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-2">

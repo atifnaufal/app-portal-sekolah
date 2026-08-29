@@ -14,8 +14,27 @@
         @if($user->role === 'siswa')
             <span class="fw-semibold text-dark">{{ $user->kelas?->nama ?? '-' }}</span>
         @else
-            <div class="fw-semibold text-dark">{{ $user->kelas?->nama ?? 'Guru Mapel' }}</div>
-            <div class="small text-muted">Tingkat: {{ $user->kelas?->tingkat ?? '-' }}</div>
+            @php
+                // Kumpulkan kelas yang diampu guru secara unik & terurut per tingkat
+                $guruClasses = collect([$user->kelas])
+                    ->merge($user->mataPelajarans->pluck('kelas'))
+                    ->filter()
+                    ->unique('id')
+                    ->sortBy([['tingkat', 'asc'], ['nama', 'asc']])
+                    ->values();
+            @endphp
+            @if($guruClasses->isEmpty())
+                <span class="text-muted">Belum ada penugasan kelas</span>
+            @else
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    @foreach($guruClasses as $availClass)
+                        <span class="class-chip" title="{{ $availClass->nama }} · Tingkat {{ $availClass->tingkat }}">
+                            <i class="bi bi-columns-gap"></i>
+                            {{ $availClass->nama }}
+                        </span>
+                    @endforeach
+                </div>
+            @endif
         @endif
     </td>
     <td>

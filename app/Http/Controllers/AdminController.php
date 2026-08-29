@@ -151,7 +151,7 @@ class AdminController extends Controller
     public function users(Request $request): View
     {
         $search = $request->search;
-        $usersQuery = User::with('kelas')
+        $usersQuery = User::with(['kelas', 'mataPelajarans.kelas'])
             ->whereIn('role', ['guru', 'siswa'])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {

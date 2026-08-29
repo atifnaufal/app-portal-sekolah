@@ -22,6 +22,18 @@
     .badge-success-p { background: #dcfce7; color: #166534; }
     .badge-warning-p { background: #fef9c3; color: #854d0e; }
 
+    /* Chip kelas — tampilan premium per kelas */
+    .class-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 12px; border-radius: 99px;
+        background: #eef2ff; color: #4f46e5;
+        border: 1px solid #e0e7ff;
+        font-size: 12px; font-weight: 800; letter-spacing: 0.01em;
+        transition: all 0.2s; cursor: default; user-select: none;
+    }
+    .class-chip i { font-size: 12px; }
+    .class-chip:hover { background: #e0e7ff; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(79,70,229,0.14); }
+
     .table-premium thead th {
         background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 800;
         text-transform: uppercase; letter-spacing: 0.05em; padding: 16px 24px; border-bottom: 1px solid #f1f5f9;
