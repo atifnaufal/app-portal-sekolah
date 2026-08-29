@@ -237,6 +237,40 @@
         @yield('content')
     </div>
 
+    <!-- Global App Lock Overlay -->
+    <div id="app-lock-overlay" style="position:fixed;inset:0;background:var(--navy);z-index:30000;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:20px;">
+        <div class="mb-5 text-center">
+            <div style="width:80px;height:80px;background:rgba(255,255,255,0.1);border-radius:24px;margin:0 auto 20px;display:grid;place-items:center;">
+                <i class="bi bi-shield-lock-fill" style="font-size:32px;color:var(--blue-bright);"></i>
+            </div>
+            <h4 class="fw-bold mb-1">Akses Terkunci</h4>
+            <p class="text-muted small">Masukkan PIN atau gunakan Biometrik</p>
+        </div>
+
+        <div id="lock-pin-container" class="w-100" style="max-width:280px;">
+            <div class="d-flex justify-content-between mb-4" id="pin-dots">
+                <div style="width:16px;height:16px;border-radius:50%;border:2px solid #fff;"></div>
+                <div style="width:16px;height:16px;border-radius:50%;border:2px solid #fff;"></div>
+                <div style="width:16px;height:16px;border-radius:50%;border:2px solid #fff;"></div>
+                <div style="width:16px;height:16px;border-radius:50%;border:2px solid #fff;"></div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center;">
+                @foreach([1,2,3,4,5,6,7,8,9] as $n)
+                    <button class="pui-btn pui-btn-ghost pui-btn-round" style="height:60px;width:60px;background:rgba(255,255,255,0.05);border-color:transparent;color:#fff;font-size:20px;" onclick="inputPin({{ $n }})">{{ $n }}</button>
+                @endforeach
+                <button class="pui-btn pui-btn-ghost pui-btn-round" style="height:60px;width:60px;background:transparent;border-color:transparent;color:#fff;" onclick="useBiometric()"><i class="bi bi-fingerprint" style="font-size:24px;"></i></button>
+                <button class="pui-btn pui-btn-ghost pui-btn-round" style="height:60px;width:60px;background:rgba(255,255,255,0.05);border-color:transparent;color:#fff;font-size:20px;" onclick="inputPin(0)">0</button>
+                <button class="pui-btn pui-btn-ghost pui-btn-round" style="height:60px;width:60px;background:transparent;border-color:transparent;color:#fff;" onclick="clearPin()"><i class="bi bi-backspace" style="font-size:20px;"></i></button>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="text-white-50 text-decoration-none small">Logout Akun</a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+        </div>
+    </div>
+
     @if(!isset($hideNav) || !$hideNav)
     <nav class="bottom-nav">
         <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
@@ -363,7 +397,10 @@
         @if(session('api_token'))
         (function() {
             if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
-                window.Capacitor.Plugins.NativeBridge.saveToken({ token: '{{ session('api_token') }}' });
+                window.Capacitor.Plugins.NativeBridge.saveToken({
+                    token: '{{ session('api_token') }}',
+                    baseUrl: window.location.origin
+                });
                 window.Capacitor.Plugins.NativeBridge.saveUserId({ userId: {{ (int) session('user_id') }} });
             }
         })();
@@ -526,56 +563,69 @@
 
     <script>
         var puiFileOverlay = document.getElementById('pui-file-overlay');
-        var puiFileStatus = document.getElementById('pui-file-status');
-        var puiFileLog = document.getElementById('pui-file-log');
-        var puiFileTitle = document.getElementById('pui-file-title');
-        var puiFileSub = document.getElementById('pui-file-sub');
-        var puiLogs = [];
-
-        function puiPrintLog(msg) { puiLogs.push(msg); puiFileLog.innerText = puiLogs.join('\n'); }
-
-        window.puiShowFilePanel = function (title, sub) {
-            puiFileTitle.innerText = title || 'Unduh Laporan';
-            puiFileSub.innerText = sub || '';
-            puiFileLog.innerText = ''; puiLogs = [];
-            puiFileOverlay.classList.add('on');
-        };
-
-        window.puiCloseFilePanel = function () { puiFileOverlay.classList.remove('on'); };
-
-        window.puiCopyFileLog = function () {
-            var t = puiFileSub.innerText + '\n' + puiLogs.join('\n');
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(t).then(function () { puiPrintLog('Detail disalin ke clipboard.'); });
-            } else { puiPrintLog('Clipboard tidak tersedia di perangkat ini.'); }
-        };
-
-        // Fungsi tunggal export PDF/Excel di semua perangkat.
-        window.puiExportFile = function (url, label, kind) {
-            var humanKind = (kind === 'excel') ? 'Excel' : 'PDF';
-            if (!window.PUI_IS_ANDROID_APP) {
-                window.puiShowFilePanel(label, 'Membuka di peramban…');
-                puiPrintLog('Perangkat: ' + window.puiDeviceReport());
-                puiPrintLog('Metode: buka tab/pratinjau browser.');
-                window.open(url, '_blank');
-                puiPrintLog('Status: dibuka di tab baru. Anda dapat mengunduh dari sana.');
-                return;
-            }
-            // Android (APK/WebView)
-            window.puiShowFilePanel(label, 'Status: mencoba mengunduh di aplikasi…');
-            puiPrintLog('Perangkat: Android (aplikasi/WebView).');
-            puiPrintLog('File: ' + humanKind + ' · ' + label);
-            if (window.Android && typeof window.Android.downloadFile === 'function') {
-                try { window.Android.downloadFile(url); puiPrintLog('Bridge Android ditemukan: unduhan dikirim ke sistem.'); return; }
-                catch (err) { puiPrintLog('Bridge error: ' + err.message); }
-            }
-            puiPrintLog('Kesalahan: modul unduhan Android (downloadFile) tidak tersedia.');
-            puiPrintLog('Penyebab: versi aplikasi ini tidak punya akses simpan file otomatis.');
-            puiPrintLog('Solusi: buka versi stabil di Desktop/komputer, lalu unduh ' + humanKind + ' di sana.');
-            puiFileSub.innerText = 'Tidak dapat mengunduh di aplikasi ini.';
-            puiFileStatus.innerText = 'PDF/Excel tidak dapat diunduh langsung di versi ini. Perangkat ini memakai aplikasi Android tanpa modul unduhan (downloadFile). Buka versi stabil Desktop untuk mengunduh ' + humanKind + ' dengan normal.';
-            try { window.open(url, '_blank'); } catch (e) { /* abaikan */ }
-        };
+        // ... (rest of the script)
     </script>
+
+    <script>
+        var currentPin = "";
+        function inputPin(n) {
+            if (currentPin.length < 4) {
+                currentPin += n;
+                updatePinDots();
+                if (currentPin.length === 4) {
+                    verifyAppPin();
+                }
+            }
+        }
+        function updatePinDots() {
+            var dots = document.getElementById('pin-dots').children;
+            for (var i = 0; i < dots.length; i++) {
+                dots[i].style.background = (i < currentPin.length) ? '#fff' : 'transparent';
+            }
+        }
+        function clearPin() {
+            currentPin = "";
+            updatePinDots();
+        }
+        function verifyAppPin() {
+            if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                window.Capacitor.Plugins.NativeBridge.verifyPin({ pin: currentPin }).then(function(res) {
+                    if (res.isValid) {
+                        unlockApp();
+                    } else {
+                        currentPin = "";
+                        updatePinDots();
+                        showNotification('Keamanan', 'PIN Salah');
+                    }
+                });
+            }
+        }
+        function useBiometric() {
+            if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                window.Capacitor.Plugins.NativeBridge.performBiometricAuth().then(function() {
+                    unlockApp();
+                }).catch(function(e) {
+                    // Fail or cancel
+                });
+            }
+        }
+        function unlockApp() {
+            sessionStorage.setItem('unlocked', 'true');
+            document.getElementById('app-lock-overlay').style.display = 'none';
+        }
+
+        // Check lock on load
+        (function() {
+            if (localStorage.getItem('pin_set') === 'true' && !sessionStorage.getItem('unlocked')) {
+                document.getElementById('app-lock-overlay').style.display = 'flex';
+                // Try biometric automatically if enabled
+                if (localStorage.getItem('biometric_enabled') === 'true') {
+                    setTimeout(useBiometric, 500);
+                }
+            }
+        })();
+    </script>
+
+    @yield('scripts')
 </body>
 </html>

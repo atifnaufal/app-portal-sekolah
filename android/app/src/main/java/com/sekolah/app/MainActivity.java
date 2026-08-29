@@ -37,6 +37,35 @@ public class MainActivity extends BridgeActivity {
         checkAndRequestPermissions();
         checkBatteryOptimization();
         startBackgroundService();
+
+        // Ensure web view doesn't handle everything if permissions missing
+        handleForcedPermissions();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handleForcedPermissions();
+    }
+
+    private void handleForcedPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // We can't easily block Capacitor webview without a custom layout,
+                // but we can show a persistent blocking dialog.
+                showMandatoryPermissionDialog();
+            }
+        }
+    }
+
+    private void showMandatoryPermissionDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Akses Dibatasi")
+                .setMessage("Aplikasi ini memerlukan izin Notifikasi untuk berfungsi sebagai asisten akademik Anda. Mohon izinkan melalui Pengaturan.")
+                .setCancelable(false)
+                .setPositiveButton("Buka Pengaturan", (dialog, which) -> openAppSettings())
+                .setNegativeButton("Keluar", (dialog, which) -> finish())
+                .show();
     }
 
     private void checkAndRequestPermissions() {

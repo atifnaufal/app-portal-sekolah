@@ -39,4 +39,9 @@ class HelpController extends Controller
     {
         return view('mobile.security');
     }
+
+    public function notificationSettings()
+    {
+        return view('mobile.notification-settings');
+    }
 }

@@ -104,6 +104,7 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::get('/help/faq', [HelpController::class, 'faq'])->name('help.faq');
     Route::get('/about', [HelpController::class, 'about'])->name('about.show');
     Route::get('/security/settings', [HelpController::class, 'security'])->name('security.settings');
+    Route::get('/settings/notifications', [HelpController::class, 'notificationSettings'])->name('settings.notifications');
 });
 
 // Endpoint JSON realtime (heartbeat sesi & polling notifikasi). Sengaja DI LUAR

@@ -34,12 +34,18 @@ public class BackgroundService extends Service {
     private PowerManager.WakeLock wakeLock;
     private ExecutorService executorService;
     private volatile boolean running = false;
+    private static volatile boolean isServiceRunning = false;
+
+    public static boolean isRunning() {
+        return isServiceRunning;
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "BackgroundService created");
         executorService = Executors.newSingleThreadExecutor();
+        isServiceRunning = true;
     }
 
     @Override
@@ -72,6 +78,7 @@ public class BackgroundService extends Service {
         super.onDestroy();
         Log.d(TAG, "BackgroundService destroyed");
         running = false;
+        isServiceRunning = false;
         if (executorService != null) {
             executorService.shutdownNow();
         }
@@ -111,6 +118,7 @@ public class BackgroundService extends Service {
     private boolean pollNotifications() {
         SharedPreferences prefs = getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE);
         String token = prefs.getString(AppConfig.KEY_TOKEN, null);
+        String baseUrl = prefs.getString("api_base_url", AppConfig.API_BASE_URL);
         String lastIdStr = prefs.getString(AppConfig.KEY_LAST_NOTIFICATION_ID, "0");
         int lastId = lastIdStr.isEmpty() ? 0 : Integer.parseInt(lastIdStr);
 
@@ -120,7 +128,7 @@ public class BackgroundService extends Service {
         }
 
         try {
-            String apiUrl = AppConfig.API_BASE_URL + "/notifikasi/poll?last_id=" + lastId;
+            String apiUrl = baseUrl + "/notifikasi/poll?last_id=" + lastId;
             HttpURLConnection connection = createConnection(apiUrl, token);
 
             int responseCode = connection.getResponseCode();
@@ -163,11 +171,12 @@ public class BackgroundService extends Service {
     private void pollSessionStatus() {
         SharedPreferences prefs = getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE);
         String token = prefs.getString(AppConfig.KEY_TOKEN, null);
+        String baseUrl = prefs.getString("api_base_url", AppConfig.API_BASE_URL);
 
         if (token == null || token.isEmpty()) return;
 
         try {
-            String apiUrl = AppConfig.API_BASE_URL + "/session/status";
+            String apiUrl = baseUrl + "/session/status";
             HttpURLConnection connection = createConnection(apiUrl, token);
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
