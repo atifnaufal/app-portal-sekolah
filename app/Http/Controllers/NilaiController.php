@@ -644,26 +644,32 @@ class NilaiController extends Controller
         $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">Predikat</Data></Cell>';
         $xml .= '</Row>';
 
+        $rowStyle = (($i % 2) === 1) ? 'alt' : 'default';
         foreach ($d['students'] as $i => $s) {
             $total = 0;
             $count = 0;
-            $xml .= '<Row>';
-            $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="Number">'.($i + 1).'</Data></Cell>';
-            $xml .= '<Cell ss:StyleID="bordered left"><Data ss:Type="String">'.$this->esc($s->name).'</Data></Cell>';
+            $xml .= '<Row';
+            $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.($i + 1).'</Data></Cell>';
+            $xml .= '<Cell ss:StyleID="bordered left '.$rowStyle.'"><Data ss:Type="String">'.$this->esc($s->name).'</Data></Cell>';
             foreach ($d['mapels'] as $mp) {
                 $n = $d['nilais'][$s->id][$mp->id] ?? null;
                 $val = $this->hitungAkhir($n);
                 if ($val === null) {
-                    $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="String">-</Data></Cell>';
+                    $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
                 } else {
                     $total += $val;
                     $count++;
-                    $xml .= '<Cell ss:StyleID="bordered cell score"><Data ss:Type="Number">'.$val.'</Data></Cell>';
+                    $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.$val.'</Data></Cell>';
                 }
             }
             $avg = $count > 0 ? round($total / $count, 2) : null;
-            $xml .= '<Cell ss:StyleID="bordered cell score"><Data ss:Type="String">'.($avg === null ? '-' : $avg).'</Data></Cell>';
-            $xml .= '<Cell ss:StyleID="bordered cell"><Data ss:Type="String">'.($avg === null ? '-' : $this->predikat($avg)).'</Data></Cell>';
+            if ($avg === null) {
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">-</Data></Cell>';
+            } else {
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="Number">'.$avg.'</Data></Cell>';
+                $xml .= '<Cell ss:StyleID="bordered cell '.$rowStyle.'"><Data ss:Type="String">'.$this->predikat($avg).'</Data></Cell>';
+            }
             $xml .= '</Row>';
         }
 
