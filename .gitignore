@@ -3,6 +3,10 @@
 .env
 .env.backup
 .env.production
+# Cache compiled blade view — artefak build, tidak perlu di-commit
+/storage/framework/views/*.php
+# Artefak internal tool Explyt
+/.artifacts/
 .phpactor.json
 .phpunit.result.cache
 /.codex
