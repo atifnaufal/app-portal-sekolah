@@ -296,6 +296,8 @@
                 // Perbaikan Download di WebView agar tidak reload
                 document.addEventListener('click', function(e) {
                     const link = e.target.closest('a');
+                    // Lewati link yang sudah memakai puiExportFile (ditangani sendiri).
+                    if (link && link.getAttribute('onclick') && link.getAttribute('onclick').indexOf('puiExportFile') !== -1) return;
                     if (link && (link.href.includes('pdf') || link.href.includes('xls'))) {
                         // Jangan biarkan reload, gunakan method download APK jika tersedia
                         if (window.Android && window.Android.downloadFile) {
@@ -457,6 +459,113 @@
 
             startHeartbeat();
         })();
+    </script>
+
+    <!-- ===== Panel Log / Status Unduhan (PDF & Excel) ===== -->
+    <div id="pui-file-overlay">
+        <div class="pui-file-box">
+            <div class="pui-file-head">
+                <div class="pui-file-ico"><i class="bi bi-file-earmark-arrow-down-fill"></i></div>
+                <div class="grow">
+                    <div class="pui-file-title" id="pui-file-title">Unduh Laporan</div>
+                    <div class="pui-file-sub" id="pui-file-sub">Status</div>
+                </div>
+                <button type="button" class="pui-file-close" onclick="puiCloseFilePanel()">&times;</button>
+            </div>
+            <div class="pui-file-body">
+                <div class="pui-file-status" id="pui-file-status"></div>
+                <div class="pui-file-log" id="pui-file-log"></div>
+            </div>
+            <div class="pui-file-actions">
+                <button type="button" class="pui-btn pui-btn-ghost pui-btn-sm" onclick="puiCopyFileLog()">Salin Detail</button>
+                <button type="button" class="pui-btn pui-btn-primary pui-btn-sm" onclick="puiCloseFilePanel()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #pui-file-overlay { position: fixed; inset: 0; z-index: 10002; display: none; align-items: flex-end; justify-content: center; padding: 16px; background: rgba(15,23,42,.45); backdrop-filter: blur(4px); }
+        #pui-file-overlay.on { display: flex; }
+        .pui-file-box { width: 100%; max-width: 440px; background: #fff; border-radius: var(--radius-lg); box-shadow: 0 24px 60px rgba(15,23,42,.25); overflow: hidden; animation: puiSlideUp .25s ease; }
+        @keyframes puiSlideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .pui-file-head { display: flex; align-items: center; gap: 12px; padding: 18px 18px 14px; background: linear-gradient(135deg,#0f172a,#1e293b); color: #fff; }
+        .pui-file-ico { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; background: linear-gradient(135deg,var(--indigo),var(--blue)); display: grid; place-items: center; color: #fff; font-size: 18px; }
+        .pui-file-title { font-weight: 800; font-size: 15px; }
+        .pui-file-sub { font-size: 12px; color: rgba(255,255,255,.6); }
+        .pui-file-close { background: rgba(255,255,255,.12); color: #fff; width: 30px; height: 30px; border-radius: 9px; font-size: 18px; }
+        .pui-file-body { padding: 14px 18px; }
+        .pui-file-status { font-size: 13.5px; color: var(--ink); line-height: 1.5; }
+        .pui-file-log { margin-top: 12px; background: #f8fafc; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; font-family: ui-monospace,Menlo,Consolas,monospace; font-size: 11.5px; color: var(--mist); white-space: pre-wrap; max-height: 120px; overflow: auto; }
+        .pui-file-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 0 18px 16px; }
+    </style>
+
+    <script>
+        // Deteksi perangkat: apakah sedang di aplikasi WebView Android (APK).
+        (function () {
+            var ua = navigator.userAgent;
+            var isAndroidApp = /Android/i.test(ua) && (/wv|Version\/[\d\.]+/i.test(ua) || typeof window.Android !== 'undefined');
+            window.PUI_IS_ANDROID_APP = isAndroidApp;
+            window.puiDeviceReport = function () {
+                if (isAndroidApp) return 'android-app';
+                if (/Android/i.test(ua)) return 'android-browser';
+                if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+                return 'desktop';
+            };
+        })();
+    </script>
+
+    <script>
+        var puiFileOverlay = document.getElementById('pui-file-overlay');
+        var puiFileStatus = document.getElementById('pui-file-status');
+        var puiFileLog = document.getElementById('pui-file-log');
+        var puiFileTitle = document.getElementById('pui-file-title');
+        var puiFileSub = document.getElementById('pui-file-sub');
+        var puiLogs = [];
+
+        function puiPrintLog(msg) { puiLogs.push(msg); puiFileLog.innerText = puiLogs.join('\n'); }
+
+        window.puiShowFilePanel = function (title, sub) {
+            puiFileTitle.innerText = title || 'Unduh Laporan';
+            puiFileSub.innerText = sub || '';
+            puiFileLog.innerText = ''; puiLogs = [];
+            puiFileOverlay.classList.add('on');
+        };
+
+        window.puiCloseFilePanel = function () { puiFileOverlay.classList.remove('on'); };
+
+        window.puiCopyFileLog = function () {
+            var t = puiFileSub.innerText + '\n' + puiLogs.join('\n');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(function () { puiPrintLog('Detail disalin ke clipboard.'); });
+            } else { puiPrintLog('Clipboard tidak tersedia di perangkat ini.'); }
+        };
+
+        // Fungsi tunggal export PDF/Excel di semua perangkat.
+        window.puiExportFile = function (url, label, kind) {
+            var humanKind = (kind === 'excel') ? 'Excel' : 'PDF';
+            if (!window.PUI_IS_ANDROID_APP) {
+                window.puiShowFilePanel(label, 'Membuka di peramban…');
+                puiPrintLog('Perangkat: ' + window.puiDeviceReport());
+                puiPrintLog('Metode: buka tab/pratinjau browser.');
+                window.open(url, '_blank');
+                puiPrintLog('Status: dibuka di tab baru. Anda dapat mengunduh dari sana.');
+                return;
+            }
+            // Android (APK/WebView)
+            window.puiShowFilePanel(label, 'Status: mencoba mengunduh di aplikasi…');
+            puiPrintLog('Perangkat: Android (aplikasi/WebView).');
+            puiPrintLog('File: ' + humanKind + ' · ' + label);
+            if (window.Android && typeof window.Android.downloadFile === 'function') {
+                try { window.Android.downloadFile(url); puiPrintLog('Bridge Android ditemukan: unduhan dikirim ke sistem.'); return; }
+                catch (err) { puiPrintLog('Bridge error: ' + err.message); }
+            }
+            puiPrintLog('Kesalahan: modul unduhan Android (downloadFile) tidak tersedia.');
+            puiPrintLog('Penyebab: versi aplikasi ini tidak punya akses simpan file otomatis.');
+            puiPrintLog('Solusi: buka versi stabil di Desktop/komputer, lalu unduh ' + humanKind + ' di sana.');
+            puiFileSub.innerText = 'Tidak dapat mengunduh di aplikasi ini.';
+            puiFileStatus.innerText = 'PDF/Excel tidak dapat diunduh langsung di versi ini. Perangkat ini memakai aplikasi Android tanpa modul unduhan (downloadFile). Buka versi stabil Desktop untuk mengunduh ' + humanKind + ' dengan normal.';
+            try { window.open(url, '_blank'); } catch (e) { /* abaikan */ }
+        };
     </script>
 </body>
 </html>

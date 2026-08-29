@@ -201,10 +201,10 @@
                             </a>
                             <div class="d-flex gap-2 mt-3 pt-3 border-top" style="border-color: var(--line) !important;">
                                 <a href="{{ route('tugas.show', $item) }}" class="pui-btn pui-btn-primary pui-btn-sm pui-btn-round flex-grow-1">Kelola</a>
-                                <a href="{{ route('tugas.export.pdf', $item) }}" target="_blank" class="icon-action" style="color:#dc2626;" title="Download PDF">
+                                <a href="{{ route('tugas.export.pdf', $item) }}" onclick="puiExportFile(this.href,'Rekap Tugas - {{ $item->judul }}','pdf'); return false;" class="icon-action" style="color:#dc2626;" title="Download PDF">
                                     <i class="bi bi-file-earmark-pdf-fill"></i>
                                 </a>
-                                <a href="{{ route('tugas.export.excel', $item) }}" target="_blank" class="icon-action" style="color:#16a34a;" title="Download Excel">
+                                <a href="{{ route('tugas.export.excel', $item) }}" onclick="puiExportFile(this.href,'Rekap Tugas - {{ $item->judul }}','excel'); return false;" class="icon-action" style="color:#16a34a;" title="Download Excel">
                                     <i class="bi bi-file-earmark-excel-fill"></i>
                                 </a>
                                 <a href="{{ route('tugas.edit', $item) }}" class="icon-action" title="Edit tugas"><i class="bi bi-pencil-square"></i></a>

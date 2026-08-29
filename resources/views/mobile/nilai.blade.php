@@ -85,7 +85,7 @@
                         var sem = document.getElementById('rekapSemester').value;
                         var base = '{{ route('nilai.recap', $managedClass->id) }}';
                         var url = base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem;
-                        window.open(url, '_blank');
+                        puiExportFile(url, 'Rekap Nilai Kelas Binaan', type);
                     }
                 </script>
             @endif
@@ -144,7 +144,7 @@
                         + '?periode=' + periode;
                     if (periode === 'bulanan') url += '&tahun=' + tahun + '&bulan=' + bulan;
                     else url += '&tahun_ajaran=' + encodeURIComponent(ta);
-                    window.open(url, '_blank');
+                    puiExportFile(url, 'Rekap Bulanan & Tahunan', type);
                 }
             </script>
 
@@ -208,7 +208,7 @@
                     function goRecapMapel(type) {
                         var sem = document.getElementById('rekapMapelSemester').value;
                         var base = '{{ route('nilai.recap.mapel', $selectedSubject->id) }}';
-                        window.open(base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem, '_blank');
+                        puiExportFile(base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem, 'Rekap Nilai Mapel', type);
                     }
                 </script>
 

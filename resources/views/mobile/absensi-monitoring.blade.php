@@ -110,7 +110,7 @@
             var url = base + (type === 'excel' ? '/excel' : '')
                 + '?periode=' + periode + '&tahun=' + tahun + '&kelas_id=' + {{ $user->kelas_id ?? 'null' }};
             if (periode === 'bulanan') url += '&bulan=' + bulan;
-            window.open(url, '_blank');
+            puiExportFile(url, 'Rekap Absensi', type);
         }
     </script>
 
