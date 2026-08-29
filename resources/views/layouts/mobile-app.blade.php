@@ -275,6 +275,42 @@
     <audio id="notif-sound" src="{{ asset('sounds/doorbell.mp3') }}" preload="auto"></audio>
 
     <script>
+        // ===== Sinkronisasi Izin & Download Mobile (APK/WebView) =====
+        (function() {
+            const isWebView = /wv|Android.*Version\/[\d\.]+/.test(navigator.userAgent);
+
+            if (isWebView) {
+                // Beri jeda sedikit agar UI stabil baru minta izin
+                setTimeout(() => {
+                    if (window.Android && window.Android.requestPermissions) {
+                        window.Android.requestPermissions();
+                    } else {
+                        // Jika tidak ada bridge, setidaknya tampilkan info satu kali via toast
+                        if (!localStorage.getItem('perm_hint_shown')) {
+                            showNotification('Izin Aplikasi', 'Pastikan memberikan izin Penyimpanan agar bisa mengunduh laporan PDF/Excel.', '#');
+                            localStorage.setItem('perm_hint_shown', 'true');
+                        }
+                    }
+                }, 2000);
+
+                // Perbaikan Download di WebView agar tidak reload
+                document.addEventListener('click', function(e) {
+                    const link = e.target.closest('a');
+                    if (link && (link.href.includes('pdf') || link.href.includes('xls'))) {
+                        // Jangan biarkan reload, gunakan method download APK jika tersedia
+                        if (window.Android && window.Android.downloadFile) {
+                            e.preventDefault();
+                            window.Android.downloadFile(link.href);
+                        } else {
+                            // Fallback: gunakan window.location daripada window.open untuk WebView
+                            e.preventDefault();
+                            window.location.href = link.href;
+                        }
+                    }
+                });
+            }
+        })();
+
         window.addEventListener('load', () => { document.getElementById('page-loader').style.display = 'none'; });
 
         var portalToastEl = document.getElementById('portal-toast');

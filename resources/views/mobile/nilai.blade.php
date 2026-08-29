@@ -48,38 +48,6 @@
             @endif
         </div>
         <div class="hero-title mt-2">{{ $isGuru ? 'Penilaian Siswa' : 'Laporan Nilai' }}</div>
-        @if($isGuru && $managedClass)
-            <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
-                <select id="rekapSemester" class="pui-select" style="width:auto;background:#fff;border:none;">
-                    <option value="1">Semester 1</option>
-                    <option value="2">Semester 2</option>
-                </select>
-                <a href="#" id="btnRecapPdf" onclick="goRecap('pdf'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#f59e0b;color:#0f172a;">
-                    <i class="bi bi-file-earmark-pdf-fill"></i> PDF
-                </a>
-                <a href="#" id="btnRecapExcel" onclick="goRecap('excel'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#22c55e;color:#0f172a;">
-                    <i class="bi bi-file-earmark-excel-fill"></i> Excel
-                </a>
-            </div>
-            <script>
-                function goRecap(type) {
-                    var sem = document.getElementById('rekapSemester').value;
-                    var base = '{{ route('nilai.recap', $managedClass->id) }}';
-                    var url = base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem;
-
-                    var win = window.open(url, '_blank');
-                    if (win) {
-                        var timer = setInterval(function() {
-                            if (win.document.readyState === 'complete') {
-                                clearInterval(timer);
-                                setTimeout(function() { win.close(); }, 1000);
-                            }
-                        }, 100);
-                    } else {
-                        alert('Pop-up diblokir by browser. Izinkan pop-up untuk situs ini, lalu coba lagi.\n\nAtau: Buka menu desktop dan gunakan link download yang tersedia.');
-                    }
-                }
-        @endif
         <div class="mt-2" style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6;">
             {{ $isGuru ? 'Monitor dan evaluasi performa akademik siswa di kelas Anda secara real-time.' : 'Rekapitulasi pencapaian tugas, UTS, dan UAS Anda sepanjang semester ini.' }}
         </div>
@@ -87,6 +55,40 @@
 
     <main class="mobile-content">
         @if($isGuru)
+            @if($managedClass)
+                {{-- Card Rekap per Semester untuk Kelas Binaan --}}
+                <div class="pui-card mb-3" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;">
+                    <div style="padding:20px;">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-award-fill" style="color:#fbbf24;"></i>
+                            <div class="fw-bold" style="font-size:15px;">Rekap Nilai Kelas Binaan</div>
+                        </div>
+                        <div class="small mb-3" style="color:rgba(255,255,255,.6);">
+                            Unduh rekap nilai seluruh siswa kelas <b>{{ $managedClass->nama }}</b>.
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <select id="rekapSemester" class="pui-select" style="width:auto;background:#fff;border:none;color:#0f172a !important;">
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                            <a href="#" id="btnRecapPdf" onclick="goRecap('pdf'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#f59e0b;color:#0f172a;">
+                                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                            </a>
+                            <a href="#" id="btnRecapExcel" onclick="goRecap('excel'); return false;" class="pui-btn pui-btn-sm pui-btn-round" style="background:#22c55e;color:#0f172a;">
+                                <i class="bi bi-file-earmark-excel-fill"></i> Excel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    function goRecap(type) {
+                        var sem = document.getElementById('rekapSemester').value;
+                        var base = '{{ route('nilai.recap', $managedClass->id) }}';
+                        var url = base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem;
+                        window.open(url, '_blank');
+                    }
+                </script>
+            @endif
             {{-- Rekap Bulanan / Tahunan (lintas mapel) --}}
             <div class="pui-card pui-card-hero mb-3" style="background:linear-gradient(135deg,#7c3aed 0%,#a78bfa 100%);color:#fff;overflow:hidden;">
                 <div style="padding:20px;">

@@ -102,21 +102,9 @@
     </a>
     <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px; color: var(--ink);">Pusat Tugas</div>
     @if($isGuru)
-        <a href="{{ route('tugas.create') }}" class="pui-btn pui-btn-primary pui-btn-sm pui-btn-round ms-auto">+ Buat</a>
-        <div class="ms-2 d-flex">
-            <select id="rekapSemester" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:1px solid var(--line-strong);">
-                <option value="1">Semester 1</option>
-                <option value="2">Semester 2</option>
-            </select>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="#" id="btnRecapPdf" onclick="goRecapTugas('pdf'); return false;" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="color:#dc2626;">
-                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
-            </a>
-            <a href="#" id="btnRecapExcel" onclick="goRecapTugas('excel'); return false;" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="color:#16a34a;">
-                <i class="bi bi-file-earmark-excel-fill"></i> Excel
-            </a>
-        </div>
+        <a href="{{ route('tugas.create') }}" class="pui-btn pui-btn-primary pui-btn-sm pui-btn-round ms-auto" style="box-shadow: 0 4px 12px rgba(79,70,229,0.3);">
+            <i class="bi bi-plus-lg me-1"></i> Buat
+        </a>
     @endif
 </div>
 
@@ -213,6 +201,12 @@
                             </a>
                             <div class="d-flex gap-2 mt-3 pt-3 border-top" style="border-color: var(--line) !important;">
                                 <a href="{{ route('tugas.show', $item) }}" class="pui-btn pui-btn-primary pui-btn-sm pui-btn-round flex-grow-1">Kelola</a>
+                                <a href="{{ route('tugas.export.pdf', $item) }}" target="_blank" class="icon-action" style="color:#dc2626;" title="Download PDF">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                </a>
+                                <a href="{{ route('tugas.export.excel', $item) }}" target="_blank" class="icon-action" style="color:#16a34a;" title="Download Excel">
+                                    <i class="bi bi-file-earmark-excel-fill"></i>
+                                </a>
                                 <a href="{{ route('tugas.edit', $item) }}" class="icon-action" title="Edit tugas"><i class="bi bi-pencil-square"></i></a>
                                 <button type="button" class="icon-action danger" title="Hapus tugas"
                                     onclick="openDeleteTugas(@json(route('tugas.destroy', $item)), @json($item->judul), @json($submitted.' pengumpulan akan ikut terhapus'))">
@@ -360,23 +354,6 @@
 </div>
 
 <script>
-    function goRecapTugas(type) {
-        if (type === 'excel') {
-            var tugasId = prompt('Masukkan ID Tugas untuk export Excel:', '');
-            if (tugasId) {
-                var excelUrl = '{{ route('tugas.export.excel', ['tugas' => '__TID__']) }}'.replace('__TID__', tugasId);
-                window.open(excelUrl, '_blank');
-            }
-            return false;
-        }
-        if (window.tugasList && window.tugasList.length > 0) {
-            var pdfUrl = '{{ route('tugas.export.pdf', ['tugas' => '__TID__']) }}'.replace('__TID__', window.tugasList[0]);
-            window.open(pdfUrl, '_blank');
-        } else {
-            alert('Pilih tugas terlebih dahulu untuk export PDF.');
-        }
-    }
-
     function openDeleteTugas(url, title, meta) {
         document.getElementById('deleteForm').action = url;
         document.getElementById('deleteTitle').innerText = title;
