@@ -44,20 +44,26 @@ public class NotificationHelper {
         }
     }
 
-    public static void showNotification(Context context, String title, String message, int notificationId) {
+    public static void showNotification(Context context, String title, String message, String url, int notificationId) {
         createNotificationChannel(context);
 
-        Intent intent = new Intent(context, MainActivity.class);
+        Intent intent;
+        if (url != null && !url.isEmpty()) {
+            intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        } else {
+            intent = new Intent(context, MainActivity.class);
+        }
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, notificationId, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, AppConfig.CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher) // Menggunakan launcher icon agar lebih premium
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
                 .setContentText(message)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
-                .setPriority(NotificationCompat.PRIORITY_MAX) // Prioritas Maksimal
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setAutoCancel(true)
                 .setDefaults(Notification.DEFAULT_ALL)
@@ -71,8 +77,12 @@ public class NotificationHelper {
         }
     }
 
+    public static void showNotification(Context context, String title, String message, int notificationId) {
+        showNotification(context, title, message, null, notificationId);
+    }
+
     public static void showNotification(Context context, String title, String message) {
-        showNotification(context, title, message, NOTIFICATION_ID);
+        showNotification(context, title, message, null, AppConfig.NEW_NOTIFICATION_ID);
     }
 
     private static Uri getDefaultSoundUri(Context context) {

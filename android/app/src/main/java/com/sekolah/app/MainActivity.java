@@ -31,6 +31,9 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Register custom plugins
+        registerPlugin(NativeBridgePlugin.class);
+
         checkAndRequestPermissions();
         checkBatteryOptimization();
         startBackgroundService();
@@ -137,16 +140,5 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception e) {
             Log.e(TAG, "Error starting background service: " + e.getMessage());
         }
-    }
-
-    // Bridge methods called from Capacitor/JS
-    public void saveAuthToken(String token) {
-        BackgroundService.saveToken(this, token);
-        // Restart service to use the new token immediately
-        BackgroundService.startService(this);
-    }
-
-    public void saveUserId(int userId) {
-        BackgroundService.saveUserId(this, userId);
     }
 }

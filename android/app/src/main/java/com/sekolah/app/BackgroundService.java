@@ -129,12 +129,24 @@ public class BackgroundService extends Service {
                 JSONObject json = new JSONObject(response);
                 int newLastId = json.optInt("new_last_id", lastId);
                 int unreadCount = json.optInt("unread", 0);
+                org.json.JSONArray items = json.optJSONArray("items");
 
                 if (newLastId > lastId) {
                     prefs.edit().putString(AppConfig.KEY_LAST_NOTIFICATION_ID, String.valueOf(newLastId)).apply();
-                    if (unreadCount > 0) {
-                        prefs.edit().putString(AppConfig.KEY_NOTIFICATION_COUNT, String.valueOf(unreadCount)).apply();
-                        NotificationHelper.showNotification(this, "Notifikasi Baru", unreadCount + " notifikasi baru belum dibaca");
+
+                    if (items != null && items.length() > 0) {
+                        for (int i = 0; i < items.length(); i++) {
+                            JSONObject item = items.getJSONObject(i);
+                            String title = item.optString("judul", "Notifikasi Baru");
+                            String message = item.optString("pesan", "");
+                            String url = item.optString("url", "");
+                            int id = item.optInt("id", (int) System.currentTimeMillis());
+
+                            NotificationHelper.showNotification(this, title, message, url, id);
+                        }
+                    } else if (unreadCount > 0) {
+                        // Fallback jika array items kosong tapi ada unread
+                        NotificationHelper.showNotification(this, "Portal Sekolah", unreadCount + " notifikasi baru menanti Anda");
                     }
                 }
                 return true;
