@@ -78,13 +78,17 @@
     <div class="am-hero animate-up">
         <div style="position:relative;z-index:1;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                    <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7);">{{ $greetingTime }}</div>
-                    <div style="font-size:26px;font-weight:900;margin-top:2px;letter-spacing:-0.02em;">Halo, Admin!</div>
-                    <div style="font-size:13px;opacity:0.7;margin-top:6px;font-weight:600;">{{ now()->translatedFormat('d F Y') }}</div>
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <div style="width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.2);overflow:hidden;">
+                        <img src="https://avatar.iran.liara.run/public/boy?username=admin" style="width:100%;height:100%;object-fit:cover;">
+                    </div>
+                    <div>
+                        <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7);">{{ $greetingTime }}</div>
+                        <div style="font-size:26px;font-weight:900;margin-top:2px;letter-spacing:-0.02em;">Halo, Admin!</div>
+                    </div>
                 </div>
-                <div style="width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.2);">
-                    <i class="bi bi-shield-lock-fill" style="font-size:20px;"></i>
+                <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.15);">
+                    <i class="bi bi-shield-lock-fill" style="font-size:18px;"></i>
                 </div>
             </div>
 

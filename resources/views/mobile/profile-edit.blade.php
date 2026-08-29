@@ -107,6 +107,13 @@
                 <input name="name" type="text" class="pui-input" value="{{ old('name', $user->name) }}" required>
             </div>
             <div class="pui-field">
+                <label class="pui-label">Jenis Kelamin</label>
+                <select name="jenis_kelamin" class="pui-select" required>
+                    <option value="L" @selected(old('jenis_kelamin', $user->jenis_kelamin) == 'L')>Laki-laki</option>
+                    <option value="P" @selected(old('jenis_kelamin', $user->jenis_kelamin) == 'P')>Perempuan</option>
+                </select>
+            </div>
+            <div class="pui-field">
                 <label class="pui-label">Email</label>
                 <input name="email" type="email" class="pui-input" value="{{ old('email', $user->email) }}" required>
             </div>

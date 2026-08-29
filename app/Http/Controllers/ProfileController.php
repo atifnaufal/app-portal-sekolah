@@ -39,6 +39,7 @@ class ProfileController extends Controller
         $data = $request->validate([
             'name' => ['required', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'jenis_kelamin' => ['required', 'in:L,P'],
             'password' => ['nullable', 'min:8', 'confirmed'],
             'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'foto_posisi_x' => ['nullable', 'integer', 'between:0,100'],

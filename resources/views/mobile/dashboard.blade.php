@@ -21,12 +21,12 @@
     $honorific = $isGuru ? 'Pak' : 'Kak';
 
     // Avatar logic
-    $avatarUrl = asset('storage/'.$user->foto);
-    if (!$user->foto) {
+    $avatarUrl = $user->foto ? asset('storage/'.$user->foto) : null;
+    if (!$avatarUrl) {
         $gender = strtolower($user->jenis_kelamin ?? 'L');
         $avatarUrl = $gender === 'p'
-            ? 'https://avatar.iran.liara.run/public/girl'
-            : 'https://avatar.iran.liara.run/public/boy';
+            ? 'https://avatar.iran.liara.run/public/girl?username='.$user->id
+            : 'https://avatar.iran.liara.run/public/boy?username='.$user->id;
     }
 @endphp
 
@@ -389,12 +389,12 @@
         <div style="max-height: 60vh; overflow-y: auto; padding-right: 4px;">
             @forelse($classmates as $cm)
                 @php
-                    $cmAvatar = asset('storage/'.$cm->foto);
-                    if (!$cm->foto) {
+                    $cmAvatar = $cm->foto ? asset('storage/'.$cm->foto) : null;
+                    if (!$cmAvatar) {
                         $cmGender = strtolower($cm->jenis_kelamin ?? 'L');
                         $cmAvatar = $cmGender === 'p'
-                            ? 'https://avatar.iran.liara.run/public/girl'
-                            : 'https://avatar.iran.liara.run/public/boy';
+                            ? 'https://avatar.iran.liara.run/public/girl?username='.$cm->id
+                            : 'https://avatar.iran.liara.run/public/boy?username='.$cm->id;
                     }
                 @endphp
                 <div class="classmate-row">
