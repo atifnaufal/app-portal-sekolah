@@ -136,3 +136,25 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/notifikasi/poll', [\App\Http\Controllers\NotifikasiController::class, 'poll']);
     Route::get('/session/status', [\App\Http\Controllers\SessionController::class, 'status']);
 });
+
+Route::get('/status-aplikasi', function () {
+    // Cek apakah sedang dalam mode maintenance
+    // Untuk development: return status maintenance
+    // Untuk production: return status normal
+    $isMaintenance = true; // Set false saat rilis
+
+    if ($isMaintenance) {
+        return response()->json([
+            'status' => 'maintenance',
+            'message' => 'Aplikasi Sedang Dalam Pengembangan',
+            'estimated_release' => '30 September 2026',
+            'mode' => 'development'
+        ], 503);
+    }
+
+    return response()->json([
+        'status' => 'active',
+        'message' => 'Aplikasi Berjalan Normal',
+        'mode' => 'production'
+    ]);
+});

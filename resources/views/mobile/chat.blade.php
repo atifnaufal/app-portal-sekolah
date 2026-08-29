@@ -5,14 +5,25 @@
 <style>
     .chat-app { min-height: 100vh; background: #f8fafc; display: flex; flex-direction: column; }
 
-    .page-container { padding-bottom: 100px; }
+    .page-header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--line);
+        padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .back-btn {
+        width: 38px; height: 38px; border-radius: 12px; background: var(--surface);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--ink); text-decoration: none;
+    }
+
+    .page-container { padding-top: 76px; padding-bottom: 100px; }
 
     .header-block {
         background: var(--grad-hero);
-        padding: 40px 24px 44px; color: #fff; position: relative; overflow: hidden;
-        border-radius: 0 0 40px 40px;
+        padding: 24px 20px 32px; color: #fff; position: relative; overflow: hidden;
+        border-radius: var(--radius-lg); margin: 0 16px 24px;
         box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
-        margin: 0 -16px 24px;
     }
     .header-block::after {
         content: ''; position: absolute; top: -40px; right: -30px;
@@ -68,20 +79,22 @@
 </style>
 
 <div class="chat-app">
-    <header class="header-block">
-        <div class="header-title">
-            <i class="bi bi-chat"></i>
-            <div>
-                <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.6);">MESSAGE CENTER</div>
-                <h1 class="mt-2 text-white" style="font-size: 28px; font-weight: 900; letter-spacing: -0.02em;">Percakapan</h1>
-                <p class="mb-0 mt-1" style="font-size: 14px; color: rgba(255,255,255,0.8); font-weight: 500;">
-                    Terhubung dengan warga sekolah secara real-time.
-                </p>
-            </div>
-        </div>
-    </header>
+    <div class="page-header">
+        <a href="{{ route('dashboard') }}" class="back-btn">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        <div style="font-weight: 800; font-size: 16px; color: var(--ink);">Pesan</div>
+        <div style="width: 38px;"></div>
+    </div>
 
     <div class="page-container">
+        <header class="header-block">
+            <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.6); text-transform: uppercase;">Message Center</div>
+            <h1 class="mt-2 text-white" style="font-size: 24px; font-weight: 900; letter-spacing: -0.02em;">Percakapan</h1>
+            <p class="mb-0 mt-1" style="font-size: 13px; color: rgba(255,255,255,0.8); font-weight: 500;">
+                Terhubung dengan warga sekolah.
+            </p>
+        </header>
         <div class="search-bar-wrap">
             <div class="search-box">
                 <i class="bi bi-search" style="color: #94a3b8;"></i>

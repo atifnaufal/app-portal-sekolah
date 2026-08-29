@@ -49,7 +49,7 @@
         <h3>Akun</h3>
     </div>
     <div class="pui-card mb-4">
-        <a href="{{ route('password.request') }}" class="p-3 d-flex align-items-center justify-content-between text-decoration-none text-dark">
+        <a href="{{ route('profile.edit') }}" class="p-3 d-flex align-items-center justify-content-between text-decoration-none text-dark">
             <div>
                 <div class="fw-bold" style="font-size:14px;">Ubah Kata Sandi</div>
                 <div class="text-muted" style="font-size:11px;">Perbarui password secara berkala</div>
@@ -114,9 +114,24 @@ function removePin() {
 
 function toggleBiometric(el) {
     if (el.checked) {
-        // Here we could prompt for fingerprint verification before enabling
-        localStorage.setItem('biometric_enabled', 'true');
-        showNotification('Keamanan', 'Biometrik diaktifkan.');
+        if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+            window.Capacitor.Plugins.NativeBridge.checkBiometricSupport().then(function(res) {
+                if (res.isAvailable) {
+                    window.Capacitor.Plugins.NativeBridge.performBiometricAuth().then(function() {
+                        localStorage.setItem('biometric_enabled', 'true');
+                        showNotification('Keamanan', 'Biometrik diaktifkan.');
+                    }).catch(function(err) {
+                        el.checked = false;
+                        alert('Gagal aktivasi biometrik: ' + err);
+                    });
+                } else {
+                    el.checked = false;
+                    alert('Biometrik tidak tersedia di perangkat ini atau belum dikonfigurasi.');
+                }
+            });
+        } else {
+            localStorage.setItem('biometric_enabled', 'true');
+        }
     } else {
         localStorage.setItem('biometric_enabled', 'false');
         showNotification('Keamanan', 'Biometrik dinonaktifkan.');

@@ -5,12 +5,17 @@
     .pe-page { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
 
     .pe-header {
-        position:fixed; top:0; left:0; right:0; z-index:1000;
-        background:rgba(255,255,255,0.92); backdrop-filter:blur(16px);
-        border-bottom:1px solid var(--line-strong); padding:10px 16px;
-        display:flex; align-items:center; gap:10px;
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--line);
+        padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
     }
-    .pe-body { padding-top: 62px; }
+    .back-btn {
+        width: 38px; height: 38px; border-radius: 12px; background: var(--surface);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--ink); text-decoration: none;
+    }
+    .pe-body { padding-top: 76px; }
 
     .pe-card {
         background: var(--surface-card); border-radius: var(--radius-md); padding:18px;
@@ -60,10 +65,11 @@
 </style>
 
 <div class="pe-header">
-    <a href="{{ route('profile.show') }}" style="width:36px;height:36px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--mist);">
+    <a href="{{ route('profile.show') }}" class="back-btn">
         <i class="bi bi-chevron-left"></i>
     </a>
-    <div style="font-weight:800;font-size:16px;flex:1;color:var(--ink);">Edit Profil</div>
+    <div style="font-weight: 800; font-size: 16px; color: var(--ink);">Edit Profil</div>
+    <div style="width: 38px;"></div>
 </div>
 
 <div id="peToast" class="pe-toast">

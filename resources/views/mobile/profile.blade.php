@@ -108,10 +108,9 @@
     {{-- Hero --}}
     <div class="pf-hero">
         <div class="pf-avatar-badge">
-            <div class="pf-avatar" id="avatarDisplay" onclick="document.getElementById('avatarInput').click()">
+            <div class="pf-avatar" id="avatarDisplay">
                 <img src="{{ $user->avatar_url }}" id="avatarImg" style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
             </div>
-            <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="pfUploadFoto(this)">
         </div>
         <div class="pf-name" id="nameDisplay">{{ $user->name }}</div>
         <div class="pf-badges">
@@ -151,6 +150,13 @@
 
     {{-- Premium Menu Section --}}
     <div class="pf-menu-card">
+        <div class="pf-menu-item" onclick="window.location.href='{{ route('profile.edit') }}'">
+            <div class="pf-menu-content">
+                <div class="pf-menu-icon" style="background:#eef2ff;color:#6366f1;"><i class="bi bi-person-gear"></i></div>
+                <div class="pf-menu-text">Pengaturan Profil</div>
+            </div>
+            <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </div>
         <div class="pf-menu-item" onclick="window.location.href='/help/faq'">
             <div class="pf-menu-content">
                 <div class="pf-menu-icon" style="background:#fff7ed;color:#ea580c;"><i class="bi bi-question-circle"></i></div>
@@ -192,8 +198,7 @@
         <button class="pf-permission-btn" onclick="openNativeSettings()">Lengkapi Sekarang</button>
     </div>
 
-    {{-- Action Buttons --}}
-    <div style="background:#fff5f5;border:1px solid #fee2e2;border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
+    {{-- Logout --}}
     <div style="background:#fff5f5;border:1px solid #fee2e2;border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
         <div>
             <div style="font-size:13px;font-weight:700;color:#dc2626;">Keluar Akun?</div>
@@ -219,82 +224,6 @@ function showToast(msg, type) {
 
     t.classList.add('show');
     setTimeout(function() { t.classList.remove('show'); }, 5000);
-}
-
-// --- Fungsi upload foto dari profil ---
-var pfCsrf = '{{ csrf_token() }}';
-var avatarImgUrl = @json($user->foto ? asset('storage/'.$user->foto) : null);
-var pfPosX = {{ $user->foto_posisi_x ?? 50 }};
-var pfPosY = {{ $user->foto_posisi_y ?? 50 }};
-
-function pfUploadFoto(input) {
-    if (!input.files || !input.files[0]) return;
-    var file = input.files[0];
-    if (file.size > 2 * 1024 * 1024) { showToast('Ukuran maks 2MB', 'error'); return; }
-
-    var fd = new FormData();
-    fd.append('foto', file);
-    fd.append('_token', pfCsrf);
-
-    fetch('{{ route("profile.foto.upload") }}', { method: 'POST', body: fd })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.ok) {
-            avatarImgUrl = data.url;
-            var img = document.getElementById('avatarImg');
-            img.src = data.url;
-            img.style.display = 'block';
-            img.style.objectPosition = '50% 50%';
-            pfPosX = 50; pfPosY = 50;
-            showToast(data.message || 'Foto berhasil diupload!');
-        } else {
-            showToast(data.message || 'Gagal upload', 'error');
-        }
-    })
-    .catch(function() { showToast('Gagal upload foto', 'error'); });
-}
-
-// Seret untuk atur posisi foto
-var pfWrap = document.getElementById('avatarDisplay');
-var pfDragging = false;
-var pfDragStart = {x:0,y:0};
-var pfPosStart = {x:50,y:50};
-
-pfWrap.addEventListener('mousedown', function(e) { pfStartDrag(e.clientX, e.clientY); e.preventDefault(); });
-pfWrap.addEventListener('touchstart', function(e) { pfStartDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
-
-function pfStartDrag(x, y) {
-    if (!avatarImgUrl) return;
-    pfDragging = true;
-    pfDragStart = {x:x, y:y};
-    pfPosStart = {x:pfPosX, y:pfPosY};
-}
-
-document.addEventListener('mousemove', function(e) { if(pfDragging) pfMoveDrag(e.clientX, e.clientY); });
-document.addEventListener('touchmove', function(e) { if(pfDragging) pfMoveDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
-document.addEventListener('mouseup', pfEndDrag);
-document.addEventListener('touchend', pfEndDrag);
-
-function pfMoveDrag(x, y) {
-    var rect = pfWrap.getBoundingClientRect();
-    var dx = ((x - pfDragStart.x) / rect.width) * 100;
-    var dy = ((y - pfDragStart.y) / rect.height) * 100;
-    pfPosX = Math.max(0, Math.min(100, pfPosStart.x - dx));
-    pfPosY = Math.max(0, Math.min(100, pfPosStart.y - dy));
-    document.getElementById('avatarImg').style.objectPosition = pfPosX + '% ' + pfPosY + '%';
-}
-function pfEndDrag() {
-    if (!pfDragging) return;
-    pfDragging = false;
-    var fd = new FormData();
-    fd.append('foto_posisi_x', Math.round(pfPosX));
-    fd.append('foto_posisi_y', Math.round(pfPosY));
-    fd.append('_token', pfCsrf);
-    fetch('{{ route("profile.foto.posisi") }}', {
-        method:'PATCH',
-        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':pfCsrf,'Accept':'application/json'},
-        body: JSON.stringify({foto_posisi_x: Math.round(pfPosX), foto_posisi_y: Math.round(pfPosY)})
-    }).catch(function(){});
 }
 
 @if(session('success'))

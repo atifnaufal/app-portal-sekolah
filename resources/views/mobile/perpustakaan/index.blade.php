@@ -2,13 +2,28 @@
 
 @section('content')
 <style>
+    .page-header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--line);
+        padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .back-btn {
+        width: 38px; height: 38px; border-radius: 12px; background: var(--surface);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--ink); text-decoration: none;
+    }
+
+    .page-container { padding-top: 60px; }
+
     /* E-Catalog — selaras dengan design system terpusat */
     .perpus-hero {
         background: var(--grad-hero);
-        padding: 32px 24px 24px;
-        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        padding: 24px 20px 32px;
+        border-radius: var(--radius-lg);
         color: #fff; position: relative; overflow: hidden;
         box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+        margin: 16px 16px 24px;
     }
     .perpus-hero::before {
         content: ''; position: absolute; top: -20%; right: -10%;
@@ -78,27 +93,33 @@
     .section-head-pro h2 { font-size: 16px; font-weight: 800; color: var(--ink); margin: 0; }
 </style>
 
-<div class="perpus-hero">
-    <div class="header-top">
-        <div>
-            <span class="lib-badge">Library Module</span>
-            <h1 class="text-white mb-0" style="font-size: 30px; letter-spacing: -1px;">E-Catalog</h1>
-        </div>
-        <a href="{{ route('dashboard') }}" class="m-0 d-inline-flex align-items-center justify-content-center text-white text-decoration-none"
-           style="width: 44px; height: 44px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); border-radius: 50%;">
-            <i class="bi bi-grid-fill"></i>
-        </a>
-    </div>
+<div class="page-header">
+    <a href="{{ route('dashboard') }}" class="back-btn">
+        <i class="bi bi-chevron-left"></i>
+    </a>
+    <div style="font-weight: 800; font-size: 16px; color: var(--ink);">Perpustakaan Digital</div>
+    <div style="width: 38px;"></div>
+</div>
 
-    <form action="{{ route('perpustakaan.index') }}" method="GET">
-        <div class="search-wrapper">
-            <div class="ps-3" style="opacity:.6;"><i class="bi bi-search"></i></div>
-            <input type="text" name="search" class="search-input" placeholder="Temukan bacaan cerdas..." value="{{ request('search') }}">
-            @if(request('search'))
-                <a href="{{ route('perpustakaan.index') }}" class="pe-3" style="opacity:.6;color:#fff;"><i class="bi bi-x-circle-fill"></i></a>
-            @endif
+<div class="page-container">
+    <div class="perpus-hero">
+        <div class="header-top">
+            <div>
+                <span class="lib-badge">Library Module</span>
+                <h1 class="text-white mb-0" style="font-size: 24px; letter-spacing: -0.5px; font-weight: 900;">E-Catalog</h1>
+            </div>
         </div>
-    </form>
+
+        <form action="{{ route('perpustakaan.index') }}" method="GET">
+            <div class="search-wrapper">
+                <div class="ps-3" style="opacity:.6;"><i class="bi bi-search"></i></div>
+                <input type="text" name="search" class="search-input" placeholder="Temukan bacaan cerdas..." value="{{ request('search') }}">
+                @if(request('search'))
+                    <a href="{{ route('perpustakaan.index') }}" class="pe-3" style="opacity:.6;color:#fff;"><i class="bi bi-x-circle-fill"></i></a>
+                @endif
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Categories -->

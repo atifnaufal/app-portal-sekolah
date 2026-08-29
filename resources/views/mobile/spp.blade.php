@@ -14,12 +14,16 @@
 <style>
     .page-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
-        border-bottom: 1px solid var(--line-strong);
-        padding: 12px 20px; display: flex; align-items: center; gap: 12px;
-        margin-bottom: 24px;
+        background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--line);
+        padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
     }
-    .page-container { padding-top: 70px; padding-bottom: 48px; }
+    .back-btn {
+        width: 38px; height: 38px; border-radius: 12px; background: var(--surface);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--ink); text-decoration: none;
+    }
+    .page-container { padding-top: 76px; padding-bottom: 48px; }
 
     .glass-card {
         background: var(--surface-card); border: none; border-radius: var(--radius-lg);
@@ -69,12 +73,14 @@
 </style>
 
 <header class="page-header">
-    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-        <i class="bi bi-chevron-left h5 mb-0"></i>
+    <a href="{{ route('dashboard') }}" class="back-btn">
+        <i class="bi bi-chevron-left"></i>
     </a>
-    <div class="fw-bold" style="font-size: 18px; color: var(--ink);">SPP & Pembayaran</div>
+    <div style="font-weight: 800; font-size: 16px; color: var(--ink);">SPP & Pembayaran</div>
     @if($isGuru)
-        <a href="{{ route('spp.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto" style="font-weight: 700;">+ Catat</a>
+        <a href="{{ route('spp.create') }}" class="btn btn-primary btn-sm rounded-pill px-3" style="font-weight: 700;">+ Catat</a>
+    @else
+        <div style="width: 38px;"></div>
     @endif
 </header>
 
