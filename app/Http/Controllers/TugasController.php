@@ -266,11 +266,31 @@ class TugasController extends Controller
         $request = request();
 
         $userId = $request->session()->get('user_id');
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
+        $sessionUserId = $userId;
+        $authUserId = null;
+        if (! $userId) {
+            if (Auth::guard('web')->check()) {
+                $authUserId = Auth::guard('web')->id();
+            }
+        } else {
+            $authUserId = $userId;
         }
 
-        abort_unless((int) $tugas->user_id === (int) $userId, 403);
+        // Debug: Log the comparison
+        \Illuminate\Support\Facades\Log::info('Export PDF Debug:', [
+            'tugas_user_id' => $tugas->user_id,
+            'session_user_id' => $sessionUserId,
+            'auth_user_id' => $authUserId,
+            'user_matches' => (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId),
+            'user_role' => $request->session()->get('user_role'),
+        ]);
+
+        // Allow access if: admin OR creator matches
+        $userRole = $request->session()->get('user_role') ?? optional(Auth::user())->role;
+        $isAdmin = $userRole === 'admin';
+        $isCreator = (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId);
+
+        abort_unless($isAdmin || $isCreator, 403);
 
         $submissions = PengumpulanTugas::with('siswa')
             ->where('tugas_id', $tugas->id)
@@ -310,11 +330,31 @@ class TugasController extends Controller
         $request = request();
 
         $userId = $request->session()->get('user_id');
-        if (!$userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
+        $sessionUserId = $userId;
+        $authUserId = null;
+        if (! $userId) {
+            if (Auth::guard('web')->check()) {
+                $authUserId = Auth::guard('web')->id();
+            }
+        } else {
+            $authUserId = $userId;
         }
 
-        abort_unless((int) $tugas->user_id === (int) $userId, 403);
+        // Debug: Log the comparison
+        \Illuminate\Support\Facades\Log::info('Export Excel Debug:', [
+            'tugas_user_id' => $tugas->user_id,
+            'session_user_id' => $sessionUserId,
+            'auth_user_id' => $authUserId,
+            'user_matches' => (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId),
+            'user_role' => $request->session()->get('user_role'),
+        ]);
+
+        // Allow access if: admin OR creator matches
+        $userRole = $request->session()->get('user_role') ?? optional(Auth::user())->role;
+        $isAdmin = $userRole === 'admin';
+        $isCreator = (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId);
+
+        abort_unless($isAdmin || $isCreator, 403);
 
         $submissions = PengumpulanTugas::with('siswa')
             ->where('tugas_id', $tugas->id)
