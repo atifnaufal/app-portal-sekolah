@@ -2,6 +2,7 @@ package com.sekolah.app;
 
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -13,10 +14,14 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -36,12 +41,6 @@ public class BackgroundService extends Service {
     private PowerManager.WakeLock wakeLock;
     private Thread pollThread;
     private volatile boolean running = false;
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
 
     @Override
     public void onCreate() {
@@ -72,6 +71,11 @@ public class BackgroundService extends Service {
         if (pollThread != null) {
             pollThread.interrupt();
         }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     private void startPolling() {
@@ -119,20 +123,19 @@ public class BackgroundService extends Service {
                 Log.d(TAG, "Poll response: " + response);
 
                 try {
-                    if (response.contains("\"new_last_id\"")) {
-                        int newLastId = extractIntValue(response, "new_last_id");
-                        int unreadCount = extractIntValue(response, "unread");
+                    JSONObject json = new JSONObject(response);
+                    int newLastId = json.optInt("new_last_id", 0);
+                    int unreadCount = json.optInt("unread", 0);
 
-                        if (newLastId > lastId) {
-                            prefs.edit().putString(KEY_LAST_NOTIFICATION_ID, String.valueOf(newLastId)).apply();
+                    if (newLastId > lastId) {
+                        prefs.edit().putString(KEY_LAST_NOTIFICATION_ID, String.valueOf(newLastId)).apply();
 
-                            if (unreadCount > 0) {
-                                prefs.edit().putString(KEY_NOTIFICATION_COUNT, String.valueOf(unreadCount)).apply();
-                                showBackgroundNotification("Notifikasi Baru", unreadCount + " notifikasi baru");
-                            }
+                        if (unreadCount > 0) {
+                            prefs.edit().putString(KEY_NOTIFICATION_COUNT, String.valueOf(unreadCount)).apply();
+                            showBackgroundNotification("Notifikasi Baru", unreadCount + " notifikasi baru");
                         }
                     }
-                } catch (Exception e) {
+                } catch (JSONException e) {
                     Log.e(TAG, "Error parsing notification response: " + e.getMessage());
                 }
             } else if (responseCode == 401) {
@@ -166,10 +169,16 @@ public class BackgroundService extends Service {
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 String response = readStream(connection);
-                if (response.contains("\"authenticated\":true")) {
-                    Log.d(TAG, "Session still active");
-                } else {
-                    Log.d(TAG, "Session expired in background");
+                try {
+                    JSONObject json = new JSONObject(response);
+                    boolean authenticated = json.optBoolean("authenticated", false);
+                    if (authenticated) {
+                        Log.d(TAG, "Session still active");
+                    } else {
+                        Log.d(TAG, "Session expired in background");
+                    }
+                } catch (JSONException e) {
+                    Log.e(TAG, "Error parsing session response: " + e.getMessage());
                 }
             }
 
@@ -182,26 +191,6 @@ public class BackgroundService extends Service {
     private void showBackgroundNotification(String title, String message) {
         NotificationHelper.createNotificationChannel(this);
         NotificationHelper.showNotification(this, title, message);
-
-        playNotificationSound();
-    }
-
-    private void playNotificationSound() {
-        try {
-            android.media.MediaPlayer mediaPlayer = android.media.MediaPlayer.create(this, android.provider.Settings.System.DEFAULT_NOTIFICATION_URI);
-            if (mediaPlayer != null) {
-                mediaPlayer.start();
-                mediaPlayer.setOnCompletionListener(mp -> {
-                    try {
-                        mp.release();
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error releasing media player: " + e.getMessage());
-                    }
-                });
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error playing notification sound: " + e.getMessage());
-        }
     }
 
     private void acquireWakeLock() {
@@ -236,31 +225,13 @@ public class BackgroundService extends Service {
 
     private String readStream(HttpURLConnection connection) throws IOException {
         StringBuilder sb = new StringBuilder();
-        try (java.util.Scanner scanner = new java.util.Scanner(connection.getInputStream(), "UTF-8")) {
-            while (scanner.hasNext()) {
-                sb.append(scanner.nextLine());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
             }
         }
         return sb.toString();
-    }
-
-    private int extractIntValue(String json, String key) {
-        try {
-            String searchKey = "\"" + key + "\"";
-            int startIndex = json.indexOf(searchKey) + searchKey.length() + 1;
-            int endIndex = json.indexOf(",", startIndex);
-            if (endIndex == -1) {
-                endIndex = json.indexOf("}", startIndex);
-            }
-            if (endIndex == -1) {
-                endIndex = json.length();
-            }
-            String value = json.substring(startIndex, endIndex).trim();
-            return Integer.parseInt(value);
-        } catch (Exception e) {
-            Log.e(TAG, "Error extracting value for key " + key + ": " + e.getMessage());
-            return 0;
-        }
     }
 
     public static void startService(Context context) {

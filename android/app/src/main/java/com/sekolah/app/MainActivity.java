@@ -16,6 +16,7 @@ public class MainActivity extends BridgeActivity {
 
     private static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_CODE = 100;
+    private static final int MAX_PERMISSION_RETRY = 3;
 
     private static final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.INTERNET,
@@ -28,6 +29,8 @@ public class MainActivity extends BridgeActivity {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.VIBRATE,
     };
+
+    private int permissionRetryCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,16 +64,31 @@ public class MainActivity extends BridgeActivity {
 
         if (requestCode == PERMISSION_REQUEST_CODE) {
             boolean allGranted = true;
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
+            boolean shouldShowRationale = false;
+
+            for (int i = 0; i < grantResults.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                     allGranted = false;
-                    break;
+                    if (shouldShowRequestPermissionRationale(permissions[i])) {
+                        shouldShowRationale = true;
+                    }
                 }
             }
-            if (!allGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            if (allGranted) {
+                permissionRetryCount = 0;
+                Log.d(TAG, "All permissions granted");
+            } else if (shouldShowRationale && permissionRetryCount < MAX_PERMISSION_RETRY) {
+                permissionRetryCount++;
                 ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSION_REQUEST_CODE);
+                Log.d(TAG, "Re-requesting permissions, attempt: " + permissionRetryCount);
+            } else if (!shouldShowRationale && permissionRetryCount < MAX_PERMISSION_RETRY) {
+                permissionRetryCount++;
+                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSION_REQUEST_CODE);
+                Log.d(TAG, "Re-requesting permissions (don't ask again), attempt: " + permissionRetryCount);
+            } else {
+                Log.w(TAG, "Max permission retry reached, some permissions denied");
             }
-            Log.d(TAG, "Permission request completed");
         }
     }
 

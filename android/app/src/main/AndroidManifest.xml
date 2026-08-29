@@ -86,11 +86,6 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
-        <!-- Notification Channel -->
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="app_portal_sekolah_channel" />
-
         <!-- Background Service -->
         <service
             android:name=".BackgroundService"
