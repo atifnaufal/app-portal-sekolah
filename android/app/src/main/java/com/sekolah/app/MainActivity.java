@@ -12,98 +12,84 @@ import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.BridgeActivity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends BridgeActivity {
 
     private static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_CODE = 100;
-    private static final int MAX_PERMISSION_RETRY = 3;
-
-    private static final String[] REQUIRED_PERMISSIONS = {
-            Manifest.permission.INTERNET,
-            Manifest.permission.READ_MEDIA_IMAGES,
-            Manifest.permission.READ_MEDIA_VIDEO,
-            Manifest.permission.READ_MEDIA_AUDIO,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.POST_NOTIFICATIONS,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.VIBRATE,
-    };
-
-    private int permissionRetryCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        requestAllPermissions();
+        checkAndRequestPermissions();
         startBackgroundService();
     }
 
-    private void requestAllPermissions() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            return;
+    private void checkAndRequestPermissions() {
+        List<String> permissionsNeeded = new ArrayList<>();
+
+        // Basic permissions
+        permissionsNeeded.add(Manifest.permission.INTERNET);
+
+        // Media permissions based on Android version
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_MEDIA_IMAGES);
+            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_MEDIA_VIDEO);
+            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_MEDIA_AUDIO);
+            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.POST_NOTIFICATIONS);
+        } else {
+            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_EXTERNAL_STORAGE);
+            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
 
-        boolean allPermissionsGranted = true;
-        for (String permission : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                allPermissionsGranted = false;
-                break;
-            }
+        // Functional permissions
+        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.CAMERA);
+        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.RECORD_AUDIO);
+        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.ACCESS_FINE_LOCATION);
+        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        // Foreground service permissions for Android 14+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC);
         }
 
-        if (!allPermissionsGranted) {
-            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSION_REQUEST_CODE);
+        if (!permissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    private void addPermissionIfNotGranted(List<String> list, String permission) {
+        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            list.add(permission);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            boolean allGranted = true;
-            boolean shouldShowRationale = false;
-
-            for (int i = 0; i < grantResults.length; i++) {
-                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                    allGranted = false;
-                    if (shouldShowRequestPermissionRationale(permissions[i])) {
-                        shouldShowRationale = true;
-                    }
-                }
-            }
-
-            if (allGranted) {
-                permissionRetryCount = 0;
-                Log.d(TAG, "All permissions granted");
-            } else if (shouldShowRationale && permissionRetryCount < MAX_PERMISSION_RETRY) {
-                permissionRetryCount++;
-                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSION_REQUEST_CODE);
-                Log.d(TAG, "Re-requesting permissions, attempt: " + permissionRetryCount);
-            } else if (!shouldShowRationale && permissionRetryCount < MAX_PERMISSION_RETRY) {
-                permissionRetryCount++;
-                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSION_REQUEST_CODE);
-                Log.d(TAG, "Re-requesting permissions (don't ask again), attempt: " + permissionRetryCount);
-            } else {
-                Log.w(TAG, "Max permission retry reached, some permissions denied");
-            }
+            Log.d(TAG, "Permissions updated");
+            // Optionally notify the web layer that permissions changed
         }
     }
 
     private void startBackgroundService() {
         try {
-            NotificationHelper.createNotificationChannel(this);
             BackgroundService.startService(this);
-            Log.d(TAG, "Background service started");
+            Log.d(TAG, "Background service initiated from MainActivity");
         } catch (Exception e) {
             Log.e(TAG, "Error starting background service: " + e.getMessage());
         }
     }
 
+    // Bridge methods called from Capacitor/JS
     public void saveAuthToken(String token) {
         BackgroundService.saveToken(this, token);
+        // Restart service to use the new token immediately
+        BackgroundService.startService(this);
     }
 
     public void saveUserId(int userId) {

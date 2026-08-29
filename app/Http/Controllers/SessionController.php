@@ -21,10 +21,10 @@ class SessionController extends Controller
      */
     public function status(Request $request): JsonResponse
     {
-        $userId = $request->session()->get('user_id');
-        $role = $request->session()->get('user_role');
+        $userId = $request->user()?->id ?: $request->session()->get('user_id');
+        $role = $request->user()?->role ?: $request->session()->get('user_role');
 
-        if (! $userId || ! $role) {
+        if (!$userId || !$role) {
             return response()->json([
                 'authenticated' => false,
                 'redirect' => route('login'),
@@ -35,9 +35,9 @@ class SessionController extends Controller
         $user = User::find($userId);
         $name = $user ? explode(' ', $user->name)[0] : '';
 
-        // Perbarui last_activity (session handler database melakukannya otomatis
-        // saat request ini berjalan); panggilan ini eksplisit agar selalu segar.
-        $request->session()->put('user_last_activity', now()->timestamp);
+        if ($request->hasSession()) {
+            $request->session()->put('user_last_activity', now()->timestamp);
+        }
 
         return response()->json([
             'authenticated' => true,

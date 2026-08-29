@@ -56,11 +56,13 @@ class NotifikasiController extends Controller
      */
     public function poll(Request $request): JsonResponse
     {
-        $userId = $request->session()->get('user_id');
-        $lastId = (int) $request->query('last_id', 0);
+        $userId = $request->user()?->id ?: $request->session()->get('user_id');
 
-        // id notifikasi terbaru milik user — dipakai client untuk "resume".
-        // Historis yang sudah ada JANGAN dianggap baru/di-popup ulang.
+        if (!$userId) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $lastId = (int) $request->query('last_id', 0);
         $latestId = (int) Notifikasi::where('user_id', $userId)->max('id');
 
         $notifikasi = Notifikasi::where('user_id', $userId)
@@ -70,7 +72,7 @@ class NotifikasiController extends Controller
             ->get(['id', 'judul', 'pesan', 'url', 'created_at']);
 
         $unread = Notifikasi::where('user_id', $userId)->whereNull('dibaca_pada')->count();
-        $newestId = $notifikasi->first()?->id ?? $latestId;
+        $newestId = $notifikasi->first()?->id ?? ($lastId > 0 ? $lastId : $latestId);
 
         return response()->json([
             'latest_id' => $latestId,

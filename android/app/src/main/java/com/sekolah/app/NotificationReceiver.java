@@ -3,19 +3,16 @@ package com.sekolah.app;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.util.Log;
 
 public class NotificationReceiver extends BroadcastReceiver {
+    private static final String TAG = "NotificationReceiver";
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        NotificationHelper.createNotificationChannel(context);
+        Log.d(TAG, "Alarm received, ensuring BackgroundService is running");
 
-        SharedPreferences prefs = context.getSharedPreferences("app_portal_prefs", Context.MODE_PRIVATE);
-        String notificationCount = prefs.getString("notification_count", "0");
-
-        if (!notificationCount.equals("0")) {
-            NotificationHelper.showNotification(context, "Notifikasi Baru", notificationCount + " notifikasi baru");
-        }
+        // The alarm acts as a watchdog to ensure the service is restarted if killed
+        BackgroundService.startService(context);
     }
 }

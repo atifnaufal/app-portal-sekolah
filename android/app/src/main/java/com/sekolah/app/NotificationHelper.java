@@ -15,32 +15,27 @@ import androidx.core.app.NotificationCompat;
 
 public class NotificationHelper {
 
-    private static final String CHANNEL_ID = "app_portal_sekolah_channel";
-    private static final String CHANNEL_NAME = "Notifikasi Sekolah";
-    private static final String CHANNEL_DESCRIPTION = "Notifikasi pengumuman, chat, dan tugas baru";
     private static final int NOTIFICATION_ID = 1001;
 
     public static void createNotificationChannel(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    CHANNEL_NAME,
+                    AppConfig.CHANNEL_ID,
+                    AppConfig.CHANNEL_NAME,
                     NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription(CHANNEL_DESCRIPTION);
+            channel.setDescription(AppConfig.CHANNEL_DESCRIPTION);
             channel.enableLights(true);
             channel.enableVibration(true);
             channel.setVibrationPattern(new long[]{0, 500, 200, 500});
             channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             channel.setShowBadge(true);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                        .build();
-                channel.setSound(getDefaultSoundUri(context), audioAttributes);
-            }
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .build();
+            channel.setSound(getDefaultSoundUri(context), audioAttributes);
 
             NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
             if (notificationManager != null) {
@@ -52,14 +47,12 @@ public class NotificationHelper {
     public static void showNotification(Context context, String title, String message, int notificationId) {
         createNotificationChannel(context);
 
-        Uri soundUri = getDefaultSoundUri(context);
-
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, AppConfig.CHANNEL_ID)
                 .setSmallIcon(R.drawable.splash)
                 .setContentTitle(title)
                 .setContentText(message)
@@ -67,12 +60,9 @@ public class NotificationHelper {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setAutoCancel(true)
-                .setSound(soundUri)
+                .setSound(getDefaultSoundUri(context))
                 .setVibrate(new long[]{0, 500, 200, 500})
-                .setLights(0xFF0000FF, 500, 2000)
-                .setContentIntent(pendingIntent)
-                .setFullScreenIntent(pendingIntent, true)
-                .setOngoing(false);
+                .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
@@ -84,22 +74,7 @@ public class NotificationHelper {
         showNotification(context, title, message, NOTIFICATION_ID);
     }
 
-    public static void cancelAllNotifications(Context context) {
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (notificationManager != null) {
-            notificationManager.cancelAll();
-        }
-    }
-
     private static Uri getDefaultSoundUri(Context context) {
-        try {
-            Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            if (alarmUri != null) {
-                return alarmUri;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         return RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     }
 }
