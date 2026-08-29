@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             LmsSeeder::class,
             TugasTestDataSeeder::class,
+            CompleteTugasSeeder::class,
             NilaiSeeder::class,
         ]);
     }
