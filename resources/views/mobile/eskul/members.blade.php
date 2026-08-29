@@ -101,6 +101,11 @@
                     </div>
                     <div class="small" style="color:var(--mist);">{{ $m->user->kelas?->nama ?? ($m->user->role === 'guru' ? 'Guru / Pembina' : 'Anggota') }}</div>
                 </div>
+                @if($m->user_id !== $user->id)
+                    <a href="{{ route('chat.startPrivate', $m->user_id) }}" class="btn-action" style="background:#f8fafc; color:var(--blue); border:1px solid #e2e8f0;" title="Kirim Pesan">
+                        <i class="bi bi-chat-text"></i>
+                    </a>
+                @endif
             </div>
         @endforeach
     @endif
@@ -125,6 +130,9 @@
                     <div class="small" style="color:var(--mist);">{{ $m->user->kelas?->nama ?? 'Umum' }}</div>
                 </div>
                 <div class="d-flex gap-2">
+                    <a href="{{ route('chat.startPrivate', $m->user_id) }}" class="btn-action" style="background:#f8fafc; color:var(--blue); border:1px solid #e2e8f0;" title="Kirim Pesan">
+                        <i class="bi bi-chat-text"></i>
+                    </a>
                     <form action="{{ route('eskul.members.approve', $m) }}" method="POST">
                         @csrf
                         <button class="btn-action" style="background:#059669; color:#fff;" title="Setujui"><i class="bi bi-check-lg"></i></button>
@@ -157,11 +165,16 @@
                 <div class="fw-bold text-truncate" style="font-size: 14px; color:var(--ink);">{{ $m->user->name }}</div>
                 <div class="small" style="color:var(--mist);">{{ $m->user->kelas?->nama ?? 'Umum' }}</div>
             </div>
-            <form action="{{ route('eskul.members.reject', $m) }}" method="POST">
-                @csrf
-                <button class="btn-action" style="background:#fff; color:var(--faint); border:1px solid var(--line);" title="Keluarkan anggota"
-                        onclick="return confirm('Keluarkan anggota ini dari eskul?')"><i class="bi bi-person-x"></i></button>
-            </form>
+            <div class="d-flex gap-2">
+                <a href="{{ route('chat.startPrivate', $m->user_id) }}" class="btn-action" style="background:#f8fafc; color:var(--blue); border:1px solid #e2e8f0;" title="Kirim Pesan">
+                    <i class="bi bi-chat-text"></i>
+                </a>
+                <form action="{{ route('eskul.members.reject', $m) }}" method="POST">
+                    @csrf
+                    <button class="btn-action" style="background:#fff; color:var(--faint); border:1px solid var(--line);" title="Keluarkan anggota"
+                            onclick="return confirm('Keluarkan anggota ini dari eskul?')"><i class="bi bi-person-x"></i></button>
+                </form>
+            </div>
         </div>
     @empty
         <div class="pui-empty">

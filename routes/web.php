@@ -92,6 +92,7 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');
     Route::get('/chat/poll', [ChatController::class, 'poll'])->name('chat.poll');
+    Route::get('/chat/private/{recipient}', [ChatController::class, 'startPrivate'])->name('chat.startPrivate');
     Route::get('/chat/{group}', [ChatController::class, 'show'])->name('chat.show');
     Route::get('/notifikasi-saya', [NotifikasiController::class, 'mine'])->name('notifications.index');
     Route::get('/mahasiswa', [MahasiswaController::class, 'index'])->name('mahasiswa.index');

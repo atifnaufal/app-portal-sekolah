@@ -60,7 +60,14 @@
 <div class="lms-body">
     <div class="hero-card fade-up">
         <div class="hero-chip" style="margin-bottom:8px;">{{ $mapel->kode }}</div>
-        <h1 style="font-size:24px;font-weight:800;margin-bottom:12px;letter-spacing:-0.5px;">{{ $mapel->nama }}</h1>
+        <div class="d-flex justify-content-between align-items-start">
+            <h1 style="font-size:24px;font-weight:800;margin-bottom:12px;letter-spacing:-0.5px;flex:1;">{{ $mapel->nama }}</h1>
+            @if($user->role === 'siswa')
+                <a href="{{ route('chat.startPrivate', $mapel->guru_id) }}" style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;">
+                    <i class="bi bi-chat-dots-fill"></i>
+                </a>
+            @endif
+        </div>
         <div style="display:flex;align-items:center;gap:8px;font-size:12px;opacity:0.8;">
             <div style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;">
                 <i class="bi bi-person-fill"></i>

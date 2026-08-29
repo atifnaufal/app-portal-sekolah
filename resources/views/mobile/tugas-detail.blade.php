@@ -94,8 +94,17 @@
                 <i class="bi bi-people me-1"></i> {{ $tugas->kelas->nama }}
             </span>
         </div>
-        <div style="font-size:20px; font-weight:800; line-height:1.2; margin-bottom:6px; letter-spacing:-0.02em;">{{ $tugas->judul }}</div>
-        <div style="font-size:12px; opacity:0.6; font-weight:500;">Oleh: {{ $tugas->user->name }}</div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+                <div style="font-size:20px; font-weight:800; line-height:1.2; margin-bottom:6px; letter-spacing:-0.02em;">{{ $tugas->judul }}</div>
+                <div style="font-size:12px; opacity:0.6; font-weight:500;">Oleh: {{ $tugas->user->name }}</div>
+            </div>
+            @if(!$isGuru)
+                <a href="{{ route('chat.startPrivate', $tugas->user_id) }}" style="width:44px; height:44px; border-radius:14px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; color:#fff; text-decoration:none;">
+                    <i class="bi bi-chat-dots-fill"></i>
+                </a>
+            @endif
+        </div>
 
         <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
             <div>
@@ -154,6 +163,9 @@
                         <div style="font-size:13px;font-weight:700;color:var(--ink);">{{ $item->siswa->name ?? 'Siswa' }}</div>
                         <div style="font-size:10px;color:var(--faint);">{{ $item->dikumpulkan_pada?->diffForHumans() ?? 'Baru saja' }}</div>
                     </div>
+                    <a href="{{ route('chat.startPrivate', $item->siswa_id) }}" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="width:36px;height:36px;padding:0;flex-shrink:0;">
+                        <i class="bi bi-chat-text"></i>
+                    </a>
                     @if($item->revisi_aktif)
                         <span class="td-badge" style="background:#fef3c7;color:#b45309;">Revisi</span>
                     @elseif($item->nilai !== null)
@@ -228,7 +240,10 @@
             @foreach($belum as $siswa)
                 <div class="d-flex align-items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--line);">
                     <div style="width:28px;height:28px;border-radius:8px;background:#fee2e2;display:flex;align-items:center;justify-content:center;font-weight:700;color:#dc2626;font-size:11px;">{{ strtoupper(substr($siswa->name,0,1)) }}</div>
-                    <span style="font-size:12px;font-weight:600;color:var(--ink);">{{ $siswa->name }}</span>
+                    <span style="flex:1;font-size:12px;font-weight:600;color:var(--ink);">{{ $siswa->name }}</span>
+                    <a href="{{ route('chat.startPrivate', $siswa->id) }}" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="width:32px;height:32px;padding:0;flex-shrink:0;">
+                        <i class="bi bi-chat-text" style="font-size:12px;"></i>
+                    </a>
                 </div>
             @endforeach
         @endif

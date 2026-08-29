@@ -404,7 +404,7 @@
                         <div class="small text-muted">NIS: {{ $cm->nik ?? '-' }}</div>
                     </div>
                     @if($cm->id !== $user->id)
-                        <a href="{{ route('chat.index', ['user_id' => $cm->id]) }}" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="width:36px;height:36px;padding:0;">
+                        <a href="{{ route('chat.startPrivate', $cm->id) }}" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="width:36px;height:36px;padding:0;">
                             <i class="bi bi-chat-text"></i>
                         </a>
                     @endif

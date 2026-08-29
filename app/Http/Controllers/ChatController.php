@@ -44,17 +44,46 @@ class ChatController extends Controller
         $this->syncEskulChatGroups($user, $userId);
 
         // Get all groups user belongs to (after eskul sync so new groups appear)
-        $groups = $user->chatGroups()->with('lastMessage')->get();
+        $groups = $user->chatGroups()->with(['lastMessage', 'members'])->get();
 
-        // Split groups into Class (school + class) and Eskul sections
+        // Split groups into sections
         $classGroups = $groups->filter(fn ($g) => in_array($g->type, ['school', 'class']));
         $eskulGroups = $groups->filter(fn ($g) => $g->type === 'eskul');
+        $privateGroups = $groups->filter(fn ($g) => $g->type === 'private');
 
         return view('mobile.chat', [
             'user' => $user,
             'classGroups' => $classGroups,
             'eskulGroups' => $eskulGroups,
+            'privateGroups' => $privateGroups,
         ]);
+    }
+
+    /**
+     * Start or resume a private chat with another user.
+     */
+    public function startPrivate(User $recipient): RedirectResponse
+    {
+        $userId = session('user_id');
+        if ($userId == $recipient->id) {
+            return back()->with('error', 'Tidak bisa chat dengan diri sendiri');
+        }
+
+        // Look for existing private group between these two users
+        $group = ChatGroup::where('type', 'private')
+            ->whereHas('members', fn($q) => $q->where('user_id', $userId))
+            ->whereHas('members', fn($q) => $q->where('user_id', $recipient->id))
+            ->first();
+
+        if (!$group) {
+            $group = ChatGroup::create([
+                'name' => 'Chat Pribadi',
+                'type' => 'private'
+            ]);
+            $group->members()->attach([$userId, $recipient->id]);
+        }
+
+        return redirect()->route('chat.show', $group->id);
     }
 
     /**
@@ -69,6 +98,16 @@ class ChatController extends Controller
         abort_unless($group->members()->where('user_id', $userId)->exists(), 403);
 
         $group->load(['members', 'lastMessage']);
+
+        // IF Private, set name to the other member
+        if ($group->type === 'private') {
+            $other = $group->members->first(fn($m) => $m->id != $userId);
+            $group->name = $other ? $other->name : 'Chat Pribadi';
+            $group->avatar = $other ? $other->foto : null;
+            // Also add a custom property for the avatar logic in the view
+            $group->other_user = $other;
+        }
+
         $messages = ChatMessage::with('user')
             ->where('chat_group_id', $group->id)
             ->oldest()

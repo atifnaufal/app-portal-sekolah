@@ -1,107 +1,188 @@
-@php $hideNav = true; @endphp
+@php
+    $hideNav = true;
+    $isPrivate = $group->type === 'private';
+    $other = $group->other_user ?? null;
+
+    // Avatar logic for header
+    $hdrAvatar = $group->avatar ? asset('storage/'.$group->avatar) : null;
+    if (!$hdrAvatar) {
+        if ($isPrivate && $other) {
+            $gnd = strtolower($other->jenis_kelamin ?? 'L');
+            $hdrAvatar = $gnd === 'p' ? 'https://avatar.iran.liara.run/public/girl?username='.$other->id : 'https://avatar.iran.liara.run/public/boy?username='.$other->id;
+        }
+    }
+@endphp
 @extends('layouts.mobile-app')
 
 @section('content')
 <style>
-    .chat-thread { display: flex; flex-direction: column; height: 100vh; }
+    .chat-thread { display: flex; flex-direction: column; height: 100vh; background: #f0f2f5; }
+
     .chat-header {
-        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-        background: var(--surface-card); border-bottom: 1px solid var(--line);
-        padding: 10px 14px; display: flex; align-items: center; gap: 12px;
-        box-shadow: 0 2px 10px rgba(15,23,42,.04);
+        position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
+        background: #fff; border-bottom: 1px solid #f1f5f9;
+        padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
-    .chat-header .back-btn {
-        width: 36px; height: 36px; border-radius: 50%;
+    .back-btn {
+        width: 36px; height: 36px; border-radius: 12px; background: #f8fafc;
         display: flex; align-items: center; justify-content: center;
-        color: var(--ink); font-size: 18px; text-decoration: none;
+        color: var(--navy); text-decoration: none; transition: all 0.2s;
     }
-    .chat-header .back-btn:active { background: var(--surface); }
+    .back-btn:active { transform: scale(0.9); background: #f1f5f9; }
+
     .hdr-avatar {
-        width: 38px; height: 38px; border-radius: var(--radius-sm); color: #fff; font-weight: 800;
-        display: flex; align-items: center; justify-content: center; font-size: 14px; overflow: hidden; flex-shrink: 0;
+        width: 42px; height: 42px; border-radius: 14px; overflow: hidden;
+        background: #f1f5f9; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-weight: 800;
     }
-    .hdr-avatar.school { background: linear-gradient(135deg, #0088cc, #00aaff); }
-    .hdr-avatar.class { background: linear-gradient(135deg, #10b981, #059669); }
-    .hdr-avatar.eskul { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
     .hdr-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .hdr-info { flex: 1; min-width: 0; }
+    .hdr-title { font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 0px; }
+    .hdr-status { font-size: 11px; color: #10b981; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .hdr-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
+
     .chat-messages {
-        flex: 1; padding: 72px 14px 92px;
-        background-color: #e5ddd5;
-        background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
+        flex: 1; padding: 76px 16px 86px;
         overflow-y: auto; display: flex; flex-direction: column;
+        scroll-behavior: smooth;
     }
-    .msg-row { display: flex; margin-bottom: 12px; max-width: 85%; }
-    .msg-row.mine { align-self: flex-end; flex-direction: row-reverse; }
-    .msg-bubble {
-        padding: 8px 12px; border-radius: var(--radius-sm); position: relative;
-        box-shadow: 0 1px 2px rgba(0,0,0,.1); font-size: 14px;
+
+    .msg-group { margin-bottom: 16px; display: flex; flex-direction: column; }
+    .msg-item { max-width: 80%; margin-bottom: 4px; position: relative; }
+    .msg-item.mine { align-self: flex-end; }
+    .msg-item.other { align-self: flex-start; }
+
+    .bubble {
+        padding: 10px 14px; border-radius: 20px; font-size: 14px; line-height: 1.5;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative;
     }
-    .msg-row.mine .msg-bubble { background: #dcf8c6; color: #303030; border-top-right-radius: 2px; }
-    .msg-row.other .msg-bubble { background: #fff; color: #303030; border-top-left-radius: 2px; }
+    .mine .bubble {
+        background: var(--blue); color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+    .other .bubble {
+        background: #fff; color: var(--navy);
+        border-bottom-left-radius: 4px;
+        border: 1px solid #f1f5f9;
+    }
+
+    .msg-info { font-size: 10px; margin-top: 4px; display: flex; align-items: center; gap: 4px; color: #94a3b8; font-weight: 600; }
+    .mine .msg-info { justify-content: flex-end; }
+
+    .sender-name { font-size: 11px; font-weight: 800; margin-bottom: 4px; color: #6366f1; }
+
     .chat-footer {
-        position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
-        background: var(--surface-card); padding: 12px 16px; display: flex; align-items: center; gap: 10px;
-        border-top: 1px solid var(--line-strong);
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
+        background: #fff; padding: 12px 16px 24px;
+        border-top: 1px solid #f1f5f9; display: flex; align-items: flex-end; gap: 10px;
     }
-    .chat-input {
-        flex: 1; background: var(--surface-card); border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
-        padding: 10px 16px; font-size: 14px; outline: none;
+    .input-wrap {
+        flex: 1; background: #f8fafc; border: 1px solid #e2e8f0;
+        border-radius: 24px; padding: 4px 16px; display: flex; align-items: center;
+        min-height: 48px;
+    }
+    .input-wrap textarea {
+        flex: 1; background: transparent; border: 0; outline: 0;
+        padding: 10px 0; font-size: 14px; color: var(--navy);
+        max-height: 120px; resize: none;
+    }
+
+    .send-btn {
+        width: 48px; height: 48px; border-radius: 50%;
+        background: var(--blue); color: #fff; border: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+        transition: all 0.2s;
+    }
+    .send-btn:active { transform: scale(0.9) rotate(-15deg); }
+
+    .attachment-btn {
+        width: 40px; height: 48px; color: #94a3b8; font-size: 22px;
+        display: flex; align-items: center; justify-content: center;
+    }
+
+    .file-preview {
+        position: absolute; bottom: 90px; left: 16px; right: 16px;
+        background: #fff; border-radius: 16px; padding: 8px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: none;
+        z-index: 10; border: 1px solid #f1f5f9;
     }
 </style>
 
 <div class="chat-thread">
     <div class="chat-header">
         <a href="{{ route('chat.index') }}" class="back-btn"><i class="bi bi-chevron-left"></i></a>
-        <div class="hdr-avatar {{ $group->type }}">
-            @if($group->avatar)
-                <img src="{{ asset('storage/'.$group->avatar) }}">
+        <div class="hdr-avatar" style="{{ $group->type !== 'private' ? 'background: linear-gradient(135deg, #10b981, #059669);' : '' }}">
+            @if($hdrAvatar)
+                <img src="{{ $hdrAvatar }}">
             @else
                 {{ strtoupper(substr($group->name, 0, 1)) }}
             @endif
         </div>
-        <div style="flex: 1; min-width: 0;">
-            <div class="fw-bold text-truncate" style="font-size: 15px; color: var(--ink);">{{ $group->name }}</div>
-            <div style="font-size: 10px; color: #10b981; font-weight: 700;">{{ $group->members->count() }} Anggota</div>
-        </div>
-        <div class="badge bg-light text-muted rounded-pill" style="font-size: 9px; text-transform: uppercase;">
-            {{ $group->type === 'eskul' ? 'Eskul' : 'Kelas' }}
+        <div class="hdr-info">
+            <div class="hdr-title text-truncate">{{ $group->name }}</div>
+            <div class="hdr-status">{{ $isPrivate ? 'Online' : $group->members->count().' Anggota' }}</div>
         </div>
     </div>
 
     <div class="chat-messages" id="message-list">
         @forelse($messages as $msg)
             @php $isMine = $msg->user_id === $user->id; @endphp
-            <div class="msg-row {{ $isMine ? 'mine' : 'other' }}">
-                <div class="msg-bubble">
-                    @if(!$isMine)
-                        <div style="font-size: 10px; font-weight: 800; color: var(--blue); margin-bottom: 2px;">{{ $msg->user->name }}</div>
+            <div class="msg-group animate-up">
+                <div class="msg-item {{ $isMine ? 'mine' : 'other' }}" data-msg-id="{{ $msg->id }}">
+                    @if(!$isMine && !$isPrivate)
+                        <div class="sender-name">{{ $msg->user->name }}</div>
                     @endif
-                    @if($msg->file)
-                        <div class="mb-2">
-                            <img src="{{ asset('storage/'.$msg->file) }}" class="img-fluid rounded-3" style="max-height: 200px; width: 100%; object-fit: cover;">
+                    <div class="bubble">
+                        @if($msg->file)
+                            <div class="mb-2">
+                                <img src="{{ asset('storage/'.$msg->file) }}" class="img-fluid rounded-3" style="max-height: 250px; width: 100%; object-fit: cover;">
+                            </div>
+                        @endif
+                        @if($msg->pesan)
+                            <div>{{ $msg->pesan }}</div>
+                        @endif
+                        <div class="msg-info">
+                            <span>{{ $msg->created_at->format('H:i') }}</span>
+                            @if($isMine) <i class="bi bi-check2-all text-white-50"></i> @endif
                         </div>
-                    @endif
-                    <div>{{ $msg->pesan }}</div>
-                    <div class="text-end" style="font-size: 9px; opacity: .5; margin-top: 2px;">
-                        {{ $msg->created_at->format('H:i') }}
-                        @if($isMine) <i class="bi bi-check2-all ms-1 text-primary"></i> @endif
                     </div>
                 </div>
             </div>
         @empty
             <div class="text-center py-5">
-                <span class="bg-white px-3 py-1 rounded-pill small fw-bold opacity-50">Mulai percakapan cerdas di sini</span>
+                <div class="bg-white d-inline-block px-4 py-2 rounded-pill shadow-sm small fw-bold text-muted">Mulai percakapan cerdas di sini</div>
             </div>
         @endforelse
+    </div>
+
+    <div class="file-preview" id="filePreview">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-image text-primary"></i>
+                <span class="small fw-bold text-muted" id="fileName">Nama file...</span>
+            </div>
+            <button class="btn-close btn-sm" onclick="clearFile()"></button>
+        </div>
     </div>
 
     <form action="{{ route('chat.store') }}" method="POST" class="chat-footer" id="chatForm" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="chat_group_id" value="{{ $group->id }}">
         <input type="file" name="file" id="fileInput" class="d-none" accept="image/*">
-        <button type="button" class="btn btn-link text-secondary p-0" onclick="document.getElementById('fileInput').click()"><i class="bi bi-plus-circle h5 mb-0"></i></button>
-        <input name="pesan" id="chatInput" autocomplete="off" class="chat-input" placeholder="Tulis pesan...">
-        <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+
+        <button type="button" class="attachment-btn" onclick="document.getElementById('fileInput').click()">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+
+        <div class="input-wrap">
+            <textarea name="pesan" id="chatInput" rows="1" placeholder="Tulis pesan..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+        </div>
+
+        <button type="submit" class="send-btn">
             <i class="bi bi-send-fill"></i>
         </button>
     </form>
@@ -113,32 +194,55 @@
 
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+
     const currentUserId = @json((int) $user->id);
     const activeGroupId = @json((int) $group->id);
     let lastMsgId = @json($messages->last()?->id ?? 0);
 
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            fileName.textContent = this.files[0].name;
+            filePreview.style.display = 'block';
+        }
+    });
+
+    function clearFile() {
+        fileInput.value = '';
+        filePreview.style.display = 'none';
+    }
+
     function appendMessage(data, mine) {
         if (data.id && document.querySelector(`[data-msg-id="${data.id}"]`)) return;
 
-        const row = document.createElement('div');
-        row.className = 'msg-row ' + (mine ? 'mine' : 'other');
-        if (data.id) row.setAttribute('data-msg-id', data.id);
+        const group = document.createElement('div');
+        group.className = 'msg-group animate-up';
 
-        let html = '<div class="msg-bubble">';
-        if (!mine) html += '<div style="font-size:10px; font-weight:800; color:var(--blue); margin-bottom:2px;">'+data.nama+'</div>';
+        const item = document.createElement('div');
+        item.className = 'msg-item ' + (mine ? 'mine' : 'other');
+        if (data.id) item.setAttribute('data-msg-id', data.id);
+
+        let html = '';
+        @if(!$isPrivate)
+            if (!mine) html += '<div class="sender-name">'+data.nama+'</div>';
+        @endif
+
+        html += '<div class="bubble">';
         if (data.file_url) {
-            html += '<div class="mb-2"><img src="'+data.file_url+'" class="img-fluid rounded-3" style="max-height: 200px; width: 100%; object-fit: cover;"></div>';
+            html += '<div class="mb-2"><img src="'+data.file_url+'" class="img-fluid rounded-3" style="max-height: 250px; width: 100%; object-fit: cover;"></div>';
         }
         if (data.pesan) html += '<div>'+data.pesan+'</div>';
-        html += '<div class="text-end" style="font-size:9px; opacity:.5; margin-top:2px;">'+data.waktu;
-        if (mine) html += ' <i class="bi bi-check2-all ms-1 text-primary"></i>';
+        html += '<div class="msg-info"><span>'+data.waktu+'</span>';
+        if (mine) html += ' <i class="bi bi-check2-all text-white-50"></i>';
         html += '</div></div>';
-        row.innerHTML = html;
-        msgList.appendChild(row);
+
+        item.innerHTML = html;
+        group.appendChild(item);
+        msgList.appendChild(group);
         msgList.scrollTop = msgList.scrollHeight;
     }
-
-    const fileInput = document.getElementById('fileInput');
 
     chatForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -153,7 +257,8 @@
 
         const formData = new FormData(chatForm);
         chatInput.value = '';
-        fileInput.value = '';
+        chatInput.style.height = '';
+        clearFile();
 
         fetch(chatForm.action, {
             method: 'POST',
