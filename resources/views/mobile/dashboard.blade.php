@@ -19,15 +19,6 @@
         default => 'Selamat Malam',
     };
     $honorific = $isGuru ? 'Pak' : 'Kak';
-
-    // Avatar logic
-    $avatarUrl = $user->foto ? asset('storage/'.$user->foto) : null;
-    if (!$avatarUrl) {
-        $gender = strtolower($user->jenis_kelamin ?? 'L');
-        $avatarUrl = $gender === 'p'
-            ? 'https://avatar.iran.liara.run/public/girl?username='.$user->id
-            : 'https://avatar.iran.liara.run/public/boy?username='.$user->id;
-    }
 @endphp
 
 <style>
@@ -186,7 +177,7 @@
             <div style="display:flex;align-items:center;gap:16px;">
                 <div class="hero-avatar-wrap">
                     <div class="hero-avatar">
-                        <img src="{{ $avatarUrl }}">
+                        <img src="{{ $user->avatar_url }}">
                     </div>
                     <div class="role-indicator">
                         <i class="bi {{ $isGuru ? 'bi-person-badge-fill' : 'bi-mortarboard-fill' }}"></i>
@@ -388,17 +379,8 @@
         </div>
         <div style="max-height: 60vh; overflow-y: auto; padding-right: 4px;">
             @forelse($classmates as $cm)
-                @php
-                    $cmAvatar = $cm->foto ? asset('storage/'.$cm->foto) : null;
-                    if (!$cmAvatar) {
-                        $cmGender = strtolower($cm->jenis_kelamin ?? 'L');
-                        $cmAvatar = $cmGender === 'p'
-                            ? 'https://avatar.iran.liara.run/public/girl?username='.$cm->id
-                            : 'https://avatar.iran.liara.run/public/boy?username='.$cm->id;
-                    }
-                @endphp
                 <div class="classmate-row">
-                    <img src="{{ $cmAvatar }}" class="classmate-avatar">
+                    <img src="{{ $cm->avatar_url }}" class="classmate-avatar">
                     <div style="flex:1;">
                         <div class="fw-bold" style="font-size:14px; color:var(--navy);">{{ $cm->name }}</div>
                         <div class="small text-muted">NIS: {{ $cm->nik ?? '-' }}</div>

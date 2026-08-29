@@ -4,13 +4,7 @@
     $other = $group->other_user ?? null;
 
     // Avatar logic for header
-    $hdrAvatar = $group->avatar ? asset('storage/'.$group->avatar) : null;
-    if (!$hdrAvatar) {
-        if ($isPrivate && $other) {
-            $gnd = strtolower($other->jenis_kelamin ?? 'L');
-            $hdrAvatar = $gnd === 'p' ? 'https://avatar.iran.liara.run/public/girl?username='.$other->id : 'https://avatar.iran.liara.run/public/boy?username='.$other->id;
-        }
-    }
+    $hdrAvatar = $isPrivate && $other ? $other->avatar_url : ($group->avatar ? asset('storage/'.$group->avatar) : null);
 @endphp
 @extends('layouts.mobile-app')
 

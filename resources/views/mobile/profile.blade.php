@@ -1,18 +1,6 @@
 @extends('layouts.mobile-app')
 
 @section('content')
-@php
-    $isGuru = $user->role === 'guru';
-    // Avatar logic: if no photo, use random animation based on gender
-    $avatarUrl = $user->foto ? asset('storage/'.$user->foto) : null;
-    if (!$avatarUrl) {
-        $gender = strtolower($user->jenis_kelamin ?? 'L');
-        $avatarUrl = $gender === 'p'
-            ? 'https://avatar.iran.liara.run/public/girl?username='.$user->id
-            : 'https://avatar.iran.liara.run/public/boy?username='.$user->id;
-    }
-@endphp
-
 <style>
     .pf-page { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
 
@@ -101,7 +89,7 @@
     <div class="pf-hero">
         <div class="pf-avatar-badge">
             <div class="pf-avatar" id="avatarDisplay" onclick="document.getElementById('pfFotoInput').click()">
-                <img src="{{ $avatarUrl }}" id="avatarImg" style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
+                <img src="{{ $user->avatar_url }}" id="avatarImg" style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
             </div>
             <div class="pf-cam-badge" onclick="document.getElementById('pfFotoInput').click()">
                 <i class="bi bi-camera-fill"></i>

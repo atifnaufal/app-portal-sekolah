@@ -98,11 +98,7 @@
                     @php
                         $other = $g->members->first(fn($m) => $m->id != $user->id);
                         $name = $other ? $other->name : 'User';
-                        $avatar = $other ? ($other->foto ? asset('storage/'.$other->foto) : null) : null;
-                        if (!$avatar && $other) {
-                            $gnd = strtolower($other->jenis_kelamin ?? 'L');
-                            $avatar = $gnd === 'p' ? 'https://avatar.iran.liara.run/public/girl?username='.$other->id : 'https://avatar.iran.liara.run/public/boy?username='.$other->id;
-                        }
+                        $avatar = $other ? $other->avatar_url : 'https://ui-avatars.com/api/?name=User&background=random';
                     @endphp
                     <a href="{{ route('chat.show', $g) }}" class="chat-card chat-row animate-up" data-name="{{ strtolower($name) }}" style="animation-delay: 0.15s;">
                         <div class="chat-avatar" style="background: #f1f5f9;">

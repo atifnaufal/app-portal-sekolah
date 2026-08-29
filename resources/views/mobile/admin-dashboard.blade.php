@@ -80,7 +80,7 @@
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div style="display:flex; align-items:center; gap:16px;">
                     <div style="width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.2);overflow:hidden;">
-                        <img src="https://avatar.iran.liara.run/public/boy?username=admin" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="{{ $user->avatar_url }}" style="width:100%;height:100%;object-fit:cover;">
                     </div>
                     <div>
                         <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7);">{{ $greetingTime }}</div>

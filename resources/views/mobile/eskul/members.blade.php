@@ -89,11 +89,7 @@
         @foreach($admins as $m)
             <div class="member-card pui-card admin mb-3">
                 <div class="avatar">
-                    @if($m->user->foto)
-                        <img src="{{ asset('storage/'.$m->user->foto) }}" data-name="{{ $m->user->name }}" onerror="avatarFallback(this);">
-                    @else
-                        {{ strtoupper(substr($m->user->name, 0, 1)) }}
-                    @endif
+                    <img src="{{ $m->user->avatar_url }}" data-name="{{ $m->user->name }}">
                 </div>
                 <div class="flex-grow-1 min-width-0">
                     <div class="fw-bold text-truncate" style="font-size: 14px; color:var(--ink);">{{ $m->user->name }}
@@ -119,11 +115,7 @@
         @foreach($pending as $m)
             <div class="member-card pui-card mb-3">
                 <div class="avatar">
-                    @if($m->user->foto)
-                        <img src="{{ asset('storage/'.$m->user->foto) }}" data-name="{{ $m->user->name }}" onerror="avatarFallback(this);">
-                    @else
-                        {{ strtoupper(substr($m->user->name, 0, 1)) }}
-                    @endif
+                    <img src="{{ $m->user->avatar_url }}" data-name="{{ $m->user->name }}">
                 </div>
                 <div class="flex-grow-1 min-width-0">
                     <div class="fw-bold text-truncate" style="font-size: 14px; color:var(--ink);">{{ $m->user->name }}</div>
@@ -155,11 +147,7 @@
     @forelse($regularMembers as $m)
         <div class="member-card pui-card mb-3">
             <div class="avatar">
-                @if($m->user->foto)
-                    <img src="{{ asset('storage/'.$m->user->foto) }}" data-name="{{ $m->user->name }}" onerror="avatarFallback(this);">
-                @else
-                    {{ strtoupper(substr($m->user->name, 0, 1)) }}
-                @endif
+                <img src="{{ $m->user->avatar_url }}" data-name="{{ $m->user->name }}">
             </div>
             <div class="flex-grow-1 min-width-0">
                 <div class="fw-bold text-truncate" style="font-size: 14px; color:var(--ink);">{{ $m->user->name }}</div>

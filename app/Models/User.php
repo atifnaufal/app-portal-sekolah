@@ -20,6 +20,22 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $appends = ['avatar_url'];
+
+    public function getAvatarUrlAttribute(): string
+    {
+        if ($this->foto) {
+            return asset('storage/'.$this->foto);
+        }
+
+        $name = urlencode($this->name);
+        $backgrounds = ['0D8ABC', '55acee', 'ffac33', '7c3aed', '10b981', 'ef4444'];
+        $bg = $backgrounds[$this->id % count($backgrounds)];
+
+        // UI-Avatars Premium Look
+        return "https://ui-avatars.com/api/?name={$name}&background={$bg}&color=fff&size=128&bold=true&rounded=true";
+    }
+
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class);

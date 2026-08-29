@@ -75,13 +75,8 @@
     {{-- Photo Section --}}
     <div class="pe-card" style="text-align:center;">
         <div class="pe-avatar-wrap" id="avatarWrap">
-            @if($user->foto)
-                <img src="{{ asset('storage/'.$user->foto) }}" id="avatarImg"
-                    style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
-            @else
-                <div class="pe-initial" id="avatarInitial">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
-                <img id="avatarImg" style="display:none;">
-            @endif
+            <img src="{{ $user->avatar_url }}" id="avatarImg"
+                style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
             <div class="pe-avatar-overlay" onclick="document.getElementById('fotoInput').click()">
                 <i class="bi bi-camera-fill" style="color:#fff;font-size:24px;"></i>
             </div>
