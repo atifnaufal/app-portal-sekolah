@@ -383,7 +383,7 @@
 <div class="sheet" id="classmatesSheet" onclick="if(event.target===this)closeClassmates()">
     <div class="sheet-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="h5 fw-bold mb-0">Teman Sekelas ({{ $user->kelas->nama ?? '-' }})</h3>
+            <h3 class="h5 fw-bold mb-0">Siswa Kelas({{ $user->kelas->nama ?? '-' }})</h3>
             <button type="button" class="btn-close" onclick="closeClassmates()"></button>
         </div>
         <div style="max-height: 60vh; overflow-y: auto; padding-right: 4px;">
