@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EskulController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\KelasController;
@@ -98,6 +99,11 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::get('/mahasiswa', [MahasiswaController::class, 'index'])->name('mahasiswa.index');
     Route::get('/tugas', [TugasController::class, 'index'])->name('tugas.index');
     Route::get('/tugas/{tugas}', [TugasController::class, 'show'])->whereNumber('tugas')->name('tugas.show');
+
+    // Help & FAQ (Premium Features)
+    Route::get('/help/faq', [HelpController::class, 'faq'])->name('help.faq');
+    Route::get('/about', [HelpController::class, 'about'])->name('about.show');
+    Route::get('/security/settings', [HelpController::class, 'security'])->name('security.settings');
 });
 
 // Endpoint JSON realtime (heartbeat sesi & polling notifikasi). Sengaja DI LUAR

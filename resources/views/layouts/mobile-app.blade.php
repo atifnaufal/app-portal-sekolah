@@ -358,6 +358,16 @@
         @if(session('success') || session('error'))
             showNotification('Informasi', '{{ session('success') ?: session('error') }}');
         @endif
+
+        // Sync token to NativeBridge if available
+        @if(session('api_token'))
+        (function() {
+            if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                window.Capacitor.Plugins.NativeBridge.saveToken({ token: '{{ session('api_token') }}' });
+                window.Capacitor.Plugins.NativeBridge.saveUserId({ userId: {{ (int) session('user_id') }} });
+            }
+        })();
+        @endif
     </script>
 
     <script>

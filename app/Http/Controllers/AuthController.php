@@ -58,6 +58,10 @@ class AuthController extends Controller
         $remember = $request->boolean('remember', true);
         Auth::login($user, $remember);
 
+        // Generate Sanctum token for mobile polling
+        $token = $user->createToken('mobile-app')->plainTextToken;
+        $request->session()->put('api_token', $token);
+
         // Pastikan session langsung disimpan
         $request->session()->save();
 
@@ -66,6 +70,11 @@ class AuthController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+        if ($user) {
+            $user->tokens()->delete();
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

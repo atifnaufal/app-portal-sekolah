@@ -69,6 +69,37 @@
     .pf-info-label { font-size: 10px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: 0.04em; }
     .pf-info-value { font-size: 14px; font-weight: 700; color: var(--ink); }
 
+    /* New Premium Styles */
+    .pf-menu-card {
+        background: var(--surface-card); border-radius: var(--radius-md); padding: 8px 0;
+        margin-bottom: 12px; box-shadow: var(--shadow-card); border: 1px solid var(--line);
+    }
+    .pf-menu-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 18px; cursor: pointer; transition: background 0.2s;
+    }
+    .pf-menu-item:active { background: #f8fafc; }
+    .pf-menu-item + .pf-menu-item { border-top: 1px solid var(--line); }
+    .pf-menu-content { display: flex; align-items: center; gap: 14px; }
+    .pf-menu-icon {
+        width: 32px; height: 32px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .pf-menu-text { font-size: 14px; font-weight: 600; color: var(--ink); }
+    .pf-menu-arrow { color: var(--faint); font-size: 12px; }
+
+    .pf-permission-card {
+        background: #fffbeb; border: 1px solid #fef3c7; border-radius: var(--radius-md);
+        padding: 16px; margin-bottom: 16px; display: none;
+    }
+    .pf-permission-card.active { display: block; }
+    .pf-permission-title { font-size: 13px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .pf-permission-desc { font-size: 11px; color: #b45309; margin-top: 4px; line-height: 1.4; }
+    .pf-permission-btn {
+        margin-top: 12px; background: #92400e; color: #fff; border: none;
+        padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    }
+
     .pf-toast {
         position: fixed; top: 16px; left: 16px; right: 16px; z-index: 9999;
         background: var(--surface-card); border-radius: var(--radius-sm); padding: 12px 16px;
@@ -130,6 +161,49 @@
                 <div class="pf-info-value">{{ $user->kelas?->nama ?? 'Staf Sekolah' }}</div>
             </div>
         </div>
+    </div>
+
+    {{-- Premium Menu Section --}}
+    <div class="pf-menu-card">
+        <div class="pf-menu-item" onclick="window.location.href='/help/faq'">
+            <div class="pf-menu-content">
+                <div class="pf-menu-icon" style="background:#fff7ed;color:#ea580c;"><i class="bi bi-question-circle"></i></div>
+                <div class="pf-menu-text">Pusat Bantuan & FAQ</div>
+            </div>
+            <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </div>
+        <div class="pf-menu-item" onclick="window.location.href='/security/settings'">
+            <div class="pf-menu-content">
+                <div class="pf-menu-icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-shield-lock"></i></div>
+                <div class="pf-menu-text">Keamanan & Privasi</div>
+            </div>
+            <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </div>
+        <div class="pf-menu-item" onclick="window.location.href='/settings/notifications'">
+            <div class="pf-menu-content">
+                <div class="pf-menu-icon" style="background:#f0f9ff;color:#0284c7;"><i class="bi bi-bell"></i></div>
+                <div class="pf-menu-text">Pengaturan Notifikasi</div>
+            </div>
+            <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </div>
+        <div class="pf-menu-item" onclick="window.location.href='/about'">
+            <div class="pf-menu-content">
+                <div class="pf-menu-icon" style="background:#f8fafc;color:#64748b;"><i class="bi bi-info-circle"></i></div>
+                <div class="pf-menu-text">Tentang Aplikasi</div>
+            </div>
+            <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </div>
+    </div>
+
+    {{-- Permission Warning Card --}}
+    <div id="permissionWarning" class="pf-permission-card">
+        <div class="pf-permission-title">
+            <i class="bi bi-exclamation-triangle-fill"></i> Izin Belum Lengkap
+        </div>
+        <div class="pf-permission-desc">
+            Fitur notifikasi dan presensi memerlukan izin tambahan (<span id="missingNames"></span>). Aktifkan sekarang untuk pengalaman terbaik.
+        </div>
+        <button class="pf-permission-btn" onclick="openNativeSettings()">Lengkapi Sekarang</button>
     </div>
 
     {{-- Action Buttons --}}
@@ -245,5 +319,30 @@ showToast(@json(session('success')), 'success');
 @if(session('error'))
 showToast(@json(session('error')), 'error');
 @endif
+
+// --- Native Integration for Premium Features ---
+document.addEventListener('DOMContentLoaded', function() {
+    checkNativePermissions();
+});
+
+function checkNativePermissions() {
+    if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+        window.Capacitor.Plugins.NativeBridge.checkPermissionsStatus()
+            .then(function(res) {
+                if (!res.isComplete) {
+                    var card = document.getElementById('permissionWarning');
+                    document.getElementById('missingNames').textContent = res.missingPermissions;
+                    card.classList.add('active');
+                }
+            })
+            .catch(function(e) { console.error('Bridge Error:', e); });
+    }
+}
+
+function openNativeSettings() {
+    if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+        window.Capacitor.Plugins.NativeBridge.openAppSettings();
+    }
+}
 </script>
 @endsection
