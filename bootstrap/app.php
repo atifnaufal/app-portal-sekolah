@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ApiRoleMiddleware;
 use App\Http\Middleware\BlockAdminOnMobile;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // MENGGUNAKAN ROLE MIDDLEWARE CUSTOM:
         $middleware->alias([
             'role' => RoleMiddleware::class,
+            'api.role' => ApiRoleMiddleware::class,
             'admin.desktop' => BlockAdminOnMobile::class,
         ]);
 

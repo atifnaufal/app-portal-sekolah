@@ -25,7 +25,7 @@ class AuthApiController extends Controller
             ], 401);
         }
 
-        $token = $user->createToken($request->device_name)->plainTextToken;
+        $token = $user->createToken($request->device_name, [$user->role])->plainTextToken;
 
         return response()->json([
             'token' => $token,
@@ -48,6 +48,15 @@ class AuthApiController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'kelas_id' => $user->kelas_id,
+            'abilities' => $user->getAbilities()->pluck('name')->toArray(),
+        ]);
     }
 }
