@@ -35,6 +35,10 @@
         Aplikasi Portal Sekolah dirancang untuk memudahkan interaksi antara siswa, guru, dan orang tua dalam ekosistem pendidikan digital yang terintegrasi.
     </div>
 
+    <div class="mt-4 px-4 py-3" style="background:var(--surface); border-radius:var(--radius-sm); border:1px solid var(--line);">
+        <p class="small text-muted mb-0" style="font-size:11px;">Jika masih butuh bantuan, silakan tanyakan kepada <strong>guru pembimbing</strong> Anda.</p>
+    </div>
+
     <div class="mt-5">
         <a href="{{ route('legal.terms') }}" class="text-decoration-none small fw-bold text-primary">Syarat & Ketentuan</a>
         <span class="mx-2 text-muted">|</span>

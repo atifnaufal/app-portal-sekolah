@@ -27,11 +27,9 @@
         @endforeach
     </div>
 
-    <div class="text-center mt-5">
-        <p class="small text-muted mb-3">Masih butuh bantuan?</p>
-        <a href="#" class="pui-btn pui-btn-soft pui-btn-block">
-            <i class="bi bi-whatsapp"></i> Hubungi Admin Sekolah
-        </a>
+    <div class="text-center mt-5 mb-4 px-4 py-4" style="background:#f8fafc; border-radius:var(--radius-md); border:1px dashed var(--line-strong);">
+        <i class="bi bi-person-video3 text-primary mb-2" style="font-size:28px;"></i>
+        <p class="small text-muted mb-0">Jika masih butuh bantuan atau memiliki kendala yang tidak tercantum di atas, silakan tanyakan kepada <strong>guru pembimbing</strong> Anda.</p>
     </div>
 </div>
 
