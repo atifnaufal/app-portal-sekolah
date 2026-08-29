@@ -4,4 +4,7 @@
     <string name="title_activity_main">App Portal Sekolah</string>
     <string name="package_name">com.sekolah.app</string>
     <string name="custom_url_scheme">com.sekolah.app</string>
+    <string name="notification_channel_name">Notifikasi Sekolah</string>
+    <string name="notification_channel_description">Notifikasi pengumuman, chat, dan tugas baru</string>
+    <string name="notification_sound">notif_sound</string>
 </resources>
