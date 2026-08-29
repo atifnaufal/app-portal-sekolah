@@ -91,6 +91,7 @@ class AdminController extends Controller
             'totalSiswa' => User::where('role', 'siswa')->count(),
             'totalKelas' => Kelas::count(),
             'sppKurang' => Spp::where('status', 'belum_lunas')->count(),
+            'pendingCount' => User::where('aktif', false)->count(),
             'sppTerbayar' => Spp::sum('dibayar'),
             'sppTagihan' => Spp::sum('nominal'),
             'chartLabels' => $sppData->map(fn ($item) => "$item->bulan/$item->tahun"),
