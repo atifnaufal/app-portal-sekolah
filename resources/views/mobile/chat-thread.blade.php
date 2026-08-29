@@ -15,7 +15,8 @@
     .chat-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
         background: #fff; border-bottom: 1px solid #f1f5f9;
-        padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+        padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
+        display: flex; align-items: center; gap: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
     .back-btn {
@@ -39,7 +40,7 @@
     .hdr-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
 
     .chat-messages {
-        flex: 1; padding: 76px 16px 86px;
+        flex: 1; padding: 76px 16px calc(86px + env(safe-area-inset-bottom));
         overflow-y: auto; display: flex; flex-direction: column;
         scroll-behavior: smooth;
     }
@@ -70,7 +71,7 @@
 
     .chat-footer {
         position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
-        background: #fff; padding: 12px 16px 24px;
+        background: #fff; padding: 12px 16px calc(24px + env(safe-area-inset-bottom));
         border-top: 1px solid #f1f5f9; display: flex; align-items: flex-end; gap: 10px;
     }
     .input-wrap {

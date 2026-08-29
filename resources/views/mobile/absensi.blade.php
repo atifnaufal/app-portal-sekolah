@@ -15,9 +15,10 @@
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
         background: rgba(255,255,255,0.88); backdrop-filter: blur(16px);
         border-bottom: 1px solid var(--line-strong);
-        padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+        padding: 12px 20px; padding-top: calc(12px + env(safe-area-inset-top));
+        display: flex; align-items: center; gap: 12px;
     }
-    .page-container { padding-top: 70px; padding-bottom: 48px; }
+    .page-container { padding-top: 80px; padding-bottom: 48px; }
 
     .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .stat-chip {

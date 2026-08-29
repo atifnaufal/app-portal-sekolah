@@ -41,7 +41,7 @@
         body {
             margin: 0; background: var(--surface); color: var(--navy);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            padding-bottom: {{ (isset($hideNav) && $hideNav) ? '20px' : '110px' }};
+            padding-bottom: {{ (isset($hideNav) && $hideNav) ? '20px' : 'calc(110px + env(safe-area-inset-bottom))' }};
             user-select: none; -webkit-user-select: none;
             touch-action: manipulation; overscroll-behavior-y: contain;
             -webkit-font-smoothing: antialiased;
@@ -76,7 +76,7 @@
 
         /* Premium Floating Nav */
         .bottom-nav {
-            position: fixed; bottom: 24px; left: 20px; right: 20px;
+            position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); left: 20px; right: 20px;
             max-width: 500px; margin: 0 auto;
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);

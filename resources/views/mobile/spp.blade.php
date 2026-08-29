@@ -16,7 +16,8 @@
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
         background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--line);
-        padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
+        display: flex; align-items: center; justify-content: space-between;
     }
     .back-btn {
         width: 38px; height: 38px; border-radius: 12px; background: var(--surface);

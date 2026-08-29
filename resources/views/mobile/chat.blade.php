@@ -9,7 +9,8 @@
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
         background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--line);
-        padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
+        display: flex; align-items: center; justify-content: space-between;
     }
     .back-btn {
         width: 38px; height: 38px; border-radius: 12px; background: var(--surface);
@@ -18,6 +19,15 @@
     }
 
     .page-container { padding-top: 76px; padding-bottom: 100px; }
+
+    .search-bar-wrap { margin: 0 16px 8px; }
+    .search-box {
+        background: #fff; border-radius: 16px; display: flex; align-items: center;
+        gap: 10px; padding: 4px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border: 1px solid var(--line);
+    }
+    .search-box input { border: 0; outline: 0; width: 100%; padding: 10px 0; font-size: 14px; background: transparent; color: var(--ink); }
+    .search-box input::placeholder { color: #94a3b8; }
 
     .header-block {
         background: var(--grad-hero);
@@ -95,15 +105,6 @@
                 Terhubung dengan warga sekolah.
             </p>
         </header>
-        <div class="search-bar-wrap">
-            <div class="search-box">
-                <i class="bi bi-search" style="color: #94a3b8;"></i>
-                <input type="text" id="searchChat" placeholder="Cari teman atau grup...">
-            </div>
-        </div>
-
-        <main>
-
         <div class="search-bar-wrap">
             <div class="search-box">
                 <i class="bi bi-search" style="color: #94a3b8;"></i>

@@ -2,20 +2,19 @@
 
 @section('content')
 <style>
-    .pe-page { padding: 0 16px 120px; max-width: 640px; margin: 0 auto; }
-
     .pe-header {
         position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
         background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--line);
-        padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
+        display: flex; align-items: center; justify-content: space-between;
     }
     .back-btn {
         width: 38px; height: 38px; border-radius: 12px; background: var(--surface);
         display: flex; align-items: center; justify-content: center;
         color: var(--ink); text-decoration: none;
     }
-    .pe-body { padding-top: 76px; }
+    .pe-body { padding-top: 80px; }
 
     .pe-card {
         background: var(--surface-card); border-radius: var(--radius-md); padding:18px;
