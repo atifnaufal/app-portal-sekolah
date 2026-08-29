@@ -118,12 +118,14 @@
                     if (type === 'excel') {
                         var tugasId = prompt('Masukkan ID Tugas untuk export Excel:', '');
                         if (tugasId) {
-                            window.open('{{ route('tugas.export.excel') }}?tugas=' + tugasId, '_blank');
+                            var excelUrl = '{{ route('tugas.export.excel', ['tugas' => '__TID__']) }}'.replace('__TID__', tugasId);
+                            window.open(excelUrl, '_blank');
                         }
                         return false;
                     }
                     if (window.tugasList && window.tugasList.length > 0) {
-                        window.open('{{ route('tugas.export.pdf') }}?tugas=' + window.tugasList[0], '_blank');
+                        var pdfUrl = '{{ route('tugas.export.pdf', ['tugas' => '__TID__']) }}'.replace('__TID__', window.tugasList[0]);
+                        window.open(pdfUrl, '_blank');
                     } else {
                         alert('Pilih tugas terlebih dahulu untuk export PDF.');
                     }
@@ -179,6 +181,7 @@
 
         @if($isGuru)
             <div id="tugasList">
+                <script>window.tugasList = {!! json_encode($tugas->pluck('id')->all()) !!};</script>
                 @forelse($tugas as $item)
                     @php
                         $deadline = $item->deadlineStatus();
