@@ -122,7 +122,7 @@
     @if($materi->file_materi)
         <div class="lms-card">
             <div style="font-size:13px;font-weight:700;margin-bottom:10px;"><i class="bi bi-paperclip" style="color:var(--blue);"></i> Lampiran</div>
-            <a href="{{ asset('storage/'.$materi->file_materi) }}" target="_blank" class="lms-file">
+            <a href="{{ asset('storage/'.$materi->file_materi) }}" onclick="puiExportFile(this.href,'{{ $materi->file_nama ?: 'Materi' }}','pdf'); return false;" class="lms-file">
                 <div class="file-ico" style="background:linear-gradient(135deg,var(--surface),#dbeafe);color:var(--blue);">
                     <i class="bi bi-file-earmark-arrow-down-fill"></i>
                 </div>

@@ -139,8 +139,8 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 10px;">
             <div style="font-size:14px;font-weight:800;color:var(--ink);">Pengumpulan Siswa</div>
             <div style="display:flex;gap:8px;">
-                <a href="{{ route('tugas.export.pdf', $tugas) }}" class="pui-chip pui-chip-red"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
-                <a href="{{ route('tugas.export.excel', $tugas) }}" class="pui-chip pui-chip-green"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+                <a href="{{ route('tugas.export.pdf', $tugas) }}" onclick="puiExportFile(this.href,'Rekap Tugas - {{ $tugas->judul }}','pdf'); return false;" class="pui-chip pui-chip-red"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                <a href="{{ route('tugas.export.excel', $tugas) }}" onclick="puiExportFile(this.href,'Rekap Tugas - {{ $tugas->judul }}','excel'); return false;" class="pui-chip pui-chip-green"><i class="bi bi-file-earmark-excel"></i> Excel</a>
             </div>
         </div>
 

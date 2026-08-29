@@ -71,7 +71,7 @@
 
         {{-- Floating Download Button as Fallback --}}
         <div style="position: fixed; bottom: 80px; right: 20px; z-index: 1002;">
-            <a href="{{ $pdfUrl }}" download class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+            <a href="{{ $pdfUrl }}" onclick="puiExportFile(this.href,'{{ $buku->judul }}','pdf'); return false;" class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
                 <i class="bi bi-download"></i>
             </a>
         </div>

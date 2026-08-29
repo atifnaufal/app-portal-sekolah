@@ -654,6 +654,7 @@ class NilaiController extends Controller
 
         $rowStyle = (($i % 2) === 1) ? 'alt' : 'default';
         foreach ($d['students'] as $i => $s) {
+            $rowStyle = (($i % 2) === 1) ? 'alt' : 'default';
             $total = 0;
             $count = 0;
             $xml .= '<Row';

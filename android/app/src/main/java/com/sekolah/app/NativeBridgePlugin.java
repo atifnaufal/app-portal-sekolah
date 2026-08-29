@@ -2,11 +2,14 @@ package com.sekolah.app;
 
 import android.Manifest;
 import android.app.AlarmManager;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -220,5 +223,51 @@ public class NativeBridgePlugin extends Plugin {
         ret.put("version", "1.1.0-Premium");
         ret.put("serviceRunning", BackgroundService.isRunning());
         call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void downloadFile(PluginCall call) {
+        String url = call.getString("url");
+        String filename = call.getString("filename");
+
+        if (url == null || url.isEmpty()) {
+            call.reject("URL is required");
+            return;
+        }
+
+        try {
+            DownloadManager.Request request;
+            if (filename != null && !filename.isEmpty()) {
+                request = new DownloadManager.Request(Uri.parse(url));
+                request.setTitle(filename);
+                request.setDescription("Mengunduh file...");
+            } else {
+                request = new DownloadManager.Request(Uri.parse(url));
+                // Extract filename from URL
+                String path = Uri.parse(url).getPath();
+                String fileName = path != null ? path.substring(path.lastIndexOf('/') + 1) : "download";
+                request.setTitle(fileName);
+                request.setDescription("Mengunduh file...");
+            }
+
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename != null ? filename : "download");
+            request.setAllowedOverMetered(true);
+            request.setAllowedOverRoaming(true);
+
+            DownloadManager manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+            if (manager != null) {
+                long downloadId = manager.enqueue(request);
+                JSObject ret = new JSObject();
+                ret.put("downloadId", downloadId);
+                ret.put("success", true);
+                call.resolve(ret);
+            } else {
+                call.reject("Download Manager tidak tersedia");
+            }
+        } catch (Exception e) {
+            Log.e("NativeBridge", "Download error: " + e.getMessage());
+            call.reject("Gagal mengunduh: " + e.getMessage());
+        }
     }
 }

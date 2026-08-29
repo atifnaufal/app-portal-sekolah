@@ -316,14 +316,16 @@
             if (isWebView) {
                 // Beri jeda sedikit agar UI stabil baru minta izin
                 setTimeout(() => {
-                    if (window.Android && window.Android.requestPermissions) {
-                        window.Android.requestPermissions();
-                    } else {
-                        // Jika tidak ada bridge, setidaknya tampilkan info satu kali via toast
-                        if (!localStorage.getItem('perm_hint_shown')) {
-                            showNotification('Izin Aplikasi', 'Pastikan memberikan izin Penyimpanan agar bisa mengunduh laporan PDF/Excel.', '#');
-                            localStorage.setItem('perm_hint_shown', 'true');
-                        }
+                    if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                        window.Capacitor.Plugins.NativeBridge.checkPermissionsStatus().then(function(res) {
+                            if (!res.isComplete && !localStorage.getItem('perm_hint_shown')) {
+                                showNotification('Izin Aplikasi', 'Pastikan memberikan izin Penyimpanan agar bisa mengunduh laporan PDF/Excel.', '#');
+                                localStorage.setItem('perm_hint_shown', 'true');
+                            }
+                        });
+                    } else if (!localStorage.getItem('perm_hint_shown')) {
+                        showNotification('Izin Aplikasi', 'Pastikan memberikan izin Penyimpanan agar bisa mengunduh laporan PDF/Excel.', '#');
+                        localStorage.setItem('perm_hint_shown', 'true');
                     }
                 }, 2000);
 
@@ -333,14 +335,17 @@
                     // Lewati link yang sudah memakai puiExportFile (ditangani sendiri).
                     if (link && link.getAttribute('onclick') && link.getAttribute('onclick').indexOf('puiExportFile') !== -1) return;
                     if (link && (link.href.includes('pdf') || link.href.includes('xls'))) {
-                        // Jangan biarkan reload, gunakan method download APK jika tersedia
-                        if (window.Android && window.Android.downloadFile) {
-                            e.preventDefault();
+                        e.preventDefault();
+                        // Coba via Capacitor plugin
+                        if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                            var filename = link.href.split('/').pop() || 'download';
+                            window.Capacitor.Plugins.NativeBridge.downloadFile({ url: link.href, filename: filename })
+                                .then(function() { showNotification('Unduhan', 'File tersimpan di folder Downloads.'); })
+                                .catch(function() { window.open(link.href, '_blank'); });
+                        } else if (window.Android && window.Android.downloadFile) {
                             window.Android.downloadFile(link.href);
                         } else {
-                            // Fallback: gunakan window.location daripada window.open untuk WebView
-                            e.preventDefault();
-                            window.location.href = link.href;
+                            window.open(link.href, '_blank');
                         }
                     }
                 });
@@ -563,7 +568,57 @@
 
     <script>
         var puiFileOverlay = document.getElementById('pui-file-overlay');
-        // ... (rest of the script)
+
+        // ===== puiExportFile: universal download handler untuk PDF/Excel =====
+        window.puiExportFile = function(url, label, kind) {
+            if (!url) return;
+
+            var isAndroidApp = window.PUI_IS_ANDROID_APP || false;
+            var ext = (kind || 'pdf').toLowerCase();
+            var icon = ext === 'excel' ? 'bi-file-earmark-excel' : 'bi-file-earmark-pdf';
+            var color = ext === 'excel' ? '#16a34a' : '#dc2626';
+
+            // Tampilkan overlay UI
+            var overlay = document.getElementById('pui-file-overlay');
+            if (overlay) {
+                overlay.classList.add('on');
+                overlay.querySelector('.pui-file-ico').innerHTML = '<i class="bi ' + icon + '"></i>';
+                overlay.querySelector('.pui-file-ico').style.background = 'linear-gradient(135deg,' + color + ',' + color + 'cc)';
+                overlay.querySelector('.pui-file-title').textContent = label || 'Download File';
+                overlay.querySelector('.pui-file-sub').textContent = 'Menyiapkan unduhan...';
+                overlay.querySelector('.pui-file-status').textContent = 'File ' + ext.toUpperCase() + ' sedang diproses.';
+            }
+
+            // Coba download native via Capacitor plugin
+            if (isAndroidApp && window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                window.Capacitor.Plugins.NativeBridge.downloadFile({
+                    url: url,
+                    filename: (label || 'download') + '.' + (ext === 'excel' ? 'xls' : 'pdf')
+                }).then(function(res) {
+                    if (overlay) {
+                        overlay.querySelector('.pui-file-sub').textContent = 'Berhasil!';
+                        overlay.querySelector('.pui-file-status').textContent = 'File tersimpan di folder Downloads.';
+                        setTimeout(function() { overlay.classList.remove('on'); }, 2000);
+                    }
+                }).catch(function(e) {
+                    if (overlay) {
+                        overlay.querySelector('.pui-file-sub').textContent = 'Gagal mengunduh';
+                        overlay.querySelector('.pui-file-status').textContent = (e.message || e) + '. Mencoba cara lain...';
+                    }
+                    // Fallback: window.open
+                    window.open(url, '_blank');
+                    setTimeout(function() { if (overlay) overlay.classList.remove('on'); }, 2500);
+                });
+            } else if (isAndroidApp && window.Android && window.Android.downloadFile) {
+                // Legacy bridge fallback
+                window.Android.downloadFile(url);
+                setTimeout(function() { if (overlay) overlay.classList.remove('on'); }, 2000);
+            } else {
+                // Browser: buka di tab baru
+                window.open(url, '_blank');
+                setTimeout(function() { if (overlay) overlay.classList.remove('on'); }, 1500);
+            }
+        };
     </script>
 
     <script>
