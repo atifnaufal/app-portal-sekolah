@@ -26,7 +26,10 @@
                 <div class="fw-bold" style="font-size:14px;">PIN Keamanan</div>
                 <div id="pinStatus" class="text-muted" style="font-size:11px;">Belum diatur</div>
             </div>
-            <i class="bi bi-chevron-right text-muted"></i>
+            <div class="d-flex align-items-center gap-2">
+                <i id="removePinBtn" class="bi bi-trash text-danger" style="display:none; cursor:pointer;" onclick="event.stopPropagation(); removePin()"></i>
+                <i class="bi bi-chevron-right text-muted"></i>
+            </div>
         </div>
     </div>
 
@@ -92,6 +95,20 @@ function checkInitialState() {
         // PIN saved natively, we just check if it exists in local storage sync
         var pinSet = localStorage.getItem('pin_set') === 'true';
         document.getElementById('pinStatus').textContent = pinSet ? 'Aktif' : 'Belum diatur';
+        document.getElementById('removePinBtn').style.display = pinSet ? 'block' : 'none';
+    }
+}
+
+function removePin() {
+    if (confirm('Matikan kunci PIN keamanan?')) {
+        if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+            window.Capacitor.Plugins.NativeBridge.savePin({ pin: "" }).then(function() {
+                localStorage.setItem('pin_set', 'false');
+                sessionStorage.removeItem('unlocked');
+                checkInitialState();
+                showNotification('Keamanan', 'PIN Keamanan dinonaktifkan.');
+            });
+        }
     }
 }
 

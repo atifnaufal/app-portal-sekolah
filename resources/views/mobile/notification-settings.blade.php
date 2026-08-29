@@ -21,6 +21,20 @@
                 <input class="form-check-input" type="checkbox" role="switch" id="pollingSwitch" checked onchange="togglePolling(this)">
             </div>
         </div>
+        <div class="p-3 d-flex align-items-center justify-content-between border-bottom" onclick="requestOptimizationExemption()">
+            <div>
+                <div class="fw-bold" style="font-size:14px;">Optimasi Baterai</div>
+                <div id="batteryStatus" class="text-muted" style="font-size:11px;">Mengecek status...</div>
+            </div>
+            <i class="bi bi-shield-check text-muted"></i>
+        </div>
+        <div class="p-3 d-flex align-items-center justify-content-between border-bottom" onclick="requestExactAlarm()">
+            <div>
+                <div class="fw-bold" style="font-size:14px;">Penjadwalan Tepat Waktu</div>
+                <div id="alarmStatus" class="text-muted" style="font-size:11px;">Mengecek status...</div>
+            </div>
+            <i class="bi bi-alarm text-muted"></i>
+        </div>
         <div class="p-3 d-flex align-items-center justify-content-between" onclick="openNativeSettings()">
             <div>
                 <div class="fw-bold" style="font-size:14px;">Izin Sistem Android</div>
@@ -74,6 +88,45 @@ function checkServiceStatus() {
     if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
         window.Capacitor.Plugins.NativeBridge.getAppInfo().then(function(res) {
             document.getElementById('pollingSwitch').checked = res.serviceRunning;
+        });
+
+        window.Capacitor.Plugins.NativeBridge.checkBatteryExemption().then(function(res) {
+            var statusEl = document.getElementById('batteryStatus');
+            if (res.isExempted) {
+                statusEl.textContent = 'Sudah diizinkan (Latar belakang stabil)';
+                statusEl.className = 'text-success small';
+            } else {
+                statusEl.textContent = 'Dibatasi sistem (Klik untuk izinkan)';
+                statusEl.className = 'text-warning small';
+            }
+        });
+
+        window.Capacitor.Plugins.NativeBridge.checkExactAlarmSupport().then(function(res) {
+            var statusEl = document.getElementById('alarmStatus');
+            if (res.isGranted) {
+                statusEl.textContent = 'Aktif (Notifikasi instan)';
+                statusEl.className = 'text-success small';
+            } else {
+                statusEl.textContent = 'Mungkin tertunda (Klik untuk aktifkan)';
+                statusEl.className = 'text-warning small';
+            }
+        });
+    }
+}
+
+function requestExactAlarm() {
+    if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+        window.Capacitor.Plugins.NativeBridge.requestExactAlarmPermission().then(function() {
+            setTimeout(checkServiceStatus, 2000);
+        });
+    }
+}
+
+function requestOptimizationExemption() {
+    if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+        window.Capacitor.Plugins.NativeBridge.requestBatteryExemption().then(function() {
+            // Re-check after returning
+            setTimeout(checkServiceStatus, 2000);
         });
     }
 }

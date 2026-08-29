@@ -36,9 +36,9 @@
     </div>
 
     <div class="mt-5">
-        <a href="#" class="text-decoration-none small fw-bold text-primary">Syarat & Ketentuan</a>
+        <a href="{{ route('legal.terms') }}" class="text-decoration-none small fw-bold text-primary">Syarat & Ketentuan</a>
         <span class="mx-2 text-muted">|</span>
-        <a href="#" class="text-decoration-none small fw-bold text-primary">Kebijakan Privasi</a>
+        <a href="{{ route('legal.privacy') }}" class="text-decoration-none small fw-bold text-primary">Kebijakan Privasi</a>
     </div>
 
     <p class="mt-4 text-muted" style="font-size:10px;">&copy; 2026 App Portal Sekolah. All rights reserved.</p>

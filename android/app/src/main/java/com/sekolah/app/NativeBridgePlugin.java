@@ -177,6 +177,43 @@ public class NativeBridgePlugin extends Plugin {
     }
 
     @PluginMethod
+    public void requestBatteryExemption(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent intent = new Intent();
+            String packageName = getContext().getPackageName();
+            PowerManager pm = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+            if (pm != null && !pm.isIgnoringBatteryOptimizations(packageName)) {
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + packageName));
+                getContext().startActivity(intent);
+            }
+        }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void checkExactAlarmSupport(PluginCall call) {
+        JSObject ret = new JSObject();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+            ret.put("isGranted", alarmManager != null && alarmManager.canScheduleExactAlarms());
+        } else {
+            ret.put("isGranted", true);
+        }
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void requestExactAlarmPermission(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+            intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+            getContext().startActivity(intent);
+        }
+        call.resolve();
+    }
+
+    @PluginMethod
     public void getAppInfo(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("version", "1.1.0-Premium");

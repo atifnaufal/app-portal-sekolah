@@ -103,6 +103,18 @@ Route::middleware('role:guru,siswa')->group(function () {
     // Help & FAQ (Premium Features)
     Route::get('/help/faq', [HelpController::class, 'faq'])->name('help.faq');
     Route::get('/about', [HelpController::class, 'about'])->name('about.show');
+    Route::get('/legal/privacy', function() {
+        return view('mobile.legal', [
+            'title' => 'Kebijakan Privasi',
+            'content' => 'Kami berkomitmen untuk melindungi data pribadi Anda. Data yang dikumpulkan hanya digunakan untuk keperluan akademik dan administrasi sekolah. Kami tidak membagikan data Anda kepada pihak ketiga tanpa izin Anda.'
+        ]);
+    })->name('legal.privacy');
+    Route::get('/legal/terms', function() {
+        return view('mobile.legal', [
+            'title' => 'Syarat & Ketentuan',
+            'content' => 'Dengan menggunakan aplikasi ini, Anda setuju untuk mematuhi semua peraturan sekolah yang berlaku. Segala bentuk penyalahgunaan akun akan ditindak tegas sesuai hukum yang berlaku di Indonesia.'
+        ]);
+    })->name('legal.terms');
     Route::get('/security/settings', [HelpController::class, 'security'])->name('security.settings');
     Route::get('/settings/notifications', [HelpController::class, 'notificationSettings'])->name('settings.notifications');
 });

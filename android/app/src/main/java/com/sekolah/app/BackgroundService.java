@@ -55,9 +55,10 @@ public class BackgroundService extends Service {
         // Start as foreground service to avoid being killed easily
         Notification notification = createForegroundNotification();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(AppConfig.NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+            startForeground(AppConfig.FOREGROUND_SERVICE_ID, notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC | ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
         } else {
-            startForeground(AppConfig.NOTIFICATION_ID, notification);
+            startForeground(AppConfig.FOREGROUND_SERVICE_ID, notification);
         }
 
         acquireWakeLock();
