@@ -10,9 +10,15 @@ public class NotificationReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "Alarm received, ensuring BackgroundService is running");
+        String action = intent.getAction();
+        Log.d(TAG, "Received action: " + action);
 
-        // The alarm acts as a watchdog to ensure the service is restarted if killed
-        BackgroundService.startService(context);
+        // Handle both alarm watchdog and device boot
+        if (Intent.ACTION_BOOT_COMPLETED.equals(action) ||
+            "android.intent.action.QUICKBOOT_POWERON".equals(action) ||
+            action == null) {
+            Log.d(TAG, "Ensuring BackgroundService is running after boot/alarm");
+            BackgroundService.startService(context);
+        }
     }
 }

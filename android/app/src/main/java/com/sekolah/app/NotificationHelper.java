@@ -53,16 +53,17 @@ public class NotificationHelper {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, AppConfig.CHANNEL_ID)
-                .setSmallIcon(R.drawable.splash)
+                .setSmallIcon(R.mipmap.ic_launcher) // Menggunakan launcher icon agar lebih premium
                 .setContentTitle(title)
                 .setContentText(message)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setPriority(NotificationCompat.PRIORITY_MAX) // Prioritas Maksimal
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setAutoCancel(true)
-                .setSound(getDefaultSoundUri(context))
+                .setDefaults(Notification.DEFAULT_ALL)
                 .setVibrate(new long[]{0, 500, 200, 500})
-                .setContentIntent(pendingIntent);
+                .setContentIntent(pendingIntent)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
