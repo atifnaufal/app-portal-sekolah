@@ -46,11 +46,14 @@ class TugasController extends Controller
                 $this->autoRecordNonSubmitters($t);
             }
 
-            $siswaCounts = User::where('role', 'siswa')
-                ->whereIn('kelas_id', $tugas->pluck('kelas_id')->unique()->filter())
-                ->selectRaw('kelas_id, count(*) as total')
-                ->groupBy('kelas_id')
-                ->pluck('total', 'kelas_id');
+            $uniqueKelasIds = $tugas->pluck('kelas_id')->unique()->filter();
+            $siswaCounts = $uniqueKelasIds->isNotEmpty()
+                ? User::where('role', 'siswa')
+                    ->whereIn('kelas_id', $uniqueKelasIds)
+                    ->selectRaw('kelas_id, count(*) as total')
+                    ->groupBy('kelas_id')
+                    ->pluck('total', 'kelas_id')
+                : collect();
 
             return view('mobile.tugas', [
                 'tugas' => $tugas,
