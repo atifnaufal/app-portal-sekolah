@@ -17,6 +17,7 @@
         background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
         border-bottom: 1px solid var(--line-strong);
         padding: 12px 20px; display: flex; align-items: center; gap: 12px;
+        margin-bottom: 24px;
     }
     .page-container { padding-top: 70px; padding-bottom: 48px; }
 
@@ -67,7 +68,7 @@
     .slide-up { animation: slideUp 0.4s ease both; }
 </style>
 
-<div class="page-header">
+<header class="page-header">
     <a href="{{ route('dashboard') }}" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
         <i class="bi bi-chevron-left h5 mb-0"></i>
     </a>
@@ -75,7 +76,7 @@
     @if($isGuru)
         <a href="{{ route('spp.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto" style="font-weight: 700;">+ Catat</a>
     @endif
-</div>
+</header>
 
 <div class="page-container px-3 pt-3">
     {{-- Hero --}}

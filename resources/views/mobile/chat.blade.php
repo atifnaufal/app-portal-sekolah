@@ -7,25 +7,25 @@
 
     .page-container { padding-bottom: 100px; }
 
-    .inbox-hero {
+    .header-block {
         background: var(--grad-hero);
         padding: 40px 24px 44px; color: #fff; position: relative; overflow: hidden;
         border-radius: 0 0 40px 40px;
         box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+        margin: 0 -16px 24px;
     }
-    .inbox-hero::after {
+    .header-block::after {
         content: ''; position: absolute; top: -40px; right: -30px;
         width: 160px; height: 160px; border-radius: 50%;
         background: radial-gradient(circle, rgba(99,102,241,.3) 0%, transparent 70%);
     }
 
-    .search-bar-wrap { margin-top: -22px; padding: 0 20px; position: relative; z-index: 10; }
-    .search-box {
-        background: #fff; border-radius: 20px; display: flex; align-items: center;
-        gap: 12px; padding: 4px 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-        border: 1px solid #f1f5f9;
+    .header-title {
+        padding: 24px 20px 12px; display: flex; align-items: center; gap: 10px;
+        font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+        color: #94a3b8;
     }
-    .search-box input { border: 0; outline: 0; width: 100%; padding: 12px 0; font-size: 14px; background: transparent; color: var(--navy); }
+    .header-title i { font-size: 16px; }
 
     .section-label {
         padding: 24px 20px 12px; display: flex; align-items: center; gap: 10px;
@@ -68,18 +68,28 @@
 </style>
 
 <div class="chat-app">
-    <div class="pui-topbar" style="background: transparent; border: 0;">
-        <a href="{{ route('dashboard') }}" class="back" style="color: #fff;"><i class="bi bi-chevron-left"></i> Beranda</a>
-    </div>
+    <header class="header-block">
+        <div class="header-title">
+            <i class="bi bi-chat"></i>
+            <div>
+                <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.6);">MESSAGE CENTER</div>
+                <h1 class="mt-2 text-white" style="font-size: 28px; font-weight: 900; letter-spacing: -0.02em;">Percakapan</h1>
+                <p class="mb-0 mt-1" style="font-size: 14px; color: rgba(255,255,255,0.8); font-weight: 500;">
+                    Terhubung dengan warga sekolah secara real-time.
+                </p>
+            </div>
+        </div>
+    </header>
 
     <div class="page-container">
-        <header class="inbox-hero">
-            <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.6);">MESSAGE CENTER</div>
-            <h1 class="mt-2 text-white" style="font-size: 28px; font-weight: 900; letter-spacing: -0.02em;">Percakapan</h1>
-            <p class="mb-0 mt-1" style="font-size: 14px; color: rgba(255,255,255,0.8); font-weight: 500;">
-                Terhubung dengan warga sekolah secara real-time.
-            </p>
-        </header>
+        <div class="search-bar-wrap">
+            <div class="search-box">
+                <i class="bi bi-search" style="color: #94a3b8;"></i>
+                <input type="text" id="searchChat" placeholder="Cari teman atau grup...">
+            </div>
+        </div>
+
+        <main>
 
         <div class="search-bar-wrap">
             <div class="search-box">

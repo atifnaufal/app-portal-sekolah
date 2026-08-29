@@ -35,17 +35,6 @@
     .pf-avatar img { width: 100%; height: 100%; object-fit: cover; display:block; }
     .pf-avatar .initial { font-size: 38px; font-weight: 800; color: rgba(255,255,255,0.85); }
 
-    /* Floating camera "ganti foto" badge (bawah kanan avatar) */
-    .pf-cam-badge {
-        position:absolute; right:-7px; bottom:-7px; width:38px; height:38px;
-        border-radius:50%; background:var(--grad-primary);
-        border:3px solid #fff; color:#fff; display:flex; align-items:center;
-        justify-content:center; font-size:16px; cursor:pointer; z-index:2;
-        box-shadow:0 6px 16px rgba(79,70,229,0.45);
-        transition: transform .15s;
-    }
-    .pf-cam-badge:active { transform:scale(0.9); }
-
     .pf-name { font-size:24px; font-weight:800; letter-spacing:-0.02em; }
     .pf-badges { margin-top:6px; }
     .pf-role-pill {
@@ -119,13 +108,10 @@
     {{-- Hero --}}
     <div class="pf-hero">
         <div class="pf-avatar-badge">
-            <div class="pf-avatar" id="avatarDisplay" onclick="document.getElementById('pfFotoInput').click()">
+            <div class="pf-avatar" id="avatarDisplay" onclick="document.getElementById('avatarInput').click()">
                 <img src="{{ $user->avatar_url }}" id="avatarImg" style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
             </div>
-            <div class="pf-cam-badge" onclick="document.getElementById('pfFotoInput').click()">
-                <i class="bi bi-camera-fill"></i>
-            </div>
-            <input type="file" id="pfFotoInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="pfUploadFoto(this)">
+            <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="pfUploadFoto(this)">
         </div>
         <div class="pf-name" id="nameDisplay">{{ $user->name }}</div>
         <div class="pf-badges">
@@ -207,11 +193,7 @@
     </div>
 
     {{-- Action Buttons --}}
-    <a href="{{ route('profile.edit') }}" class="pui-btn pui-btn-primary pui-btn-block" style="padding:14px;border-radius:var(--radius-sm);margin-bottom:10px;">
-        <i class="bi bi-pencil-square"></i> Edit Profil
-    </a>
-
-    {{-- Logout --}}
+    <div style="background:#fff5f5;border:1px solid #fee2e2;border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
     <div style="background:#fff5f5;border:1px solid #fee2e2;border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
         <div>
             <div style="font-size:13px;font-weight:700;color:#dc2626;">Keluar Akun?</div>
@@ -239,9 +221,9 @@ function showToast(msg, type) {
     setTimeout(function() { t.classList.remove('show'); }, 5000);
 }
 
-// --- Ganti foto langsung dari profil (premium camera badge) ---
+// --- Fungsi upload foto dari profil ---
 var pfCsrf = '{{ csrf_token() }}';
-var pfFotoUrl = @json($user->foto ? asset('storage/'.$user->foto) : null);
+var avatarImgUrl = @json($user->foto ? asset('storage/'.$user->foto) : null);
 var pfPosX = {{ $user->foto_posisi_x ?? 50 }};
 var pfPosY = {{ $user->foto_posisi_y ?? 50 }};
 
@@ -258,7 +240,7 @@ function pfUploadFoto(input) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.ok) {
-            pfFotoUrl = data.url;
+            avatarImgUrl = data.url;
             var img = document.getElementById('avatarImg');
             img.src = data.url;
             img.style.display = 'block';
@@ -280,17 +262,19 @@ var pfPosStart = {x:50,y:50};
 
 pfWrap.addEventListener('mousedown', function(e) { pfStartDrag(e.clientX, e.clientY); e.preventDefault(); });
 pfWrap.addEventListener('touchstart', function(e) { pfStartDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
+
+function pfStartDrag(x, y) {
+    if (!avatarImgUrl) return;
+    pfDragging = true;
+    pfDragStart = {x:x, y:y};
+    pfPosStart = {x:pfPosX, y:pfPosY};
+}
+
 document.addEventListener('mousemove', function(e) { if(pfDragging) pfMoveDrag(e.clientX, e.clientY); });
 document.addEventListener('touchmove', function(e) { if(pfDragging) pfMoveDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
 document.addEventListener('mouseup', pfEndDrag);
 document.addEventListener('touchend', pfEndDrag);
 
-function pfStartDrag(x, y) {
-    if (!pfFotoUrl) return;
-    pfDragging = true;
-    pfDragStart = {x:x, y:y};
-    pfPosStart = {x:pfPosX, y:pfPosY};
-}
 function pfMoveDrag(x, y) {
     var rect = pfWrap.getBoundingClientRect();
     var dx = ((x - pfDragStart.x) / rect.width) * 100;
