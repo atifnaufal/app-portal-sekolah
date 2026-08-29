@@ -77,9 +77,23 @@
                 function goRecap(type) {
                     var sem = document.getElementById('rekapSemester').value;
                     var base = '{{ route('nilai.recap', $managedClass->id) }}';
-                    window.open(base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem, '_blank');
+                    var url = base + (type === 'excel' ? '/excel' : '') + '?semester=' + sem;
+                    
+                    // Try window.open first, but show fallback message
+                    var win = window.open(url, '_blank');
+                    if (win) {
+                        // Window opened successfully - track progress
+                        var timer = setInterval(function() {
+                            if (win.document.readyState === 'complete') {
+                                clearInterval(timer);
+                                setTimeout(function() { win.close(); }, 1000);
+                            }
+                        }, 100);
+                    } else {
+                        // Pop-up blocked - provide instructions
+                        alert('Pop-up diblokir by browser. Izinkan pop-up untuk situs ini, lalu coba lagi.\n\nAtau: Buka menu desktop dan gunakan link download yang tersedia.');
+                    }
                 }
-            </script>
         @endif
         <div class="mt-2" style="font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.6;">
             {{ $isGuru ? 'Monitor dan evaluasi performa akademik siswa di kelas Anda secara real-time.' : 'Rekapitulasi pencapaian tugas, UTS, dan UAS Anda sepanjang semester ini.' }}

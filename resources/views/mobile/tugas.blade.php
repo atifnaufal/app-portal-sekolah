@@ -101,6 +101,34 @@
     <div class="fw-bold" style="font-size: 18px; letter-spacing: -0.4px;">Pusat Tugas</div>
     @if($isGuru)
         <a href="{{ route('tugas.create') }}" class="btn btn-primary btn-sm rounded-pill px-3 ms-auto" style="font-weight: 700;">+ Buat</a>
+        <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
+                <select id="rekapSemester" class="form-select form-select-sm rounded-pill text-dark fw-semibold" style="width:auto; background:#fff; border:none;">
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                </select>
+                <a href="#" id="btnRecapPdf" onclick="goRecapTugas('pdf'); return false;" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
+                </a>
+                <a href="#" id="btnRecapExcel" onclick="goRecapTugas('excel'); return false;" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
+                </a>
+            </div>
+            <script>
+                function goRecapTugas(type) {
+                    if (type === 'excel') {
+                        var tugasId = prompt('Masukkan ID Tugas untuk export Excel:', '');
+                        if (tugasId) {
+                            window.open('{{ route('tugas.export.excel') }}?tugas=' + tugasId, '_blank');
+                        }
+                        return false;
+                    }
+                    if (window.tugasList && window.tugasList.length > 0) {
+                        window.open('{{ route('tugas.export.pdf') }}?tugas=' + window.tugasList[0], '_blank');
+                    } else {
+                        alert('Pilih tugas terlebih dahulu untuk export PDF.');
+                    }
+                }
+            </script>
     @endif
 </div>
 
