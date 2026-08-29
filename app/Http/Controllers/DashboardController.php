@@ -60,6 +60,14 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
+        $classmates = collect();
+        if ($user->kelas_id) {
+            $classmates = User::where('kelas_id', $user->kelas_id)
+                ->where('role', 'siswa')
+                ->orderBy('name')
+                ->get();
+        }
+
         return view('mobile.dashboard', [
             'user' => $user,
             'mapels' => $mapels,
@@ -72,6 +80,7 @@ class DashboardController extends Controller
             'absensiHariIni' => $absensiHariIni,
             'absensiBulan' => $absensiBulan,
             'totalSiswaKelas' => User::where('role', 'siswa')->where('kelas_id', $user->kelas_id)->count(),
+            'classmates' => $classmates,
         ]);
     }
 }

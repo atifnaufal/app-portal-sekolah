@@ -19,6 +19,15 @@
         default => 'Selamat Malam',
     };
     $honorific = $isGuru ? 'Pak' : 'Kak';
+
+    // Avatar logic
+    $avatarUrl = asset('storage/'.$user->foto);
+    if (!$user->foto) {
+        $gender = strtolower($user->jenis_kelamin ?? 'L');
+        $avatarUrl = $gender === 'p'
+            ? 'https://avatar.iran.liara.run/public/girl'
+            : 'https://avatar.iran.liara.run/public/boy';
+    }
 @endphp
 
 <style>
@@ -51,7 +60,6 @@
     .hero-avatar {
         width: 56px; height: 56px; border-radius: 18px;
         overflow: hidden; display: flex; align-items: center; justify-content: center;
-        font-size: 22px; font-weight: 800; flex-shrink: 0;
         background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
@@ -148,6 +156,25 @@
     .absen-val { font-size: 16px; font-weight: 800; color: var(--navy); }
     .absen-lab { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
 
+    /* Bottom Sheet Classmates */
+    .sheet {
+        position: fixed; inset: 0; z-index: 3000; display: none;
+        align-items: flex-end; justify-content: center;
+        background: rgba(15, 23, 42, .45); backdrop-filter: blur(4px);
+    }
+    .sheet.open { display: flex; }
+    .sheet-card {
+        width: 100%; max-width: 640px; background: #fff;
+        border-radius: 32px 32px 0 0; padding: 24px 20px 40px;
+        animation: slideSheet 0.3s ease-out;
+    }
+    @keyframes slideSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .classmate-row {
+        display: flex; align-items: center; gap: 12px; padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .classmate-avatar { width: 44px; height: 44px; border-radius: 14px; object-fit: cover; background: #f1f5f9; }
+
     @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .animate-up { animation: slideIn 0.5s ease both; }
 </style>
@@ -159,11 +186,7 @@
             <div style="display:flex;align-items:center;gap:16px;">
                 <div class="hero-avatar-wrap">
                     <div class="hero-avatar">
-                        @if($user->foto)
-                            <img src="{{ asset('storage/'.$user->foto) }}">
-                        @else
-                            {{ strtoupper(substr($user->name, 0, 1)) }}
-                        @endif
+                        <img src="{{ $avatarUrl }}">
                     </div>
                     <div class="role-indicator">
                         <i class="bi {{ $isGuru ? 'bi-person-badge-fill' : 'bi-mortarboard-fill' }}"></i>
@@ -211,19 +234,11 @@
             <div class="val">{{ $pctHadir }}%</div>
             <div class="lab">Hadir</div>
         </div>
-        @if($isGuru)
-            <div class="stat-item">
-                <div class="ico" style="background: #fdf2f8; color: #db2777;"><i class="bi bi-people"></i></div>
-                <div class="val">{{ $totalSiswaKelas }}</div>
-                <div class="lab">Siswa</div>
-            </div>
-        @else
-            <a href="{{ route('spp.index') }}" class="stat-item">
-                <div class="ico" style="background: #fffbeb; color: #d97706;"><i class="bi bi-wallet2"></i></div>
-                <div class="val">{{ $spp['lunas'] ?? 0 }}<span style="font-size:11px;opacity:0.5;">/{{ $spp['total'] ?? 0 }}</span></div>
-                <div class="lab">SPP</div>
-            </a>
-        @endif
+        <a href="#" onclick="openClassmates(); return false;" class="stat-item">
+            <div class="ico" style="background: #fdf2f8; color: #db2777;"><i class="bi bi-people"></i></div>
+            <div class="val">{{ $totalSiswaKelas }}</div>
+            <div class="lab">Siswa</div>
+        </a>
     </div>
 
     {{-- Premium Quick Menu --}}
@@ -364,7 +379,53 @@
     @endif
 </div>
 
+{{-- Bottom Sheet Classmates --}}
+<div class="sheet" id="classmatesSheet" onclick="if(event.target===this)closeClassmates()">
+    <div class="sheet-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="h5 fw-bold mb-0">Teman Sekelas ({{ $user->kelas->nama ?? '-' }})</h3>
+            <button type="button" class="btn-close" onclick="closeClassmates()"></button>
+        </div>
+        <div style="max-height: 60vh; overflow-y: auto; padding-right: 4px;">
+            @forelse($classmates as $cm)
+                @php
+                    $cmAvatar = asset('storage/'.$cm->foto);
+                    if (!$cm->foto) {
+                        $cmGender = strtolower($cm->jenis_kelamin ?? 'L');
+                        $cmAvatar = $cmGender === 'p'
+                            ? 'https://avatar.iran.liara.run/public/girl'
+                            : 'https://avatar.iran.liara.run/public/boy';
+                    }
+                @endphp
+                <div class="classmate-row">
+                    <img src="{{ $cmAvatar }}" class="classmate-avatar">
+                    <div style="flex:1;">
+                        <div class="fw-bold" style="font-size:14px; color:var(--navy);">{{ $cm->name }}</div>
+                        <div class="small text-muted">NIS: {{ $cm->nik ?? '-' }}</div>
+                    </div>
+                    @if($cm->id !== $user->id)
+                        <a href="{{ route('chat.index', ['user_id' => $cm->id]) }}" class="pui-btn pui-btn-ghost pui-btn-sm pui-btn-round" style="width:36px;height:36px;padding:0;">
+                            <i class="bi bi-chat-text"></i>
+                        </a>
+                    @endif
+                </div>
+            @empty
+                <div class="text-center py-5 text-muted">Belum ada data teman sekelas.</div>
+            @endforelse
+        </div>
+    </div>
+</div>
+
 <script>
+    function openClassmates() {
+        document.getElementById('classmatesSheet').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeClassmates() {
+        document.getElementById('classmatesSheet').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
     // Voice notification if any unread
     var unreadCount = {{ $unreadNotificationsCount }};
     var lastKnown = localStorage.getItem('last_notif_count');
