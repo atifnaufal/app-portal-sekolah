@@ -31,7 +31,7 @@ Route::get('/download/apk', function () {
     $apk = public_path('downloads/app-portal-sekolah.apk');
 
     if (is_file($apk)) {
-        return response()->download($apk, 'app-portal-sekolah1.apk', [
+        return response()->download($apk, 'aplikasi portal sekolah.apk', [
             'Content-Type' => 'application/vnd.android.package-archive',
         ]);
     }

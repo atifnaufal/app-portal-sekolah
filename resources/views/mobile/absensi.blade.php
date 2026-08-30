@@ -100,7 +100,7 @@
             <div class="pui-empty">
                 <i class="bi bi-exclamation-octagon ico"></i>
                 <h4>Absensi Nonaktif</h4>
-                <p>Fitur absensi sedang dinonaktifkan oleh Admin.</p>
+                <p>Fitur absensi digital sedang dinonaktifkan oleh Admin.</p>
             </div>
         @else
             <div class="card absen-card success">
@@ -144,7 +144,7 @@
                         </div>
 
                         <button id="open-camera-btn" type="button" class="btn btn-primary w-100 btn-premium">
-                            <i class="bi bi-camera-fill me-2"></i> Buka Kamera Vermuk
+                            <i class="bi bi-camera-fill me-2"></i> Buka Kamera verifikasi muka
                         </button>
 
                         <form method="POST" action="{{ route('absensi.store') }}" enctype="multipart/form-data" id="absensiForm" class="d-none mt-3">
