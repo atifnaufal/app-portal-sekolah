@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\ChatMessageEvent;
 use App\Models\ChatGroup;
 use App\Models\ChatMessage;
+use App\Models\Notifikasi;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -51,11 +52,33 @@ class ChatController extends Controller
         $eskulGroups = $groups->filter(fn ($g) => $g->type === 'eskul');
         $privateGroups = $groups->filter(fn ($g) => $g->type === 'private');
 
+        // Hitung unread per group dari tabel notifikasi
+        $unreadMap = [];
+        $groupIds = $groups->pluck('id')->toArray();
+        if (!empty($groupIds)) {
+            $unreadRows = Notifikasi::where('user_id', $userId)
+                ->whereNull('dibaca_pada')
+                ->where(function ($q) use ($groupIds) {
+                    foreach ($groupIds as $gid) {
+                        $q->orWhere('url', 'like', '%/chat/' . $gid . '%');
+                    }
+                })
+                ->selectRaw('url, count(*) as total')
+                ->groupBy('url')
+                ->get();
+            foreach ($unreadRows as $row) {
+                if (preg_match('#/chat/(\d+)#', $row->url, $m)) {
+                    $unreadMap[(int) $m[1]] = (int) $row->total;
+                }
+            }
+        }
+
         return view('mobile.chat', [
             'user' => $user,
             'classGroups' => $classGroups,
             'eskulGroups' => $eskulGroups,
             'privateGroups' => $privateGroups,
+            'unreadMap' => $unreadMap,
         ]);
     }
 
@@ -179,6 +202,17 @@ class ChatController extends Controller
 
         try {
             broadcast(new ChatMessageEvent($message));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        // Kirim notifikasi ke semua member kecuali pengirim
+        try {
+            \App\Helpers\NotificationHelper::sendToChat(
+                $group->id,
+                $userId,
+                $data['pesan'] ?? ''
+            );
         } catch (\Throwable $e) {
             report($e);
         }

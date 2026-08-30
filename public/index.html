@@ -53,8 +53,8 @@
                     redirectToApp();
                 }
             } catch (error) {
-                // Jika gagal konek ke server, tampilkan maintenance offline
-                showErrorMode('Tidak bisa terkoneksi ke server. Aplikasi akan cek kembali.');
+                // Jika gagal konek ke server, tampilkan pesan generik tanpa detail
+                showErrorMode('Tidak bisa terkoneksi ke server. Silakan coba lagi.');
                 setTimeout(redirectToApp, 3000);
             }
         }
@@ -78,14 +78,7 @@
         }
 
         function showErrorMode(message) {
-            const container = document.querySelector('.container');
-            container.innerHTML = `
-                <div class="error-box">
-                    <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 24px; color: #dc2626;"></i>
-                    <h3>Koneksi Gagal</h3>
-                    <p>${message}</p>
-                </div>
-            `;
+            document.body.innerHTML = '<div style="font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;"><div style="width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:24px;display:grid;place-items:center;margin:0 auto 20px;"><i style="font-size:36px;color:#fbbf24;">&#9888;</i></div><h4 style="font-size:18px;font-weight:700;margin-bottom:8px;">Terjadi Gangguan</h4><p style="font-size:13px;color:#94a3b8;max-width:300px;margin:0 auto 24px;">' + message + '</p><button onclick="location.reload()" style="padding:12px 28px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">Coba Lagi</button></div>';
         }
 
         function redirectToApp() {

@@ -13,19 +13,20 @@ class NotificationEvent implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $title;
-
     public $message;
-
-    public $type; // 'announcement' or 'task'
-
+    public $type;
+    public $actorName;
+    public $actorPhoto;
     public $userId;
 
-    public function __construct($userId, $title, $message, $type = 'announcement')
+    public function __construct($userId, $title, $message, $type = 'general', $actorName = null, $actorPhoto = null)
     {
         $this->userId = $userId;
         $this->title = $title;
         $this->message = $message;
         $this->type = $type;
+        $this->actorName = $actorName;
+        $this->actorPhoto = $actorPhoto;
     }
 
     public function broadcastOn(): array
@@ -46,6 +47,8 @@ class NotificationEvent implements ShouldBroadcast
             'title' => $this->title,
             'message' => $this->message,
             'type' => $this->type,
+            'actor_name' => $this->actorName,
+            'actor_photo' => $this->actorPhoto,
         ];
     }
 }

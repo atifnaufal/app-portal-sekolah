@@ -9,7 +9,7 @@ class Notifikasi extends Model
 {
     protected $table = 'notifikasi';
 
-    protected $fillable = ['user_id', 'judul', 'pesan', 'url', 'dibaca_pada'];
+    protected $fillable = ['user_id', 'judul', 'pesan', 'url', 'dibaca_pada', 'type', 'actor_name', 'actor_photo'];
 
     protected function casts(): array
     {

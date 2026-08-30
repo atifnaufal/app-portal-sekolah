@@ -140,6 +140,9 @@
                         </div>
                         <div class="chat-meta">
                             <div class="chat-time">{{ $g->lastMessage ? $g->lastMessage->created_at->format('H:i') : '' }}</div>
+                            @if(isset($unreadMap[$g->id]) && $unreadMap[$g->id] > 0)
+                                <div class="unread-badge">{{ $unreadMap[$g->id] }}</div>
+                            @endif
                         </div>
                     </a>
                 @endforeach
@@ -168,10 +171,13 @@
                             @endif
                         </div>
                     </div>
-                    <div class="chat-meta">
-                        <div class="chat-time">{{ $g->lastMessage ? $g->lastMessage->created_at->format('H:i') : '' }}</div>
-                    </div>
-                </a>
+                        <div class="chat-meta">
+                            <div class="chat-time">{{ $g->lastMessage ? $g->lastMessage->created_at->format('H:i') : '' }}</div>
+                            @if(isset($unreadMap[$g->id]) && $unreadMap[$g->id] > 0)
+                                <div class="unread-badge">{{ $unreadMap[$g->id] }}</div>
+                            @endif
+                        </div>
+                    </a>
             @empty
                 <div class="text-center py-4 text-muted small">Belum ada grup kelas.</div>
             @endforelse
@@ -202,6 +208,9 @@
                         </div>
                         <div class="chat-meta">
                             <div class="chat-time">{{ $g->lastMessage ? $g->lastMessage->created_at->format('H:i') : '' }}</div>
+                            @if(isset($unreadMap[$g->id]) && $unreadMap[$g->id] > 0)
+                                <div class="unread-badge">{{ $unreadMap[$g->id] }}</div>
+                            @endif
                         </div>
                     </a>
                 @endforeach

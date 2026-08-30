@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Events\NotificationEvent;
+use App\Models\ChatGroup;
 use App\Models\Notifikasi;
 use App\Models\User;
 
@@ -11,7 +12,7 @@ class NotificationHelper
     /**
      * Send a notification to a specific user.
      */
-    public static function send($userId, $title, $message, $url = null, $type = 'general')
+    public static function send($userId, $title, $message, $url = null, $type = 'general', $actorName = null, $actorPhoto = null)
     {
         Notifikasi::create([
             'user_id' => $userId,
@@ -19,10 +20,39 @@ class NotificationHelper
             'pesan' => $message,
             'url' => $url,
             'dibaca_pada' => null,
+            'type' => $type,
+            'actor_name' => $actorName,
+            'actor_photo' => $actorPhoto,
         ]);
 
-        // Trigger real-time event (private channel per-user)
-        event(new NotificationEvent($userId, $title, $message, $type));
+        event(new NotificationEvent($userId, $title, $message, $type, $actorName, $actorPhoto));
+    }
+
+    /**
+     * Send chat notification to all group members except sender.
+     */
+    public static function sendToChat($chatGroupId, $senderUserId, $message)
+    {
+        $group = ChatGroup::find($chatGroupId);
+        if (!$group) return;
+
+        $sender = User::find($senderUserId);
+        if (!$sender) return;
+
+        $actorName = $sender->name ?? 'Seseorang';
+        $actorPhoto = $sender->foto ?? null;
+        $preview = mb_strlen($message) > 80 ? mb_substr($message, 0, 80) . '...' : $message;
+        if (empty(trim($preview))) $preview = 'Mengirim lampiran';
+
+        $title = $ group->type === 'private' ? $actorName : $group->name;
+        $url = '/chat/' . $chatGroupId;
+
+        $memberIds = $group->members()->pluck('users.id')->toArray();
+        $recipients = array_filter($memberIds, fn($id) => $id != $senderUserId);
+
+        foreach ($recipients as $userId) {
+            self::send($userId, $title, $preview, $url, 'chat', $actorName, $actorPhoto);
+        }
     }
 
     /**

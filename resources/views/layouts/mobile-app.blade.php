@@ -244,29 +244,26 @@
                 <i class="bi bi-shield-lock-fill" style="font-size:32px;color:var(--blue-bright);"></i>
             </div>
             <h4 class="fw-bold mb-1">Akses Terkunci</h4>
-            <p class="text-muted small">Masukkan PIN atau gunakan Biometrik</p>
+            <p id="lock-subtitle" class="text-muted small">Masukkan PIN atau gunakan Biometrik</p>
+            <p id="lock-error" class="small" style="color:#f87171;display:none;margin-top:8px;"></p>
+            <p id="lock-countdown" class="small" style="color:#fbbf24;display:none;margin-top:8px;"></p>
         </div>
 
         <div id="lock-pin-container" class="w-100" style="max-width:280px;">
-            <div class="d-flex justify-content-between mb-4" id="pin-dots">
-                <div style="width:16px;height:16px;border-radius:50%;border:2px solid #fff;"></div>
-                <div style="width:16px;height:16px;border-radius:50%;border:2px solid #fff;"></div>
-                <div style="width:16px;height:16px;border-radius:50%;border:2px solid #fff;"></div>
-                <div style="width:16px;height:16px;border-radius:50%;border:2px solid #fff;"></div>
-            </div>
+            <div class="d-flex justify-content-center gap-3 mb-4" id="pin-dots"></div>
 
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center;">
+            <div id="pin-keypad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center;">
                 @foreach([1,2,3,4,5,6,7,8,9] as $n)
-                    <button class="pui-btn pui-btn-ghost pui-btn-round" style="height:60px;width:60px;background:rgba(255,255,255,0.05);border-color:transparent;color:#fff;font-size:20px;" onclick="inputPin({{ $n }})">{{ $n }}</button>
+                    <button class="pui-btn pui-btn-ghost pui-btn-round pin-key" style="height:60px;width:60px;background:rgba(255,255,255,0.05);border-color:transparent;color:#fff;font-size:20px;" onclick="inputPin({{ $n }})">{{ $n }}</button>
                 @endforeach
-                <button class="pui-btn pui-btn-ghost pui-btn-round" style="height:60px;width:60px;background:transparent;border-color:transparent;color:#fff;" onclick="useBiometric()"><i class="bi bi-fingerprint" style="font-size:24px;"></i></button>
-                <button class="pui-btn pui-btn-ghost pui-btn-round" style="height:60px;width:60px;background:rgba(255,255,255,0.05);border-color:transparent;color:#fff;font-size:20px;" onclick="inputPin(0)">0</button>
-                <button class="pui-btn pui-btn-ghost pui-btn-round" style="height:60px;width:60px;background:transparent;border-color:transparent;color:#fff;" onclick="clearPin()"><i class="bi bi-backspace" style="font-size:20px;"></i></button>
+                <button class="pui-btn pui-btn-ghost pui-btn-round pin-key" id="btn-biometric" style="height:60px;width:60px;background:transparent;border-color:transparent;color:#fff;display:none;" onclick="useBiometric()"><i class="bi bi-fingerprint" style="font-size:24px;"></i></button>
+                <button class="pui-btn pui-btn-ghost pui-btn-round pin-key" style="height:60px;width:60px;background:rgba(255,255,255,0.05);border-color:transparent;color:#fff;font-size:20px;" onclick="inputPin(0)">0</button>
+                <button class="pui-btn pui-btn-ghost pui-btn-round pin-key" style="height:60px;width:60px;background:transparent;border-color:transparent;color:#fff;" onclick="clearPin()"><i class="bi bi-backspace" style="font-size:20px;"></i></button>
             </div>
         </div>
 
         <div class="mt-5">
-            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="text-white-50 text-decoration-none small">Logout Akun</a>
+            <a href="{{ route('logout') }}" onclick="event.preventDefault(); localStorage.removeItem('pin_set'); localStorage.removeItem('biometric_enabled'); sessionStorage.clear(); document.getElementById('logout-form').submit();" class="text-white-50 text-decoration-none small">Logout Akun</a>
             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
         </div>
     </div>
@@ -294,8 +291,8 @@
     <div id="portal-toast" class="animate__animated animate__fadeInDown" style="display:none;">
         <a id="toast-link" href="#" style="display:block; text-decoration:none; color:inherit;">
             <div class="d-flex align-items-center gap-3">
-                <div style="width: 42px; height: 42px; background: #e8f0fe; border-radius: 12px; display: grid; place-items: center; color: var(--blue); flex-shrink:0;">
-                    <i class="bi bi-bell-fill" style="font-size:18px;"></i>
+                <div id="toast-icon-box" style="width: 42px; height: 42px; background: #e8f0fe; border-radius: 12px; display: grid; place-items: center; color: var(--blue); flex-shrink:0;">
+                    <i id="toast-icon" class="bi bi-bell-fill" style="font-size:18px;"></i>
                 </div>
                 <div style="flex: 1; min-width:0;">
                     <div id="toast-title" class="fw-bold text-dark" style="font-size: 14px; line-height:1.3;">Notifikasi</div>
@@ -358,8 +355,17 @@
         var toastTimer = null;
         var lastSoundAt = 0;
 
+        var NOTIF_ICONS = {
+            chat: { icon: 'bi-chat-left-text-fill', bg: '#eff6ff', color: '#2563eb' },
+            tugas: { icon: 'bi-journal-text', bg: '#f0fdf4', color: '#16a34a' },
+            pengumuman: { icon: 'bi-megaphone-fill', bg: '#fefce8', color: '#ca8a04' },
+            spp: { icon: 'bi-wallet2', bg: '#fff7ed', color: '#ea580c' },
+            absensi: { icon: 'bi-calendar-check-fill', bg: '#faf5ff', color: '#9333ea' },
+            eskul: { icon: 'bi-people-fill', bg: '#f0fdf4', color: '#15803d' },
+            general: { icon: 'bi-bell-fill', bg: '#e8f0fe', color: '#3b82f6' }
+        };
+
         function playNotifSound() {
-            // Debounce: jangan bunyi berulang/beruntun dalam 1,5 detik
             var now = Date.now();
             var snd = document.getElementById('notif-sound');
             if (snd && (now - lastSoundAt) > 1500) {
@@ -369,8 +375,24 @@
             }
         }
 
-        function showNotification(title, message, url) {
-            document.getElementById('toast-title').innerText = title || 'Notifikasi';
+        function showNotification(title, message, url, type, actorName) {
+            type = type || 'general';
+            var cfg = NOTIF_ICONS[type] || NOTIF_ICONS.general;
+
+            // Set icon
+            var iconBox = document.getElementById('toast-icon-box');
+            iconBox.style.background = cfg.bg;
+            iconBox.style.color = cfg.color;
+            var iconEl = document.getElementById('toast-icon');
+            iconEl.className = 'bi ' + cfg.icon;
+
+            // Set title: for chat, show actor name as title
+            if (type === 'chat' && actorName) {
+                document.getElementById('toast-title').innerText = actorName;
+            } else {
+                document.getElementById('toast-title').innerText = title || 'Notifikasi';
+            }
+
             document.getElementById('toast-msg').innerText = message || '';
             document.getElementById('toast-link').setAttribute('href', url || '#');
             playNotifSound();
@@ -459,7 +481,7 @@
 
                         if (d.new_last_id && d.new_last_id > lastId) {
                             (d.items || []).forEach(function (it) {
-                                showNotification(it.judul, it.pesan, it.url || '#');
+                                showNotification(it.judul, it.pesan, it.url || '#', it.type, it.actor_name);
                             });
                             lastId = d.new_last_id;
                         }
@@ -502,7 +524,7 @@
                 try {
                     window.Echo.private('portal-notifications.' + myId)
                         .listen('.new-notification', function (e) {
-                            showNotification(e.title || 'Notifikasi', e.message || '', '#');
+                            showNotification(e.title || 'Notifikasi', e.message || '', '#', e.type, e.actor_name);
                             var dots = document.querySelectorAll('[data-live-dot]');
                             dots.forEach(function (h) { h.style.display = 'block'; });
                         });
@@ -622,63 +644,293 @@
     </script>
 
     <script>
-        var currentPin = "";
-        function inputPin(n) {
-            if (currentPin.length < 4) {
-                currentPin += n;
-                updatePinDots();
-                if (currentPin.length === 4) {
-                    verifyAppPin();
+        // ===== PREMIUM SECURITY SYSTEM =====
+        (function() {
+            var PIN_MIN = 4;
+            var PIN_MAX = 6;
+            var MAX_ATTEMPTS = 5;
+            var LOCKOUT_SECONDS = 30;
+            var storedPinLength = 4;
+
+            var currentPin = '';
+            var attemptCount = parseInt(sessionStorage.getItem('pin_attempts') || '0', 10);
+            var lockoutUntil = parseInt(sessionStorage.getItem('lockout_until') || '0', 10);
+            var autoLockTimer = null;
+            var biometricPrompting = false;
+
+            function getAutoLockSeconds() {
+                return parseInt(localStorage.getItem('auto_lock_seconds') || '60', 10);
+            }
+
+            function getPinLength() {
+                return new Promise(function(resolve) {
+                    if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                        window.Capacitor.Plugins.NativeBridge.getPinLength().then(function(res) {
+                            storedPinLength = res.length || 4;
+                            resolve(storedPinLength);
+                        }).catch(function() { resolve(4); });
+                    } else { resolve(4); }
+                });
+            }
+
+            function renderPinDots(length) {
+                var container = document.getElementById('pin-dots');
+                container.innerHTML = '';
+                for (var i = 0; i < length; i++) {
+                    var dot = document.createElement('div');
+                    dot.style.cssText = 'width:16px;height:16px;border-radius:50%;border:2px solid #fff;transition:all 0.2s;';
+                    container.appendChild(dot);
                 }
             }
-        }
-        function updatePinDots() {
-            var dots = document.getElementById('pin-dots').children;
-            for (var i = 0; i < dots.length; i++) {
-                dots[i].style.background = (i < currentPin.length) ? '#fff' : 'transparent';
-            }
-        }
-        function clearPin() {
-            currentPin = "";
-            updatePinDots();
-        }
-        function verifyAppPin() {
-            if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
-                window.Capacitor.Plugins.NativeBridge.verifyPin({ pin: currentPin }).then(function(res) {
-                    if (res.isValid) {
-                        unlockApp();
+
+            function updatePinDots() {
+                var dots = document.getElementById('pin-dots').children;
+                for (var i = 0; i < dots.length; i++) {
+                    if (i < currentPin.length) {
+                        dots[i].style.background = '#fff';
+                        dots[i].style.transform = 'scale(1.1)';
+                        setTimeout(function(el) { el.style.transform = 'scale(1)'; }, 100, dots[i]);
                     } else {
-                        currentPin = "";
-                        updatePinDots();
-                        showNotification('Keamanan', 'PIN Salah');
+                        dots[i].style.background = 'transparent';
+                        dots[i].style.transform = 'scale(1)';
+                    }
+                }
+            }
+
+            function showError(msg) {
+                var el = document.getElementById('lock-error');
+                el.textContent = msg;
+                el.style.display = 'block';
+                setTimeout(function() { el.style.display = 'none'; }, 3000);
+            }
+
+            function showCountdown(seconds) {
+                var el = document.getElementById('lock-countdown');
+                el.style.display = 'block';
+                var remaining = seconds;
+                el.textContent = 'Terlalu banyak percobaan. Coba lagi dalam ' + remaining + ' detik.';
+                var interval = setInterval(function() {
+                    remaining--;
+                    if (remaining <= 0) {
+                        clearInterval(interval);
+                        el.style.display = 'none';
+                        attemptCount = 0;
+                        sessionStorage.removeItem('pin_attempts');
+                        sessionStorage.removeItem('lockout_until');
+                        enableKeypad(true);
+                    } else {
+                        el.textContent = 'Terlalu banyak percobaan. Coba lagi dalam ' + remaining + ' detik.';
+                    }
+                }, 1000);
+            }
+
+            function enableKeypad(enabled) {
+                var keys = document.querySelectorAll('.pin-key');
+                keys.forEach(function(k) { k.disabled = !enabled; k.style.opacity = enabled ? '1' : '0.3'; });
+            }
+
+            window.inputPin = function(n) {
+                if (Date.now() < lockoutUntil) return;
+                if (currentPin.length < PIN_MAX) {
+                    currentPin += n;
+                    updatePinDots();
+                    if (currentPin.length === storedPinLength) {
+                        verifyAppPin();
+                    }
+                }
+            };
+
+            window.clearPin = function() {
+                currentPin = '';
+                updatePinDots();
+            };
+
+            function verifyAppPin() {
+                if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                    window.Capacitor.Plugins.NativeBridge.verifyPin({ pin: currentPin }).then(function(res) {
+                        if (res.isValid) {
+                            unlockApp();
+                        } else {
+                            attemptCount++;
+                            sessionStorage.setItem('pin_attempts', attemptCount);
+                            currentPin = '';
+                            updatePinDots();
+                            if (attemptCount >= MAX_ATTEMPTS) {
+                                lockoutUntil = Date.now() + (LOCKOUT_SECONDS * 1000);
+                                sessionStorage.setItem('lockout_until', lockoutUntil);
+                                enableKeypad(false);
+                                showCountdown(LOCKOUT_SECONDS);
+                            } else {
+                                showError('PIN Salah. Sisa percobaan: ' + (MAX_ATTEMPTS - attemptCount));
+                            }
+                        }
+                    });
+                }
+            }
+
+            window.useBiometric = function() {
+                if (biometricPrompting) return;
+                if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                    biometricPrompting = true;
+                    window.Capacitor.Plugins.NativeBridge.performBiometricAuth().then(function(res) {
+                        biometricPrompting = false;
+                        if (res && res.cancelled) {
+                            // User chose "Use PIN" — not an error, just stay on PIN input
+                            return;
+                        }
+                        unlockApp();
+                    }).catch(function(e) {
+                        biometricPrompting = false;
+                        // Real error — show message only if not cancelled
+                        if (e && e.message && e.message.indexOf('cancel') === -1) {
+                            showError('Biometrik gagal. Gunakan PIN.');
+                        }
+                    });
+                }
+            };
+
+            function unlockApp() {
+                sessionStorage.setItem('unlocked', 'true');
+                sessionStorage.removeItem('pin_attempts');
+                sessionStorage.removeItem('lockout_until');
+                attemptCount = 0;
+                document.getElementById('app-lock-overlay').style.display = 'none';
+                resetAutoLock();
+            }
+
+            function lockApp() {
+                if (localStorage.getItem('pin_set') !== 'true') return;
+                sessionStorage.removeItem('unlocked');
+                currentPin = '';
+                document.getElementById('app-lock-overlay').style.display = 'flex';
+                renderPinDots(storedPinLength);
+                updatePinDots();
+                if (localStorage.getItem('biometric_enabled') === 'true') {
+                    setTimeout(window.useBiometric, 500);
+                }
+            }
+
+            function resetAutoLock() {
+                if (autoLockTimer) clearTimeout(autoLockTimer);
+                var sec = getAutoLockSeconds();
+                if (sec > 0 && localStorage.getItem('pin_set') === 'true') {
+                    autoLockTimer = setTimeout(function() { lockApp(); }, sec * 1000);
+                }
+            }
+
+            ['click', 'touchstart', 'keydown', 'scroll'].forEach(function(evt) {
+                document.addEventListener(evt, function() {
+                    if (sessionStorage.getItem('unlocked') === 'true') {
+                        resetAutoLock();
+                    }
+                }, { passive: true });
+            });
+
+            document.addEventListener('visibilitychange', function() {
+                if (localStorage.getItem('pin_set') !== 'true') return;
+                var sec = getAutoLockSeconds();
+                if (document.hidden) {
+                    sessionStorage.setItem('bg_time', Date.now());
+                } else {
+                    var bgTime = parseInt(sessionStorage.getItem('bg_time') || '0', 10);
+                    var bgDuration = bgTime ? (Date.now() - bgTime) / 1000 : 0;
+                    if (bgDuration > 10 || sec <= 10) {
+                        if (sessionStorage.getItem('unlocked') === 'true') {
+                            lockApp();
+                        }
+                    } else if (sec > 0) {
+                        resetAutoLock();
+                    }
+                }
+            });
+
+            window.addEventListener('pageshow', function(e) {
+                if (e.persisted && localStorage.getItem('pin_set') === 'true') {
+                    lockApp();
+                }
+            });
+
+            window.addEventListener('load', function() {
+                getPinLength().then(function(len) {
+                    if (localStorage.getItem('pin_set') === 'true' && !sessionStorage.getItem('unlocked')) {
+                        document.getElementById('app-lock-overlay').style.display = 'flex';
+                        renderPinDots(len);
+                        if (Date.now() < lockoutUntil) {
+                            enableKeypad(false);
+                            showCountdown(Math.ceil((lockoutUntil - Date.now()) / 1000));
+                        }
+                        if (localStorage.getItem('biometric_enabled') === 'true') {
+                            setTimeout(window.useBiometric, 500);
+                        }
+                    } else {
+                        renderPinDots(len);
+                        resetAutoLock();
+                    }
+                    if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                        window.Capacitor.Plugins.NativeBridge.checkBiometricSupport().then(function(res) {
+                            if (res.isAvailable) {
+                                document.getElementById('btn-biometric').style.display = 'grid';
+                            }
+                        });
                     }
                 });
-            }
-        }
-        function useBiometric() {
-            if (window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
-                window.Capacitor.Plugins.NativeBridge.performBiometricAuth().then(function() {
-                    unlockApp();
-                }).catch(function(e) {
-                    // Fail or cancel
-                });
-            }
-        }
-        function unlockApp() {
-            sessionStorage.setItem('unlocked', 'true');
-            document.getElementById('app-lock-overlay').style.display = 'none';
+            });
+
+            window.lockApp = lockApp;
+        })();
+    </script>
+
+    <!-- ===== GLOBAL ERROR CATCHER ===== -->
+    <div id="error-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:24px;text-align:center;">
+        <div style="width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:24px;display:grid;place-items:center;margin:0 auto 24px;">
+            <i class="bi bi-exclamation-triangle" style="font-size:36px;color:#fbbf24;"></i>
+        </div>
+        <h4 style="font-size:18px;font-weight:700;margin-bottom:8px;">Terjadi Kesalahan</h4>
+        <p style="font-size:13px;color:#94a3b8;line-height:1.6;max-width:300px;margin:0 auto 24px;">Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.</p>
+        <button onclick="location.reload()" style="padding:12px 28px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">Muat Ulang</button>
+        <div style="margin-top:40px;font-size:11px;color:#475569;">{{ config('app.name', 'Sekolah') }}</div>
+    </div>
+
+    <script>
+    (function() {
+        var shown = false;
+        function showError(msg) {
+            if (shown) return;
+            shown = true;
+            document.getElementById('error-screen').style.display = 'flex';
         }
 
-        // Check lock on load
-        (function() {
-            if (localStorage.getItem('pin_set') === 'true' && !sessionStorage.getItem('unlocked')) {
-                document.getElementById('app-lock-overlay').style.display = 'flex';
-                // Try biometric automatically if enabled
-                if (localStorage.getItem('biometric_enabled') === 'true') {
-                    setTimeout(useBiometric, 500);
+        // Catch unhandled JS errors
+        window.onerror = function(msg, src, line, col, err) {
+            showError(msg);
+            return true;
+        };
+
+        // Catch unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(e) {
+            showError('promise_rejection');
+        });
+
+        // Intercept fetch() to catch network/server errors
+        var origFetch = window.fetch;
+        window.fetch = function() {
+            return origFetch.apply(this, arguments).then(function(res) {
+                if (res.status >= 500) {
+                    showError('server_' + res.status);
                 }
-            }
-        })();
+                return res;
+            }).catch(function(err) {
+                showError('network');
+                throw err;
+            });
+        };
+
+        // Catch page load errors (404, 500 from navigation)
+        window.addEventListener('error', function(e) {
+            if (e.target && e.target.tagName === 'IMG') return; // skip broken images
+            showError('resource');
+        }, true);
+    })();
     </script>
 
     @yield('scripts')

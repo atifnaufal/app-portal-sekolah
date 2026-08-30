@@ -7,6 +7,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,7 +35,67 @@ return Application::configure(basePath: dirname(__DIR__))
     })
 
     ->withExceptions(function (Exceptions $exceptions): void {
+        // API: always return JSON
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Map HTTP exceptions to custom error pages
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['message' => 'Not found'], 404);
+            }
+            return response()->view('errors.404', [], 404);
+        });
+
+        $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['message' => 'Forbidden'], 403);
+            }
+            return response()->view('errors.403', [], 403);
+        });
+
+        $exceptions->render(function (TooManyRequestsHttpException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['message' => 'Too many requests'], 429);
+            }
+            return response()->view('errors.429', [], 429);
+        });
+
+        // 419 Page Expired (CSRF)
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, Request $request) {
+            if ($e->getStatusCode() === 419) {
+                if ($request->is('api/*') || $request->expectsJson()) {
+                    return response()->json(['message' => 'Page expired'], 419);
+                }
+                return response()->view('errors.419', [], 419);
+            }
+            if ($e->getStatusCode() === 503) {
+                if ($request->is('api/*') || $request->expectsJson()) {
+                    return response()->json(['message' => 'Service unavailable'], 503);
+                }
+                return response()->view('errors.503', [], 503);
+            }
+        });
+
+        // Catch-all: ALL uncaught exceptions → custom 500 page, NO stack trace
+        $exceptions->renderable(function (\Throwable $e, Request $request) {
+            // Log internally but never expose to user
+            \Illuminate\Support\Facades\Log::error('Uncaught exception: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['message' => 'Terjadi kesalahan sistem'], 500);
+            }
+            return response()->view('errors.500', [], 500);
+        });
+
+        // Disable detailed error reporting to users
+        $exceptions->dontReport([
+            \Illuminate\Auth\AuthenticationException::class,
+            \Illuminate\Validation\ValidationException::class,
+        ]);
     })->create();

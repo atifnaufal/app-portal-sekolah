@@ -69,7 +69,7 @@ class NotifikasiController extends Controller
             ->where('id', '>', $lastId)
             ->latest('id')
             ->take(10)
-            ->get(['id', 'judul', 'pesan', 'url', 'created_at']);
+            ->get(['id', 'judul', 'pesan', 'url', 'type', 'actor_name', 'actor_photo', 'created_at']);
 
         $unread = Notifikasi::where('user_id', $userId)->whereNull('dibaca_pada')->count();
         $newestId = $notifikasi->first()?->id ?? ($lastId > 0 ? $lastId : $latestId);
@@ -83,6 +83,9 @@ class NotifikasiController extends Controller
                 'judul' => $n->judul,
                 'pesan' => $n->pesan,
                 'url' => $n->url,
+                'type' => $n->type ?? 'general',
+                'actor_name' => $n->actor_name,
+                'actor_photo' => $n->actor_photo ? asset('storage/' . $n->actor_photo) : null,
                 'created_at' => $n->created_at?->diffForHumans(),
             ]),
         ]);

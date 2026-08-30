@@ -40,7 +40,15 @@ public class NativeBridgePlugin extends Plugin {
                 @Override
                 public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
                     super.onAuthenticationError(errorCode, errString);
-                    call.reject(errString.toString());
+                    // User tapped "Use PIN" button — this is not an error
+                    if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                        errorCode == BiometricPrompt.ERROR_USER_CANCELED) {
+                        JSObject ret = new JSObject();
+                        ret.put("cancelled", true);
+                        call.resolve(ret);
+                    } else {
+                        call.reject(errString.toString());
+                    }
                 }
 
                 @Override
@@ -121,8 +129,20 @@ public class NativeBridgePlugin extends Plugin {
     @PluginMethod
     public void savePin(PluginCall call) {
         String pin = call.getString("pin");
-        if (pin == null || pin.length() < 4) {
-            call.reject("PIN minimal 4 digit");
+        // Empty string = remove PIN
+        if (pin == null) {
+            call.reject("PIN tidak valid");
+            return;
+        }
+        if (pin.isEmpty()) {
+            // Remove PIN
+            getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit().remove("app_pin").apply();
+            call.resolve();
+            return;
+        }
+        if (pin.length() < 4 || pin.length() > 6) {
+            call.reject("PIN harus 4-6 digit");
             return;
         }
         getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
@@ -136,7 +156,17 @@ public class NativeBridgePlugin extends Plugin {
         String savedPin = getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
                 .getString("app_pin", "");
         JSObject ret = new JSObject();
-        ret.put("isValid", savedPin.equals(pin));
+        ret.put("isValid", !savedPin.isEmpty() && savedPin.equals(pin));
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void getPinLength(PluginCall call) {
+        String savedPin = getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
+                .getString("app_pin", "");
+        JSObject ret = new JSObject();
+        ret.put("length", savedPin.length());
+        ret.put("isSet", !savedPin.isEmpty());
         call.resolve(ret);
     }
 

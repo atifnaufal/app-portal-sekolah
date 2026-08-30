@@ -19,9 +19,11 @@
 /auth.json
 /node_modules
 /public/build
+/public/downloads/app-portal-sekolah.apk
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
+/public/resources
 /storage/*.key
 /storage/pail
 /vendor
