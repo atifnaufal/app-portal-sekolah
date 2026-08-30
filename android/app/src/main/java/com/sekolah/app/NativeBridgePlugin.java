@@ -28,12 +28,21 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 @CapacitorPlugin(name = "NativeBridge")
 public class NativeBridgePlugin extends Plugin {
 
     @PluginMethod
     public void performBiometricAuth(PluginCall call) {
+        if (getActivity() == null || getActivity().isFinishing()) {
+            call.reject("Aktivitas tidak siap untuk autentikasi biometrik");
+            return;
+        }
         getActivity().runOnUiThread(() -> {
             Executor executor = ContextCompat.getMainExecutor(getContext());
             BiometricPrompt biometricPrompt = new BiometricPrompt(getActivity(), executor, new BiometricPrompt.AuthenticationCallback() {
@@ -67,6 +76,7 @@ public class NativeBridgePlugin extends Plugin {
             BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                     .setTitle("Autentikasi Diperlukan")
                     .setSubtitle("Gunakan biometrik Anda untuk melanjutkan")
+                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK)
                     .setNegativeButtonText("Gunakan PIN/Password")
                     .build();
 
@@ -120,7 +130,9 @@ public class NativeBridgePlugin extends Plugin {
     @PluginMethod
     public void checkBiometricSupport(PluginCall call) {
         BiometricManager biometricManager = BiometricManager.from(getContext());
-        int status = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG);
+        // BIOMETRIC_WEAK supports secure face unlock as well as fingerprints. Requiring
+        // STRONG made many otherwise compatible devices appear unsupported.
+        int status = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK);
         JSObject ret = new JSObject();
         ret.put("isAvailable", status == BiometricManager.BIOMETRIC_SUCCESS);
         call.resolve(ret);
@@ -137,7 +149,12 @@ public class NativeBridgePlugin extends Plugin {
         if (pin.isEmpty()) {
             // Remove PIN
             getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
-                    .edit().remove("app_pin").apply();
+                    .edit()
+                    .remove("app_pin")
+                    .remove("app_pin_hash")
+                    .remove("app_pin_salt")
+                    .remove("app_pin_length")
+                    .apply();
             call.resolve();
             return;
         }
@@ -145,28 +162,64 @@ public class NativeBridgePlugin extends Plugin {
             call.reject("PIN harus 4-6 digit");
             return;
         }
-        getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
-                .edit().putString("app_pin", pin).apply();
-        call.resolve();
+        try {
+            byte[] salt = new byte[16];
+            new SecureRandom().nextBytes(salt);
+            String hash = hashPin(pin, salt);
+            getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString("app_pin_hash", hash)
+                    .putString("app_pin_salt", android.util.Base64.encodeToString(salt, android.util.Base64.NO_WRAP))
+                    .putInt("app_pin_length", pin.length())
+                    .remove("app_pin")
+                    .apply();
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("Gagal mengamankan PIN", e);
+        }
     }
 
     @PluginMethod
     public void verifyPin(PluginCall call) {
         String pin = call.getString("pin");
-        String savedPin = getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
-                .getString("app_pin", "");
+        android.content.SharedPreferences prefs = getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE);
+        String savedHash = prefs.getString("app_pin_hash", "");
+        String legacyPin = prefs.getString("app_pin", "");
         JSObject ret = new JSObject();
-        ret.put("isValid", !savedPin.isEmpty() && savedPin.equals(pin));
-        call.resolve(ret);
+        try {
+            boolean valid;
+            if (!savedHash.isEmpty()) {
+                String saltText = prefs.getString("app_pin_salt", "");
+                byte[] salt = android.util.Base64.decode(saltText, android.util.Base64.NO_WRAP);
+                valid = MessageDigest.isEqual(savedHash.getBytes(java.nio.charset.StandardCharsets.UTF_8), hashPin(pin, salt).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            } else {
+                // One-time migration for PINs created by earlier APK versions.
+                valid = !legacyPin.isEmpty() && legacyPin.equals(pin);
+                if (valid) {
+                    byte[] salt = new byte[16];
+                    new SecureRandom().nextBytes(salt);
+                    prefs.edit()
+                            .putString("app_pin_hash", hashPin(pin, salt))
+                            .putString("app_pin_salt", android.util.Base64.encodeToString(salt, android.util.Base64.NO_WRAP))
+                            .putInt("app_pin_length", pin.length())
+                            .remove("app_pin")
+                            .apply();
+                }
+            }
+            ret.put("isValid", valid);
+            call.resolve(ret);
+        } catch (Exception e) {
+            call.reject("Gagal memverifikasi PIN", e);
+        }
     }
 
     @PluginMethod
     public void getPinLength(PluginCall call) {
-        String savedPin = getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
-                .getString("app_pin", "");
+        android.content.SharedPreferences prefs = getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE);
+        int length = prefs.getInt("app_pin_length", prefs.getString("app_pin", "").length());
         JSObject ret = new JSObject();
-        ret.put("length", savedPin.length());
-        ret.put("isSet", !savedPin.isEmpty());
+        ret.put("length", length);
+        ret.put("isSet", length > 0);
         call.resolve(ret);
     }
 
@@ -298,6 +351,16 @@ public class NativeBridgePlugin extends Plugin {
         } catch (Exception e) {
             Log.e("NativeBridge", "Download error: " + e.getMessage());
             call.reject("Gagal mengunduh: " + e.getMessage());
+        }
+    }
+
+    private String hashPin(String pin, byte[] salt) throws Exception {
+        PBEKeySpec spec = new PBEKeySpec(pin.toCharArray(), salt, 120000, 256);
+        try {
+            byte[] encoded = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
+            return android.util.Base64.encodeToString(encoded, android.util.Base64.NO_WRAP);
+        } finally {
+            spec.clearPassword();
         }
     }
 }

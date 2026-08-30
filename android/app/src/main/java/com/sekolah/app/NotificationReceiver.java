@@ -13,12 +13,14 @@ public class NotificationReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         Log.d(TAG, "Received action: " + action);
 
-        // Handle both alarm watchdog and device boot
+        // Restore the service only after an actual device restart. Restarting it for
+        // every alarm caused the foreground notification channel to alert repeatedly.
         if (Intent.ACTION_BOOT_COMPLETED.equals(action) ||
-            "android.intent.action.QUICKBOOT_POWERON".equals(action) ||
-            action == null) {
+            "android.intent.action.QUICKBOOT_POWERON".equals(action)) {
             Log.d(TAG, "Ensuring BackgroundService is running after boot/alarm");
-            BackgroundService.startService(context);
+            if (BackgroundService.hasToken(context)) {
+                BackgroundService.startService(context);
+            }
         }
     }
 }

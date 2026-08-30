@@ -44,6 +44,24 @@ public class NotificationHelper {
         }
     }
 
+    public static void createServiceNotificationChannel(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    AppConfig.SERVICE_CHANNEL_ID,
+                    AppConfig.SERVICE_CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            channel.setDescription("Status layanan sinkronisasi latar belakang");
+            channel.setSound(null, null);
+            channel.enableVibration(false);
+            channel.setShowBadge(false);
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+
     public static void showNotification(Context context, String title, String message, String url, int notificationId) {
         createNotificationChannel(context);
 

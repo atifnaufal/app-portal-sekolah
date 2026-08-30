@@ -30,15 +30,19 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        // Register custom plugins
+        // Capacitor discovers custom plugins while creating its bridge, so this must
+        // happen before BridgeActivity.onCreate().
         registerPlugin(NativeBridgePlugin.class);
+        super.onCreate(savedInstanceState);
 
         checkAndRequestPermissions();
         checkBatteryOptimization();
         checkExactAlarmPermission();
-        startBackgroundService();
+        // The service is started after a successful login when an API token exists.
+        // Starting it for every fresh install causes needless foreground notifications.
+        if (BackgroundService.hasToken(this)) {
+            startBackgroundService();
+        }
 
         // Ensure web view doesn't handle everything if permissions missing
         handleForcedPermissions();
@@ -130,7 +134,7 @@ public class MainActivity extends BridgeActivity {
                     allGranted = false;
                 }
             }
-            if (allGranted) {
+            if (allGranted && BackgroundService.hasToken(this)) {
                 Log.d(TAG, "All permissions granted");
                 startBackgroundService();
             }

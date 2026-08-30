@@ -35,7 +35,7 @@
                 <div id="biometricDesc" class="sec-desc">Gunakan Sidik Jari / Wajah</div>
             </div>
             <div class="form-check form-switch mb-0">
-                <input class="form-check-input" type="checkbox" role="switch" id="biometricSwitch">
+                <input class="form-check-input" type="checkbox" role="switch" id="biometricSwitch" onclick="event.stopPropagation()" onchange="toggleBiometric(this)">
             </div>
         </div>
 

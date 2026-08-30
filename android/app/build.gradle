@@ -51,7 +51,7 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
 
     // Biometric & Security
-    implementation "androidx.biometric:biometric:1.2.0-alpha05"
+    implementation "androidx.biometric:biometric:1.2.0"
 }
 
 apply from: 'capacitor.build.gradle'

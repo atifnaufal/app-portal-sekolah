@@ -461,6 +461,7 @@
             var bootstrapped = false;   // sudah sinkron `lastId` dengan server
             var offlineRetry = 0;
             var stdout = null;
+            var pollTimer = null;
 
             // Polling notifikasi baru (fallback saat Echo tak tersedia)
             function pollNotifications() {
@@ -481,7 +482,11 @@
 
                         if (d.new_last_id && d.new_last_id > lastId) {
                             (d.items || []).forEach(function (it) {
-                                showNotification(it.judul, it.pesan, it.url || '#', it.type, it.actor_name);
+                                // Android's native service owns alerts while the app is in
+                                // the background. Do not replay the doorbell from WebView.
+                                if (!document.hidden) {
+                                    showNotification(it.judul, it.pesan, it.url || '#', it.type, it.actor_name);
+                                }
                             });
                             lastId = d.new_last_id;
                         }
@@ -514,9 +519,12 @@
                 stdout = setInterval(heartbeat, 60000);   // setiap 60 detik
                 // Notifikasi di-poll lebih rapat untuk nuansa "langsung"
                 pollNotifications();
-                setInterval(pollNotifications, 15000);
+                pollTimer = setInterval(pollNotifications, 15000);
             }
-            function stopHeartbeat() { if (stdout) { clearInterval(stdout); stdout = null; } }
+            function stopHeartbeat() {
+                if (stdout) { clearInterval(stdout); stdout = null; }
+                if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            }
 
             // Echo/Reverb: terima notifikasi push secara instan
             if (window.Echo) {

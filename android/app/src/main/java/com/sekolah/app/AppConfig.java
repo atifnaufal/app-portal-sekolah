@@ -5,7 +5,9 @@ public class AppConfig {
     public static final String API_BASE_URL = "https://app-portal-sekolah-production.up.railway.app/api";
 
     // Polling intervals in milliseconds
-    public static final long POLL_INTERVAL_MS = 30000; // 30 seconds
+    // Polling is only a fallback when push notifications are unavailable.  Polling every
+    // 30 seconds keeps a foreground service awake and noticeably drains the battery.
+    public static final long POLL_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
     public static final long WAKE_LOCK_TIMEOUT_MS = 60000; // 60 seconds
 
     // Shared Preferences keys
@@ -13,12 +15,15 @@ public class AppConfig {
     public static final String KEY_TOKEN = "token";
     public static final String KEY_USER_ID = "user_id";
     public static final String KEY_LAST_NOTIFICATION_ID = "last_notification_id";
+    public static final String KEY_NOTIFICATION_INITIALIZED = "notification_cursor_initialized";
     public static final String KEY_NOTIFICATION_COUNT = "notification_count";
 
     // Notification channel info
-    public static final String CHANNEL_ID = "portal_premium_channel_v2";
-    public static final String CHANNEL_NAME = "Layanan Portal Premium";
-    public static final String CHANNEL_DESCRIPTION = "Notifikasi prioritas tinggi untuk pengumuman dan tugas";
+    public static final String CHANNEL_ID = "portal_alerts_v3";
+    public static final String CHANNEL_NAME = "Notifikasi Portal Sekolah";
+    public static final String CHANNEL_DESCRIPTION = "Notifikasi tugas dan pengumuman";
+    public static final String SERVICE_CHANNEL_ID = "portal_background_v1";
+    public static final String SERVICE_CHANNEL_NAME = "Status sinkronisasi";
 
     // Notification IDs
     public static final int FOREGROUND_SERVICE_ID = 1;

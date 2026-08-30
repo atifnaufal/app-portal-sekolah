@@ -52,6 +52,11 @@ public class BackgroundService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "BackgroundService onStartCommand");
 
+        if (!hasToken(this)) {
+            stopSelf(startId);
+            return START_NOT_STICKY;
+        }
+
         // Start as foreground service to avoid being killed easily
         Notification notification = createForegroundNotification();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -67,9 +72,6 @@ public class BackgroundService extends Service {
             running = true;
             startPollingTask();
         }
-
-        // Schedule next alarm in case the service is killed
-        scheduleAlarm(this);
 
         return START_STICKY;
     }
@@ -122,6 +124,7 @@ public class BackgroundService extends Service {
         String baseUrl = prefs.getString("api_base_url", AppConfig.API_BASE_URL);
         String lastIdStr = prefs.getString(AppConfig.KEY_LAST_NOTIFICATION_ID, "0");
         int lastId = lastIdStr.isEmpty() ? 0 : Integer.parseInt(lastIdStr);
+        boolean initialized = prefs.getBoolean(AppConfig.KEY_NOTIFICATION_INITIALIZED, false);
 
         if (token == null || token.isEmpty()) {
             Log.d(TAG, "No token, skipping poll");
@@ -139,6 +142,17 @@ public class BackgroundService extends Service {
                 int newLastId = json.optInt("new_last_id", lastId);
                 int unreadCount = json.optInt("unread", 0);
                 org.json.JSONArray items = json.optJSONArray("items");
+
+                // A newly authenticated device must begin at the current cursor.
+                // Otherwise every historical notification is treated as new and the
+                // device rings repeatedly after login or a service restart.
+                if (!initialized) {
+                    prefs.edit()
+                            .putString(AppConfig.KEY_LAST_NOTIFICATION_ID, String.valueOf(newLastId))
+                            .putBoolean(AppConfig.KEY_NOTIFICATION_INITIALIZED, true)
+                            .apply();
+                    return true;
+                }
 
                 if (newLastId > lastId) {
                     prefs.edit().putString(AppConfig.KEY_LAST_NOTIFICATION_ID, String.valueOf(newLastId)).apply();
@@ -225,17 +239,20 @@ public class BackgroundService extends Service {
     }
 
     private Notification createForegroundNotification() {
-        NotificationHelper.createNotificationChannel(this);
-        return new NotificationCompat.Builder(this, AppConfig.CHANNEL_ID)
+        // The ongoing service status must never use the audible alert channel.
+        NotificationHelper.createServiceNotificationChannel(this);
+        return new NotificationCompat.Builder(this, AppConfig.SERVICE_CHANNEL_ID)
                 .setContentTitle("App Portal Sekolah")
                 .setContentText("Layanan latar belakang aktif")
                 .setSmallIcon(R.drawable.splash)
                 .setPriority(NotificationCompat.PRIORITY_MIN)
+                .setOnlyAlertOnce(true)
                 .setOngoing(true)
                 .build();
     }
 
     public static void startService(Context context) {
+        if (!hasToken(context)) return;
         Intent intent = new Intent(context, BackgroundService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
@@ -246,6 +263,12 @@ public class BackgroundService extends Service {
 
     public static void stopService(Context context) {
         context.stopService(new Intent(context, BackgroundService.class));
+    }
+
+    public static boolean hasToken(Context context) {
+        String token = context.getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(AppConfig.KEY_TOKEN, "");
+        return token != null && !token.isEmpty();
     }
 
     public static void scheduleAlarm(Context context) {
@@ -266,8 +289,14 @@ public class BackgroundService extends Service {
 
     // Static helper methods for auth data
     public static void saveToken(Context context, String token) {
-        context.getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
-                .edit().putString(AppConfig.KEY_TOKEN, token).apply();
+        SharedPreferences prefs = context.getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE);
+        String previousToken = prefs.getString(AppConfig.KEY_TOKEN, "");
+        SharedPreferences.Editor editor = prefs.edit().putString(AppConfig.KEY_TOKEN, token);
+        if (!token.equals(previousToken)) {
+            editor.remove(AppConfig.KEY_LAST_NOTIFICATION_ID)
+                    .putBoolean(AppConfig.KEY_NOTIFICATION_INITIALIZED, false);
+        }
+        editor.apply();
     }
 
     public static void saveUserId(Context context, int userId) {
