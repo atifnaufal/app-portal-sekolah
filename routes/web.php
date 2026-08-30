@@ -28,10 +28,17 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/', '/dashboard');
 
 Route::get('/download/apk', function () {
-    $url = env('APK_DOWNLOAD_URL');
-    if (!$url) {
-        abort(404);
+    $apk = public_path('downloads/app-portal-sekolah.apk');
+
+    if (is_file($apk)) {
+        return response()->download($apk, 'app-portal-sekolah.apk', [
+            'Content-Type' => 'application/vnd.android.package-archive',
+        ]);
     }
+
+    $url = env('APK_DOWNLOAD_URL');
+    abort_unless($url, 404);
+
     return redirect($url);
 })->name('download.apk');
 
