@@ -2,91 +2,206 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>App Portal Sekolah</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 50px; background: #f8fafc; color: #333; }
-        .container { max-width: 400px; margin: 0 auto; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .maintenance-box { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-top: 20px; }
-        .error-box { background: #fee2e2; border: 1px solid #fecaca; border-radius: 12px; padding: 24px; margin-top: 20px; display: none; }
-        .success-box { background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 12px; padding: 24px; margin-top: 20px; display: none; }
-        .logo { width: 80px; height: 80px; margin: 0 auto 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .logo i { font-size: 32px; color: white; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #0f172a; color: #fff; min-height: 100vh; overflow: hidden; }
+
+        /* ===== ONBOARDING ===== */
+        .onboarding { position: fixed; inset: 0; z-index: 100; display: none; flex-direction: column; }
+        .onboarding.active { display: flex; }
+        .onboarding-slides { flex: 1; position: relative; overflow: hidden; }
+        .ob-slide {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 40px 32px;
+            opacity: 0; transform: translateX(60px); transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+            pointer-events: none;
+        }
+        .ob-slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+        .ob-slide.exit { opacity: 0; transform: translateX(-60px); }
+        .ob-icon {
+            width: 120px; height: 120px; border-radius: 32px; display: grid; place-items: center;
+            margin-bottom: 36px; position: relative;
+        }
+        .ob-icon::after {
+            content: ''; position: absolute; inset: -12px; border-radius: 40px;
+            background: inherit; opacity: 0.15; filter: blur(20px);
+        }
+        .ob-icon i { font-size: 48px; position: relative; z-index: 1; }
+        .ob-title { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; text-align: center; }
+        .ob-desc { font-size: 14px; color: #94a3b8; line-height: 1.7; text-align: center; max-width: 320px; }
+        .ob-dots { display: flex; gap: 8px; justify-content: center; padding: 20px 0; }
+        .ob-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s; }
+        .ob-dot.active { width: 24px; border-radius: 4px; background: #3b82f6; }
+        .ob-footer { padding: 0 32px 40px; display: flex; flex-direction: column; gap: 12px; }
+        .ob-btn {
+            width: 100%; padding: 16px; border-radius: 16px; border: none; font-size: 15px;
+            font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .ob-btn:active { transform: scale(0.97); }
+        .ob-btn-next { background: #3b82f6; color: #fff; box-shadow: 0 8px 24px rgba(59,130,246,0.3); }
+        .ob-btn-skip { background: transparent; color: rgba(255,255,255,0.5); font-size: 13px; }
+
+        /* ===== LOADING / MAINTENANCE / ERROR ===== */
+        .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 40px; text-align: center; }
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .maintenance-box, .error-box {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 32px; max-width: 360px; width: 100%;
+        }
+        .retry-btn {
+            margin-top: 20px; padding: 12px 28px; background: #3b82f6; color: #fff;
+            border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        .app-logo { width: 80px; height: 80px; margin: 0 auto 20px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; display: grid; place-items: center; }
+        .app-logo i { font-size: 32px; color: #fff; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="logo">
-            <i class="bi bi-school me-2"></i>
+<!-- ===== ONBOARDING SCREENS ===== -->
+<div class="onboarding" id="onboarding">
+    <div class="onboarding-slides">
+        <div class="ob-slide active" data-step="0">
+            <div class="ob-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                <i class="bi bi-mortarboard-fill" style="color: #fff;"></i>
+            </div>
+            <div class="ob-title">Portal Sekolah Digital</div>
+            <div class="ob-desc">Akses semua kebutuhan akademik dalam satu aplikasi. Tugas, absensi, nilai, dan komunikasi — semuanya terhubung.</div>
         </div>
-        <h2>App Portal Sekolah</h2>
-        <p style="color: #64748b; margin-bottom: 24px;">Sistem Sedang Diperiksa...</p>
-        
-        <div class="spinner"></div>
+        <div class="ob-slide" data-step="1">
+            <div class="ob-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <i class="bi bi-chat-dots-fill" style="color: #fff;"></i>
+            </div>
+            <div class="ob-title">Chat & Notifikasi Realtime</div>
+            <div class="ob-desc">Berkomunikasi langsung dengan guru dan teman sekelas. Dapatkan notifikasi instan untuk tugas, pengumuman, dan pesan penting.</div>
+        </div>
+        <div class="ob-slide" data-step="2">
+            <div class="ob-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                <i class="bi bi-shield-lock-fill" style="color: #fff;"></i>
+            </div>
+            <div class="ob-title">Aman & Terpercaya</div>
+            <div class="ob-desc">Data tersimpan aman di cloud. Login dengan PIN atau biometrik. Kapan pun dan di mana pun, akses tetap tersedia.</div>
+        </div>
+        <div class="ob-slide" data-step="3">
+            <div class="ob-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="bi bi-rocket-takeoff-fill" style="color: #fff;"></i>
+            </div>
+            <div class="ob-title">Siap Digunakan!</div>
+            <div class="ob-desc">Daftar atau masuk dengan akun yang sudah diberikan oleh sekolah. Selamat belajar!</div>
+        </div>
     </div>
 
-    <script>
-        // Cek status aplikasi terlebih dahulu
-        async function checkAppStatus() {
-            try {
-                const response = await fetch('https://app-portal-sekolah-production.up.railway.app/api/status-aplikasi', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                    }
-                });
+    <div class="ob-dots" id="obDots">
+        <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+    </div>
 
-                if (response.status === 503) {
-                    // Mode maintenance
-                    showMaintenanceMode();
-                    return;
-                }
+    <div class="ob-footer">
+        <button class="ob-btn ob-btn-next" id="obNext" onclick="nextSlide()">Mulai</button>
+        <button class="ob-btn ob-btn-skip" onclick="finishOnboarding()">Lewati</button>
+    </div>
+</div>
 
-                const data = await response.json();
+<!-- ===== LOADING / STATUS SCREEN ===== -->
+<div class="loading-screen" id="mainScreen">
+    <div class="app-logo"><i class="bi bi-school"></i></div>
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:6px;">App Portal Sekolah</h2>
+    <p style="color:#94a3b8;font-size:13px;margin-bottom:24px;">Memeriksa koneksi...</p>
+    <div class="spinner"></div>
+</div>
 
-                if (data.status === 'maintenance') {
-                    showMaintenanceMode(data);
-                } else {
-                    // Mode normal - redirect ke login
-                    redirectToApp();
-                }
-            } catch (error) {
-                // Jika gagal konek ke server, tampilkan pesan generik tanpa detail
-                showErrorMode('Tidak bisa terkoneksi ke server. Silakan coba lagi.');
-                setTimeout(redirectToApp, 3000);
-            }
-        }
+<script>
+var currentSlide = 0;
+var totalSlides = 4;
 
-        function showMaintenanceMode(data) {
-            const container = document.querySelector('.container');
-            container.innerHTML = `
-                <div class="maintenance-box">
-                    <div class="logo">
-                        <i class="bi bi-lock me-2"></i>
-                    </div>
-                    <h3>Sedang Dalam Pengembangan</h3>
-                    <p style="color: #64748b; font-size: 14px; margin-bottom: 16px;">${data.message || 'Aplikasi sedang dalam pengembangan.'}</p>
-                    <p style="color: #64748b; font-size: 12px; margin-bottom: 16px;">Estimasi rilis: ${data.estimated_release || 'Belum ditetapkan'}</p>
-                    <p style="color: #64748b; font-size: 12px;">Aplikasi akan segera kembali dengan fitur baru.</p>
-                </div>
-            `;
-            // Sembunyikan spinner
-            const spinner = document.querySelector('.spinner');
-            if (spinner) spinner.style.display = 'none';
-        }
+function showSlide(n) {
+    var slides = document.querySelectorAll('.ob-slide');
+    var dots = document.querySelectorAll('.ob-dot');
+    var btn = document.getElementById('obNext');
 
-        function showErrorMode(message) {
-            document.body.innerHTML = '<div style="font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;"><div style="width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:24px;display:grid;place-items:center;margin:0 auto 20px;"><i style="font-size:36px;color:#fbbf24;">&#9888;</i></div><h4 style="font-size:18px;font-weight:700;margin-bottom:8px;">Terjadi Gangguan</h4><p style="font-size:13px;color:#94a3b8;max-width:300px;margin:0 auto 24px;">' + message + '</p><button onclick="location.reload()" style="padding:12px 28px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">Coba Lagi</button></div>';
-        }
+    slides.forEach(function(s, i) {
+        s.classList.remove('active', 'exit');
+        if (i < n) s.classList.add('exit');
+        if (i === n) s.classList.add('active');
+    });
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === n); });
 
-        function redirectToApp() {
-            window.location.href = 'https://app-portal-sekolah-production.up.railway.app/login';
-        }
+    if (n === totalSlides - 1) {
+        btn.textContent = 'Mulai Sekarang';
+        btn.onclick = finishOnboarding;
+    } else {
+        btn.textContent = 'Selanjutnya';
+        btn.onclick = nextSlide;
+    }
+}
 
-        // Jalankan cek status saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', checkAppStatus);
-    </script>
+function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        showSlide(currentSlide);
+    } else {
+        finishOnboarding();
+    }
+}
+
+function finishOnboarding() {
+    localStorage.setItem('onboarding_done', '1');
+    document.getElementById('onboarding').classList.remove('active');
+    checkAppStatus();
+}
+
+async function checkAppStatus() {
+    try {
+        var response = await fetch('https://app-portal-sekolah-production.up.railway.app/api/status-aplikasi', {
+            method: 'GET', headers: { 'Accept': 'application/json' }
+        });
+        if (response.status === 503) { showMaintenanceMode(); return; }
+        var data = await response.json();
+        if (data.status === 'maintenance') { showMaintenanceMode(data); }
+        else { redirectToApp(); }
+    } catch (error) {
+        showErrorMode('Tidak bisa terkoneksi ke server. Silakan coba lagi.');
+        setTimeout(redirectToApp, 3000);
+    }
+}
+
+function showMaintenanceMode(data) {
+    var msg = (data && data.message) ? data.message : 'Aplikasi sedang dalam pengembangan.';
+    var est = (data && data.estimated_release) ? data.estimated_release : 'Belum ditetapkan';
+    document.getElementById('mainScreen').innerHTML =
+        '<div class="maintenance-box">' +
+        '<div class="app-logo" style="margin-bottom:16px;"><i class="bi bi-lock"></i></div>' +
+        '<h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Sedang Dalam Pengembangan</h3>' +
+        '<p style="color:#94a3b8;font-size:13px;margin-bottom:12px;">' + msg + '</p>' +
+        '<p style="color:#64748b;font-size:12px;">Estimasi rilis: ' + est + '</p></div>';
+}
+
+function showErrorMode(message) {
+    document.getElementById('mainScreen').innerHTML =
+        '<div class="error-box">' +
+        '<div class="app-logo" style="background:linear-gradient(135deg,#ef4444,#dc2626);margin-bottom:16px;"><i class="bi bi-exclamation-triangle"></i></div>' +
+        '<h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Terjadi Gangguan</h3>' +
+        '<p style="color:#94a3b8;font-size:13px;margin-bottom:16px;">' + message + '</p>' +
+        '<button class="retry-btn" onclick="location.reload()">Coba Lagi</button></div>';
+}
+
+function redirectToApp() {
+    window.location.href = 'https://app-portal-sekolah-production.up.railway.app/login';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('onboarding_done') === '1') {
+        checkAppStatus();
+    } else {
+        document.getElementById('onboarding').classList.add('active');
+    }
+});
+</script>
 </body>
 </html>
