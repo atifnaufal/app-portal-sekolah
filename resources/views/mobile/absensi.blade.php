@@ -83,7 +83,7 @@
 <div class="page-container">
     <header class="mobile-hero" style="border-radius: 0 0 40px 40px; margin-bottom: 24px; background: linear-gradient(135deg, var(--navy), var(--blue)); padding: 32px 24px 40px;">
         <div class="eyebrow" style="color: #94a3b8;">{{ $user->kelas?->nama ?? 'Akademik' }}</div>
-        <div class="hero-title mt-2 text-white" style="font-size: 26px;">Absensi & Vermuk</div>
+        <div class="hero-title mt-2 text-white" style="font-size: 26px;">Absensi & Verifikasi Muka</div>
         <p class="mb-3 mt-1" style="font-size: 12px; color: rgba(255,255,255,.7);">
             Rekap kehadiran bulan ini: <strong>{{ $totalAbsen }} hari</strong>
         </p>
