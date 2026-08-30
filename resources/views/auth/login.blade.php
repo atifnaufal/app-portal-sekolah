@@ -218,22 +218,22 @@
                     <div class="welcome-feature-icon" style="background:rgba(251,191,36,0.2);color:#fbbf24;">
                         <i class="bi bi-wallet2"></i>
                     </div>
-                    <div class="welcome-feature-title">SPP</div>
-                    <div class="welcome-feature-desc">Cek Tagihan</div>
+                    <div class="welcome-feature-title">SPP Online</div>
+                    <div class="welcome-feature-desc">Cek Tagihan Online</div>
                 </div>
                 <div class="welcome-feature">
                     <div class="welcome-feature-icon" style="background:rgba(139,92,246,0.2);color:#a78bfa;">
                         <i class="bi bi-chat-dots"></i>
                     </div>
                     <div class="welcome-feature-title">Chat</div>
-                    <div class="welcome-feature-desc">Grup Kelas</div>
+                    <div class="welcome-feature-desc">Online Chat</div>
                 </div>
-                <div class="welcome-feature">
-                    <div class="welcome-feature-icon" style="background:rgba(6,182,212,0.2);color:#22d3ee;">
-                        <i class="bi bi-book"></i>
+                 <div class="welcome-feature">
+                    <div class="welcome-feature-icon" style="background:rgba(14,165,233,0.2);color:#38bdf8;">
+                      <i class="bi bi-file-earmark-richtext"></i>
                     </div>
-                    <div class="welcome-feature-title">Perpus</div>
-                    <div class="welcome-feature-desc">Buku Digital</div>
+                 <div class="welcome-feature-title">Perpus Digital</div>
+                    <div class="welcome-feature-desc">Baca Online Digital</div>
                 </div>
                 <div class="welcome-feature">
                     <div class="welcome-feature-icon" style="background:rgba(244,114,182,0.2);color:#f472b6;">
@@ -249,13 +249,7 @@
                     <div class="welcome-feature-title">E-Learning</div>
                     <div class="welcome-feature-desc">Materi & Tugas</div>
                 </div>
-                <div class="welcome-feature">
-                    <div class="welcome-feature-icon" style="background:rgba(14,165,233,0.2);color:#38bdf8;">
-                        <i class="bi bi-file-earmark-richtext"></i>
-                    </div>
-                    <div class="welcome-feature-title">Perpus Digital</div>
-                    <div class="welcome-feature-desc">Baca Online</div>
-                </div>
+
                 <div class="welcome-feature">
                     <div class="welcome-feature-icon" style="background:rgba(16,185,129,0.2);color:#34d399;">
                         <i class="bi bi-bar-chart-line"></i>
@@ -271,7 +265,7 @@
                 </button>
                 @if(\App\Models\Setting::getValue('registration_guru_enabled', false) || \App\Models\Setting::getValue('registration_siswa_enabled', false))
                     <a href="{{ route('register') }}" class="btn-welcome btn-welcome-secondary" style="flex:1;">
-                        <i class="bi bi-person-plus"></i> Daftar
+                        <i class="bi bi-person-plus"></i>Pendaftaran
                     </a>
                 @endif
             </div>

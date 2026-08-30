@@ -3,7 +3,7 @@
 @section('content')
 <div class="pui-topbar">
     <a href="{{ route('profile.show') }}" class="back"><i class="bi bi-chevron-left"></i> Profil</a>
-    <h1>Tentang Aplikasi</h1>
+    <h1>Tentang Aplikasi Portal Sekolah</h1>
 </div>
 
 <div class="p-4 text-center">
@@ -14,7 +14,7 @@
     </div>
 
     <h3 class="fw-bold mb-1">Portal Sekolah</h3>
-    <p class="text-muted small mb-4">Versi 1.1.0 (Premium Build)</p>
+    <p class="text-muted small mb-4">Versi 1.1.0 (Applikasi Build)</p>
 
     <div class="pui-card text-start stagger">
         <div class="p-3 border-bottom d-flex justify-content-between">
@@ -22,8 +22,8 @@
             <span class="fw-bold small">Agustus 2026</span>
         </div>
         <div class="p-3 border-bottom d-flex justify-content-between">
-            <span class="text-muted small">Pengembang</span>
-            <span class="fw-bold small">IT Team Sekolah</span>
+            <span class="text-muted small">Pengembang Developer</span>
+            <span class="fw-bold small">Aplikasi Portal Sekolah</span>
         </div>
         <div class="p-3 d-flex justify-content-between">
             <span class="text-muted small">Lisensi</span>
@@ -32,7 +32,7 @@
     </div>
 
     <div class="mt-5 small text-muted px-3" style="line-height:1.6;">
-        Aplikasi Portal Sekolah dirancang untuk memudahkan interaksi antara siswa, guru, dan orang tua dalam ekosistem pendidikan digital yang terintegrasi.
+        Aplikasi Portal Sekolah dirancang untuk memudahkan interaksi antara siswa dan guru dalam ekosistem pendidikan digital yang terintegrasi.
     </div>
 
     <div class="mt-4 px-4 py-3" style="background:var(--surface); border-radius:var(--radius-sm); border:1px solid var(--line);">
