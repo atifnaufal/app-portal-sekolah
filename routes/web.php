@@ -27,6 +27,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 
+Route::get('/download/apk', function () {
+    $url = env('APK_DOWNLOAD_URL');
+    if (!$url) {
+        abort(404);
+    }
+    return redirect($url);
+})->name('download.apk');
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.store');
 

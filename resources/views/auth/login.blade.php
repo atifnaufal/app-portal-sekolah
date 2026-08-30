@@ -277,7 +277,7 @@
             </div>
 
             <div style="margin-top:20px;">
-                <a href="{{ asset('downloads/app-portal-sekolah.apk') }}" style="font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none;">
+                <a href="{{ route('download.apk') }}" style="font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none;">
                     <i class="bi bi-cloud-arrow-down"></i> Unduh Aplikasi Android
                 </a>
             </div>
