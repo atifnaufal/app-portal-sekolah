@@ -44,7 +44,7 @@ class NotificationHelper
         $preview = mb_strlen($message) > 80 ? mb_substr($message, 0, 80) . '...' : $message;
         if (empty(trim($preview))) $preview = 'Mengirim lampiran';
 
-        $title = $ group->type === 'private' ? $actorName : $group->name;
+        $title = $group->type === 'private' ? $actorName : $group->name;
         $url = '/chat/' . $chatGroupId;
 
         $memberIds = $group->members()->pluck('users.id')->toArray();
