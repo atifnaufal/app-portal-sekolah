@@ -263,7 +263,7 @@
         </div>
 
         <div class="mt-5">
-            <a href="{{ route('logout') }}" onclick="event.preventDefault(); localStorage.removeItem('pin_set'); localStorage.removeItem('biometric_enabled'); sessionStorage.clear(); document.getElementById('logout-form').submit();" class="text-white-50 text-decoration-none small">Logout Akun</a>
+            <a href="{{ route('logout') }}" onclick="event.preventDefault(); window.Capacitor.Plugins.NativeBridge.clearToken().then(function() { localStorage.removeItem('pin_set'); localStorage.removeItem('biometric_enabled'); sessionStorage.clear(); document.getElementById('logout-form').submit(); }).catch(function() { localStorage.removeItem('pin_set'); localStorage.removeItem('biometric_enabled'); sessionStorage.clear(); document.getElementById('logout-form').submit(); })" class="text-white-50 text-decoration-none small">Logout Akun</a>
             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
         </div>
     </div>

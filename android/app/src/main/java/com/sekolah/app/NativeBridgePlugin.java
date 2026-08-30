@@ -301,6 +301,22 @@ public class NativeBridgePlugin extends Plugin {
     }
 
     @PluginMethod
+    public void clearToken(PluginCall call) {
+        getContext().getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .remove("app_pin")
+                .remove("app_pin_hash")
+                .remove("app_pin_salt")
+                .remove("app_pin_length")
+                .putString(AppConfig.KEY_TOKEN, "")
+                .putBoolean(AppConfig.KEY_NOTIFICATION_INITIALIZED, false)
+                .remove(AppConfig.KEY_LAST_NOTIFICATION_ID)
+                .apply();
+        BackgroundService.saveToken(getContext(), "");
+        call.resolve();
+    }
+
+    @PluginMethod
     public void getAppInfo(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("version", "1.1.0-Premium");
