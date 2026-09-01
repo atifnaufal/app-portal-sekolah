@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\UserHistoryHelper;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,6 +62,8 @@ class ProfileController extends Controller
 
         $user->update($data);
         $request->session()->put('admin_name', $user->name);
+
+        UserHistoryHelper::logProfileUpdate($user->id, array_keys($data), $request);
 
         if ($request->expectsJson() || str_contains($request->header('Accept', ''), 'application/json')) {
             return response()->json([

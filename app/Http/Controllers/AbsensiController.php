@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\NotificationHelper;
+use App\Helpers\UserHistoryHelper;
 use App\Models\Absensi;
 use App\Models\Kelas;
 use App\Models\Setting;
@@ -44,6 +45,12 @@ class AbsensiController extends Controller
             ]);
         }
 
+        $absensiBulan = Absensi::where('user_id', $userId)
+            ->whereMonth('tanggal', now()->month)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         return view('mobile.absensi', [
             'myAttendance' => $myAttendance,
             'user' => $user,
@@ -51,6 +58,7 @@ class AbsensiController extends Controller
             'startTime' => $startTime,
             'endTime' => $endTime,
             'isWithinTime' => now()->between(now()->setTimeFromTimeString($startTime), now()->setTimeFromTimeString($endTime)),
+            'absensiBulan' => $absensiBulan,
         ]);
     }
 
@@ -115,6 +123,8 @@ class AbsensiController extends Controller
                 }
             }
 
+            UserHistoryHelper::logAbsensi($user->id, 'masuk', $status, $request->lat, $request->long, $request);
+
             return back()->with('success', 'Absensi masuk berhasil dicatat. Status: '.ucfirst($status));
         } else {
             if (! $attendance->waktu_masuk) {
@@ -130,6 +140,8 @@ class AbsensiController extends Controller
                 'lat_pulang' => $request->lat,
                 'long_pulang' => $request->long,
             ]);
+
+            UserHistoryHelper::logAbsensi($user->id, 'pulang', 'hadir', $request->lat, $request->long, $request);
 
             return back()->with('success', 'Absensi pulang berhasil dicatat.');
         }

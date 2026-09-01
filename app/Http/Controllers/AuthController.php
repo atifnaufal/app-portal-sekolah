@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\UserHistoryHelper;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,6 +66,8 @@ class AuthController extends Controller
         // Pastikan session langsung disimpan
         $request->session()->save();
 
+        UserHistoryHelper::logLogin($user->id, $request);
+
         return redirect()->intended(route('dashboard'));
     }
 
@@ -72,6 +75,7 @@ class AuthController extends Controller
     {
         $user = Auth::user();
         if ($user) {
+            UserHistoryHelper::logLogout($user->id, $request);
             $user->tokens()->delete();
         }
 

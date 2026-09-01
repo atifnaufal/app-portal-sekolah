@@ -12,6 +12,7 @@ use App\Models\Setting;
 use App\Models\Spp;
 use App\Models\Tugas;
 use App\Models\User;
+use App\Models\UserHistory;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -248,5 +249,68 @@ class AdminController extends Controller
         }
 
         return back()->with('success', 'Pengaturan berhasil diperbarui.');
+    }
+
+    public function userHistory(Request $request): View
+    {
+        $search = $request->search;
+        $typeFilter = $request->type;
+        $dateFrom = $request->date_from;
+        $dateTo = $request->date_to;
+
+        $query = UserHistory::with('user')
+            ->whereIn('user_id', User::whereIn('role', ['guru', 'siswa'])->pluck('id'))
+            ->latest();
+
+        if ($search) {
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($typeFilter) {
+            $query->ofType($typeFilter);
+        }
+
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+
+        $histories = $query->paginate(25)->withQueryString();
+
+        $activityTypes = UserHistory::distinct()->pluck('activity_type')->filter()->values();
+
+        $stats = [
+            'total' => UserHistory::count(),
+            'today' => UserHistory::whereDate('created_at', today())->count(),
+            'activeUsers' => UserHistory::whereDate('created_at', today())->distinct('user_id')->count('user_id'),
+            'logins' => UserHistory::ofType('login')->count(),
+        ];
+
+        $recentActivity = UserHistory::with('user')
+            ->latest()
+            ->take(10)
+            ->get()
+            ->groupBy(fn ($h) => $h->created_at->format('d M Y'))
+            ->map(fn ($items) => $items->groupBy(fn ($h) => $h->user?->name ?? 'Unknown'));
+
+        $dailyActivity = UserHistory::where('created_at', '>=', now()->subDays(30))
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        return view($this->isMobileRequest() ? 'mobile.admin-history' : 'admin.history', [
+            'histories' => $histories,
+            'activityTypes' => $activityTypes,
+            'stats' => $stats,
+            'recentActivity' => $recentActivity,
+            'dailyActivity' => $dailyActivity,
+        ]);
     }
 }

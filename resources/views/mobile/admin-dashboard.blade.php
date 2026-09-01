@@ -166,6 +166,15 @@
         <i class="bi bi-chevron-right text-muted"></i>
     </a>
 
+    <a href="{{ route('admin.history') }}" class="quick-action animate-up">
+        <div class="qa-ico" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-clock-history"></i></div>
+        <div style="flex:1;">
+            <div style="font-size:15px;font-weight:800;">Riwayat Aktivitas</div>
+            <div style="font-size:11px;color:#94a3b8;">Pelacakan login, absensi, dan aktivitas user</div>
+        </div>
+        <i class="bi bi-chevron-right text-muted"></i>
+    </a>
+
     <a href="{{ route('pengumuman.create') }}" class="quick-action animate-up">
         <div class="qa-ico" style="background:#fff7ed;color:#ea580c;"><i class="bi bi-megaphone-fill"></i></div>
         <div style="flex:1;">
