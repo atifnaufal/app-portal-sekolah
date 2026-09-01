@@ -27,6 +27,8 @@ class AdminController extends Controller
     {
         $isMobile = $this->isMobileRequest();
 
+        $data = \Illuminate\Support\Facades\Cache::remember('admin_dashboard_v3'.($isMobile?'_m':'_d'), 120, function () use ($isMobile) {
+
         // Diurutkan menurun lalu dibalik agar benar-benar 6 bulan TERAKHIR.
         $sppData = Spp::selectRaw('tahun, bulan, SUM(nominal) as tagihan, SUM(dibayar) as terbayar')
             ->groupBy('tahun', 'bulan')
@@ -152,6 +154,9 @@ class AdminController extends Controller
         $data['totalSchools'] = School::count();
         $data['topSchool'] = School::withCount('posts')->orderByDesc('posts_count')->first();
         $data['recentGlobalPosts'] = GlobalPost::with(['user','school'])->latest()->take(4)->get();
+
+        return $data;
+        });
 
         return view($isMobile ? 'mobile.admin-dashboard' : 'admin.dashboard', $data);
     }
