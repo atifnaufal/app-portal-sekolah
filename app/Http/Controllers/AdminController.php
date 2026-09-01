@@ -253,63 +253,51 @@ class AdminController extends Controller
 
     public function userHistory(Request $request): View
     {
-        $search = $request->search;
+        $search = trim((string) $request->search);
         $typeFilter = $request->type;
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
 
-        $query = UserHistory::with('user')
-            ->whereIn('user_id', User::whereIn('role', ['guru', 'siswa'])->pluck('id'))
-            ->latest();
+        // Ringan: whereHas langsung + select minimal, hindari pluck besar
+        $query = UserHistory::with(['user:id,name,email,role,foto'])
+            ->whereHas('user', fn($q) => $q->whereIn('role', ['guru','siswa']))
+            ->latest('user_histories.created_at');
 
-        if ($search) {
+        if ($search !== '') {
             $query->whereHas('user', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             });
         }
+        if ($typeFilter) $query->ofType($typeFilter);
+        if ($dateFrom) $query->whereDate('user_histories.created_at', '>=', $dateFrom);
+        if ($dateTo) $query->whereDate('user_histories.created_at', '<=', $dateTo);
 
-        if ($typeFilter) {
-            $query->ofType($typeFilter);
-        }
+        $histories = $query->paginate(20)->withQueryString();
 
-        if ($dateFrom) {
-            $query->whereDate('created_at', '>=', $dateFrom);
-        }
-
-        if ($dateTo) {
-            $query->whereDate('created_at', '<=', $dateTo);
-        }
-
-        $histories = $query->paginate(25)->withQueryString();
-
-        $activityTypes = UserHistory::distinct()->pluck('activity_type')->filter()->values();
-
-        $stats = [
-            'total' => UserHistory::count(),
-            'today' => UserHistory::whereDate('created_at', today())->count(),
-            'activeUsers' => UserHistory::whereDate('created_at', today())->distinct('user_id')->count('user_id'),
-            'logins' => UserHistory::ofType('login')->count(),
-        ];
-
-        $recentActivity = UserHistory::with('user')
-            ->latest()
-            ->take(10)
-            ->get()
-            ->groupBy(fn ($h) => $h->created_at->format('d M Y'))
-            ->map(fn ($items) => $items->groupBy(fn ($h) => $h->user?->name ?? 'Unknown'));
-
-        $dailyActivity = UserHistory::where('created_at', '>=', now()->subDays(30))
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        // Ringan + cache 60 detik untuk stats & chart
+        $cacheKey = 'admin_history_stats_'.md5(json_encode([$search,$typeFilter,$dateFrom,$dateTo]));
+        [$activityTypes, $stats, $dailyActivity] = cache()->remember($cacheKey, 60, function () {
+            $types = UserHistory::distinct()->pluck('activity_type')->filter()->values();
+            // SQLite-compatible DATE() -> pakai strftime untuk stabil
+            $daily = UserHistory::where('created_at', '>=', now()->subDays(30))
+                ->selectRaw("strftime('%Y-%m-%d', created_at) as date, COUNT(*) as count")
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
+            $stats = [
+                'total' => UserHistory::count(),
+                'today' => UserHistory::whereDate('created_at', today())->count(),
+                'activeUsers' => UserHistory::whereDate('created_at', today())->distinct('user_id')->count('user_id'),
+                'logins' => UserHistory::ofType('login')->whereDate('created_at', today())->count(),
+            ];
+            return [$types, $stats, $daily];
+        });
 
         return view($this->isMobileRequest() ? 'mobile.admin-history' : 'admin.history', [
             'histories' => $histories,
             'activityTypes' => $activityTypes,
             'stats' => $stats,
-            'recentActivity' => $recentActivity,
             'dailyActivity' => $dailyActivity,
         ]);
     }
