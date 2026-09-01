@@ -257,6 +257,13 @@
                     <div class="welcome-feature-title">Nilai</div>
                     <div class="welcome-feature-desc">Rapor Online</div>
                 </div>
+                <div class="welcome-feature" style="background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(79,70,229,.18));border-color:rgba(99,102,241,.3)">
+                    <div class="welcome-feature-icon" style="background:rgba(99,102,241,.25);color:#a5b4fc;">
+                        <i class="bi bi-globe2"></i>
+                    </div>
+                    <div class="welcome-feature-title" style="color:#c7d2fe">Global Portal</div>
+                    <div class="welcome-feature-desc" style="color:rgba(199,210,254,.7)">Sosmed Sekolah</div>
+                </div>
             </div>
 
             <div style="display:flex;gap:10px;">
