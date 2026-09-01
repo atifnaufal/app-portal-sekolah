@@ -41,7 +41,9 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         checkAndRequestPermissions();
+        // Auto-prompt battery & exact alarm langsung setelah install — user tinggal tap Izinkan
         checkBatteryOptimization();
+        requestAutoBatteryOptimization();
         checkExactAlarmPermission();
         // The service is started after a successful login when an API token exists.
         // Starting it for every fresh install causes needless foreground notifications.
@@ -166,6 +168,34 @@ public class MainActivity extends BridgeActivity {
                 Log.d(TAG, "Battery optimization is active - background tasks may be throttled");
             }
         }
+    }
+
+    private void requestAutoBatteryOptimization() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null && pm.isIgnoringBatteryOptimizations(getPackageName())) return;
+            // Hanya sekali per install agar tidak spam — cek flag
+            android.content.SharedPreferences sp = getSharedPreferences("auto_setup", MODE_PRIVATE);
+            if (sp.getBoolean("battery_prompted", false)) return;
+            sp.edit().putBoolean("battery_prompted", true).apply();
+            // Tampilkan dialog auto → user tinggal tap Izinkan, langsung aktif tanpa manual cari setting
+            new AlertDialog.Builder(this)
+                    .setTitle("Aktifkan Notifikasi Latar Belakang")
+                    .setMessage("Agar pengumuman & chat tetap muncul melayang walau aplikasi tertutup, izinkan aplikasi berjalan di latar belakang tanpa hemat baterai.")
+                    .setCancelable(false)
+                    .setPositiveButton("Izinkan Sekarang", (d, w) -> {
+                        try {
+                            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(intent);
+                        } catch (Exception e) {
+                            openAppSettings();
+                        }
+                    })
+                    .setNegativeButton("Nanti", null)
+                    .show();
+        } catch (Exception e) { Log.e(TAG, "battery auto: "+e.getMessage()); }
     }
 
     private void addPermissionIfNotGranted(List<String> list, String permission) {
