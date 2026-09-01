@@ -26,7 +26,10 @@ use App\Http\Controllers\SppController;
 use App\Http\Controllers\TugasController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/dashboard');
+Route::get('/', function () {
+    if (session('user_id') || \Illuminate\Support\Facades\Auth::check()) return redirect()->route('dashboard');
+    return view('welcome');
+})->name('welcome');
 Route::view('/offline', 'errors.offline')->name('offline');
 
 Route::get('/download/apk', function () {
