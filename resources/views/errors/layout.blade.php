@@ -80,13 +80,13 @@
 Method: {{ request()->method() }}
 IP: {{ request()->ip() }}
 UA: {{ request()->userAgent() }}
-@if($exception)
+@if(isset($exception) && $exception)
 Error: {{ $exception->getMessage() }}
 File: {{ $exception->getFile() }}:{{ $exception->getLine() }}
 @endif
 Trace ID: {{ substr(md5(request()->fullUrl().microtime()),0,8) }}</div>
 
-                @if(config('app.debug') && isset($exception))
+                @if(config('app.debug') && isset($exception) && $exception)
                 <div class="details on" style="margin-top:10px;background:#fef2f2;color:#7f1d1d;border:1px solid #fecaca">{{ $exception->getMessage() }}</div>
                 @endif
             </div>
