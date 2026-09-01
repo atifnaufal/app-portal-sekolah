@@ -103,7 +103,8 @@
                     <a class="nav-link {{ request()->routeIs('admin.perpustakaan.*') ? 'active' : '' }}" href="{{ route('admin.perpustakaan.index') }}">Perpustakaan</a>
                     <a class="nav-link {{ request()->routeIs('admin.eskul.*') ? 'active' : '' }}" href="{{ route('admin.eskul.index') }}">Eskul</a>
                     <a class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}">Akun</a>
-                    <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}">Pengaturan</a>
+                     <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}">Pengaturan</a>
+                     <a class="nav-link {{ request()->routeIs('admin.history') ? 'active' : '' }}" href="{{ route('admin.history') }}"><i class="bi bi-clock-history me-1"></i>Riwayat</a>
                 @else
                     <a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a>
                     <a class="nav-link" href="{{ route('pengumuman.index') }}">Pengumuman</a>

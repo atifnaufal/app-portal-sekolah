@@ -174,7 +174,8 @@
                     <option value="{{ $type }}" {{ request('type') === $type ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $type)) }}</option>
                 @endforeach
             </select>
-            <input type="date" name="date_from" value="{{ request('date_from') }}" style="flex:0 0 auto;">
+             <input type="date" name="date_from" value="{{ request('date_from') }}" style="flex:0 0 auto;">
+             <input type="date" name="date_to" value="{{ request('date_to') }}" style="flex:0 0 auto;">
         </form>
 
         @forelse($histories as $h)
