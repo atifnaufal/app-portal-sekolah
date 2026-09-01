@@ -93,6 +93,8 @@ class User extends Authenticatable
      * Akun harus disetujui admin sebelum bisa dipakai.
      * Kolom `aktif` menggantikan verifikasi email sebagai gerbang akses.
      */
+    public function followers(){ return $this->hasMany(GlobalFollow::class,'followed_id'); }
+    public function following(){ return $this->hasMany(GlobalFollow::class,'follower_id'); }
     public function isSuperAdmin(): bool
     {
         return $this->email === 'adminpusat@pusat.com' || ($this->role === 'admin' && $this->school_id === null);

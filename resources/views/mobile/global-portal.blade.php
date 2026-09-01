@@ -83,22 +83,28 @@
 
   @forelse($posts as $p)
   <div class="ig-card">
-    <div class="ig-head">
+    <a href="{{ route('global.portal.profile',$p->user) }}" class="ig-head" style="text-decoration:none;color:inherit">
       <div class="ig-avatar"><img src="{{ $p->user->avatar_url }}" alt=""></div>
       <div class="ig-meta">
         <div class="ig-user">{{ $p->user->name }} @if($p->user->isOnline())<span style="width:6px;height:6px;background:#22c55e;border-radius:50%;display:inline-block"></span>@endif <span style="font-size:11px;color:#0095f6">• {{ $p->school->name ?? $p->user->school->name ?? 'Umum' }}</span></div>
-        <div class="ig-sub">{{ $p->created_at->diffForHumans() }} • {{ $p->created_at->translatedFormat('d M Y') }}</div>
+        <div class="ig-sub">{{ $p->created_at->diffForHumans() }} • {{ $p->followers->count() }} followers • {{ $p->created_at->translatedFormat('d M Y') }}</div>
       </div>
       <i class="bi bi-three-dots"></i>
-    </div>
+    </a>
     <div style="padding:0 14px 8px;font-size:13px;white-space:pre-wrap">{{ $p->content }}</div>
     @if($p->image)<img src="{{ \App\Services\FirebaseStorageService::url($p->image) }}" class="ig-img" alt="">@endif
     <div class="ig-actions" style="gap:16px">
       @php $liked = $p->likes->contains('user_id', session('user_id')); @endphp
-      <form method="POST" action="{{ route('global.portal.like',$p) }}" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button><span style="font-size:11px;color:#8e8e8e">pesan {{ $p->comments_count }}</span></form>
-      <a href="#cmt-{{ $p->id }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-chat"></i><span style="font-size:12px;font-weight:700">{{ $p->comments_count }} pesan</span></a>
-      <i class="bi bi-send" onclick="navigator.share?navigator.share({text:@json($p->content)}):alert('Link disalin')"></i>
-      <span style="margin-left:auto"><i class="bi bi-bookmark"></i></span>
+      <form method="POST" action="{{ route('global.portal.like',$p) }}" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button><span style="font-size:11px;color:#8e8e8e">pesan</span></form>
+      <a href="{{ route('chat.startPrivate',$p->user) }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i><span style="font-size:11px;font-weight:700">pesan</span></a>
+      <a href="#cmt-{{ $p->id }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-chat"></i><span style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></a>
+      <span style="margin-left:auto" onclick="navigator.share?navigator.share({text:@json($p->content)}):alert('Link disalin')"><i class="bi bi-share"></i></span>
+    </div>
+    <div style="padding:0 14px;display:flex;gap:12px;font-size:11px;color:#8e8e8e"><a href="#" onclick="event.preventDefault();document.getElementById('likes-{{ $p->id }}').style.display='block'" style="color:#262626;text-decoration:none"><b>{{ $p->likes_count }} suka</b> — lihat</a> • <a href="#cmt-{{ $p->id }}" style="color:#262626;text-decoration:none">{{ $p->comments_count }} komentar — lihat</a></div>
+    <div id="likes-{{ $p->id }}" style="display:none;padding:8px 14px;background:#fafafa;border-top:1px solid #efefef">
+      <div style="font-size:11px;font-weight:700">Disukai oleh</div>
+      @foreach($p->likes->take(5) as $l)<div style="font-size:12px">{{ $l->user_id }} • user</div>@endforeach
+      <div style="font-size:11px;color:#0095f6;cursor:pointer" onclick="this.parentElement.style.display='none'">Tutup</div>
     </div>
     <div class="ig-caption"><b>{{ $p->user->name }}</b> {{ \Illuminate\Support\Str::limit($p->content,80) }}</div>
     <div class="ig-comments" id="cmt-{{ $p->id }}">

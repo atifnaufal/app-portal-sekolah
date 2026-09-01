@@ -107,6 +107,8 @@ Route::middleware('role:guru,siswa,admin')->group(function () {
     Route::post('/global-portal', [GlobalPortalController::class, 'store'])->name('global.portal.store');
     Route::post('/global-portal/{post}/like', [GlobalPortalController::class, 'toggleLike'])->name('global.portal.like');
     Route::post('/global-portal/{post}/comment', [GlobalPortalController::class, 'comment'])->name('global.portal.comment');
+    Route::post('/global-portal/follow/{user}', [GlobalPortalController::class, 'toggleFollow'])->name('global.portal.follow');
+    Route::get('/global-portal/profile/{user}', [GlobalPortalController::class, 'profile'])->name('global.portal.profile');
 });
 
 Route::middleware('role:guru,siswa')->group(function () {

@@ -14,7 +14,7 @@ class GlobalPortalController extends Controller
 {
     public function index(Request $request): View
     {
-        $posts = GlobalPost::with(['user.school','school','likes','comments.user'])
+        $posts = GlobalPost::with(['user.school','user.followers','school','likes.user','comments.user'])
             ->latest()->paginate(15);
         $isMobile = (bool) preg_match('/(android|iphone|mobile)/i', $request->userAgent());
         $view = $isMobile ? 'mobile.global-portal' : 'global-portal.index';
@@ -59,5 +59,21 @@ class GlobalPortalController extends Controller
         $post->comments()->create(['user_id'=>$uid,'body'=>$data['body']]);
         $post->increment('comments_count');
         return back();
+    }
+
+    public function toggleFollow(Request $request, \App\Models\User $user): RedirectResponse
+    {
+        $uid = $request->session()->get('user_id');
+        if($uid==$user->id) return back();
+        $ex=\App\Models\GlobalFollow::where('follower_id',$uid)->where('followed_id',$user->id)->first();
+        if($ex) $ex->delete(); else \App\Models\GlobalFollow::create(['follower_id'=>$uid,'followed_id'=>$user->id]);
+        return back();
+    }
+
+    public function profile(Request $request, \App\Models\User $user): View
+    {
+        $posts = \App\Models\GlobalPost::where('user_id',$user->id)->latest()->paginate(12);
+        $isFollowing = \App\Models\GlobalFollow::where('follower_id', session('user_id'))->where('followed_id',$user->id)->exists();
+        return view('mobile.global-profile', ['profileUser'=>$user->load(['school','followers','following']), 'posts'=>$posts, 'isFollowing'=>$isFollowing]);
     }
 }

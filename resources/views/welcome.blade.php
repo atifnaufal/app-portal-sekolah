@@ -52,36 +52,29 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
       <a href="{{ route('register') }}" class="btn btn-primary"><i class="bi bi-person-plus"></i> Daftar Akun</a>
     </div>
   </nav>
-  <div class="hero-main">
-    <div>
-      <div class="badge"><i class="bi bi-globe2"></i> Global Portal • Antar Sekolah Se-Nusantara</div>
-      <div class="h1">Satu Aplikasi,<br>Semua Kebutuhan Sekolah Digital</div>
-      <div class="lead">Absensi, Tugas LMS, Nilai, SPP, Eskul, Chat WA-like & <b>Global Portal sosmed</b> antar sekolah — premium, cepat, ringan.</div>
-      <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-        <a href="{{ route('register') }}" class="btn btn-primary" style="padding:13px 22px;border-radius:14px">Mulai Sekarang — Gratis <i class="bi bi-arrow-right"></i></a>
-        <a href="{{ route('download.apk') }}" class="btn btn-ghost"><i class="bi bi-download"></i> Download APK</a>
+  <div class="hero-main" style="justify-items:center">
+    <!-- Figma premium mobile card — tampil di semua, desktop tetap centered premium -->
+    <div style="width:100%;max-width:420px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-radius:32px;padding:28px 18px 20px;backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center">
+      <div style="width:120px;height:120px;margin:0 auto 16px;filter:drop-shadow(0 12px 24px rgba(0,0,0,.25))">
+        <img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f1ee-1f1e9.png" alt="flag" style="display:none">
+        <div style="font-size:64px">🇮🇩</div>
+        <div style="margin-top:-18px;font-size:48px">🏃‍♂️</div>
       </div>
-      <div style="display:flex;gap:12px;margin-top:16px;font-size:11px;opacity:.8">
-        <span><i class="bi bi-shield-check"></i> Aman & Terverifikasi</span>
-        <span><i class="bi bi-lightning"></i> Ringan 11MB</span>
-        <span><i class="bi bi-phone"></i> Android & Web</span>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-.02em">Portal Sekolah Digital</div>
+      <div style="font-size:13px;opacity:.7;margin-top:4px">Portal Akademik Mahasiswa & Guru</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px">
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,.2);color:#60a5fa;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-journal-check"></i></div><div style="font-size:11px;font-weight:800">Tugas</div><div style="font-size:9px;opacity:.5">Kumpul Tugas</div></div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.2);color:#34d399;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-calendar-check"></i></div><div style="font-size:11px;font-weight:800">Absensi</div><div style="font-size:9px;opacity:.5">Catat Hadir</div></div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(251,191,36,.2);color:#fbbf24;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-wallet2"></i></div><div style="font-size:11px;font-weight:800">SPP Online</div><div style="font-size:9px;opacity:.5">Cek Tagihan</div></div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(139,92,246,.2);color:#a78bfa;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-chat-dots"></i></div><div style="font-size:11px;font-weight:800">Chat</div><div style="font-size:9px;opacity:.5">Online Chat</div></div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(14,165,233,.2);color:#38bdf8;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-file-earmark-richtext"></i></div><div style="font-size:11px;font-weight:800">Perpus</div><div style="font-size:9px;opacity:.5">Baca Digital</div></div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(244,114,182,.2);color:#f472b6;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-flag"></i></div><div style="font-size:11px;font-weight:800">Eskul</div><div style="font-size:9px;opacity:.5">Minat Bakat</div></div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,.2);color:#c084fc;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-mortarboard-fill"></i></div><div style="font-size:11px;font-weight:800">E-Learning</div><div style="font-size:9px;opacity:.5">Materi & Tugas</div></div>
+        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(16,185,129,.2);color:#34d399;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-bar-chart-line"></i></div><div style="font-size:11px;font-weight:800">Nilai</div><div style="font-size:9px;opacity:.5">Rapor Online</div></div>
+        <div style="background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:16px;padding:10px 6px;box-shadow:0 8px 20px rgba(99,102,241,.3)"><div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.2);color:#fff;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-globe2"></i></div><div style="font-size:11px;font-weight:800;color:#fff">Global Portal</div><div style="font-size:9px;color:rgba(255,255,255,.8)">Sosmed Sekolah</div></div>
       </div>
-    </div>
-    <div class="hero-card">
-      <div class="mock">
-        <img src="{{ asset('logo_sekolah.png') }}" alt="Preview" style="padding:24px;max-height:220px;object-fit:contain;background:linear-gradient(135deg,#eef2ff,#f5f3ff)">
-        <div style="padding:14px">
-          <div style="height:10px;background:#e2e8f0;border-radius:999px;width:60%;margin-bottom:8px"></div>
-          <div style="height:8px;background:#f1f5f9;border-radius:999px;margin-bottom:6px"></div>
-          <div style="height:8px;background:#f1f5f9;border-radius:999px;width:80%"></div>
-          <div style="display:flex;gap:8px;margin-top:12px"><span style="flex:1;height:32px;background:#4f46e5;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:11px">Masuk</span><span style="flex:1;height:32px;background:#f1f5f9;border-radius:10px"></span></div>
-        </div>
-      </div>
-      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:900">4.9★</div><div style="font-size:10px;opacity:.8">Rating</div></div>
-        <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:900">10K+</div><div style="font-size:10px;opacity:.8">Pengguna</div></div>
-        <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:10px;text-align:center"><div style="font-weight:900">3 Sekolah</div><div style="font-size:10px;opacity:.8">Tergabung</div></div>
-      </div>
+      <a href="{{ route('login') }}" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;background:#fff;color:#1e3a5f;padding:14px;border-radius:16px;font-weight:800;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.15)"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+      <a href="{{ route('download.apk') }}" style="display:block;margin-top:10px;font-size:11px;color:rgba(255,255,255,.5);text-decoration:none"><i class="bi bi-cloud-arrow-down"></i> Unduh Aplikasi Android</a>
     </div>
   </div>
 </div>
