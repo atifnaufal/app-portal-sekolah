@@ -19,6 +19,14 @@ public class NotificationHelper {
 
     public static void createNotificationChannel(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager nm = context.getSystemService(NotificationManager.class);
+            if (nm != null) {
+                // Hapus channel lama yang terlanjur terbuat dengan IMPORTANCE rendah → Android tidak mau update
+                for (String old : new String[]{"portal_alerts_v1","portal_alerts_v2","portal_alerts_v3"}) {
+                    try { nm.deleteNotificationChannel(old); } catch (Exception ignored) {}
+                }
+            }
+            // IMPORTANCE_HIGH = kunci heads-up pop-up melayang
             NotificationChannel channel = new NotificationChannel(
                     AppConfig.CHANNEL_ID,
                     AppConfig.CHANNEL_NAME,
@@ -27,7 +35,7 @@ public class NotificationHelper {
             channel.setDescription(AppConfig.CHANNEL_DESCRIPTION);
             channel.enableLights(true);
             channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{0, 500, 200, 500});
+            channel.setVibrationPattern(new long[]{0, 400, 150, 400});
             channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             channel.setShowBadge(true);
 

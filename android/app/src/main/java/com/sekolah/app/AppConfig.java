@@ -19,9 +19,9 @@ public class AppConfig {
     public static final String KEY_NOTIFICATION_COUNT = "notification_count";
 
     // Notification channel info
-    public static final String CHANNEL_ID = "portal_alerts_v3";
-    public static final String CHANNEL_NAME = "Notifikasi Portal Sekolah";
-    public static final String CHANNEL_DESCRIPTION = "Notifikasi tugas dan pengumuman";
+    public static final String CHANNEL_ID = "portal_alerts_v4_pop";
+    public static final String CHANNEL_NAME = "Notifikasi Penting";
+    public static final String CHANNEL_DESCRIPTION = "Channel untuk notifikasi melayang (Heads-up)";
     public static final String SERVICE_CHANNEL_ID = "portal_background_v1";
     public static final String SERVICE_CHANNEL_NAME = "Status sinkronisasi";
 
