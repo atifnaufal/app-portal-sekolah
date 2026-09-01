@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'jenis_kelamin', 'kelas_id', 'foto', 'foto_posisi_x', 'foto_posisi_y', 'nik', 'no_hp', 'aktif'])]
+#[Fillable(['name', 'email', 'password', 'role', 'jenis_kelamin', 'kelas_id', 'foto', 'foto_posisi_x', 'foto_posisi_y', 'nik', 'no_hp', 'aktif', 'status', 'last_activity_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -103,6 +103,34 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'aktif' => 'boolean',
+            'last_activity_at' => 'datetime',
         ];
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->last_activity_at && $this->last_activity_at->diffInSeconds(now()) < 120;
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        if (! $this->aktif) {
+            return 'nonaktif';
+        }
+        if ($this->isOnline()) {
+            return 'aktif';
+        }
+
+        return 'terdaftar';
+    }
+
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status_label) {
+            'aktif' => 'green',
+            'terdaftar' => 'blue',
+            'nonaktif' => 'red',
+            default => 'gray',
+        };
     }
 }

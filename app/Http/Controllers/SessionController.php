@@ -39,6 +39,10 @@ class SessionController extends Controller
             $request->session()->put('user_last_activity', now()->timestamp);
         }
 
+        if ($user) {
+            $user->updateQuietly(['last_activity_at' => now()]);
+        }
+
         return response()->json([
             'authenticated' => true,
             'user_id' => (int) $userId,

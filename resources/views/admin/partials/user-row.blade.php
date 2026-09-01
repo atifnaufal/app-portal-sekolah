@@ -1,8 +1,15 @@
 <tr>
     <td>
         <div class="d-flex align-items-center gap-3">
-            <div style="width: 40px; height: 40px; border-radius: 12px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #475569; flex-shrink: 0;">
-                {{ strtoupper(substr($user->name, 0, 1)) }}
+            <div style="width: 40px; height: 40px; border-radius: 12px; overflow: hidden; position: relative; flex-shrink: 0;">
+                @if($user->foto)
+                    <img src="{{ asset('storage/'.$user->foto) }}" style="width:100%;height:100%;object-fit:cover;">
+                @else
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg, #3b82f6, #2563eb);display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px;">
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                    </div>
+                @endif
+                <div style="position:absolute;bottom:-1px;right:-1px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;background: {{ $user->status_color === 'green' ? '#22c55e' : ($user->status_color === 'blue' ? '#3b82f6' : '#ef4444') }};"></div>
             </div>
             <div>
                 <div class="fw-bold text-dark" style="font-size: 14px;">{{ $user->name }}</div>
@@ -15,7 +22,6 @@
             <span class="fw-semibold text-dark">{{ $user->kelas?->nama ?? '-' }}</span>
         @else
             @php
-                // Kumpulkan kelas yang diampu guru secara unik & terurut per tingkat
                 $guruClasses = collect([$user->kelas])
                     ->merge($user->mataPelajarans->pluck('kelas'))
                     ->filter()
@@ -38,11 +44,24 @@
         @endif
     </td>
     <td>
-        @if($user->aktif)
-            <span class="badge-premium badge-success-p"><i class="bi bi-check-circle-fill me-1"></i> Aktif</span>
-        @else
-            <span class="badge-premium badge-warning-p"><i class="bi bi-exclamation-circle-fill me-1"></i> Menunggu</span>
-        @endif
+        @php
+            $statusLabel = $user->status_label;
+            $statusColor = match($statusLabel) {
+                'aktif' => 'success-p',
+                'terdaftar' => 'primary-p',
+                'nonaktif' => 'warning-p',
+                default => 'secondary-p',
+            };
+        @endphp
+        <span class="badge-premium badge-{{ $statusColor }}">
+            <i class="bi {{ match($statusLabel) {
+                'aktif' => 'bi-circle-fill',
+                'terdaftar' => 'bi-person-check-fill',
+                'nonaktif' => 'bi-person-x-fill',
+                default => 'bi-person-fill'
+            } }} me-1" style="font-size:8px;"></i>
+            {{ ucfirst($statusLabel) }}
+        </span>
     </td>
     <td class="text-end">
         <div class="d-flex justify-content-end gap-2">

@@ -20,7 +20,12 @@ class ProfileController extends Controller
             $userId = Auth::guard('web')->id();
         }
 
-        return User::with('kelas')->findOrFail($userId);
+        $user = User::with('kelas')->find($userId);
+        if (! $user) {
+            abort(401, 'Sesi berakhir. Silakan login kembali.');
+        }
+
+        return $user;
     }
 
     public function show(Request $request): View

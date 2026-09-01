@@ -154,6 +154,71 @@
         </div>
     </div>
 
+    {{-- Online Users Widget --}}
+    @php
+        $onlineUsers = \App\Models\User::whereIn('role', ['guru', 'siswa'])
+            ->where('aktif', true)
+            ->where('last_activity_at', '>=', now()->subMinutes(2))
+            ->with('kelas')
+            ->get();
+        $recentLogs = \App\Models\UserHistory::with('user')->latest()->take(5)->get();
+    @endphp
+    <div class="am-card animate-up" style="animation-delay: 0.22s;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="font-size:16px;font-weight:800;margin:0;"><i class="bi bi-broadcast me-2" style="color:#22c55e;"></i> Status Online</h3>
+            <span style="background:#dcfce7;color:#166534;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:800;">{{ $onlineUsers->count() }} aktif</span>
+        </div>
+        @if($onlineUsers->count() > 0)
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                @foreach($onlineUsers->take(8) as $ou)
+                    <div style="display:flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:6px 10px;">
+                        <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div>
+                        <span style="font-size:11px;font-weight:700;color:#166534;">{{ explode(' ', $ou->name)[0] }}</span>
+                    </div>
+                @endforeach
+                @if($onlineUsers->count() > 8)
+                    <div style="display:flex;align-items:center;background:#f1f5f9;border-radius:10px;padding:6px 10px;">
+                        <span style="font-size:11px;font-weight:700;color:#64748b;">+{{ $onlineUsers->count() - 8 }} lagi</span>
+                    </div>
+                @endif
+            </div>
+        @else
+            <div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px;font-weight:600;">Tidak ada user online saat ini</div>
+        @endif
+    </div>
+
+    {{-- Recent Activity Widget --}}
+    <div class="am-card animate-up" style="animation-delay: 0.25s;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="font-size:16px;font-weight:800;margin:0;"><i class="bi bi-clock-history me-2" style="color:#ea580c;"></i> Aktivitas Terbaru</h3>
+            <a href="{{ route('admin.history') }}" style="font-size:11px;font-weight:700;color:var(--blue);text-decoration:none;">Lihat Semua</a>
+        </div>
+        @forelse($recentLogs as $log)
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 0;{{ !$loop->last ? 'border-bottom:1px solid #f1f5f9;' : '' }}">
+                <div style="width:32px;height:32px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;font-size:13px;background:{{ match($log->activity_type) {
+                    'login' => '#dcfce7', 'logout' => '#fef2f2', 'absensi' => '#dbeafe',
+                    'profile_update' => '#fef3c7', default => '#f1f5f9'
+                } }}; color:{{ match($log->activity_type) {
+                    'login' => '#166534', 'logout' => '#991b1b', 'absensi' => '#1e40af',
+                    'profile_update' => '#92400e', default => '#64748b'
+                } }};">
+                    <i class="bi {{ match($log->activity_type) {
+                        'login' => 'bi-box-arrow-in-right', 'logout' => 'bi-box-arrow-right',
+                        'absensi' => 'bi-calendar-check', 'profile_update' => 'bi-person-gear',
+                        default => 'bi-activity'
+                    } }}"></i>
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:12px;font-weight:700;color:var(--navy);">{{ $log->user?->name ?? 'User #'.$log->user_id }}</div>
+                    <div style="font-size:10px;color:#94a3b8;font-weight:600;">{{ $log->description }}</div>
+                </div>
+                <div style="font-size:10px;color:#94a3b8;font-weight:600;white-space:nowrap;">{{ $log->created_at->diffForHumans() }}</div>
+            </div>
+        @empty
+            <div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px;font-weight:600;">Belum ada aktivitas</div>
+        @endforelse
+    </div>
+
     {{-- Quick Actions --}}
     <div style="font-size:13px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin:24px 0 12px;">Navigasi Cepat</div>
 

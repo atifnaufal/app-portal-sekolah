@@ -350,6 +350,7 @@
         })();
 
         window.addEventListener('load', () => { document.getElementById('page-loader').style.display = 'none'; });
+        setTimeout(() => { document.getElementById('page-loader').style.display = 'none'; }, 8000);
 
         var portalToastEl = document.getElementById('portal-toast');
         var toastTimer = null;
@@ -407,10 +408,10 @@
             }, 6000);
         }
 
-        document.querySelectorAll('a, button').forEach(el => {
+        document.querySelectorAll('a[href]').forEach(el => {
             el.addEventListener('click', function() {
                 const href = this.getAttribute('href');
-                if (href && href.length > 1 && !href.startsWith('#') && !href.startsWith('javascript')) {
+                if (href && href.length > 1 && href.startsWith('/') && !href.startsWith('//')) {
                     document.getElementById('page-loader').style.display = 'flex';
                 }
             });
@@ -894,7 +895,7 @@
             <i class="bi bi-exclamation-triangle" style="font-size:36px;color:#fbbf24;"></i>
         </div>
         <h4 style="font-size:18px;font-weight:700;margin-bottom:8px;">Terjadi Kesalahan</h4>
-        <p style="font-size:13px;color:#94a3b8;line-height:1.6;max-width:300px;margin:0 auto 24px;">Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.</p>
+        <p id="error-detail" style="font-size:13px;color:#94a3b8;line-height:1.6;max-width:300px;margin:0 auto 24px;">Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.</p>
         <button onclick="location.reload()" style="padding:12px 28px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">Muat Ulang</button>
         <div style="margin-top:40px;font-size:11px;color:#475569;">{{ config('app.name', 'Sekolah') }}</div>
     </div>
@@ -902,41 +903,52 @@
     <script>
     (function() {
         var shown = false;
+        var errorCount = 0;
+        var ERROR_THRESHOLD = 3;
+        var CriticalErrors = ['Script error', 'Unexpected token', 'SyntaxError', 'ReferenceError', 'TypeError'];
+        var bgEndpoints = ['/session/status', '/notifikasi/poll', '/chat/poll'];
+
+        function isCritical(msg) {
+            return CriticalErrors.some(function(e) { return String(msg).indexOf(e) !== -1; });
+        }
+
         function showError(msg) {
             if (shown) return;
+            errorCount++;
+            if (errorCount < ERROR_THRESHOLD && !isCritical(msg)) return;
             shown = true;
+            var detail = document.getElementById('error-detail');
+            if (detail && msg) detail.textContent = 'Error: ' + msg;
             document.getElementById('error-screen').style.display = 'flex';
         }
 
-        // Catch unhandled JS errors
-        window.onerror = function(msg, src, line, col, err) {
-            showError(msg);
+        window.onerror = function(msg) {
+            if (isCritical(msg)) showError(msg);
             return true;
         };
 
-        // Catch unhandled promise rejections
         window.addEventListener('unhandledrejection', function(e) {
-            showError('promise_rejection');
+            var reason = e.reason || e.detail || '';
+            if (isCritical(reason)) showError('promise_rejection');
         });
 
-        // Intercept fetch() to catch network/server errors
         var origFetch = window.fetch;
         window.fetch = function() {
+            var url = arguments[0];
+            var urlStr = typeof url === 'string' ? url : (url.url || '');
+            var isBg = bgEndpoints.some(function(ep) { return urlStr.indexOf(ep) !== -1; });
             return origFetch.apply(this, arguments).then(function(res) {
-                if (res.status >= 500) {
-                    showError('server_' + res.status);
-                }
+                if (res.status >= 500 && !isBg) showError('server_' + res.status);
                 return res;
             }).catch(function(err) {
-                showError('network');
+                if (!isBg) showError('network');
                 throw err;
             });
         };
 
-        // Catch page load errors (404, 500 from navigation)
         window.addEventListener('error', function(e) {
-            if (e.target && e.target.tagName === 'IMG') return; // skip broken images
-            showError('resource');
+            if (e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) return;
+            if (e.target && e.target.id === 'error-screen') return;
         }, true);
     })();
     </script>

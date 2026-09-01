@@ -67,6 +67,7 @@ class AuthController extends Controller
         $request->session()->save();
 
         UserHistoryHelper::logLogin($user->id, $request);
+        $user->updateQuietly(['status' => 'aktif', 'last_activity_at' => now()]);
 
         return redirect()->intended(route('dashboard'));
     }
@@ -76,6 +77,7 @@ class AuthController extends Controller
         $user = Auth::user();
         if ($user) {
             UserHistoryHelper::logLogout($user->id, $request);
+            $user->updateQuietly(['status' => 'terdaftar']);
             $user->tokens()->delete();
         }
 
