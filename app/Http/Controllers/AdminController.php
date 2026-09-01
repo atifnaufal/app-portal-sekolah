@@ -31,9 +31,7 @@ class AdminController extends Controller
         $isSuper = $me && $me->isSuperAdmin();
         $filterSchoolId = $isSuper ? request('school_id') : ($me->school_id ?? null);
         $filterSchoolId = $filterSchoolId ? (int)$filterSchoolId : null;
-        $cacheKey = 'admin_dashboard_v4'.($isMobile?'_m':'_d').'_s'.($filterSchoolId??'all');
-
-        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 120, function () use ($isMobile, $filterSchoolId) {
+        // Cache dimatikan sementara untuk hindari serialisasi model bug — gunakan index DB untuk ringan
 
         // Diurutkan menurun lalu dibalik agar benar-benar 6 bulan TERAKHIR.
         $sppData = Spp::selectRaw('tahun, bulan, SUM(nominal) as tagihan, SUM(dibayar) as terbayar')
@@ -163,13 +161,11 @@ class AdminController extends Controller
         $data['topSchool'] = School::withCount('posts')->orderByDesc('posts_count')->first();
         $data['recentGlobalPosts'] = $gpQ(GlobalPost::with(['user','school'])->latest())->take(4)->get();
         $meForView = \App\Models\User::find(session('user_id') ?? auth()->id());
+        $data['user'] = $meForView;
         $data['filterSchoolId'] = $filterSchoolId;
         $data['isSuperAdmin'] = $meForView && $meForView->isSuperAdmin();
         $data['allSchools'] = School::withCount(['users','posts'])->orderBy('name')->get();
         $data['filterSchool'] = $filterSchoolId ? School::withCount(['users','posts'])->find($filterSchoolId) : null;
-
-        return $data;
-        });
 
         return view($isMobile ? 'mobile.admin-dashboard' : 'admin.dashboard', $data);
     }

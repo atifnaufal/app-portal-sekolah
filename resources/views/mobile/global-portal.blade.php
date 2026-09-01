@@ -87,7 +87,7 @@
       <div class="ig-avatar"><img src="{{ $p->user->avatar_url }}" alt=""></div>
       <div class="ig-meta">
         <div class="ig-user">{{ $p->user->name }} @if($p->user->isOnline())<span style="width:6px;height:6px;background:#22c55e;border-radius:50%;display:inline-block"></span>@endif <span style="font-size:11px;color:#0095f6">• {{ $p->school->name ?? $p->user->school->name ?? 'Umum' }}</span></div>
-        <div class="ig-sub">{{ $p->created_at->diffForHumans() }} • {{ $p->followers->count() }} followers • {{ $p->created_at->translatedFormat('d M Y') }}</div>
+        <div class="ig-sub">{{ $p->created_at->diffForHumans() }} • {{ $p->user->followers->count() }} followers • {{ $p->created_at->translatedFormat('d M Y') }}</div>
       </div>
       <i class="bi bi-three-dots"></i>
     </a>
