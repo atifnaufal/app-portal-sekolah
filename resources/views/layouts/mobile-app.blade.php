@@ -269,9 +269,12 @@
     </div>
 
     @if(!isset($hideNav) || !$hideNav)
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" style="gap:2px">
         <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
             <i class="bi bi-house-door nav-icon"></i>Beranda
+        </a>
+        <a class="{{ request()->routeIs('global.portal') ? 'active' : '' }}" href="{{ route('global.portal') }}">
+            <i class="bi bi-globe2 nav-icon"></i>Global
         </a>
         <a class="{{ request()->routeIs('absensi.*') ? 'active' : '' }}" href="{{ route('absensi.index') }}">
             <i class="bi bi-calendar-check nav-icon"></i>Absen

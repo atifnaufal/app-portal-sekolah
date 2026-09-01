@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EskulController;
+use App\Http\Controllers\GlobalPortalController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\JurusanController;
@@ -96,6 +97,13 @@ Route::middleware('role:admin,guru')->group(function () {
     Route::get('/nilai/recap-periode/excel', [NilaiController::class, 'recapPeriodeExcel'])->name('nilai.recap.periode.excel');
     Route::get('/absensi/recap', [AbsensiController::class, 'recapPdf'])->name('absensi.recap');
     Route::get('/absensi/recap/excel', [AbsensiController::class, 'recapExcel'])->name('absensi.recap.excel');
+});
+
+Route::middleware('role:guru,siswa,admin')->group(function () {
+    Route::get('/global-portal', [GlobalPortalController::class, 'index'])->name('global.portal');
+    Route::post('/global-portal', [GlobalPortalController::class, 'store'])->name('global.portal.store');
+    Route::post('/global-portal/{post}/like', [GlobalPortalController::class, 'toggleLike'])->name('global.portal.like');
+    Route::post('/global-portal/{post}/comment', [GlobalPortalController::class, 'comment'])->name('global.portal.comment');
 });
 
 Route::middleware('role:guru,siswa')->group(function () {

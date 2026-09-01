@@ -119,7 +119,7 @@
         </div>
         <div class="hdr-info">
             <div class="hdr-title text-truncate">{{ $group->name }}</div>
-            <div class="hdr-status">{{ $isPrivate ? 'Online' : $group->members->count().' Anggota' }}</div>
+            <div class="hdr-status" style="color:{{ $isPrivate && $other && $other->isOnline() ? '#22c55e' : '#94a3b8' }}">{{ $isPrivate ? ($other ? $other->last_seen : 'Offline') : $group->members->count().' Anggota' }}</div>
         </div>
     </div>
 

@@ -168,6 +168,7 @@ class AdminController extends Controller
         $data = [
             'users' => $users,
             'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
+            'schools' => \App\Models\School::orderBy('name')->get(),
             'totalGuru' => User::where('role', 'guru')->count(),
             'totalSiswa' => User::where('role', 'siswa')->count(),
             'pendingUsers' => User::where('aktif', false)->whereIn('role', ['guru', 'siswa'])->count(),
@@ -179,7 +180,7 @@ class AdminController extends Controller
     public function updateUser(Request $request, User $user): RedirectResponse
     {
         abort_unless(in_array($user->role, ['guru', 'siswa'], true), 404);
-        $data = $request->validate(['name' => ['required', 'max:255'], 'nik' => ['required', 'max:30', 'unique:users,nik,'.$user->id], 'no_hp' => ['required', 'max:25'], 'email' => ['required', 'email', 'unique:users,email,'.$user->id], 'kelas_id' => ['required', 'exists:kelas,id'], 'role' => ['required', 'in:guru,siswa']]);
+        $data = $request->validate(['name' => ['required', 'max:255'], 'nik' => ['required', 'max:30', 'unique:users,nik,'.$user->id], 'no_hp' => ['required', 'max:25'], 'email' => ['required', 'email', 'unique:users,email,'.$user->id], 'kelas_id' => ['required', 'exists:kelas,id'], 'school_id' => ['nullable','exists:schools,id'], 'role' => ['required', 'in:guru,siswa']]);
         $user->update($data);
 
         return back()->with('success', 'Data akun berhasil diperbarui.');

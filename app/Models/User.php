@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'jenis_kelamin', 'kelas_id', 'foto', 'foto_posisi_x', 'foto_posisi_y', 'nik', 'no_hp', 'aktif', 'status', 'last_activity_at'])]
+#[Fillable(['name', 'email', 'password', 'role', 'jenis_kelamin', 'kelas_id', 'school_id', 'foto', 'foto_posisi_x', 'foto_posisi_y', 'nik', 'no_hp', 'aktif', 'status', 'last_activity_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -36,6 +36,7 @@ class User extends Authenticatable
         return "https://ui-avatars.com/api/?name={$name}&background={$bg}&color=fff&size=128&bold=true&rounded=true";
     }
 
+    public function school(): BelongsTo { return $this->belongsTo(School::class); }
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class);
