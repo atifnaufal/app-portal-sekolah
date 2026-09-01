@@ -3,6 +3,7 @@
 use App\Http\Middleware\ApiRoleMiddleware;
 use App\Http\Middleware\BlockAdminOnMobile;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\UpdateLastActivity;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -30,7 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'api.role' => ApiRoleMiddleware::class,
             'admin.desktop' => BlockAdminOnMobile::class,
+            'last.activity' => UpdateLastActivity::class,
         ]);
+        $middleware->appendToGroup('web', UpdateLastActivity::class);
 
     })
 
@@ -78,15 +81,14 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // Catch-all: ALL uncaught exceptions → custom 500 page, NO stack trace
+        // Catch-all: uncaught exceptions → 500 (but don't swallow known HttpExceptions)
         $exceptions->renderable(function (\Throwable $e, Request $request) {
-            // Log internally but never expose to user
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) return null;
+            if ($e instanceof \Illuminate\Auth\AuthenticationException) return null;
+            if ($e instanceof \Illuminate\Validation\ValidationException) return null;
             \Illuminate\Support\Facades\Log::error('Uncaught exception: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(), 'line' => $e->getLine(),
             ]);
-
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json(['message' => 'Terjadi kesalahan sistem'], 500);
             }

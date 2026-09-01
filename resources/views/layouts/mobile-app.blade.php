@@ -349,8 +349,18 @@
             }
         })();
 
-        window.addEventListener('load', () => { document.getElementById('page-loader').style.display = 'none'; });
-        setTimeout(() => { document.getElementById('page-loader').style.display = 'none'; }, 8000);
+        window.addEventListener('load', () => { var l=document.getElementById('page-loader'); if(l) l.style.display='none'; });
+        setTimeout(() => { var l=document.getElementById('page-loader'); if(l) l.style.display='none'; }, 8000);
+        // Offline banner
+        (function(){
+            var bar=document.createElement('div');
+            bar.id='offline-bar';
+            bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:10003;background:#dc2626;color:#fff;text-align:center;padding:8px 12px;font-size:12px;font-weight:700;display:none;';
+            bar.innerHTML='<i class="bi bi-wifi-off me-1"></i> Anda sedang offline — beberapa fitur tidak tersedia';
+            document.body.prepend(bar);
+            function upd(){ bar.style.display=navigator.onLine?'none':'block'; }
+            window.addEventListener('online',upd); window.addEventListener('offline',upd); upd();
+        })();
 
         var portalToastEl = document.getElementById('portal-toast');
         var toastTimer = null;
@@ -411,8 +421,10 @@
         document.querySelectorAll('a[href]').forEach(el => {
             el.addEventListener('click', function() {
                 const href = this.getAttribute('href');
-                if (href && href.length > 1 && href.startsWith('/') && !href.startsWith('//')) {
-                    document.getElementById('page-loader').style.display = 'flex';
+                if (!href || href==='#' || href.startsWith('javascript:') || href.startsWith('tel:') || href.startsWith('mailto:')) return;
+                if (href.length > 1 && href.startsWith('/') && !href.startsWith('//')) {
+                    var loader=document.getElementById('page-loader'); if(loader) loader.style.display='flex';
+                    setTimeout(function(){ if(loader) loader.style.display='none'; }, 7000);
                 }
             });
         });
@@ -889,67 +901,125 @@
         })();
     </script>
 
-    <!-- ===== GLOBAL ERROR CATCHER ===== -->
-    <div id="error-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:24px;text-align:center;">
-        <div style="width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:24px;display:grid;place-items:center;margin:0 auto 24px;">
-            <i class="bi bi-exclamation-triangle" style="font-size:36px;color:#fbbf24;"></i>
+    <!-- ===== GLOBAL ERROR CATCHER — premium, no reload loop ===== -->
+    <div id="error-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:24px;text-align:center;overflow:auto;">
+        <div style="width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:24px;display:grid;place-items:center;margin:0 auto 16px;">
+            <i id="error-icon" class="bi bi-exclamation-triangle" style="font-size:36px;color:#fbbf24;"></i>
         </div>
-        <h4 style="font-size:18px;font-weight:700;margin-bottom:8px;">Terjadi Kesalahan</h4>
-        <p id="error-detail" style="font-size:13px;color:#94a3b8;line-height:1.6;max-width:300px;margin:0 auto 24px;">Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.</p>
-        <button onclick="location.reload()" style="padding:12px 28px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">Muat Ulang</button>
-        <div style="margin-top:40px;font-size:11px;color:#475569;">{{ config('app.name', 'Sekolah') }}</div>
+        <h4 id="error-title" style="font-size:18px;font-weight:800;margin-bottom:6px;">Terjadi Kesalahan</h4>
+        <p id="error-detail" style="font-size:13px;color:#94a3b8;line-height:1.6;max-width:340px;margin:0 auto 8px;">Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.</p>
+        <div id="error-meta" style="font-size:11px;color:#475569;margin-bottom:18px;max-width:340px;word-break:break-word;"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+            <button id="error-retry" style="padding:12px 22px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;"><i class="bi bi-arrow-clockwise"></i> Coba Lagi</button>
+            <button onclick="document.getElementById('error-screen').style.display='none'" style="padding:12px 22px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;">Tutup</button>
+            <button id="error-copy" style="padding:12px 18px;background:transparent;color:#94a3b8;border:1px solid rgba(255,255,255,.15);border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;"><i class="bi bi-clipboard"></i> Salin</button>
+        </div>
+        <div id="error-countdown" style="margin-top:12px;font-size:11px;color:#64748b;"></div>
+        <div style="margin-top:24px;font-size:11px;color:#475569;">{{ config('app.name', 'Sekolah') }} &middot; <span id="error-trace"></span></div>
     </div>
 
     <script>
     (function() {
         var shown = false;
         var errorCount = 0;
+        var lastShownAt = 0;
+        var retryCount = 0;
+        var MAX_RETRY = 3;
+        var RETRY_COOLDOWN = 4000;
         var ERROR_THRESHOLD = 3;
-        var CriticalErrors = ['Script error', 'Unexpected token', 'SyntaxError', 'ReferenceError', 'TypeError'];
-        var bgEndpoints = ['/session/status', '/notifikasi/poll', '/chat/poll'];
+        var CriticalErrors = ['Script error','Unexpected token','SyntaxError','ReferenceError','TypeError','ChunkLoadError','Failed to fetch'];
+        var bgEndpoints = ['/session/status','/notifikasi/poll','/chat/poll'];
+        var detailEl=document.getElementById('error-detail');
+        var metaEl=document.getElementById('error-meta');
+        var screenEl=document.getElementById('error-screen');
+        var titleEl=document.getElementById('error-title');
+        var iconEl=document.getElementById('error-icon');
+        var traceEl=document.getElementById('error-trace');
+        var countdownEl=document.getElementById('error-countdown');
 
-        function isCritical(msg) {
-            return CriticalErrors.some(function(e) { return String(msg).indexOf(e) !== -1; });
-        }
+        function isCritical(msg){ return CriticalErrors.some(function(e){ return String(msg||'').indexOf(e)!==-1; }); }
+        function isBg(url){ return bgEndpoints.some(function(ep){ return url.indexOf(ep)!==-1; }); }
 
-        function showError(msg) {
-            if (shown) return;
+        function showError(msg, opts){
+            opts=opts||{};
+            var now=Date.now();
+            if(now - lastShownAt < 1500) return; // debounce
             errorCount++;
-            if (errorCount < ERROR_THRESHOLD && !isCritical(msg)) return;
-            shown = true;
-            var detail = document.getElementById('error-detail');
-            if (detail && msg) detail.textContent = 'Error: ' + msg;
-            document.getElementById('error-screen').style.display = 'flex';
+            var critical = isCritical(msg) || opts.critical;
+            if(!critical && errorCount < ERROR_THRESHOLD) return;
+            if(shown && !opts.force) return;
+            shown=true; lastShownAt=now;
+            var friendly = opts.title || 'Terjadi Kesalahan';
+            var color = opts.iconColor || '#fbbf24';
+            var icon = opts.icon || 'bi-exclamation-triangle';
+            titleEl.textContent=friendly;
+            iconEl.className='bi '+icon;
+            iconEl.style.color=color;
+            if(detailEl) detailEl.textContent=opts.detail || ('Error: '+(msg||'unknown'));
+            if(metaEl) metaEl.textContent='Waktu: '+new Date().toLocaleString('id-ID')+' | URL: '+location.pathname + (navigator.onLine?' | Online':' | Offline');
+            if(traceEl) traceEl.textContent='Trace '+Math.random().toString(36).slice(2,8).toUpperCase()+' | '+location.href.slice(0,80);
+            screenEl.style.display='flex';
+            if(!navigator.onLine){
+                if(detailEl) detailEl.textContent='Anda sedang offline. Periksa koneksi internet lalu coba lagi.';
+                titleEl.textContent='Tidak Ada Koneksi';
+                iconEl.className='bi bi-wifi-off';
+                iconEl.style.color='#f87171';
+            }
+            if(opts.autoRetry && retryCount < MAX_RETRY){
+                var wait = RETRY_COOLDOWN * Math.pow(1.5, retryCount);
+                countdownEl.textContent='Mencoba otomatis dalam '+(wait/1000)+' dtk... ('+(retryCount+1)+'/'+MAX_RETRY+')';
+                setTimeout(function(){ retryCount++; shown=false; screenEl.style.display='none'; countdownEl.textContent=''; }, wait);
+            }
         }
-
-        window.onerror = function(msg) {
-            if (isCritical(msg)) showError(msg);
-            return true;
-        };
-
-        window.addEventListener('unhandledrejection', function(e) {
-            var reason = e.reason || e.detail || '';
-            if (isCritical(reason)) showError('promise_rejection');
+        function resetAndReload(){
+            if(retryCount >= MAX_RETRY){ showError('Batas percobaan tercapai. Muat ulang manual.',{force:true,title:'Gagal Memuat',icon:'bi-x-circle',iconColor:'#f87171',detail:'Sudah mencoba '+MAX_RETRY+'x. Periksa koneksi atau hubungi admin.'}); return; }
+            retryCount++; shown=false; screenEl.style.display='none'; location.reload();
+        }
+        document.getElementById('error-retry').addEventListener('click', resetAndReload);
+        document.getElementById('error-copy').addEventListener('click', function(){
+            var t=(detailEl?detailEl.textContent:'')+'\n'+(metaEl?metaEl.textContent:'')+'\n'+location.href;
+            if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){ countdownEl.textContent='Disalin!'; setTimeout(function(){countdownEl.textContent='';},1500);});
         });
 
+        window.onerror = function(msg, src, line, col){
+            var m = msg + (src ? ' @ '+(src.split('/').pop())+':'+line : '');
+            if(isCritical(m)) showError(m,{critical:true, detail:m});
+            return true;
+        };
+        window.addEventListener('unhandledrejection', function(e){
+            var r = (e.reason && (e.reason.message||e.reason)) || e.detail || '';
+            var s = String(r);
+            if(s.indexOf('ChunkLoadError')!==-1 || s.indexOf('Loading chunk')!==-1){
+                showError(s,{critical:true,title:'Gagal Memuat Modul',icon:'bi-cloud-download',detail:'File aplikasi gagal dimuat. Coba muat ulang. Jika di APK, tutup dan buka kembali.'});
+            } else if(isCritical(s)) showError(s,{critical:true});
+        });
         var origFetch = window.fetch;
-        window.fetch = function() {
-            var url = arguments[0];
-            var urlStr = typeof url === 'string' ? url : (url.url || '');
-            var isBg = bgEndpoints.some(function(ep) { return urlStr.indexOf(ep) !== -1; });
-            return origFetch.apply(this, arguments).then(function(res) {
-                if (res.status >= 500 && !isBg) showError('server_' + res.status);
+        window.fetch = function(){
+            var url = arguments[0]; var urlStr = typeof url==='string'?url:(url&&url.url||'');
+            var bg = isBg(urlStr);
+            return origFetch.apply(this, arguments).then(function(res){
+                if(!bg){
+                    if(res.status===419) showError('419 Sesi kedaluwarsa',{critical:true,title:'Sesi Kedaluwarsa',icon:'bi-clock-history',iconColor:'#fbbf24',detail:'Sesi berakhir. Muat ulang halaman dan login kembali.'});
+                    else if(res.status===429) showError('429 Terlalu banyak permintaan',{critical:true,title:'Terlalu Sering',icon:'bi-hourglass-split',detail:'Tunggu beberapa detik lalu coba lagi.'});
+                    else if(res.status===403) showError('403 Akses ditolak',{critical:true,title:'Akses Ditolak',icon:'bi-shield-x',detail:'Anda tidak memiliki izin untuk aksi ini.'});
+                    else if(res.status>=500) showError('server_'+res.status,{critical:true,title:'Gangguan Server ('+res.status+')',icon:'bi-cpu',iconColor:'#f87171',detail:'Server mengembalikan '+res.status+'. Coba lagi atau hubungi admin jika berlanjut.'});
+                }
                 return res;
-            }).catch(function(err) {
-                if (!isBg) showError('network');
+            }).catch(function(err){
+                if(!bg){
+                    if(!navigator.onLine) showError('offline',{critical:true,title:'Offline',icon:'bi-wifi-off',iconColor:'#f87171',detail:'Tidak ada koneksi. Periksa internet Anda.'});
+                    else showError('network',{detail:'Gagal terhubung ke server. Periksa koneksi.'});
+                }
                 throw err;
             });
         };
-
-        window.addEventListener('error', function(e) {
-            if (e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) return;
-            if (e.target && e.target.id === 'error-screen') return;
+        window.addEventListener('error', function(e){
+            if(e.target && (e.target.tagName==='IMG'||e.target.tagName==='SCRIPT'||e.target.tagName==='LINK')){
+                if(e.target.tagName==='SCRIPT') showError('ChunkLoadError '+ (e.target.src||''),{critical:true,title:'Gagal Memuat Script',icon:'bi-file-earmark-code'});
+                return;
+            }
         }, true);
+        window.addEventListener('online', function(){ if(screenEl.style.display==='flex' && titleEl.textContent==='Tidak Ada Koneksi'){ screenEl.style.display='none'; shown=false; } });
     })();
     </script>
 

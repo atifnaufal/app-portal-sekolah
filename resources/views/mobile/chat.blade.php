@@ -125,11 +125,14 @@
                         $avatar = $other ? $other->avatar_url : 'https://ui-avatars.com/api/?name=User&background=random';
                     @endphp
                     <a href="{{ route('chat.show', $g) }}" class="chat-card chat-row animate-up" data-name="{{ strtolower($name) }}" style="animation-delay: 0.15s;">
-                        <div class="chat-avatar" style="background: #f1f5f9;">
+                        <div class="chat-avatar" style="background: #f1f5f9;position:relative;">
                             <img src="{{ $avatar }}">
+                            @if($other && $other->isOnline())
+                                <span style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;background:#22c55e;border:2px solid #fff;border-radius:50%;"></span>
+                            @endif
                         </div>
                         <div class="chat-info">
-                            <div class="chat-name text-truncate">{{ $name }}</div>
+                            <div class="chat-name text-truncate" style="display:flex;align-items:center;gap:6px;">{{ $name }} @if($other && $other->isOnline())<span style="font-size:10px;padding:2px 6px;border-radius:999px;background:#dcfce7;color:#166534;font-weight:800;">ONLINE</span>@endif</div>
                             <div class="chat-msg text-truncate">
                                 @if($g->lastMessage)
                                     {{ $g->lastMessage->user_id === $user->id ? 'Anda: ' : '' }}{{ $g->lastMessage->pesan }}
