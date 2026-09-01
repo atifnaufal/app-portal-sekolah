@@ -93,6 +93,10 @@ class User extends Authenticatable
      * Akun harus disetujui admin sebelum bisa dipakai.
      * Kolom `aktif` menggantikan verifikasi email sebagai gerbang akses.
      */
+    public function isSuperAdmin(): bool
+    {
+        return $this->email === 'adminpusat@pusat.com' || ($this->role === 'admin' && $this->school_id === null);
+    }
     public function isAwaitingApproval(): bool
     {
         return ! $this->aktif;

@@ -26,8 +26,14 @@ class AdminController extends Controller
     public function dashboard(): View
     {
         $isMobile = $this->isMobileRequest();
+        // Admin Pusat (super admin) bisa lihat per-sekolah, admin sekolah otomatis terfilter sekolahnya
+        $me = \App\Models\User::find(session('user_id') ?? auth()->id());
+        $isSuper = $me && $me->isSuperAdmin();
+        $filterSchoolId = $isSuper ? request('school_id') : ($me->school_id ?? null);
+        $filterSchoolId = $filterSchoolId ? (int)$filterSchoolId : null;
+        $cacheKey = 'admin_dashboard_v4'.($isMobile?'_m':'_d').'_s'.($filterSchoolId??'all');
 
-        $data = \Illuminate\Support\Facades\Cache::remember('admin_dashboard_v3'.($isMobile?'_m':'_d'), 120, function () use ($isMobile) {
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 120, function () use ($isMobile, $filterSchoolId) {
 
         // Diurutkan menurun lalu dibalik agar benar-benar 6 bulan TERAKHIR.
         $sppData = Spp::selectRaw('tahun, bulan, SUM(nominal) as tagihan, SUM(dibayar) as terbayar')
@@ -91,12 +97,13 @@ class AdminController extends Controller
         $regLabels = $regTrend->keys()->map(fn ($k) => Carbon::createFromFormat('Y-m', $k)->translatedFormat('M y'))->values();
         $regCounts = $regTrend->values();
 
+        $uQ = fn($q)=> $filterSchoolId ? $q->where('school_id',$filterSchoolId) : $q;
         $data = [
-            'totalGuru' => User::where('role', 'guru')->count(),
-            'totalSiswa' => User::where('role', 'siswa')->count(),
+            'totalGuru' => $uQ(User::where('role', 'guru'))->count(),
+            'totalSiswa' => $uQ(User::where('role', 'siswa'))->count(),
             'totalKelas' => Kelas::count(),
             'sppKurang' => Spp::where('status', 'belum_lunas')->count(),
-            'pendingCount' => User::where('aktif', false)->count(),
+            'pendingCount' => $uQ(User::where('aktif', false))->count(),
             'sppTerbayar' => Spp::sum('dibayar'),
             'sppTagihan' => Spp::sum('nominal'),
             'chartLabels' => $sppData->map(fn ($item) => "$item->bulan/$item->tahun"),
@@ -146,14 +153,20 @@ class AdminController extends Controller
         $data['kelasSiswa'] = collect($data['kelasSummaries'])->pluck('siswa_count');
         $data['kelasGuru'] = collect($data['kelasSummaries'])->pluck('guru_count');
 
-        // Global Portal premium stats
-        $data['totalGlobalPosts'] = GlobalPost::count();
-        $data['globalPostsHariIni'] = GlobalPost::whereDate('created_at', today())->count();
+        // Global Portal premium stats (filter per sekolah jika super admin pilih)
+        $gpQ = fn($q)=> $filterSchoolId ? $q->where('school_id',$filterSchoolId) : $q;
+        $data['totalGlobalPosts'] = $gpQ(GlobalPost::query())->count();
+        $data['globalPostsHariIni'] = $gpQ(GlobalPost::whereDate('created_at', today()))->count();
         $data['totalGlobalLikes'] = \DB::table('global_likes')->count();
         $data['totalGlobalComments'] = \DB::table('global_comments')->count();
         $data['totalSchools'] = School::count();
         $data['topSchool'] = School::withCount('posts')->orderByDesc('posts_count')->first();
-        $data['recentGlobalPosts'] = GlobalPost::with(['user','school'])->latest()->take(4)->get();
+        $data['recentGlobalPosts'] = $gpQ(GlobalPost::with(['user','school'])->latest())->take(4)->get();
+        $meForView = \App\Models\User::find(session('user_id') ?? auth()->id());
+        $data['filterSchoolId'] = $filterSchoolId;
+        $data['isSuperAdmin'] = $meForView && $meForView->isSuperAdmin();
+        $data['allSchools'] = School::orderBy('name')->get();
+        $data['filterSchool'] = $filterSchoolId ? School::find($filterSchoolId) : null;
 
         return $data;
         });
@@ -268,29 +281,55 @@ class AdminController extends Controller
         return back()->with('success', 'Pengaturan berhasil diperbarui.');
     }
 
-    // === Sekolah — premium admin only ===
+    // === Sekolah — premium admin only (publik bisa daftar jika is_active) ===
     public function schoolsIndex(): View
     {
+        $me = User::find(session('user_id') ?? auth()->id());
+        abort_unless(($me && $me->isSuperAdmin()) || session('user_role')==='admin',403);
         $schools = School::withCount(['users','posts'])->orderBy('name')->get();
         return view('admin.schools', compact('schools'));
     }
     public function schoolsStore(Request $request): RedirectResponse
     {
-        $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug']]);
+        $me = User::find(session('user_id') ?? auth()->id());
+        abort_unless(($me && $me->isSuperAdmin()) || session('user_role')==='admin',403);
+        $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug'],'is_active'=>['nullable','boolean']]);
+        $data['is_active']=$request->boolean('is_active',true);
         School::create($data);
         return back()->with('success','Sekolah ditambahkan');
     }
     public function schoolsUpdate(Request $request, School $school): RedirectResponse
     {
-        $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug,'.$school->id]]);
+        $me = User::find(session('user_id') ?? auth()->id());
+        abort_unless(($me && $me->isSuperAdmin()) || session('user_role')==='admin',403);
+        $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug,'.$school->id],'is_active'=>['nullable','boolean']]);
+        $data['is_active']=$request->boolean('is_active');
         $school->update($data);
         return back()->with('success','Sekolah diperbarui');
     }
     public function schoolsDestroy(School $school): RedirectResponse
     {
+        $me = User::find(session('user_id') ?? auth()->id());
+        abort_unless($me && $me->isSuperAdmin(),403);
         if($school->users()->exists()) return back()->with('error','Tidak bisa hapus sekolah yang masih punya user');
         $school->delete();
         return back()->with('success','Sekolah dihapus');
+    }
+    public function schoolsToggle(School $school): RedirectResponse
+    {
+        $me = User::find(session('user_id') ?? auth()->id());
+        abort_unless(($me && $me->isSuperAdmin()) || session('user_role')==='admin',403);
+        $school->update(['is_active'=>!$school->is_active]);
+        return back()->with('success',$school->is_active?'Sekolah diaktifkan — pendaftaran dibuka':'Sekolah dinonaktifkan — pendaftaran ditutup');
+    }
+    // Admin pusat bisa buat akun admin sekolah
+    public function createSchoolAdmin(Request $request): RedirectResponse
+    {
+        $me = User::find(session('user_id') ?? auth()->id());
+        abort_unless($me && $me->isSuperAdmin(),403);
+        $data=$request->validate(['name'=>['required','max:100'],'email'=>['required','email','unique:users,email'],'password'=>['required','min:8','confirmed'],'school_id'=>['required','exists:schools,id']]);
+        \App\Models\User::create(['name'=>$data['name'],'email'=>$data['email'],'password'=>\Illuminate\Support\Facades\Hash::make($data['password']),'role'=>'admin','school_id'=>$data['school_id'],'aktif'=>true,'nik'=>'ADM'.rand(1000,9999),'no_hp'=>'08'.rand(1000000000,9999999999)]);
+        return back()->with('success','Admin sekolah dibuat');
     }
 
     public function userHistory(Request $request): View

@@ -21,7 +21,7 @@ class RegisterController extends Controller
 
         return view('auth.register', [
             'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
-            'schools' => \App\Models\School::orderBy('name')->get(),
+            'schools' => \App\Models\School::where('is_active',true)->orderBy('name')->get(),
             'guruEnabled' => $guruEnabled,
             'siswaEnabled' => $siswaEnabled,
         ]);
@@ -44,6 +44,8 @@ class RegisterController extends Controller
             'school_id' => ['required', 'exists:schools,id'],
             'password' => ['required', 'min:8', 'confirmed'],
         ]);
+        $school = \App\Models\School::find($data['school_id']);
+        if(!$school || !$school->is_active){ return back()->withErrors(['school_id'=>'Sekolah tidak aktif / ID tidak diberi akses. Hubungi Admin Pusat.'])->withInput(); }
 
         if ($data['role'] === 'guru' && ! $guruEnabled) {
             return back()->withErrors(['role' => 'Pendaftaran Guru sedang dinonaktifkan.'])->withInput();

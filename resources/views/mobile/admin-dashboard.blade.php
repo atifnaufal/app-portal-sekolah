@@ -98,6 +98,16 @@
                 <div class="am-stat"><div class="n">{{ $totalKelas }}</div><div class="l">Kelas</div></div>
                 <div class="am-stat" style="border-color:rgba(248,113,113,0.3);"><div class="n" style="color:#f87171;">{{ $pendingCount }}</div><div class="l">Pending</div></div>
             </div>
+            @if($isSuperAdmin ?? false)
+            <form method="GET" style="margin-top:16px;position:relative;z-index:1;display:flex;gap:8px;align-items:center">
+                <select name="school_id" onchange="this.form.submit()" style="flex:1;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff;font-weight:700;font-size:12px">
+                    <option value="" style="color:#0f172a" {{ !$filterSchoolId?'selected':'' }}>🌐 Semua Sekolah (Pusat)</option>
+                    @foreach($allSchools as $sc)<option value="{{ $sc->id }}" style="color:#0f172a" {{ $filterSchoolId==$sc->id?'selected':'' }}>[ID {{ $sc->id }}] {{ $sc->name }} {{ $sc->is_active?'':'— NONAKTIF' }}</option>@endforeach
+                </select>
+                <a href="{{ route('admin.schools.index') }}" style="padding:8px 12px;background:rgba(255,255,255,.15);color:#fff;border-radius:10px;text-decoration:none;font-size:11px;font-weight:800">Kelola Sekolah</a>
+            </form>
+            @if($filterSchool) <div style="margin-top:8px;font-size:11px;opacity:.8">Menampilkan: <b>{{ $filterSchool->name }}</b> {{ $filterSchool->is_active?'🟢 Aktif':'🔴 Nonaktif — pendaftaran tertutup' }}</div> @endif
+            @endif
         </div>
     </div>
 

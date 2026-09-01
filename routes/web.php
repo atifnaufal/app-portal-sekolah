@@ -172,7 +172,9 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::get('/admin/schools', [AdminController::class, 'schoolsIndex'])->name('admin.schools.index');
     Route::post('/admin/schools', [AdminController::class, 'schoolsStore'])->name('admin.schools.store');
     Route::put('/admin/schools/{school}', [AdminController::class, 'schoolsUpdate'])->name('admin.schools.update');
+    Route::patch('/admin/schools/{school}/toggle', [AdminController::class, 'schoolsToggle'])->name('admin.schools.toggle');
     Route::delete('/admin/schools/{school}', [AdminController::class, 'schoolsDestroy'])->name('admin.schools.destroy');
+    Route::post('/admin/schools/admin', [AdminController::class, 'createSchoolAdmin'])->name('admin.schools.admin.create');
 
     Route::get('/admin/perpustakaan', [AdminPerpustakaanController::class, 'index'])->name('admin.perpustakaan.index');
     Route::get('/admin/perpustakaan/create', [AdminPerpustakaanController::class, 'create'])->name('admin.perpustakaan.create');

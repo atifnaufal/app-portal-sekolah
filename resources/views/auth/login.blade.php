@@ -333,11 +333,20 @@
                     </button>
                 </form>
 
+                <div class="info-box" style="background:#fffbeb;border-color:#fde68a">
+                    <div style="display:flex;gap:8px;align-items:start;">
+                        <i class="bi bi-building" style="color:#d97706;flex-shrink:0;margin-top:1px;"></i>
+                        <div>
+                            <div style="font-weight:700;color:#92400e">Pendaftaran butuh ID Sekolah aktif</div>
+                            <div style="margin-top:2px;color:#92400e">Publik bisa daftar <b>hanya jika sekolah sudah diberi ID & diaktifkan Admin Pusat</b>. Jika ID dinonaktifkan/dihapus, pendaftaran tertutup. Hubungi Admin Pusat.</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="info-box">
                     <div style="display:flex;gap:8px;align-items:start;">
                         <i class="bi bi-info-circle" style="color:#3b82f6;flex-shrink:0;margin-top:1px;"></i>
                         <div>
-                            <div style="margin-top:2px;color:#94a3b8;">Butuh bantuan akses? Hubungi Admin IT sekolah.</div>
+                            <div style="margin-top:2px;color:#94a3b8;">Butuh bantuan akses? Hubungi Admin IT sekolah / adminpusat@pusat.com</div>
                         </div>
                     </div>
                 </div>

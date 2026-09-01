@@ -114,6 +114,12 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
   </div>
 </div>
 
-<div class="footer">© {{ date('Y') }} {{ config('app.name') }} — Platform Digital Antar Sekolah • <a href="{{ route('offline') }}" style="color:#6366f1;text-decoration:none">Offline Mode</a></div>
+<div class="section" style="background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-top:16px">
+  <div class="eyebrow" style="color:#059669">Panduan Lengkap</div>
+  <div class="h2">Cara Daftar — Publik Se-Dunia Bisa, Jika Sekolah Aktif</div>
+  <div style="font-size:13px;color:#64748b;line-height:1.6;margin-top:6px">1. <b>Cari ID Sekolah</b> dari admin sekolahmu (contoh: [ID:1] Sekolah Pusat Semarang). Tanpa ID tidak bisa lanjut.<br>2. Pilih <b>Daftar</b> → isi NIK, Nama, WA, Email, Kelas, <b>Sekolah (ID)</b> → buat password.<br>3. Akun <b>menunggu persetujuan Admin Sekolah</b> (jika DB ada data murid/guru, admin tinggal klik Setujui).<br>4. Jika sekolah <b>dinonaktifkan/di hapus Admin Pusat</b>, tombol daftar hilang & NIK tertolak — hubungi adminpusat@pusat.com.<br>5. Setelah disetujui, login → atur PIN → jelajahi Global Portal & Chat.</div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span style="padding:6px 10px;background:#dcfce7;color:#166534;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-check-circle"></i> ID Aktif = Bisa Daftar</span><span style="padding:6px 10px;background:#fee2e2;color:#991b1b;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-x-circle"></i> ID Nonaktif = Tertutup</span></div>
+</div>
+<div class="footer">© {{ date('Y') }} {{ config('app.name') }} — Platform Digital Antar Sekolah • <a href="{{ route('offline') }}" style="color:#6366f1;text-decoration:none">Offline Mode</a> • Admin Pusat: adminpusat@pusat.com</div>
 </body>
 </html>
