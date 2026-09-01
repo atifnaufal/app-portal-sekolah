@@ -223,13 +223,17 @@
 </div>
 
 <script>
-    const searchInput = document.getElementById('searchChat');
-    const rows = document.querySelectorAll('.chat-row');
-    searchInput.addEventListener('input', function () {
-        const q = (this.value || '').toLowerCase().trim();
-        rows.forEach(r => {
-            r.style.display = r.dataset.name.includes(q) ? 'flex' : 'none';
+    (function(){
+        var searchInput = document.getElementById('searchChat');
+        var rows = document.querySelectorAll('.chat-row');
+        if(!searchInput) return;
+        searchInput.addEventListener('input', function () {
+            var q = (this.value || '').toLowerCase().trim();
+            rows.forEach(function(r){
+                var n=(r.dataset.name||'').toLowerCase();
+                r.style.display = n.includes(q) ? 'flex' : 'none';
+            });
         });
-    });
+    })();
 </script>
 @endsection

@@ -400,11 +400,13 @@
 
 <script>
     function openClassmates() {
-        document.getElementById('classmatesSheet').classList.add('open');
+        var el=document.getElementById('classmatesSheet'); if(!el) return;
+        el.classList.add('open');
         document.body.style.overflow = 'hidden';
     }
     function closeClassmates() {
-        document.getElementById('classmatesSheet').classList.remove('open');
+        var el=document.getElementById('classmatesSheet'); if(!el) return;
+        el.classList.remove('open');
         document.body.style.overflow = '';
     }
 

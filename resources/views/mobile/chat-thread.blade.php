@@ -185,7 +185,7 @@
 
 <script>
     const msgList = document.getElementById('message-list');
-    msgList.scrollTop = msgList.scrollHeight;
+    if(msgList) msgList.scrollTop = msgList.scrollHeight;
 
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
@@ -197,10 +197,10 @@
     const activeGroupId = @json((int) $group->id);
     let lastMsgId = @json($messages->last()?->id ?? 0);
 
-    fileInput.addEventListener('change', function() {
+    if(fileInput) fileInput.addEventListener('change', function() {
         if (this.files.length > 0) {
-            fileName.textContent = this.files[0].name;
-            filePreview.style.display = 'block';
+            if(fileName) fileName.textContent = this.files[0].name;
+            if(filePreview) filePreview.style.display = 'block';
         }
     });
 
@@ -239,27 +239,18 @@
         msgList.scrollTop = msgList.scrollHeight;
     }
 
-    chatForm.addEventListener('submit', function(e) {
+    if(chatForm) chatForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        const pesan = chatInput.value.trim();
-        const hasFile = fileInput.files.length > 0;
+        var pesan = (chatInput?chatInput.value:'').trim();
+        var hasFile = fileInput && fileInput.files.length > 0;
         if (!pesan && !hasFile) return;
-
-        let tempFileUrl = null;
-        if (hasFile) tempFileUrl = URL.createObjectURL(fileInput.files[0]);
-
+        var tempFileUrl = null;
+        if (hasFile) try{ tempFileUrl = URL.createObjectURL(fileInput.files[0]); }catch(e){}
         appendMessage({ pesan, nama: '', waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), file_url: tempFileUrl }, true);
-
-        const formData = new FormData(chatForm);
-        chatInput.value = '';
-        chatInput.style.height = '';
+        var formData = new FormData(chatForm);
+        if(chatInput){ chatInput.value = ''; chatInput.style.height = ''; }
         clearFile();
-
-        fetch(chatForm.action, {
-            method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            body: formData
-        });
+        fetch(chatForm.action, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData }).catch(function(){});
     });
 
     if (window.Echo) {
