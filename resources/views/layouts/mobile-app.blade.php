@@ -370,11 +370,13 @@
             chat: { icon: 'bi-chat-left-text-fill', bg: '#eff6ff', color: '#2563eb' },
             tugas: { icon: 'bi-journal-text', bg: '#f0fdf4', color: '#16a34a' },
             pengumuman: { icon: 'bi-megaphone-fill', bg: '#fefce8', color: '#ca8a04' },
+            announcement: { icon: 'bi-megaphone-fill', bg: '#fefce8', color: '#ca8a04' },
             spp: { icon: 'bi-wallet2', bg: '#fff7ed', color: '#ea580c' },
             absensi: { icon: 'bi-calendar-check-fill', bg: '#faf5ff', color: '#9333ea' },
             eskul: { icon: 'bi-people-fill', bg: '#f0fdf4', color: '#15803d' },
             general: { icon: 'bi-bell-fill', bg: '#e8f0fe', color: '#3b82f6' }
         };
+        var notifQueue = []; var isShowingNotif = false;
 
         function playNotifSound() {
             var now = Date.now();
@@ -386,27 +388,42 @@
             }
         }
 
-        function showNotification(title, message, url, type, actorName) {
+        function showNotification(title, message, url, type, actorName, actorPhoto) {
+            notifQueue.push([title, message, url, type, actorName, actorPhoto]);
+            processNotifQueue();
+        }
+        function processNotifQueue(){
+            if(isShowingNotif || notifQueue.length===0) return;
+            isShowingNotif=true;
+            var args=notifQueue.shift();
+            var title=args[0], message=args[1], url=args[2], type=args[3], actorName=args[4], actorPhoto=args[5];
             type = type || 'general';
+            if(type==='announcement') type='pengumuman';
             var cfg = NOTIF_ICONS[type] || NOTIF_ICONS.general;
-
-            // Set icon
             var iconBox = document.getElementById('toast-icon-box');
-            iconBox.style.background = cfg.bg;
-            iconBox.style.color = cfg.color;
             var iconEl = document.getElementById('toast-icon');
-            iconEl.className = 'bi ' + cfg.icon;
-
-            // Set title: for chat, show actor name as title
+            // WA-like: if chat with photo, show avatar img
+            if(type==='chat' && actorPhoto){
+                iconBox.style.background='transparent';
+                iconBox.style.padding='0';
+                iconBox.innerHTML='<img src="'+actorPhoto+'" style="width:42px;height:42px;border-radius:12px;object-fit:cover;border:1px solid rgba(15,23,42,.06)">'; 
+            } else {
+                iconBox.style.background = cfg.bg;
+                iconBox.style.color = cfg.color;
+                iconBox.style.padding='';
+                iconBox.innerHTML='<i id="toast-icon" class="bi '+cfg.icon+'" style="font-size:18px;"></i>';
+                iconEl = document.getElementById('toast-icon');
+                if(iconEl) iconEl.className = 'bi ' + cfg.icon;
+            }
             if (type === 'chat' && actorName) {
                 document.getElementById('toast-title').innerText = actorName;
             } else {
                 document.getElementById('toast-title').innerText = title || 'Notifikasi';
             }
-
             document.getElementById('toast-msg').innerText = message || '';
             document.getElementById('toast-link').setAttribute('href', url || '#');
             playNotifSound();
+            try{ if(navigator.vibrate) navigator.vibrate(120); }catch(e){}
             portalToastEl.style.display = 'block';
             portalToastEl.classList.remove('animate__fadeOutUp');
             portalToastEl.classList.add('animate__fadeInDown');
@@ -414,8 +431,8 @@
             toastTimer = setTimeout(() => {
                 portalToastEl.classList.remove('animate__fadeInDown');
                 portalToastEl.classList.add('animate__fadeOutUp');
-                setTimeout(() => { portalToastEl.style.display = 'none'; }, 400);
-            }, 6000);
+                setTimeout(() => { portalToastEl.style.display = 'none'; isShowingNotif=false; processNotifQueue(); }, 400);
+            }, 5500);
         }
 
         document.querySelectorAll('a[href]').forEach(el => {
@@ -494,11 +511,11 @@
                         }
 
                         if (d.new_last_id && d.new_last_id > lastId) {
-                            (d.items || []).forEach(function (it) {
-                                // Android's native service owns alerts while the app is in
-                                // the background. Do not replay the doorbell from WebView.
+                            // Reverse agar popup berurutan kronologis (WhatsApp-like)
+                            var list=(d.items||[]).slice().reverse();
+                            list.forEach(function (it) {
                                 if (!document.hidden) {
-                                    showNotification(it.judul, it.pesan, it.url || '#', it.type, it.actor_name);
+                                    showNotification(it.judul, it.pesan, it.url || '#', it.type, it.actor_name, it.actor_photo);
                                 }
                             });
                             lastId = d.new_last_id;
@@ -545,7 +562,7 @@
                 try {
                     window.Echo.private('portal-notifications.' + myId)
                         .listen('.new-notification', function (e) {
-                            showNotification(e.title || 'Notifikasi', e.message || '', '#', e.type, e.actor_name);
+                            showNotification(e.title || 'Notifikasi', e.message || '', e.url || '#', e.type, e.actor_name, e.actor_photo);
                             var dots = document.querySelectorAll('[data-live-dot]');
                             dots.forEach(function (h) { h.style.display = 'block'; });
                         });

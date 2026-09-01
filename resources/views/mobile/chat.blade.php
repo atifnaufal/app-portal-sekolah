@@ -132,7 +132,7 @@
                             @endif
                         </div>
                         <div class="chat-info">
-                              <span id="pfHeroDot" class="pf-dot {{ $user->status_badge }}"><i class="bi {{ $user->status_badge === 'online' ? 'bi-check-lg' : 'bi-moon' }}"></i></span>
+                            <div class="chat-name text-truncate">{{ $name }}</div>
                             <div class="chat-msg text-truncate">
                                 @if($g->lastMessage)
                                     {{ $g->lastMessage->user_id === $user->id ? 'Anda: ' : '' }}{{ $g->lastMessage->pesan }}

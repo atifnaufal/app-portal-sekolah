@@ -175,23 +175,21 @@ class PengumumanController extends Controller
 
         $pengumuman = Pengumuman::create($data);
 
-        // Kirim notifikasi sesuai target
+        // Kirim notifikasi sesuai target — type 'pengumuman' agar popup premium (WA-like) muncul
         $targetName = 'Semua';
         if ($pengumuman->kelas_id) {
             $targetName = 'Kelas '.$pengumuman->kelas->nama;
-            NotificationHelper::sendToClass($pengumuman->kelas_id, "Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'announcement');
+            NotificationHelper::sendToClass($pengumuman->kelas_id, "Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'pengumuman');
         } elseif ($pengumuman->eskul_id) {
             $targetName = 'Eskul '.$pengumuman->eskul->nama;
-            NotificationHelper::sendToEskul($pengumuman->eskul_id, "Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'announcement');
+            NotificationHelper::sendToEskul($pengumuman->eskul_id, "Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'pengumuman');
         } elseif (! empty($privateSiswaIds)) {
-            // Privat: lampirkan penerima + kirim notifikasi individu.
             $pengumuman->users()->sync($privateSiswaIds);
             foreach ($privateSiswaIds as $sid) {
-                NotificationHelper::send($sid, 'Pengumuman Pribadi', $pengumuman->judul, route('pengumuman.index'), 'announcement');
+                NotificationHelper::send($sid, 'Pengumuman Pribadi', $pengumuman->judul, route('pengumuman.index'), 'pengumuman');
             }
         } else {
-            // Umum
-            NotificationHelper::sendToAll("Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'announcement', null, $userId);
+            NotificationHelper::sendToAll("Pengumuman ($targetName)", $pengumuman->judul, route('pengumuman.index'), 'pengumuman', null, $userId);
         }
 
         return redirect()->route('pengumuman.index')->with('success', 'Pengumuman berhasil dibuat.');
