@@ -1,7 +1,10 @@
+[variables]
+NIXPACKS_PHP_VERSION = "8.3"
+
 [phases.setup]
+nixPkgs = ["php83", "php83Packages.composer", "php83Extensions.gd", "php83Extensions.pdo_mysql", "php83Extensions.zip", "php83Extensions.intl"]
 cmds = [
-    # Install PHP extensions required by Laravel + dompdf
-    "nix-env -iA nixpkgs.php83Packages.pdo_mysql nixpkgs.php83Packages.gd nixpkgs.php83Packages.zip nixpkgs.php83Packages.intl nixpkgs.php83Packages.opcache"
+    "bash ensure-env.sh"
 ]
 
 [phases.build]
