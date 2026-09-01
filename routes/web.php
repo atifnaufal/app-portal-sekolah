@@ -169,6 +169,10 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::get('/admin/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::post('/admin/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
     Route::get('/admin/history', [AdminController::class, 'userHistory'])->name('admin.history');
+    Route::get('/admin/schools', [AdminController::class, 'schoolsIndex'])->name('admin.schools.index');
+    Route::post('/admin/schools', [AdminController::class, 'schoolsStore'])->name('admin.schools.store');
+    Route::put('/admin/schools/{school}', [AdminController::class, 'schoolsUpdate'])->name('admin.schools.update');
+    Route::delete('/admin/schools/{school}', [AdminController::class, 'schoolsDestroy'])->name('admin.schools.destroy');
 
     Route::get('/admin/perpustakaan', [AdminPerpustakaanController::class, 'index'])->name('admin.perpustakaan.index');
     Route::get('/admin/perpustakaan/create', [AdminPerpustakaanController::class, 'create'])->name('admin.perpustakaan.create');

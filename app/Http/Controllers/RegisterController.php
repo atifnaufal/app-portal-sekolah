@@ -21,6 +21,7 @@ class RegisterController extends Controller
 
         return view('auth.register', [
             'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
+            'schools' => \App\Models\School::orderBy('name')->get(),
             'guruEnabled' => $guruEnabled,
             'siswaEnabled' => $siswaEnabled,
         ]);
@@ -40,6 +41,7 @@ class RegisterController extends Controller
             'no_hp' => ['required', 'max:25'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'kelas_id' => ['required', 'exists:kelas,id'],
+            'school_id' => ['required', 'exists:schools,id'],
             'password' => ['required', 'min:8', 'confirmed'],
         ]);
 

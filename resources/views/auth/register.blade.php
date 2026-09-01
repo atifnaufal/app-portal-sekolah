@@ -104,6 +104,17 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-12">
+                        <label class="form-label"><i class="bi bi-building me-1"></i> Pilih Sekolah (ID + Nama) <span class="text-danger">*</span></label>
+                        <select name="school_id" class="form-select" required id="schoolSelect">
+                            <option value="">Cari sekolah — ketik ID atau nama...</option>
+                            @foreach($schools as $s)
+                                <option value="{{ $s->id }}" data-city="{{ $s->city }}" @selected(old('school_id')==$s->id)>[ID: {{ $s->id }}] {{ $s->name }} — {{ $s->city }}</option>
+                            @endforeach
+                        </select>
+                        <div class="small text-muted mt-1" id="schoolHint" style="display:none"></div>
+                        <div class="alert alert-info border-0 rounded-3 small mt-2" style="background:#eef2ff;color:#4f46e5"><i class="bi bi-info-circle"></i> Wajib tahu <b>ID Sekolahan</b>. Jika data murid/guru sudah ada di database sekolah tersebut, pendaftaran otomatis bisa. Hanya <b>Admin</b> yang bisa menambah sekolah baru (premium).</div>
+                    </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Buat Kata Sandi</label>
@@ -145,6 +156,11 @@
             el.classList.replace('bi-eye-slash', 'bi-eye');
         }
     }
+    document.getElementById('schoolSelect')?.addEventListener('change', function(){
+        const opt=this.options[this.selectedIndex];
+        const hint=document.getElementById('schoolHint');
+        if(this.value){ hint.style.display='block'; hint.innerHTML='<i class="bi bi-check-circle-fill text-success"></i> Terpilih: <b>'+opt.text+'</b> — Kota: '+(opt.dataset.city||'-'); } else hint.style.display='none';
+    });
 </script>
 </body>
 </html>

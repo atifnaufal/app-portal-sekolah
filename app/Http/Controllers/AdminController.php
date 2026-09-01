@@ -268,6 +268,31 @@ class AdminController extends Controller
         return back()->with('success', 'Pengaturan berhasil diperbarui.');
     }
 
+    // === Sekolah — premium admin only ===
+    public function schoolsIndex(): View
+    {
+        $schools = School::withCount(['users','posts'])->orderBy('name')->get();
+        return view('admin.schools', compact('schools'));
+    }
+    public function schoolsStore(Request $request): RedirectResponse
+    {
+        $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug']]);
+        School::create($data);
+        return back()->with('success','Sekolah ditambahkan');
+    }
+    public function schoolsUpdate(Request $request, School $school): RedirectResponse
+    {
+        $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug,'.$school->id]]);
+        $school->update($data);
+        return back()->with('success','Sekolah diperbarui');
+    }
+    public function schoolsDestroy(School $school): RedirectResponse
+    {
+        if($school->users()->exists()) return back()->with('error','Tidak bisa hapus sekolah yang masih punya user');
+        $school->delete();
+        return back()->with('success','Sekolah dihapus');
+    }
+
     public function userHistory(Request $request): View
     {
         $search = trim((string) $request->search);

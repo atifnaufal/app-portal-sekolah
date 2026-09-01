@@ -35,10 +35,9 @@
 </style>
 <a href="{{ route('dashboard') }}" class="ig-back" title="Beranda"><i class="bi bi-house-door-fill"></i></a>
 <div class="ig-page">
-  <div class="ig-header" style="margin-top:38px">
-    <a href="#composer" style="width:28px;height:28px;border:1px solid #262626;border-radius:8px;display:grid;place-items:center;color:#262626;text-decoration:none"><i class="bi bi-plus-lg"></i></a>
+  <div class="ig-header" style="margin-top:42px;justify-content:center">
     <div class="ig-logo">Global Portal</div>
-    <a href="{{ route('global.portal') }}" style="position:relative;color:#262626"><i class="bi bi-heart" style="font-size:22px"></i><span style="position:absolute;top:-6px;right:-6px;background:#ed4956;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:999px">{{ $posts->total() >99?'99+':$posts->total() }}</span></a>
+    <a href="{{ route('global.portal') }}" style="position:absolute;right:14px;color:#262626"><i class="bi bi-heart" style="font-size:22px"></i><span style="position:absolute;top:-6px;right:-6px;background:#ed4956;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:999px">{{ $posts->total() >99?'99+':$posts->total() }}</span></a>
   </div>
 
   <div class="ig-stories">
@@ -94,14 +93,13 @@
     </div>
     <div style="padding:0 14px 8px;font-size:13px;white-space:pre-wrap">{{ $p->content }}</div>
     @if($p->image)<img src="{{ \App\Services\FirebaseStorageService::url($p->image) }}" class="ig-img" alt="">@endif
-    <div class="ig-actions">
+    <div class="ig-actions" style="gap:16px">
       @php $liked = $p->likes->contains('user_id', session('user_id')); @endphp
-      <form method="POST" action="{{ route('global.portal.like',$p) }}" style="display:inline">@csrf<button style="background:none;border:0"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i></button></form>
-      <a href="#cmt-{{ $p->id }}" style="color:#262626"><i class="bi bi-chat"></i></a>
+      <form method="POST" action="{{ route('global.portal.like',$p) }}" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button><span style="font-size:11px;color:#8e8e8e">pesan {{ $p->comments_count }}</span></form>
+      <a href="#cmt-{{ $p->id }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-chat"></i><span style="font-size:12px;font-weight:700">{{ $p->comments_count }} pesan</span></a>
       <i class="bi bi-send" onclick="navigator.share?navigator.share({text:@json($p->content)}):alert('Link disalin')"></i>
       <span style="margin-left:auto"><i class="bi bi-bookmark"></i></span>
     </div>
-    <div class="ig-count">{{ $p->likes_count }} suka</div>
     <div class="ig-caption"><b>{{ $p->user->name }}</b> {{ \Illuminate\Support\Str::limit($p->content,80) }}</div>
     <div class="ig-comments" id="cmt-{{ $p->id }}">
       @foreach($p->comments->take(2) as $c)<div class="ig-cmt"><b>{{ $c->user->name }}</b> {{ $c->body }}</div>@endforeach
