@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Absensi;
 use App\Models\Kelas;
+use App\Models\GlobalPost;
 use App\Models\MataPelajaran;
 use App\Models\Materi;
 use App\Models\Nilai;
 use App\Models\PengumpulanTugas;
+use App\Models\School;
 use App\Models\Setting;
 use App\Models\Spp;
 use App\Models\Tugas;
@@ -141,6 +143,15 @@ class AdminController extends Controller
         $data['kelasNames'] = collect($data['kelasSummaries'])->pluck('nama');
         $data['kelasSiswa'] = collect($data['kelasSummaries'])->pluck('siswa_count');
         $data['kelasGuru'] = collect($data['kelasSummaries'])->pluck('guru_count');
+
+        // Global Portal premium stats
+        $data['totalGlobalPosts'] = GlobalPost::count();
+        $data['globalPostsHariIni'] = GlobalPost::whereDate('created_at', today())->count();
+        $data['totalGlobalLikes'] = \DB::table('global_likes')->count();
+        $data['totalGlobalComments'] = \DB::table('global_comments')->count();
+        $data['totalSchools'] = School::count();
+        $data['topSchool'] = School::withCount('posts')->orderByDesc('posts_count')->first();
+        $data['recentGlobalPosts'] = GlobalPost::with(['user','school'])->latest()->take(4)->get();
 
         return view($isMobile ? 'mobile.admin-dashboard' : 'admin.dashboard', $data);
     }

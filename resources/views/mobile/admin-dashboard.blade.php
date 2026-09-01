@@ -154,6 +154,36 @@
         </div>
     </div>
 
+    {{-- Global Portal Premium --}}
+    <div class="am-card animate-up" style="animation-delay: 0.21s;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="font-size:16px;font-weight:800;margin:0"><i class="bi bi-globe2 me-2" style="color:#6366f1"></i> Global Portal</h3>
+            <a href="{{ route('global.portal') }}" style="font-size:11px;font-weight:700;color:var(--blue);text-decoration:none">Lihat Portal</a>
+        </div>
+        <div class="kpi-grid" style="margin-bottom:14px">
+            <div class="kpi-item" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:0"><div class="kpi-val" style="color:#fff">{{ $totalGlobalPosts }}</div><div class="kpi-lab" style="color:rgba(255,255,255,.8)">Post</div></div>
+            <div class="kpi-item"><div class="kpi-val" style="color:#16a34a">{{ $globalPostsHariIni }}</div><div class="kpi-lab">Hari Ini</div></div>
+            <div class="kpi-item"><div class="kpi-val" style="color:#dc2626">{{ $totalGlobalLikes }}</div><div class="kpi-lab">Suka</div></div>
+            <div class="kpi-item"><div class="kpi-val" style="color:#7c3aed">{{ $totalSchools }}</div><div class="kpi-lab">Sekolah</div></div>
+        </div>
+        @if($topSchool)
+        <div style="display:flex;gap:10px;align-items:center;background:#f8fafc;border:1px solid #eef2f7;border-radius:14px;padding:10px 12px;margin-bottom:12px">
+            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#2563eb);display:grid;place-items:center;color:#fff"><i class="bi bi-trophy-fill"></i></div>
+            <div style="flex:1"><div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase">Top Sekolah</div><div style="font-size:13px;font-weight:800">{{ $topSchool->name }} <span style="color:#64748b">({{ $topSchool->posts_count }} post)</span></div></div>
+        </div>
+        @endif
+        @forelse($recentGlobalPosts as $gp)
+        <a href="{{ route('global.portal') }}" style="display:flex;gap:10px;align-items:center;padding:10px 0;{{ !$loop->last?'border-bottom:1px solid #f1f5f9':'' }};text-decoration:none;color:inherit">
+            <img src="{{ $gp->user->avatar_url }}" style="width:32px;height:32px;border-radius:10px;object-fit:cover;flex-shrink:0">
+            <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700" class="text-truncate">{{ $gp->user->name }} <span style="font-weight:600;color:#6366f1">@ {{ $gp->school->name ?? $gp->user->school->name ?? 'Umum' }}</span></div><div style="font-size:11px;color:#64748b" class="text-truncate">{{ \Illuminate\Support\Str::limit($gp->content,55) }}</div></div>
+            <div style="font-size:10px;color:#94a3b8">{{ $gp->created_at->diffForHumans() }}</div>
+        </a>
+        @empty
+        <div style="text-align:center;padding:12px;color:#94a3b8;font-size:12px">Belum ada post — jadilah yang pertama!</div>
+        @endforelse
+        <div style="display:flex;gap:8px;margin-top:14px"><div style="flex:1;background:#eef2ff;border:1px solid #e0e7ff;border-radius:12px;padding:10px;text-align:center"><div style="font-size:12px;font-weight:800;color:#4f46e5">{{ $totalGlobalComments }} Komentar</div></div><div style="flex:1;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px;text-align:center"><div style="font-size:12px;font-weight:800;color:#dc2626">{{ $totalGlobalLikes }} Suka total</div></div></div>
+    </div>
+
     {{-- Online Users Widget --}}
     @php
         $onlineUsers = \App\Models\User::whereIn('role', ['guru', 'siswa'])
