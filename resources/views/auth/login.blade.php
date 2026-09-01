@@ -396,7 +396,7 @@ document.getElementById('loginForm').addEventListener('submit', function() {
 });
 
 // Auto-show login if there are errors or specific session messages
-@if($errors->any() || session('error') || session('success'))
+@if((isset($errors) && $errors->any()) || session('error') || session('success'))
     showScreen('loginScreen');
 @endif
 
