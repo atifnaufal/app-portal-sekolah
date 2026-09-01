@@ -275,16 +275,21 @@ class AdminController extends Controller
 
         $histories = $query->paginate(20)->withQueryString();
 
-        // Ringan + cache 60 detik untuk stats & chart
+        // Ringan + cache 60 detik untuk stats & chart — DB-agnostic
         $cacheKey = 'admin_history_stats_'.md5(json_encode([$search,$typeFilter,$dateFrom,$dateTo]));
         [$activityTypes, $stats, $dailyActivity] = cache()->remember($cacheKey, 60, function () {
             $types = UserHistory::distinct()->pluck('activity_type')->filter()->values();
-            // SQLite-compatible DATE() -> pakai strftime untuk stabil
-            $daily = UserHistory::where('created_at', '>=', now()->subDays(30))
-                ->selectRaw("strftime('%Y-%m-%d', created_at) as date, COUNT(*) as count")
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
+            $driver = \Illuminate\Support\Facades\DB::getDriverName();
+            $dateExpr = $driver === 'sqlite' ? "strftime('%Y-%m-%d', created_at)" : "DATE(created_at)";
+            try {
+                $daily = UserHistory::where('created_at', '>=', now()->subDays(30))
+                    ->selectRaw("$dateExpr as date, COUNT(*) as count")
+                    ->groupBy('date')
+                    ->orderBy('date')
+                    ->get();
+            } catch (\Throwable $e) {
+                $daily = collect();
+            }
             $stats = [
                 'total' => UserHistory::count(),
                 'today' => UserHistory::whereDate('created_at', today())->count(),
