@@ -188,7 +188,7 @@ class ChatController extends Controller
 
         $filePath = null;
         if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('chat_files', 'public');
+            $filePath = \App\Services\FirebaseStorageService::put('chat_files', $request->file('file'));
         }
 
         $message = ChatMessage::create([
@@ -224,9 +224,9 @@ class ChatController extends Controller
                 'user_id' => $message->user_id,
                 'chat_group_id' => $message->chat_group_id,
                 'pesan' => $message->pesan,
-                'file_url' => $message->file ? asset('storage/'.$message->file) : null,
+                'file_url' => \App\Services\FirebaseStorageService::url($message->file),
                 'nama' => $message->user?->name,
-                'foto' => $message->user?->foto ? asset('storage/'.$message->user->foto) : null,
+                'foto' => $message->user?->foto ? \App\Services\FirebaseStorageService::url($message->user->foto) : null,
                 'waktu' => $message->created_at?->format('H:i'),
             ]);
         }
@@ -257,7 +257,7 @@ class ChatController extends Controller
             'user_id' => $msg->user_id,
             'nama' => $msg->user->name,
             'pesan' => $msg->pesan,
-            'file_url' => $msg->file ? asset('storage/'.$msg->file) : null,
+            'file_url' => \App\Services\FirebaseStorageService::url($msg->file),
             'waktu' => $msg->created_at->format('H:i'),
         ]);
 

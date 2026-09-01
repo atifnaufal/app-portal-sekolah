@@ -69,7 +69,7 @@
       </div>
     </div>
     <div style="padding:12px 14px;font-size:13.5px;line-height:1.6;white-space:pre-wrap">{{ $p->content }}</div>
-    @if($p->image)<img src="{{ asset('storage/'.$p->image) }}" style="width:100%;max-height:420px;object-fit:cover;display:block">@endif
+    @if($p->image)<img src="{{ \App\Services\FirebaseStorageService::url($p->image) }}" style="width:100%;max-height:420px;object-fit:cover;display:block">@endif
     <div style="display:flex;gap:12px;padding:8px 14px;font-size:11px;color:#64748b;font-weight:700"><span><i class="bi bi-heart-fill" style="color:#ef4444"></i> {{ $p->likes_count }} Suka</span><span><i class="bi bi-chat-fill" style="color:#6366f1"></i> {{ $p->comments_count }} Komentar</span></div>
     <div class="gp-actions">
       <form method="POST" action="{{ route('global.portal.like',$p) }}" style="flex:1">@csrf

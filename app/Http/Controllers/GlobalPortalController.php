@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\NotificationHelper;
 use App\Models\GlobalPost;
 use App\Models\School;
+use App\Services\FirebaseStorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -33,7 +34,7 @@ class GlobalPortalController extends Controller
         ]);
         $data['user_id']=$uid;
         $data['school_id']=$data['school_id'] ?? $user->school_id;
-        if($request->hasFile('image')) $data['image']=$request->file('image')->store('global','public');
+        if($request->hasFile('image')) $data['image']=FirebaseStorageService::put('global', $request->file('image'));
         $post = GlobalPost::create($data);
         // notif ringan ke followers global (skip self)
         try{
