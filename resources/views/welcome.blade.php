@@ -78,20 +78,12 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
     </div>
   </div>
 </div>
-
-<div class="section">
-  <div class="eyebrow" style="color:#6366f1">Fitur Unggulan</div>
-  <div class="h2">Kenapa Portal Sekolah Berbeda?</div>
-  <div class="grid">
-    <div class="card"><div class="ico" style="background:linear-gradient(135deg,#22c55e,#16a34a)"><i class="bi bi-geo-alt-fill"></i></div><div style="font-weight:800">Absensi Pintar</div><div style="font-size:12px;color:#64748b;margin-top:4px">GPS + foto, rekap otomatis PDF/Excel, status hadir/terlambat/izin.</div></div>
-    <div class="card"><div class="ico" style="background:linear-gradient(135deg,#6366f1,#4f46e5)"><i class="bi bi-globe2"></i></div><div style="font-weight:800">Global Portal</div><div style="font-size:12px;color:#64748b;margin-top:4px">Sosmed antar sekolah — posting karya, like & komentar lintas Nusantara.</div></div>
-    <div class="card"><div class="ico" style="background:linear-gradient(135deg,#06b6d4,#2563eb)"><i class="bi bi-chat-dots-fill"></i></div><div style="font-weight:800">Chat WA-like</div><div style="font-size:12px;color:#64748b;margin-top:4px">Pribadi & grup kelas/eskul, online/last seen, file & notif heads-up.</div></div>
-    <div class="card"><div class="ico" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="bi bi-journal-text"></i></div><div style="font-weight:800">LMS Tugas</div><div style="font-size:12px;color:#64748b;margin-top:4px">Materi, tugas form/file, nilai & rekap.</div></div>
-    <div class="card"><div class="ico" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)"><i class="bi bi-wallet2"></i></div><div style="font-weight:800">SPP Digital</div><div style="font-size:12px;color:#64748b;margin-top:4px">Tagihan, pembayaran, progress realtime.</div></div>
-    <div class="card"><div class="ico" style="background:linear-gradient(135deg,#0f172a,#334155)"><i class="bi bi-shield-lock-fill"></i></div><div style="font-weight:800">Aman Premium</div><div style="font-size:12px;color:#64748b;margin-top:4px">PIN + Biometrik, offline mode, notif luar aplikasi.</div></div>
-  </div>
+<div class="section" style="background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-top:16px">
+  <div class="eyebrow" style="color:#059669">Panduan Lengkap</div>
+  <div class="h2">Cara Daftar — Publik Se-Dunia Bisa, Jika Sekolah Aktif</div>
+  <div style="font-size:13px;color:#64748b;line-height:1.6;margin-top:6px">1. <b>Cari ID Sekolah</b> dari admin sekolahmu (contoh: [ID:1] Sekolah Pusat Semarang). Tanpa ID tidak bisa lanjut.<br>2. Pilih <b>Daftar</b> → isi NIK, Nama, WA, Email, Kelas, <b>Sekolah (ID)</b> → buat password.<br>3. Akun <b>menunggu persetujuan Admin Sekolah</b> (jika DB ada data murid/guru, admin tinggal klik Setujui).<br>4. Jika sekolah <b>dinonaktifkan/di hapus Admin Pusat</b>, tombol daftar hilang & NIK tertolak — hubungi adminpusat@pusat.com.<br>5. Setelah disetujui, login → atur PIN → jelajahi Global Portal & Chat.</div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span style="padding:6px 10px;background:#dcfce7;color:#166534;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-check-circle"></i> ID Aktif = Bisa Daftar</span><span style="padding:6px 10px;background:#fee2e2;color:#991b1b;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-x-circle"></i> ID Nonaktif = Tertutup</span></div>
 </div>
-
 <div class="section" style="background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-top:8px">
   <div class="eyebrow" style="color:#6366f1">Cara Memulai</div>
   <div class="h2">4 Langkah Jadi Warga Digital</div>
@@ -107,12 +99,6 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
   </div>
 </div>
 
-<div class="section" style="background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-top:16px">
-  <div class="eyebrow" style="color:#059669">Panduan Lengkap</div>
-  <div class="h2">Cara Daftar — Publik Se-Dunia Bisa, Jika Sekolah Aktif</div>
-  <div style="font-size:13px;color:#64748b;line-height:1.6;margin-top:6px">1. <b>Cari ID Sekolah</b> dari admin sekolahmu (contoh: [ID:1] Sekolah Pusat Semarang). Tanpa ID tidak bisa lanjut.<br>2. Pilih <b>Daftar</b> → isi NIK, Nama, WA, Email, Kelas, <b>Sekolah (ID)</b> → buat password.<br>3. Akun <b>menunggu persetujuan Admin Sekolah</b> (jika DB ada data murid/guru, admin tinggal klik Setujui).<br>4. Jika sekolah <b>dinonaktifkan/di hapus Admin Pusat</b>, tombol daftar hilang & NIK tertolak — hubungi adminpusat@pusat.com.<br>5. Setelah disetujui, login → atur PIN → jelajahi Global Portal & Chat.</div>
-  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span style="padding:6px 10px;background:#dcfce7;color:#166534;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-check-circle"></i> ID Aktif = Bisa Daftar</span><span style="padding:6px 10px;background:#fee2e2;color:#991b1b;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-x-circle"></i> ID Nonaktif = Tertutup</span></div>
-</div>
 <div class="footer">© {{ date('Y') }} {{ config('app.name') }} — Platform Digital Antar Sekolah • <a href="{{ route('offline') }}" style="color:#6366f1;text-decoration:none">Offline Mode</a> • Admin Pusat: adminpusat@pusat.com</div>
 </body>
 </html>
