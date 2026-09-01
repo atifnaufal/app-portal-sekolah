@@ -109,12 +109,20 @@ class User extends Authenticatable
 
     public function isOnline(): bool
     {
+        if (! $this->aktif) return false;
         return $this->last_activity_at && $this->last_activity_at->diffInSeconds(now()) < 60;
     }
 
     public function isOffline(): bool
     {
         return ! $this->isOnline();
+    }
+
+    public function getLastSeenAttribute(): string
+    {
+        if ($this->isOnline()) return 'online';
+        if (! $this->last_activity_at) return 'Belum pernah aktif';
+        return 'Terakhir dilihat '.$this->last_activity_at->diffForHumans();
     }
 
     public function getStatusLabelAttribute(): string

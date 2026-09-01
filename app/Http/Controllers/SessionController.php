@@ -41,6 +41,7 @@ class SessionController extends Controller
 
         if ($user) {
             $user->updateQuietly(['last_activity_at' => now()]);
+            $user->refresh();
         }
 
         return response()->json([
@@ -49,6 +50,10 @@ class SessionController extends Controller
             'role' => $role,
             'name' => $name,
             'unread' => (int) $unread,
+            'is_online' => $user ? $user->isOnline() : false,
+            'last_seen' => $user ? $user->last_seen : '-',
+            'status_label' => $user ? $user->status_label : 'offline',
+            'status_badge' => $user ? $user->status_badge : 'offline',
             'now' => now()->toIso8601String(),
         ]);
     }

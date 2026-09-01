@@ -48,6 +48,13 @@
     }
     .pf-status-pill.online { background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.3); }
     .pf-status-pill.offline { background:rgba(148,163,184,0.15);color:#94a3b8;border:1px solid rgba(148,163,184,0.2); }
+    .pf-presence{margin-top:6px;font-size:12px;font-weight:600;letter-spacing:.01em}
+    .pf-presence.online{color:#4ade80}
+    .pf-presence.offline{color:rgba(255,255,255,.7)}
+    .pf-dot{position:absolute;bottom:4px;right:4px;width:18px;height:18px;border-radius:50%;background:#94a3b8;border:3px solid #1e1b4b;display:grid;place-items:center}
+    .pf-dot.online{background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.25);animation:pfPulse 1.6s infinite}
+    .pf-dot i{font-size:9px;color:#fff}
+    @keyframes pfPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.35)}70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
 
     .pf-info-card {
         background: var(--surface-card); border-radius: var(--radius-md); padding: 18px;
@@ -111,19 +118,21 @@
 </div>
 
 <div class="pf-page" style="padding-top:16px;">
-    {{-- Hero --}}
+    {{-- Hero WA-style --}}
     <div class="pf-hero">
         <div class="pf-avatar-badge">
             <div class="pf-avatar" id="avatarDisplay">
                 <img src="{{ $user->avatar_url }}" id="avatarImg" style="object-position: {{ $user->foto_posisi_x ?? 50 }}% {{ $user->foto_posisi_y ?? 50 }}%;">
             </div>
+            <span id="pfHeroDot" class="pf-dot {{ $user->status_badge }}"><i class="bi {{ $user->status_badge === 'online' ? 'bi-check-lg' : 'bi-moon' }}"></i></span>
         </div>
         <div class="pf-name" id="nameDisplay">{{ $user->name }}</div>
-        <div class="pf-badges" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;">
+        <div id="pfPresence" class="pf-presence {{ $user->status_badge }}"><i class="bi {{ $user->isOnline() ? 'bi-circle-fill' : 'bi-clock' }}" style="font-size:8px;"></i> {{ $user->last_seen }}</div>
+        <div class="pf-badges" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;">
             <span class="pf-role-pill">{{ $user->role }}</span>
-            <span class="pf-status-pill {{ $user->status_badge }}">
+            <span id="pfStatusPill" class="pf-status-pill {{ $user->status_badge }}">
                 <i class="bi {{ $user->status_badge === 'online' ? 'bi-circle-fill' : 'bi-person' }}" style="font-size:8px;"></i>
-                {{ ucfirst($user->status_label) }}
+                <span id="pfStatusText">{{ ucfirst($user->status_label) }}</span>
             </span>
         </div>
     </div>
@@ -155,16 +164,17 @@
         </div>
         <div class="pf-info-row">
             <div class="pf-info-icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-wifi"></i></div>
-            <div>
+            <div style="flex:1;min-width:0">
                 <div class="pf-info-label">Status Sesi</div>
-                <div class="pf-info-value">
+                <div class="pf-info-value" id="pfSessionStatus">
                     @if($user->status_badge === 'online')
-                        <span style="color:#22c55e;font-weight:700;"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Online</span>
+                        <span style="color:#22c55e;font-weight:700;"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Online</span> <span style="font-weight:600;color:#64748b;font-size:11px;">— aktif sekarang</span>
                     @else
-                        <span style="color:#94a3b8;font-weight:700;"><i class="bi bi-person" style="font-size:8px;"></i> Offline</span>
+                        <span style="color:#94a3b8;font-weight:700;"><i class="bi bi-person" style="font-size:8px;"></i> Offline</span> <span style="font-weight:600;color:#64748b;font-size:11px;">— {{ $user->last_seen }}</span>
                     @endif
                 </div>
             </div>
+            <span id="pfLiveDot" style="width:10px;height:10px;border-radius:50%;background:{{ $user->isOnline() ? '#22c55e' : '#cbd5e1' }};box-shadow:0 0 0 4px {{ $user->isOnline() ? 'rgba(34,197,94,.18)' : 'transparent' }};flex-shrink:0"></span>
         </div>
     </div>
 
@@ -277,5 +287,31 @@ function openNativeSettings() {
         window.Capacitor.Plugins.NativeBridge.openAppSettings();
     }
 }
+// WA-style realtime presence (poll session/status every 15s)
+(function(){
+    var url="{{ route('session.status') }}";
+    function apply(data){
+        if(!data || !data.authenticated) return;
+        var online=!!data.is_online;
+        var badge=data.status_badge||(online?'online':'offline');
+        var label=data.status_label|| (online?'aktif':'terdaftar');
+        var seen=data.last_seen|| (online?'online':'offline');
+        var pill=document.getElementById('pfStatusPill');
+        var txt=document.getElementById('pfStatusText');
+        var pres=document.getElementById('pfPresence');
+        var dot=document.getElementById('pfHeroDot');
+        var live=document.getElementById('pfLiveDot');
+        var sess=document.getElementById('pfSessionStatus');
+        if(pill){ pill.className='pf-status-pill '+badge; }
+        if(txt) txt.textContent=label.charAt(0).toUpperCase()+label.slice(1);
+        if(pres){ pres.className='pf-presence '+badge; pres.innerHTML='<i class="bi '+(online?'bi-circle-fill':'bi-clock')+'" style="font-size:8px;"></i> '+seen; }
+        if(dot){ dot.className='pf-dot '+badge; dot.innerHTML='<i class="bi '+(online?'bi-check-lg':'bi-moon')+'"></i>'; }
+        if(live){ live.style.background=online?'#22c55e':'#cbd5e1'; live.style.boxShadow=online?'0 0 0 4px rgba(34,197,94,.18)':'none'; }
+        if(sess){ sess.innerHTML = online ? '<span style="color:#22c55e;font-weight:700;"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Online</span> <span style="font-weight:600;color:#64748b;font-size:11px;">— aktif sekarang</span>' : '<span style="color:#94a3b8;font-weight:700;"><i class="bi bi-person" style="font-size:8px;"></i> Offline</span> <span style="font-weight:600;color:#64748b;font-size:11px;">— '+seen+'</span>'; }
+    }
+    function tick(){ fetch(url+'?t='+Date.now(),{headers:{'X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(apply).catch(()=>{}); }
+    tick(); setInterval(tick,15000);
+    document.addEventListener('visibilitychange',function(){ if(!document.hidden) tick(); });
+})();
 </script>
 @endsection
