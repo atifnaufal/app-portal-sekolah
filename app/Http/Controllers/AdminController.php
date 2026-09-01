@@ -182,8 +182,14 @@ class AdminController extends Controller
     public function users(Request $request): View
     {
         $search = $request->search;
-        $usersQuery = User::with(['kelas', 'mataPelajarans.kelas'])
+        $me = User::find(session('user_id') ?? auth()->id());
+        $isSuper = $me && $me->isSuperAdmin();
+        // Admin sekolah hanya lihat user sekolahnya sendiri
+        $schoolFilter = (!$isSuper && $me && $me->school_id) ? $me->school_id : (request('school_id') ? (int)request('school_id') : null);
+
+        $usersQuery = User::with(['kelas', 'mataPelajarans.kelas', 'school'])
             ->whereIn('role', ['guru', 'siswa'])
+            ->when($schoolFilter, fn($q,$sid)=> $q->where('school_id',$sid))
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%$search%")

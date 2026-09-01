@@ -12,7 +12,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             min-height: 100vh; margin: 0;
-            background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 40%, #1d4ed8 100%);
+            background: linear-gradient(135deg,#0f172a 0%,#1e1b4b 45%,#4f46e5 100%);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             display: flex; align-items: center; justify-content: center;
             padding: 20px; overflow-x: hidden;

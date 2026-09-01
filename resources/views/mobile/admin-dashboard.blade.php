@@ -303,11 +303,30 @@
     <a href="{{ route('admin.users') }}" class="quick-action animate-up">
         <div class="qa-ico" style="background:#eff6ff;color:#2563eb;"><i class="bi bi-people-fill"></i></div>
         <div style="flex:1;">
-            <div style="font-size:15px;font-weight:800;">Manajemen User</div>
-            <div style="font-size:11px;color:#94a3b8;">Kelola Guru, Siswa, dan Persetujuan</div>
+            <div style="font-size:15px;font-weight:800;">{{ ($isSuperAdmin ?? false) ? 'Manajemen User — Semua Sekolah' : 'Manajemen User Sekolah' }}</div>
+            <div style="font-size:11px;color:#94a3b8;">{{ ($isSuperAdmin ?? false) ? 'Kelola Guru/Siswa lintas sekolah + persetujuan' : 'Kelola Guru/Siswa sekolah Anda' }}</div>
         </div>
         <i class="bi bi-chevron-right text-muted"></i>
     </a>
+
+    @if($isSuperAdmin ?? false)
+    <a href="{{ route('admin.schools.index') }}" class="quick-action animate-up" style="border-color:#4f46e5;background:linear-gradient(135deg,#eef2ff,#f5f3ff)">
+        <div class="qa-ico" style="background:#4f46e5;color:#fff;"><i class="bi bi-building"></i></div>
+        <div style="flex:1;">
+            <div style="font-size:15px;font-weight:800;color:#4f46e5">Kelola Sekolah (Pusat)</div>
+            <div style="font-size:11px;color:#6366f1;">Buat ID, Aktif/Nonaktif, Hapus, + Admin Sekolah</div>
+        </div>
+        <i class="bi bi-chevron-right" style="color:#4f46e5"></i>
+    </a>
+    <a href="{{ route('global.portal') }}" class="quick-action animate-up">
+        <div class="qa-ico" style="background:#fef3c7;color:#d97706;"><i class="bi bi-globe2"></i></div>
+        <div style="flex:1;">
+            <div style="font-size:15px;font-weight:800;">Moderasi Global Portal</div>
+            <div style="font-size:11px;color:#94a3b8;">Hapus post, kelola konten lintas sekolah</div>
+        </div>
+        <i class="bi bi-chevron-right text-muted"></i>
+    </a>
+    @endif
 
     <a href="{{ route('admin.history') }}" class="quick-action animate-up">
         <div class="qa-ico" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-clock-history"></i></div>
