@@ -48,21 +48,21 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json(['message' => 'Not found'], 404);
             }
-            return response()->view('errors.404', [], 404);
+            return response()->view('errors.404', ['exception' => $e], 404);
         });
 
         $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json(['message' => 'Forbidden'], 403);
             }
-            return response()->view('errors.403', [], 403);
+            return response()->view('errors.403', ['exception' => $e], 403);
         });
 
         $exceptions->render(function (TooManyRequestsHttpException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json(['message' => 'Too many requests'], 429);
             }
-            return response()->view('errors.429', [], 429);
+            return response()->view('errors.429', ['exception' => $e], 429);
         });
 
         // 419 Page Expired (CSRF)
@@ -71,13 +71,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($request->is('api/*') || $request->expectsJson()) {
                     return response()->json(['message' => 'Page expired'], 419);
                 }
-                return response()->view('errors.419', [], 419);
+                return response()->view('errors.419', ['exception' => $e], 419);
             }
             if ($e->getStatusCode() === 503) {
                 if ($request->is('api/*') || $request->expectsJson()) {
                     return response()->json(['message' => 'Service unavailable'], 503);
                 }
-                return response()->view('errors.503', [], 503);
+                return response()->view('errors.503', ['exception' => $e], 503);
             }
         });
 
@@ -92,7 +92,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json(['message' => 'Terjadi kesalahan sistem'], 500);
             }
-            return response()->view('errors.500', [], 500);
+            return response()->view('errors.500', ['exception' => $e], 500);
         });
 
         // Disable detailed error reporting to users

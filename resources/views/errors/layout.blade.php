@@ -1,3 +1,4 @@
+@php($exception = $exception ?? null)
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -80,10 +81,10 @@
 Method: {{ request()->method() }}
 IP: {{ request()->ip() }}
 UA: {{ request()->userAgent() }}
-@if($exception)
+@isset($exception)
 Error: {{ $exception->getMessage() }}
 File: {{ $exception->getFile() }}:{{ $exception->getLine() }}
-@endif
+@endisset
 Trace ID: {{ substr(md5(request()->fullUrl().microtime()),0,8) }}</div>
 
                 @if(config('app.debug') && isset($exception))
