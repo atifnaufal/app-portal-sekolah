@@ -111,6 +111,34 @@
         </div>
     </div>
 
+    {{-- Super Admin: Jaringan Sekolah Premium --}}
+    @if($isSuperAdmin ?? false)
+    <div class="am-card animate-up" style="animation-delay:0.12s;background:linear-gradient(135deg,#0f172a,#1e1b4b);color:#fff;border:0;overflow:hidden;position:relative">
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.25),transparent 70%)"></div>
+        <div style="position:relative;z-index:1">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <h3 style="font-size:14px;font-weight:800;margin:0"><i class="bi bi-diagram-3-fill me-1"></i> Jaringan Sekolah</h3>
+                <span style="background:rgba(255,255,255,.12);padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800">{{ $totalSchools }} sekolah</span>
+            </div>
+            <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">
+                @foreach($allSchools as $sc)
+                <div style="min-width:140px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px;backdrop-filter:blur(8px)">
+                    <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#22c55e);display:grid;place-items:center;color:#fff;font-weight:800">{{ substr($sc->name,0,1) }}</div>
+                    <div style="font-size:12px;font-weight:800;margin-top:6px" class="text-truncate">[{{ $sc->id }}] {{ \Illuminate\Support\Str::limit($sc->name,14) }}</div>
+                    <div style="font-size:10px;opacity:.7">{{ $sc->users_count ?? 0 }} user • {{ $sc->is_active?'Aktif':'Nonaktif' }}</div>
+                    <div style="margin-top:6px"><span style="padding:2px 6px;border-radius:999px;font-size:9px;font-weight:800;background:{{ $sc->is_active?'#dcfce7':'#fee2e2' }};color:{{ $sc->is_active?'#166534':'#991b1b' }}">{{ $sc->is_active?'ID Aktif':'ID Nonaktif' }}</span></div>
+                </div>
+                @endforeach
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+                <a href="{{ route('admin.schools.index') }}" style="background:#fff;color:#4f46e5;padding:10px;border-radius:12px;text-align:center;font-size:12px;font-weight:800;text-decoration:none">Kelola Sekolah</a>
+                <a href="{{ route('admin.schools.index') }}#admin" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);padding:10px;border-radius:12px;text-align:center;font-size:12px;font-weight:800;text-decoration:none">+ Admin Sekolah</a>
+            </div>
+            <div style="margin-top:8px;font-size:10px;opacity:.6">Flow Pusat: Buat Sekolah → Aktifkan ID → User daftar pakai ID → Admin Sekolah setujui → Kelola per-sekolah via filter di atas.</div>
+        </div>
+    </div>
+    @endif
+
     {{-- Urgent Alerts --}}
     @if($pendingCount > 0)
         <a href="{{ route('admin.users') }}" class="alert-banner animate-up" style="animation-delay: 0.1s;">

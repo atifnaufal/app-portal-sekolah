@@ -165,8 +165,8 @@ class AdminController extends Controller
         $meForView = \App\Models\User::find(session('user_id') ?? auth()->id());
         $data['filterSchoolId'] = $filterSchoolId;
         $data['isSuperAdmin'] = $meForView && $meForView->isSuperAdmin();
-        $data['allSchools'] = School::orderBy('name')->get();
-        $data['filterSchool'] = $filterSchoolId ? School::find($filterSchoolId) : null;
+        $data['allSchools'] = School::withCount(['users','posts'])->orderBy('name')->get();
+        $data['filterSchool'] = $filterSchoolId ? School::withCount(['users','posts'])->find($filterSchoolId) : null;
 
         return $data;
         });
