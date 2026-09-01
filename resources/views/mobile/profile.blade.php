@@ -157,28 +157,28 @@
             </div>
             <i class="bi bi-chevron-right pf-menu-arrow"></i>
         </div>
-        <div class="pf-menu-item" onclick="window.location.href='/help/faq'">
+        <div class="pf-menu-item" onclick="window.location.href='{{ route('help.faq') }}'">
             <div class="pf-menu-content">
                 <div class="pf-menu-icon" style="background:#fff7ed;color:#ea580c;"><i class="bi bi-question-circle"></i></div>
                 <div class="pf-menu-text">Pusat Bantuan & FAQ</div>
             </div>
             <i class="bi bi-chevron-right pf-menu-arrow"></i>
         </div>
-        <div class="pf-menu-item" onclick="window.location.href='/security/settings'">
+        <div class="pf-menu-item" onclick="window.location.href='{{ route('security.settings') }}'">
             <div class="pf-menu-content">
                 <div class="pf-menu-icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-shield-lock"></i></div>
                 <div class="pf-menu-text">Keamanan & Privasi</div>
             </div>
             <i class="bi bi-chevron-right pf-menu-arrow"></i>
         </div>
-        <div class="pf-menu-item" onclick="window.location.href='/settings/notifications'">
+        <div class="pf-menu-item" onclick="window.location.href='{{ route('settings.notifications') }}'">
             <div class="pf-menu-content">
                 <div class="pf-menu-icon" style="background:#f0f9ff;color:#0284c7;"><i class="bi bi-bell"></i></div>
                 <div class="pf-menu-text">Pengaturan Notifikasi</div>
             </div>
             <i class="bi bi-chevron-right pf-menu-arrow"></i>
         </div>
-        <div class="pf-menu-item" onclick="window.location.href='/about'">
+        <div class="pf-menu-item" onclick="window.location.href='{{ route('about.show') }}'">
             <div class="pf-menu-content">
                 <div class="pf-menu-icon" style="background:#f8fafc;color:#64748b;"><i class="bi bi-info-circle"></i></div>
                 <div class="pf-menu-text">Tentang Aplikasi</div>

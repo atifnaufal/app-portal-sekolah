@@ -245,7 +245,7 @@ function simpanProfil(e) {
     var btn = document.getElementById('submitBtn');
     var card = document.getElementById('formCard');
 
-    btn.textContent = 'Menyimpan...';
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...';
     card.classList.add('pe-saving');
 
     var fd = new FormData(form);

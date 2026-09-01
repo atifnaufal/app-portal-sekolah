@@ -62,7 +62,7 @@ class ProfileController extends Controller
         $user->update($data);
         $request->session()->put('admin_name', $user->name);
 
-        if ($request->expectsJson() || $request->header('Accept') === 'application/json') {
+        if ($request->expectsJson() || str_contains($request->header('Accept', ''), 'application/json')) {
             return response()->json([
                 'ok' => true,
                 'message' => 'Profil berhasil diperbarui.',
