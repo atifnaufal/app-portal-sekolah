@@ -38,10 +38,16 @@
     .pf-name { font-size:24px; font-weight:800; letter-spacing:-0.02em; }
     .pf-badges { margin-top:6px; }
     .pf-role-pill {
-        background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.18);
-        padding:4px 12px; border-radius:8px; font-weight:700; font-size:11px;
-        text-transform:uppercase; letter-spacing:0.05em; backdrop-filter:blur(6px);
+        background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.18);
+        padding:4px 12px;border-radius:8px;font-weight:700;font-size:11px;
+        text-transform:uppercase;letter-spacing:0.05em;backdrop-filter:blur(6px);
     }
+    .pf-status-pill {
+        padding:4px 10px;border-radius:8px;font-weight:700;font-size:10px;
+        text-transform:uppercase;letter-spacing:0.04em;display:inline-flex;align-items:center;gap:4px;
+    }
+    .pf-status-pill.online { background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.3); }
+    .pf-status-pill.offline { background:rgba(148,163,184,0.15);color:#94a3b8;border:1px solid rgba(148,163,184,0.2); }
 
     .pf-info-card {
         background: var(--surface-card); border-radius: var(--radius-md); padding: 18px;
@@ -113,11 +119,12 @@
             </div>
         </div>
         <div class="pf-name" id="nameDisplay">{{ $user->name }}</div>
-        <div class="pf-badges">
+        <div class="pf-badges" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;">
             <span class="pf-role-pill">{{ $user->role }}</span>
-            @if($user->kelas)
-                <span style="background:rgba(255,255,255,0.12);padding:4px 12px;border-radius:8px;font-size:11px;font-weight:600;margin-left:6px;">{{ $user->kelas->nama }}</span>
-            @endif
+            <span class="pf-status-pill {{ $user->status_badge }}">
+                <i class="bi {{ $user->status_badge === 'online' ? 'bi-circle-fill' : 'bi-person' }}" style="font-size:8px;"></i>
+                {{ ucfirst($user->status_label) }}
+            </span>
         </div>
     </div>
 
@@ -144,6 +151,19 @@
             <div>
                 <div class="pf-info-label">Kelas / Jabatan</div>
                 <div class="pf-info-value">{{ $user->kelas?->nama ?? 'Staf Sekolah' }}</div>
+            </div>
+        </div>
+        <div class="pf-info-row">
+            <div class="pf-info-icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-wifi"></i></div>
+            <div>
+                <div class="pf-info-label">Status Sesi</div>
+                <div class="pf-info-value">
+                    @if($user->status_badge === 'online')
+                        <span style="color:#22c55e;font-weight:700;"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Online</span>
+                    @else
+                        <span style="color:#94a3b8;font-weight:700;"><i class="bi bi-person" style="font-size:8px;"></i> Offline</span>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

@@ -77,7 +77,7 @@ class AuthController extends Controller
         $user = Auth::user();
         if ($user) {
             UserHistoryHelper::logLogout($user->id, $request);
-            $user->updateQuietly(['status' => 'terdaftar']);
+            $user->updateQuietly(['status' => 'terdaftar', 'last_activity_at' => null]);
             $user->tokens()->delete();
         }
 

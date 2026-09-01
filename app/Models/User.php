@@ -109,7 +109,12 @@ class User extends Authenticatable
 
     public function isOnline(): bool
     {
-        return $this->last_activity_at && $this->last_activity_at->diffInSeconds(now()) < 120;
+        return $this->last_activity_at && $this->last_activity_at->diffInSeconds(now()) < 60;
+    }
+
+    public function isOffline(): bool
+    {
+        return ! $this->isOnline();
     }
 
     public function getStatusLabelAttribute(): string
@@ -131,6 +136,16 @@ class User extends Authenticatable
             'terdaftar' => 'blue',
             'nonaktif' => 'red',
             default => 'gray',
+        };
+    }
+
+    public function getStatusBadgeAttribute(): string
+    {
+        return match ($this->status_label) {
+            'aktif' => 'online',
+            'terdaftar' => 'offline',
+            'nonaktif' => 'offline',
+            default => 'offline',
         };
     }
 }

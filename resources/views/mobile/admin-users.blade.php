@@ -45,6 +45,10 @@
     .au-user-info { flex: 1; min-width: 0; }
     .au-user-name { font-size: 14px; font-weight: 800; color: var(--navy); }
     .au-user-meta { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
+    .au-last-seen { font-size: 9px; color: #94a3b8; font-weight: 600; margin-top: 1px; }
+    .au-last-seen .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; }
+    .au-last-seen .dot.online { background: #22c55e; }
+    .au-last-seen .dot.offline { background: #94a3b8; }
 
     .au-status-badge {
         display: inline-flex; align-items: center; gap: 5px;
@@ -120,6 +124,13 @@
                 <div class="au-user-info">
                     <div class="au-user-name">{{ $u->name }}</div>
                     <div class="au-user-meta">{{ ucfirst($u->role) }} {{ $u->kelas?->nama ? '· '.$u->kelas->nama : '' }}</div>
+                    <div class="au-last-seen">
+                        @if($u->isOnline())
+                            <span class="dot online"></span> Aktif sekarang
+                        @else
+                            <span class="dot offline"></span> Terakhir aktif {{ $u->last_activity_at ? $u->last_activity_at->diffForHumans() : 'Belum pernah' }}
+                        @endif
+                    </div>
                 </div>
                 <span class="au-status-badge {{ $u->status_label }}">{{ ucfirst($u->status_label) }}</span>
             </div>
