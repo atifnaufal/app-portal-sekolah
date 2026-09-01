@@ -18,6 +18,11 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebView;
+
+import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 
 import java.util.ArrayList;
@@ -46,6 +51,51 @@ public class MainActivity extends BridgeActivity {
 
         // Ensure web view doesn't handle everything if permissions missing
         handleForcedPermissions();
+        setupOfflineHandler();
+    }
+
+    private void setupOfflineHandler() {
+        try {
+            final Bridge b = getBridge();
+            if (b == null) return;
+            final WebView wv = b.getWebView();
+            if (wv == null) return;
+            final android.webkit.WebViewClient orig = wv.getWebViewClient();
+            wv.setWebViewClient(new android.webkit.WebViewClient() {
+                @Override
+                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                    boolean handled = false;
+                    if (request != null && request.isForMainFrame() && error != null) {
+                        int code = error.getErrorCode();
+                        // -2 HOST_LOOKUP, -6 CONN, -8 TIMEOUT, -10 UNSUPPORTED_SCHEME
+                        if (code == -2 || code == -6 || code == -8 || code == -10) {
+                            String url = request.getUrl().toString();
+                            if (!url.contains("offline.html")) {
+                                view.loadUrl("file:///android_asset/public/offline.html");
+                                Log.w(TAG, "Offline intercept " + code + " " + url);
+                                handled = true;
+                            }
+                        }
+                    }
+                    if (!handled) {
+                        if (orig != null) orig.onReceivedError(view, request, error);
+                        else super.onReceivedError(view, request, error);
+                    }
+                }
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                    if (orig != null) return orig.shouldOverrideUrlLoading(view, request);
+                    return super.shouldOverrideUrlLoading(view, request);
+                }
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    if (orig != null) orig.onPageFinished(view, url);
+                    else super.onPageFinished(view, url);
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "setupOfflineHandler failed: " + e.getMessage());
+        }
     }
 
     private void checkExactAlarmPermission() {

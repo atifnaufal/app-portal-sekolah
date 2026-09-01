@@ -26,6 +26,7 @@ use App\Http\Controllers\TugasController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
+Route::view('/offline', 'errors.offline')->name('offline');
 
 Route::get('/download/apk', function () {
     $apk = public_path('downloads/app-portal-sekolah.apk');
