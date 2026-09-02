@@ -31,4 +31,4 @@ php artisan config:cache --no-interaction
 php artisan route:cache --no-interaction
 
 echo "Starting web server on port ${PORT:-8080}..."
-exec php artisan serve --host=0.0.0.0 --port="${PORT:-8080}"
+exec php-fpm -D && nginx -g 'daemon off;'
