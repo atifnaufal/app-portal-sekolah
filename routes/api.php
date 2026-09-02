@@ -190,7 +190,7 @@ Route::get('/status-aplikasi', function () {
     // Cek apakah sedang dalam mode maintenance
     // Untuk development: return status maintenance
     // Untuk production: return status normal
-    $isMaintenance = true; // Set false saat rilis
+    $isMaintenance = false; // Set false saat rilis
 
     if ($isMaintenance) {
         return response()->json([
