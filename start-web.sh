@@ -31,12 +31,5 @@ php artisan config:cache --no-interaction
 php artisan route:cache --no-interaction
 
 echo "Starting web server on port ${PORT:-8080}..."
-php-fpm -D
-# Nixpacks sudah menjalankan envsubst pada nginx.conf saat build,
-# tapi $PORT berubah tiap deploy. Jalankan lagi untuk pastikan benar.
-if command -v envsubst &>/dev/null; then
-  envsubst '${PORT}' < nginx.conf > /tmp/nginx.conf
-  exec nginx -c /tmp/nginx.conf -g 'daemon off;'
-else
-  exec nginx -g 'daemon off;'
-fi
+echo "Workers: ${PHP_CLI_SERVER_WORKERS:-4}"
+exec php artisan serve --host=0.0.0.0 --port="${PORT:-8080}"
