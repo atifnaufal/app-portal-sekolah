@@ -25,7 +25,14 @@ class NotificationHelper
             'actor_photo' => $actorPhoto,
         ]);
 
-        event(new NotificationEvent($userId, $title, $message, $type, $actorName, $actorPhoto));
+        try {
+            event(new NotificationEvent($userId, $title, $message, $type, $actorName, $actorPhoto));
+        } catch (\Throwable $e) {
+            // Broadcast watchdog error (mis. Reverb belum ready / kredensial salah saat
+            // cold-start Railway) TIDAK boleh menggagalkan aksi yang sudah sukses.
+            // Notifikasi tetap tersimpan di DB dan terbaca di menu notifikasi.
+            \Illuminate\Support\Facades\Log::warning('Broadcast notifikasi gagal: '.$e->getMessage());
+        }
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\NotificationHelper;
+use App\Helpers\UserContextHelper;
 use App\Models\GlobalPost;
 use App\Models\School;
 use App\Services\FirebaseStorageService;
@@ -19,14 +20,17 @@ class GlobalPortalController extends Controller
         $isMobile = (bool) preg_match('/(android|iphone|mobile)/i', $request->userAgent());
         $view = $isMobile ? 'mobile.global-portal' : 'global-portal.index';
         if (! view()->exists($view)) $view='mobile.global-portal';
-        $me = \App\Models\User::find(session('user_id'));
+        $me = UserContextHelper::user($request);
         return view($view, ['posts'=>$posts, 'schools'=>School::orderBy('name')->get(), 'me'=>$me]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $uid = $request->session()->get('user_id');
-        $user = \App\Models\User::findOrFail($uid);
+        $uid = UserContextHelper::id($request);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
         $data = $request->validate([
             'content'=>['required','string','max:2000'],
             'image'=>['nullable','image','mimes:jpg,jpeg,png,webp','max:4096'],
@@ -45,7 +49,7 @@ class GlobalPortalController extends Controller
 
     public function toggleLike(Request $request, GlobalPost $post): RedirectResponse
     {
-        $uid = $request->session()->get('user_id');
+        $uid = UserContextHelper::id($request);
         $like = $post->likes()->where('user_id',$uid)->first();
         if($like){ $like->delete(); GlobalPost::withoutTimestamps(fn() => $post->decrement('likes_count')); }
         else { $post->likes()->create(['user_id'=>$uid]); GlobalPost::withoutTimestamps(fn() => $post->increment('likes_count')); }
@@ -54,7 +58,7 @@ class GlobalPortalController extends Controller
 
     public function comment(Request $request, GlobalPost $post): RedirectResponse
     {
-        $uid = $request->session()->get('user_id');
+        $uid = UserContextHelper::id($request);
         $data = $request->validate(['body'=>['required','string','max:500']]);
         $post->comments()->create(['user_id'=>$uid,'body'=>$data['body']]);
         GlobalPost::withoutTimestamps(fn() => $post->increment('comments_count'));
@@ -63,7 +67,7 @@ class GlobalPortalController extends Controller
 
     public function toggleFollow(Request $request, \App\Models\User $user): RedirectResponse
     {
-        $uid = $request->session()->get('user_id');
+        $uid = UserContextHelper::id($request);
         if($uid==$user->id) return back();
         $ex=\App\Models\GlobalFollow::where('follower_id',$uid)->where('followed_id',$user->id)->first();
         if($ex) $ex->delete(); else \App\Models\GlobalFollow::create(['follower_id'=>$uid,'followed_id'=>$user->id]);
@@ -73,7 +77,7 @@ class GlobalPortalController extends Controller
     public function profile(Request $request, \App\Models\User $user): View
     {
         $posts = \App\Models\GlobalPost::where('user_id',$user->id)->latest()->paginate(12);
-        $isFollowing = \App\Models\GlobalFollow::where('follower_id', session('user_id'))->where('followed_id',$user->id)->exists();
+        $isFollowing = \App\Models\GlobalFollow::where('follower_id', UserContextHelper::id($request))->where('followed_id',$user->id)->exists();
         return view('mobile.global-profile', ['profileUser'=>$user->load(['school','followers','following']), 'posts'=>$posts, 'isFollowing'=>$isFollowing]);
     }
 }

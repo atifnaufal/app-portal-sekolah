@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\NotificationHelper;
+use App\Helpers\UserContextHelper;
 use App\Models\ChatGroup;
 use App\Models\Eskul;
 use App\Models\EskulMember;
@@ -16,7 +17,11 @@ class EskulController extends Controller
     // Mobile: List Eskul untuk Siswa
     public function index(Request $request)
     {
-        $user = User::findOrFail(session('user_id'));
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
         $eskuls = Eskul::with('pembina')->withCount(['members' => function ($q) {
             $q->where('eskul_members.status', 'approved');
         }])->where('aktif', true)->get();
@@ -24,7 +29,7 @@ class EskulController extends Controller
 
         // Jumlah eskul aktif (approved/pending) yang sedang diikuti siswa,
         // dipakai untuk memblokir join saat sudah mencapai batas 3.
-        $myCount = session('user_role') === 'siswa'
+        $myCount = $user->role === 'siswa'
             ? EskulMember::where('user_id', $user->id)
                 ->whereIn('status', ['approved', 'pending'])
                 ->count()
@@ -37,7 +42,7 @@ class EskulController extends Controller
     // Mobile: Gabung Eskul
     public function join(Request $request, Eskul $eskul)
     {
-        $userId = session('user_id');
+        $userId = UserContextHelper::id($request);
 
         $member = EskulMember::where('user_id', $userId)->where('eskul_id', $eskul->id)->first();
         if ($member) {
@@ -84,30 +89,30 @@ class EskulController extends Controller
     }
 
     // Mobile: Lihat & Kelola Member Eskul (Hanya untuk Admin Eskul)
-    public function members(Eskul $eskul)
+    public function members(Request $request, Eskul $eskul)
     {
-        $userId = session('user_id');
+        $userId = UserContextHelper::id($request);
         $isEskulAdmin = EskulMember::where('eskul_id', $eskul->id)
             ->where('user_id', $userId)
             ->where('is_admin', true)
             ->exists();
 
-        abort_unless($isEskulAdmin || session('user_role') === 'admin', 403);
+        abort_unless($isEskulAdmin || UserContextHelper::role($request) === 'admin', 403);
 
         $members = EskulMember::with('user')->where('eskul_id', $eskul->id)->latest()->get();
 
         return view('mobile.eskul.members', compact('eskul', 'members'));
     }
 
-    public function approveMember(EskulMember $member)
+    public function approveMember(Request $request, EskulMember $member)
     {
-        $userId = session('user_id');
+        $userId = UserContextHelper::id($request);
         $isEskulAdmin = EskulMember::where('eskul_id', $member->eskul_id)
             ->where('user_id', $userId)
             ->where('is_admin', true)
             ->exists();
 
-        abort_unless($isEskulAdmin || session('user_role') === 'admin', 403);
+        abort_unless($isEskulAdmin || UserContextHelper::role($request) === 'admin', 403);
 
         $member->status = 'approved';
         $member->save();
@@ -131,15 +136,15 @@ class EskulController extends Controller
         return back()->with('success', 'Member berhasil disetujui.');
     }
 
-    public function rejectMember(EskulMember $member)
+    public function rejectMember(Request $request, EskulMember $member)
     {
-        $userId = session('user_id');
+        $userId = UserContextHelper::id($request);
         $isEskulAdmin = EskulMember::where('eskul_id', $member->eskul_id)
             ->where('user_id', $userId)
             ->where('is_admin', true)
             ->exists();
 
-        abort_unless($isEskulAdmin || session('user_role') === 'admin', 403);
+        abort_unless($isEskulAdmin || UserContextHelper::role($request) === 'admin', 403);
 
         // Remove from chat group
         $group = ChatGroup::where('type', 'eskul')->where('related_id', $member->eskul_id)->first();

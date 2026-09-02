@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\NotificationHelper;
+use App\Helpers\UserContextHelper;
 use App\Models\Spp;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -14,18 +15,15 @@ class SppController extends Controller
 {
     private function resolveUserId(Request $request): ?int
     {
-        $userId = $request->session()->get('user_id');
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        }
-
-        return $userId;
+        return UserContextHelper::id($request);
     }
 
     public function index(Request $request): View
     {
-        $userId = $this->resolveUserId($request);
-        $user = User::with('kelas')->findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
 
         $query = Spp::with('siswa.kelas');
 
@@ -63,10 +61,10 @@ class SppController extends Controller
 
     public function create(Request $request): View
     {
-        $role = $request->session()->get('user_role') ?? Auth::guard('web')->user()?->role;
+        $role = UserContextHelper::role($request);
         abort_unless(in_array($role, ['admin', 'guru'], true), 403);
 
-        $kelasId = $request->session()->get('user_kelas_id') ?? Auth::guard('web')->user()?->kelas_id;
+        $kelasId = UserContextHelper::user($request)?->kelas_id;
 
         $siswas = User::where('role', 'siswa')
             ->with('kelas')
@@ -83,7 +81,7 @@ class SppController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $role = $request->session()->get('user_role') ?? Auth::guard('web')->user()?->role;
+        $role = UserContextHelper::role($request);
         abort_unless(in_array($role, ['admin', 'guru'], true), 403);
 
         $data = $request->validate([
@@ -95,7 +93,7 @@ class SppController extends Controller
             'jatuh_tempo' => ['nullable', 'date'],
         ]);
 
-        $kelasId = $request->session()->get('user_kelas_id') ?? Auth::guard('web')->user()?->kelas_id;
+        $kelasId = UserContextHelper::user($request)?->kelas_id;
 
         $siswa = User::where('role', 'siswa')
             ->when($role === 'guru', fn ($q) => $q->where('kelas_id', $kelasId))
@@ -121,10 +119,10 @@ class SppController extends Controller
 
     public function remind(Request $request, Spp $spp): RedirectResponse
     {
-        $role = $request->session()->get('user_role') ?? Auth::guard('web')->user()?->role;
+        $role = UserContextHelper::role($request);
         abort_unless($role === 'guru', 403);
 
-        $kelasId = $request->session()->get('user_kelas_id') ?? Auth::guard('web')->user()?->kelas_id;
+        $kelasId = UserContextHelper::user($request)?->kelas_id;
 
         $spp->load('siswa');
         abort_unless((int) $spp->siswa->kelas_id === (int) $kelasId, 403);
@@ -137,7 +135,7 @@ class SppController extends Controller
 
     public function edit(Request $request, Spp $spp): View
     {
-        $role = $request->session()->get('user_role') ?? Auth::guard('web')->user()?->role;
+        $role = UserContextHelper::role($request);
         abort_unless($role === 'admin', 403);
 
         $siswas = User::where('role', 'siswa')->with('kelas')->orderBy('name')->get();
@@ -151,7 +149,7 @@ class SppController extends Controller
 
     public function update(Request $request, Spp $spp): RedirectResponse
     {
-        $role = $request->session()->get('user_role') ?? Auth::guard('web')->user()?->role;
+        $role = UserContextHelper::role($request);
         abort_unless($role === 'admin', 403);
 
         $data = $request->validate([
@@ -171,7 +169,7 @@ class SppController extends Controller
 
     public function destroy(Request $request, Spp $spp): RedirectResponse
     {
-        $role = $request->session()->get('user_role') ?? Auth::guard('web')->user()?->role;
+        $role = UserContextHelper::role($request);
         abort_unless($role === 'admin', 403);
 
         $spp->delete();

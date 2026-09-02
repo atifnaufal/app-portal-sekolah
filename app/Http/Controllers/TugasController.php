@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\NotificationHelper;
+use App\Helpers\UserContextHelper;
 use App\Mail\TugasBaruMail;
 use App\Models\Kelas;
 use App\Models\MataPelajaran;
@@ -23,12 +24,11 @@ class TugasController extends Controller
 {
     public function index(Request $request): View
     {
-        $userId = $request->session()->get('user_id');
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
         }
-
-        $user = User::with('kelas')->findOrFail($userId);
+        $userId = $user->id;
 
         if ($user->role === 'guru') {
             $tugas = Tugas::with(['kelas', 'user'])
@@ -109,9 +109,9 @@ class TugasController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        $userId = session('user_id') ?: Auth::id();
+        $userId = UserContextHelper::id($request);
         $mapels = MataPelajaran::where('guru_id', $userId)->get();
 
         return view('mobile.tugas-form', [
@@ -125,7 +125,7 @@ class TugasController extends Controller
     public function edit(Request $request, Tugas $tugas): View
     {
         $this->assertOwner($request, $tugas);
-        $userId = session('user_id') ?: Auth::id();
+        $userId = UserContextHelper::id($request);
         $mapels = MataPelajaran::where('guru_id', $userId)->get();
 
         return view('mobile.tugas-form', [
@@ -138,12 +138,11 @@ class TugasController extends Controller
 
     public function show(Request $request, Tugas $tugas): View
     {
-        $userId = $request->session()->get('user_id');
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
         }
-
-        $user = User::with('kelas')->findOrFail($userId);
+        $userId = $user->id;
         abort_unless(
             ($user->role === 'guru' && (int) $tugas->user_id === (int) $user->id)
             || ($user->role === 'siswa' && (int) $tugas->kelas_id === (int) $user->kelas_id)
@@ -179,9 +178,9 @@ class TugasController extends Controller
     {
         $data = $this->validatedTugasPayload($request);
 
-        $userId = $request->session()->get('user_id');
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
+        $userId = UserContextHelper::id($request);
+        if (! $userId) {
+            UserContextHelper::abortUnauthorized($request);
         }
 
         $data['user_id'] = $userId;
@@ -268,16 +267,8 @@ class TugasController extends Controller
     {
         $request = request();
 
-        $userId = $request->session()->get('user_id');
-        $sessionUserId = $userId;
-        $authUserId = null;
-        if (! $userId) {
-            if (Auth::guard('web')->check()) {
-                $authUserId = Auth::guard('web')->id();
-            }
-        } else {
-            $authUserId = $userId;
-        }
+        $authUserId = UserContextHelper::id($request);
+        $sessionUserId = $authUserId;
 
         // Debug: Log the comparison
         \Illuminate\Support\Facades\Log::info('Export PDF Debug:', [
@@ -285,11 +276,11 @@ class TugasController extends Controller
             'session_user_id' => $sessionUserId,
             'auth_user_id' => $authUserId,
             'user_matches' => (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId),
-            'user_role' => $request->session()->get('user_role'),
+            'user_role' => UserContextHelper::role($request),
         ]);
 
         // Allow access if: admin OR creator matches
-        $userRole = $request->session()->get('user_role') ?? optional(Auth::user())->role;
+        $userRole = UserContextHelper::role($request);
         $isAdmin = $userRole === 'admin';
         $isCreator = (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId);
 
@@ -336,16 +327,8 @@ class TugasController extends Controller
     {
         $request = request();
 
-        $userId = $request->session()->get('user_id');
-        $sessionUserId = $userId;
-        $authUserId = null;
-        if (! $userId) {
-            if (Auth::guard('web')->check()) {
-                $authUserId = Auth::guard('web')->id();
-            }
-        } else {
-            $authUserId = $userId;
-        }
+        $authUserId = UserContextHelper::id($request);
+        $sessionUserId = $authUserId;
 
         // Debug: Log the comparison
         \Illuminate\Support\Facades\Log::info('Export Excel Debug:', [
@@ -353,11 +336,11 @@ class TugasController extends Controller
             'session_user_id' => $sessionUserId,
             'auth_user_id' => $authUserId,
             'user_matches' => (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId),
-            'user_role' => $request->session()->get('user_role'),
+            'user_role' => UserContextHelper::role($request),
         ]);
 
         // Allow access if: admin OR creator matches
-        $userRole = $request->session()->get('user_role') ?? optional(Auth::user())->role;
+        $userRole = UserContextHelper::role($request);
         $isAdmin = $userRole === 'admin';
         $isCreator = (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId);
 
@@ -464,12 +447,11 @@ class TugasController extends Controller
 
     public function submit(Request $request, Tugas $tugas): RedirectResponse
     {
-        $userId = $request->session()->get('user_id');
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
         }
-
-        $user = User::findOrFail($userId);
+        $userId = $user->id;
         abort_unless($user->role === 'siswa' && (int) $user->kelas_id === (int) $tugas->kelas_id, 403);
         abort_if($tugas->isExpired(), 403, 'Batas pengumpulan tugas telah berakhir.');
 
@@ -520,12 +502,11 @@ class TugasController extends Controller
 
     public function review(Request $request, PengumpulanTugas $pengumpulan): RedirectResponse
     {
-        $userId = $request->session()->get('user_id');
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
         }
-
-        $user = User::findOrFail($userId);
+        $userId = $user->id;
         $pengumpulan->load('tugas');
         abort_unless($user->role === 'guru' && (int) $pengumpulan->tugas->user_id === (int) $user->id, 403);
 
@@ -550,17 +531,8 @@ class TugasController extends Controller
 
     private function assertOwner(Request $request, Tugas $tugas): void
     {
-        $userId = $request->session()->get('user_id');
-
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        }
-
-        $userRole = $request->session()->get('user_role');
-
-        if (! $userRole && Auth::guard('web')->check()) {
-            $userRole = Auth::guard('web')->user()?->role;
-        }
+        $userId = UserContextHelper::id($request);
+        $userRole = UserContextHelper::role($request);
 
         $isOwner = (int) $tugas->user_id === (int) $userId;
         $isAdmin = $userRole === 'admin';

@@ -20,15 +20,16 @@ class UpdateLastActivity
 
         $userId = $request->session()->get('user_id') ?: Auth::id();
         if ($userId) {
-            // Throttle: update at most once per 30s per user to avoid DB spam
-            $cacheKey = 'last_activity_'.$userId;
-            if (! cache()->has($cacheKey)) {
-                try {
+            try {
+                // Throttle: update at most once per 30s per user to avoid DB spam
+                $cacheKey = 'last_activity_'.$userId;
+                if (! cache()->has($cacheKey)) {
                     \App\Models\User::where('id', $userId)->update(['last_activity_at' => now()]);
-                } catch (\Throwable $e) {
-                    // ignore
+                    cache()->put($cacheKey, true, 30);
                 }
-                cache()->put($cacheKey, true, 30);
+            } catch (\Throwable $e) {
+                // Jangan pernah jatuhkan request karena cache/DB absen (mis. migrasi
+                // belum jalan saat cold-start Railway). Gagal = abaikan, bukan 500.
             }
         }
 

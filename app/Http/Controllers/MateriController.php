@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\NotificationHelper;
+use App\Helpers\UserContextHelper;
 use App\Models\MataPelajaran;
 use App\Models\Materi;
 use App\Models\User;
@@ -64,10 +65,15 @@ class MateriController extends Controller
     {
         $this->assertAccess($request, $mapel, $materi);
 
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+
         return view('mobile.materi-detail', [
             'mapel' => $mapel,
             'materi' => $materi,
-            'user' => User::findOrFail($this->userId($request)),
+            'user' => $user,
         ]);
     }
 
@@ -134,29 +140,32 @@ class MateriController extends Controller
         return redirect()->route('mapel.show', $mapel)->with('success', 'Materi berhasil dihapus.');
     }
 
-    private function userId(Request $request): int
+    private function userId(Request $request): ?int
     {
-        return (int) ($request->session()->get('user_id') ?: Auth::id());
+        return UserContextHelper::id($request);
     }
 
     private function assertGuruOfMapel(Request $request, MataPelajaran $mapel): void
     {
-        $user = User::findOrFail($this->userId($request));
-        abort_unless($user->role === 'guru' && (int) $mapel->guru_id === (int) $user->id, 403);
+        $user = UserContextHelper::user($request);
+        abort_unless($user && $user->role === 'guru' && (int) $mapel->guru_id === (int) $user->id, 403);
     }
 
     private function assertOwner(Request $request, Materi $materi): void
     {
-        $user = User::findOrFail($this->userId($request));
-        $isOwner = (int) $materi->user_id === (int) $user->id;
-        $isAdmin = $user->role === 'admin';
+        $user = UserContextHelper::user($request);
+        $isOwner = $user && (int) $materi->user_id === (int) $user->id;
+        $isAdmin = $user && $user->role === 'admin';
         abort_unless($isOwner || $isAdmin, 403);
     }
 
     private function assertAccess(Request $request, MataPelajaran $mapel, Materi $materi): void
     {
-        $user = User::findOrFail($this->userId($request));
+        $user = UserContextHelper::user($request);
 
+        if (! $user) {
+            abort(403);
+        }
         if ($user->role === 'admin') {
             return;
         }

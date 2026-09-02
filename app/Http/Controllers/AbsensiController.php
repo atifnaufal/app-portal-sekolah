@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\NotificationHelper;
+use App\Helpers\UserContextHelper;
 use App\Helpers\UserHistoryHelper;
 use App\Models\Absensi;
 use App\Models\Kelas;
@@ -20,9 +21,12 @@ class AbsensiController extends Controller
 {
     public function index(Request $request): View
     {
-        $role = $request->session()->get('user_role');
-        $userId = $request->session()->get('user_id');
-        $user = User::with('kelas')->findOrFail($userId);
+        $role = UserContextHelper::role($request);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
         $today = now()->toDateString();
 
         $attendanceActive = (bool) Setting::getValue('attendance_active', false);
@@ -66,8 +70,11 @@ class AbsensiController extends Controller
     {
         Log::info('Absensi submission started', $request->all());
 
-        $userId = $request->session()->get('user_id');
-        $user = User::findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
 
         if (! Setting::getValue('attendance_active', false)) {
             return back()->with('error', 'Absensi saat ini dinonaktifkan oleh Admin.');

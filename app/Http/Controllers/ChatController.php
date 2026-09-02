@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\ChatMessageEvent;
+use App\Helpers\UserContextHelper;
 use App\Models\ChatGroup;
 use App\Models\ChatMessage;
 use App\Models\Notifikasi;
@@ -14,10 +15,13 @@ use Illuminate\View\View;
 
 class ChatController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $userId = session('user_id');
-        $user = User::with(['kelas', 'eskuls'])->findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
 
         // Ensure School Group exists
         $schoolGroup = ChatGroup::firstOrCreate(
@@ -85,9 +89,9 @@ class ChatController extends Controller
     /**
      * Start or resume a private chat with another user.
      */
-    public function startPrivate(User $recipient): RedirectResponse
+    public function startPrivate(Request $request, User $recipient): RedirectResponse
     {
-        $userId = session('user_id');
+        $userId = UserContextHelper::id($request);
         if ($userId == $recipient->id) {
             return back()->with('error', 'Tidak bisa chat dengan diri sendiri');
         }
@@ -112,10 +116,13 @@ class ChatController extends Controller
     /**
      * Halaman percakapan untuk SATU grup tertentu.
      */
-    public function show(ChatGroup $group): View
+    public function show(Request $request, ChatGroup $group): View
     {
-        $userId = session('user_id');
-        $user = User::findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
 
         // Hanya member grup yang boleh membuka percakapan
         abort_unless($group->members()->where('user_id', $userId)->exists(), 403);
@@ -169,8 +176,11 @@ class ChatController extends Controller
 
     public function store(Request $request): RedirectResponse|JsonResponse
     {
-        $userId = session('user_id');
-        $user = User::findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
 
         $data = $request->validate([
             'pesan' => ['nullable', 'string', 'max:1000'],
@@ -236,7 +246,7 @@ class ChatController extends Controller
 
     public function poll(Request $request): JsonResponse
     {
-        $userId = session('user_id');
+        $userId = UserContextHelper::id($request);
         $groupId = $request->query('group_id');
         $lastId = $request->query('last_id', 0);
 

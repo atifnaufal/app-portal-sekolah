@@ -5,17 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\MataPelajaran;
 use App\Models\Materi;
 use App\Models\Tugas;
+use App\Helpers\UserContextHelper;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class MapelController extends Controller
 {
     public function show(Request $request, MataPelajaran $mapel): View
     {
-        $userId = session('user_id') ?: Auth::id();
-        $user = User::findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
 
         // Security check
         if ($user->role === 'guru' && $mapel->guru_id !== $user->id) {

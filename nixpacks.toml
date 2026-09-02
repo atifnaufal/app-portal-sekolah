@@ -36,9 +36,11 @@ cmds = [
     "php artisan view:cache"
 ]
 
-# nginx.conf ada di root proyek, jadi Nixpacks memasang nginx + php-fpm.
-# Start command dinyatakan eksplisit supaya TIDAK fallback ke
-# `php artisan serve` (development server single-thread) yang menjadi
-# dugaan penyebab dashboard blank intermiten karena worker kehabisan memori.
+# Start command disamakan dengan Procfile (web: bash start-web.sh).
+# php-fpm + nginx SENGAJA tidak dipakai: riwayat deploy menunjukkan binary
+# php-fpm/nginx tidak terpasang andal di image Railway ("php-fpm: command not
+# found"), yang membuat server gagal start -> 500 semua halaman.
+# start-web.sh menjalankan ensure-env.sh (samakan .env + APP_KEY + DATABASE_URL)
+# lalu `php artisan serve` di $PORT dinamis Railway.
 [start]
-cmd = "php-fpm -D && bash ensure-env.sh && php artisan config:clear && php artisan config:cache && nginx -g 'daemon off;'"
+cmd = "bash start-web.sh"

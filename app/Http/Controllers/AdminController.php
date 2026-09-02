@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\UserContextHelper;
 use App\Models\Absensi;
 use App\Models\Kelas;
 use App\Models\GlobalPost;
@@ -26,8 +27,7 @@ class AdminController extends Controller
     public function dashboard(): View
     {
         $isMobile = $this->isMobileRequest();
-        // Admin Pusat (super admin) bisa lihat per-sekolah, admin sekolah otomatis terfilter sekolahnya
-        $me = \App\Models\User::find(session('user_id') ?? auth()->id());
+        $me = UserContextHelper::user();
         $isSuper = $me && $me->isSuperAdmin();
         $filterSchoolId = $isSuper ? request('school_id') : ($me->school_id ?? null);
         $filterSchoolId = $filterSchoolId ? (int)$filterSchoolId : null;
@@ -177,7 +177,7 @@ class AdminController extends Controller
         $data['totalSchools'] = School::count();
         $data['topSchool'] = School::withCount('posts')->orderByDesc('posts_count')->first();
         $data['recentGlobalPosts'] = $gpQ(GlobalPost::with(['user','school'])->latest())->take(4)->get();
-        $meForView = \App\Models\User::find(session('user_id') ?? auth()->id());
+        $meForView = UserContextHelper::user();
         $data['user'] = $meForView;
         $data['filterSchoolId'] = $filterSchoolId;
         $data['isSuperAdmin'] = $meForView && $meForView->isSuperAdmin();
@@ -194,11 +194,11 @@ class AdminController extends Controller
 
     public function users(Request $request): View
     {
-        $search = $request->search;
-        $me = User::find(session('user_id') ?? auth()->id());
+        $me = UserContextHelper::user();
         $isSuper = $me && $me->isSuperAdmin();
         // Admin sekolah hanya lihat user sekolahnya sendiri
         $schoolFilter = (!$isSuper && $me && $me->school_id) ? $me->school_id : (request('school_id') ? (int)request('school_id') : null);
+        $search = $request->input('search', '');
 
         $usersQuery = User::with(['kelas', 'mataPelajarans.kelas', 'school'])
             ->whereIn('role', ['guru', 'siswa'])
@@ -303,15 +303,15 @@ class AdminController extends Controller
     // === Sekolah — premium admin only (publik bisa daftar jika is_active) ===
     public function schoolsIndex(): View
     {
-        $me = User::find(session('user_id') ?? auth()->id());
-        abort_unless(($me && $me->isSuperAdmin()) || session('user_role')==='admin',403);
+        $me = UserContextHelper::user();
+        abort_unless(($me && $me->isSuperAdmin()) || UserContextHelper::role()==='admin',403);
         $schools = School::withCount(['users','posts'])->orderBy('name')->get();
         return view('admin.schools', compact('schools'));
     }
     public function schoolsStore(Request $request): RedirectResponse
     {
-        $me = User::find(session('user_id') ?? auth()->id());
-        abort_unless(($me && $me->isSuperAdmin()) || session('user_role')==='admin',403);
+        $me = UserContextHelper::user();
+        abort_unless(($me && $me->isSuperAdmin()) || UserContextHelper::role()==='admin',403);
         $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug'],'is_active'=>['nullable','boolean']]);
         $data['is_active']=$request->boolean('is_active',true);
         School::create($data);
@@ -319,8 +319,8 @@ class AdminController extends Controller
     }
     public function schoolsUpdate(Request $request, School $school): RedirectResponse
     {
-        $me = User::find(session('user_id') ?? auth()->id());
-        abort_unless(($me && $me->isSuperAdmin()) || session('user_role')==='admin',403);
+        $me = UserContextHelper::user();
+        abort_unless(($me && $me->isSuperAdmin()) || UserContextHelper::role()==='admin',403);
         $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug,'.$school->id],'is_active'=>['nullable','boolean']]);
         $data['is_active']=$request->boolean('is_active');
         $school->update($data);
@@ -328,7 +328,7 @@ class AdminController extends Controller
     }
     public function schoolsDestroy(School $school): RedirectResponse
     {
-        $me = User::find(session('user_id') ?? auth()->id());
+        $me = UserContextHelper::user();
         abort_unless($me && $me->isSuperAdmin(),403);
         if($school->users()->exists()) return back()->with('error','Tidak bisa hapus sekolah yang masih punya user');
         $school->delete();
@@ -336,15 +336,15 @@ class AdminController extends Controller
     }
     public function schoolsToggle(School $school): RedirectResponse
     {
-        $me = User::find(session('user_id') ?? auth()->id());
-        abort_unless(($me && $me->isSuperAdmin()) || session('user_role')==='admin',403);
+        $me = UserContextHelper::user();
+        abort_unless(($me && $me->isSuperAdmin()) || UserContextHelper::role()==='admin',403);
         $school->update(['is_active'=>!$school->is_active]);
         return back()->with('success',$school->is_active?'Sekolah diaktifkan — pendaftaran dibuka':'Sekolah dinonaktifkan — pendaftaran ditutup');
     }
     // Admin pusat bisa buat akun admin sekolah
     public function createSchoolAdmin(Request $request): RedirectResponse
     {
-        $me = User::find(session('user_id') ?? auth()->id());
+        $me = UserContextHelper::user();
         abort_unless($me && $me->isSuperAdmin(),403);
         $data=$request->validate(['name'=>['required','max:100'],'email'=>['required','email','unique:users,email'],'password'=>['required','min:8','confirmed'],'school_id'=>['required','exists:schools,id']]);
         \App\Models\User::create(['name'=>$data['name'],'email'=>$data['email'],'password'=>\Illuminate\Support\Facades\Hash::make($data['password']),'role'=>'admin','school_id'=>$data['school_id'],'aktif'=>true,'nik'=>'ADM'.rand(1000,9999),'no_hp'=>'08'.rand(1000000000,9999999999)]);

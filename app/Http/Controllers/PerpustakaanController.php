@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\UserContextHelper;
 use App\Models\Buku;
 use App\Models\KategoriBuku;
 use App\Models\PeminjamanBuku;
@@ -14,8 +15,11 @@ class PerpustakaanController extends Controller
 {
     public function index(Request $request): View
     {
-        $userId = $request->session()->get('user_id') ?: Auth::guard('web')->id();
-        $user = User::findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
 
         $query = Buku::with('kategori');
 
@@ -46,8 +50,11 @@ class PerpustakaanController extends Controller
 
     public function show(Request $request, Buku $buku): View
     {
-        $userId = $request->session()->get('user_id') ?: Auth::guard('web')->id();
-        $user = User::findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
 
         $isPinjam = PeminjamanBuku::where('user_id', $user->id)
             ->where('buku_id', $buku->id)
@@ -64,8 +71,10 @@ class PerpustakaanController extends Controller
 
     public function read(Request $request, Buku $buku): View
     {
-        $userId = $request->session()->get('user_id') ?: Auth::guard('web')->id();
-        $user = User::findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
 
         // Track reading as borrowing if not already borrowed
         PeminjamanBuku::firstOrCreate([

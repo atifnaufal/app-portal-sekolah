@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\UserContextHelper;
 use App\Models\Absensi;
 use App\Models\Notifikasi;
 use Illuminate\Http\JsonResponse;
@@ -13,9 +14,9 @@ class NotifikasiController extends Controller
     /**
      * Pusat informasi admin: ringkasan aktivitas absensi terbaru.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        abort_unless(session('user_role') === 'admin', 403);
+        abort_unless(UserContextHelper::role($request) === 'admin', 403);
 
         $today = now()->toDateString();
 
@@ -30,9 +31,9 @@ class NotifikasiController extends Controller
     /**
      * Daftar notifikasi milik user yang sedang login, sekaligus menandainya sudah dibaca.
      */
-    public function mine(): View
+    public function mine(Request $request): View
     {
-        $userId = session('user_id');
+        $userId = UserContextHelper::id($request);
 
         $notifications = Notifikasi::where('user_id', $userId)->latest()->get();
         Notifikasi::where('user_id', $userId)->whereNull('dibaca_pada')->update(['dibaca_pada' => now()]);
@@ -43,10 +44,10 @@ class NotifikasiController extends Controller
     /**
      * Daftar notifikasi tugas untuk guru (jawaban siswa terbaru).
      */
-    public function tugas(): View
+    public function tugas(Request $request): View
     {
         return view('mobile.tugas-notifikasi', [
-            'notifikasis' => Notifikasi::where('user_id', session('user_id'))->latest()->get(),
+            'notifikasis' => Notifikasi::where('user_id', UserContextHelper::id($request))->latest()->get(),
         ]);
     }
 

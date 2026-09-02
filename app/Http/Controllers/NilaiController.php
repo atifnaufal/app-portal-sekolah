@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\UserContextHelper;
 use App\Models\Kelas;
 use App\Models\MataPelajaran;
 use App\Models\Nilai;
@@ -44,8 +45,10 @@ class NilaiController extends Controller
 
     public function index(Request $request)
     {
-        $userId = session('user_id') ?: Auth::id();
-        $user = User::with('kelas')->findOrFail($userId);
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
         $isGuru = $user->role === 'guru';
 
         // Kelas yang dikelola guru untuk akses rekap: wali kelas (pembina),
@@ -111,7 +114,7 @@ class NilaiController extends Controller
             'uas' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        $userId = session('user_id') ?: Auth::id();
+        $userId = UserContextHelper::id($request);
         $subject = MataPelajaran::with('kelas')->findOrFail($data['mata_pelajaran_id']);
         abort_unless($subject->guru_id == $userId, 403);
 
@@ -167,10 +170,10 @@ class NilaiController extends Controller
         ];
     }
 
-    protected function authorizeRecap(Kelas $kelas): void
+    protected function authorizeRecap(Request $request, Kelas $kelas): void
     {
-        $userId = session('user_id') ?: Auth::id();
-        $userRole = session('user_role') ?: optional(Auth::user())->role;
+        $userId = UserContextHelper::id($request);
+        $userRole = UserContextHelper::role($request);
 
         $isWaliKelas = $kelas->pembina_id == $userId;
         $isMapelGuru = MataPelajaran::where('kelas_id', $kelas->id)->where('guru_id', $userId)->exists();
@@ -188,10 +191,10 @@ class NilaiController extends Controller
     /**
      * Hanya guru pengampu mapel, wali kelas, atau admin yang boleh mengunduh rekap mapelnya.
      */
-    protected function authorizeMapel(MataPelajaran $mp): void
+    protected function authorizeMapel(Request $request, MataPelajaran $mp): void
     {
-        $userId = session('user_id') ?: Auth::id();
-        $userRole = session('user_role') ?: optional(Auth::user())->role;
+        $userId = UserContextHelper::id($request);
+        $userRole = UserContextHelper::role($request);
 
         $isWaliKelas = $mp->kelas && $mp->kelas->pembina_id == $userId;
         $isHomeGuru = optional(User::find($userId))->kelas_id == $mp->kelas_id;
@@ -236,7 +239,7 @@ class NilaiController extends Controller
 
     public function recapMapelPdf(Request $request, MataPelajaran $mp)
     {
-        $this->authorizeMapel($mp);
+        $this->authorizeMapel($request, $mp);
 
         try {
             $this->prepPdf();
@@ -258,7 +261,7 @@ class NilaiController extends Controller
 
     public function recapMapelExcel(Request $request, MataPelajaran $mp)
     {
-        $this->authorizeMapel($mp);
+        $this->authorizeMapel($request, $mp);
 
         $semester = (int) ($request->semester ?: 1);
         $d = $this->dataRecapMapel($mp, $semester, $request->tahun_ajaran);
@@ -343,7 +346,7 @@ class NilaiController extends Controller
 
     public function recapPdf(Request $request, Kelas $kelas)
     {
-        $this->authorizeRecap($kelas);
+        $this->authorizeRecap($request, $kelas);
 
         try {
             $this->prepPdf();
@@ -372,7 +375,7 @@ class NilaiController extends Controller
      */
     public function recapExcel(Request $request, Kelas $kelas)
     {
-        $this->authorizeRecap($kelas);
+        $this->authorizeRecap($request, $kelas);
 
         $semester = (int) ($request->semester ?: 1);
         $d = $this->dataRecap($kelas, $semester, $request->tahun_ajaran);
@@ -494,10 +497,9 @@ class NilaiController extends Controller
         return htmlspecialchars((string) ($value ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8');
     }
 
-    protected function authorizePeriode(): void
+    protected function authorizePeriode(Request $request): void
     {
-        $userId = session('user_id') ?: Auth::id();
-        $role = session('user_role') ?: optional(Auth::user())->role;
+        $role = UserContextHelper::role($request);
         abort_unless($role === 'admin' || $role === 'guru', 403);
     }
 
@@ -570,7 +572,7 @@ class NilaiController extends Controller
 
     public function recapPeriodePdf(Request $request)
     {
-        $this->authorizePeriode();
+        $this->authorizePeriode($request);
 
         try {
             $this->prepPdf();
@@ -596,7 +598,7 @@ class NilaiController extends Controller
 
     public function recapPeriodeExcel(Request $request)
     {
-        $this->authorizePeriode();
+        $this->authorizePeriode($request);
 
         $periode = $request->periode === 'tahunan' ? 'tahunan' : 'bulanan';
         $tahun = (int) ($request->tahun ?: now()->year);

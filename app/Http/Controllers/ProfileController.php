@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\UserContextHelper;
 use App\Helpers\UserHistoryHelper;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -15,14 +15,9 @@ class ProfileController extends Controller
 {
     private function resolveUser(Request $request): User
     {
-        $userId = $request->session()->get('user_id');
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
-        }
-
-        $user = User::with('kelas')->find($userId);
+        $user = UserContextHelper::user($request);
         if (! $user) {
-            abort(401, 'Sesi berakhir. Silakan login kembali.');
+            UserContextHelper::abortUnauthorized($request);
         }
 
         return $user;

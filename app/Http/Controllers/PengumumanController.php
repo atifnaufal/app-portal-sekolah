@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\NotificationHelper;
+use App\Helpers\UserContextHelper;
 use App\Models\Eskul;
 use App\Models\EskulMember;
 use App\Models\Kelas;
@@ -19,10 +20,12 @@ class PengumumanController extends Controller
      */
     public function index(Request $request): View
     {
-        $userId = $request->session()->get('user_id');
-        $user = User::with(['kelas', 'eskuls'])->findOrFail($userId);
-
-        $role = $request->session()->get('user_role');
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
+        $role = UserContextHelper::role($request);
         $kelasId = $user->kelas_id;
         $myEskulIds = $user->eskuls()->pluck('eskuls.id')->toArray();
 
@@ -82,8 +85,8 @@ class PengumumanController extends Controller
 
     public function create(Request $request): View
     {
-        $role = session('user_role');
-        $userId = session('user_id');
+        $role = UserContextHelper::role($request);
+        $userId = UserContextHelper::id($request);
 
         // Admin IT, Wali Kelas, atau Admin Eskul
         $isWaliKelas = Kelas::where('pembina_id', $userId)->first();
@@ -110,8 +113,8 @@ class PengumumanController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $role = session('user_role');
-        $userId = session('user_id');
+        $role = UserContextHelper::role($request);
+        $userId = UserContextHelper::id($request);
 
         $data = $request->validate([
             'judul' => ['required', 'max:255'],
@@ -196,10 +199,10 @@ class PengumumanController extends Controller
     }
 
     // Edit/Update/Destroy logic remains similar but with scope checks
-    public function edit(Pengumuman $pengumuman): View
+    public function edit(Request $request, Pengumuman $pengumuman): View
     {
-        $userId = session('user_id');
-        $role = session('user_role');
+        $userId = UserContextHelper::id($request);
+        $role = UserContextHelper::role($request);
 
         abort_unless($role === 'admin' || $pengumuman->user_id === $userId, 403);
 
@@ -220,8 +223,8 @@ class PengumumanController extends Controller
 
     public function update(Request $request, Pengumuman $pengumuman): RedirectResponse
     {
-        $userId = session('user_id');
-        $role = session('user_role');
+        $userId = UserContextHelper::id($request);
+        $role = UserContextHelper::role($request);
         abort_unless($role === 'admin' || $pengumuman->user_id === $userId, 403);
 
         $data = $request->validate([
@@ -294,7 +297,7 @@ class PengumumanController extends Controller
     public function destroy(Request $request, Pengumuman $pengumuman): RedirectResponse
     {
         // Hanya Admin yang boleh menghapus pengumuman (guru/pembina eskul tidak).
-        abort_unless(session('user_role') === 'admin', 403);
+        abort_unless(UserContextHelper::role($request) === 'admin', 403);
 
         $pengumuman->delete();
 

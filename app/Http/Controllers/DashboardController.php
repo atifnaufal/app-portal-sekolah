@@ -8,24 +8,23 @@ use App\Models\Notifikasi;
 use App\Models\Pengumuman;
 use App\Models\Spp;
 use App\Models\Tugas;
+use App\Helpers\UserContextHelper;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        if (session('user_role') === 'admin') {
+        if (UserContextHelper::role($request) === 'admin') {
             return app(AdminController::class)->dashboard();
         }
 
-        $userId = session('user_id');
-        if (! $userId && Auth::guard('web')->check()) {
-            $userId = Auth::guard('web')->id();
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
         }
-
-        $user = User::with('kelas')->findOrFail($userId);
 
         $mapels = $user->role === 'guru'
             ? MataPelajaran::where('guru_id', $user->id)->with('kelas')->get()

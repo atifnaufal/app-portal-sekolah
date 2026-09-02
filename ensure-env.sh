@@ -68,14 +68,27 @@ inject_env() {
 # DB — Railway MySQL
 # Railway menyediakan DATABASE_URL saat MySQL service ditambah (format: mysql://user:pass@host:port/db).
 # Parse & injeksi ke var individual agar Laravel terbaca.
+# Kubernetes/URL-parse dipakai di sini (bukan regex bash) karena password boleh
+# mengandung karakter khusus seperti '@', ':', '/' yang membuat regex gagal.
 if [ -n "${DATABASE_URL:-}" ]; then
-  _DB_URL="${DATABASE_URL#mysql://}"
-  if [[ "$_DB_URL" =~ ^([^:]+):([^@]+)@([^/:]+):([0-9]+)/(.+)$ ]]; then
-    _DB_USER="${BASH_REMATCH[1]}"
-    _DB_PASS="${BASH_REMATCH[2]}"
-    _DB_HOST="${BASH_REMATCH[3]}"
-    _DB_PORT="${BASH_REMATCH[4]}"
-    _DB_NAME="${BASH_REMATCH[5]}"
+  DB_PARSE=$(php -r '
+    $u = getenv("DATABASE_URL");
+    $p = parse_url($u);
+    if (!$p || empty($p["host"])) { exit(1); }
+    $host = $p["host"];
+    $port = $p["port"] ?? "3306";
+    $user = $p["user"] ?? "";
+    $pass = $p["pass"] ?? "";
+    $db   = ltrim($p["path"] ?? "", "/");
+    echo implode("\n", [$user, $pass, $host, $port, $db]);
+  ' 2>/dev/null) || DB_PARSE=""
+
+  if [ -n "$DB_PARSE" ]; then
+    _DB_USER=$(printf '%s\n' "$DB_PARSE" | sed -n '1p')
+    _DB_PASS=$(printf '%s\n' "$DB_PARSE" | sed -n '2p')
+    _DB_HOST=$(printf '%s\n' "$DB_PARSE" | sed -n '3p')
+    _DB_PORT=$(printf '%s\n' "$DB_PARSE" | sed -n '4p')
+    _DB_NAME=$(printf '%s\n' "$DB_PARSE" | sed -n '5p')
     [ -n "$_DB_USER" ]     && inject_env "DB_USERNAME" "$_DB_USER"
     [ -n "$_DB_PASS" ]     && inject_env "DB_PASSWORD" "$_DB_PASS"
     [ -n "$_DB_HOST" ]     && inject_env "DB_HOST" "$_DB_HOST"
@@ -83,7 +96,7 @@ if [ -n "${DATABASE_URL:-}" ]; then
     [ -n "$_DB_NAME" ]     && inject_env "DB_DATABASE" "$_DB_NAME"
     echo "[ensure-env] DATABASE_URL di-parse & di-inject"
   else
-    echo "[ensure-env] WARNING: Tidak bisa parse DATABASE_URL: $_DB_URL"
+    echo "[ensure-env] WARNING: Tidak bisa parse DATABASE_URL: ${DATABASE_URL}"
   fi
 fi
 
