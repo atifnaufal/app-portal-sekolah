@@ -21,8 +21,14 @@ cmds = [
 # db:seed sengaja DIHAPUS dari fase deploy: dulu dijalankan tiap cold start
 # sehingga data seed bisa dobel / deploy gagal. Seed cukup dijalankan manual sekali.
 # storage:link diberi || true karena perintah ini exit non-zero bila symlink sudah ada.
+# PENTING: ensure-env.sh WAJIB jalan SEBELUM config:cache agar .env terisi Railway vars.
 [phases.deploy]
 cmds = [
+    "bash ensure-env.sh",
+    "php artisan config:clear",
+    "php artisan route:clear",
+    "php artisan view:clear",
+    "php artisan cache:clear",
     "php artisan migrate --force",
     "php artisan storage:link || true",
     "php artisan config:cache",
@@ -35,4 +41,4 @@ cmds = [
 # `php artisan serve` (development server single-thread) yang menjadi
 # dugaan penyebab dashboard blank intermiten karena worker kehabisan memori.
 [start]
-cmd = "php-fpm -D && bash ensure-env.sh && nginx -g 'daemon off;'"
+cmd = "php-fpm -D && bash ensure-env.sh && php artisan config:clear && php artisan config:cache && nginx -g 'daemon off;'"
