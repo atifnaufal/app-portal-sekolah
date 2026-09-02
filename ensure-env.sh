@@ -124,7 +124,7 @@ set_db() {
 }
 
 # 1) Ambil user/pass/host/port/db dari DATABASE_URL atau MYSQL_URL (url lengkap).
-_DB_URL="${DATABASE_URL:-${MYSQL_URL:-${MYSQL_URL_OLD:-}}}"
+_DB_URL="${DATABASE_URL:-${MYSQL_PRIVATE_URL:-${MYSQL_URL:-${MYSQL_URL_OLD:-}}}}"
 if [ -n "$_DB_URL" ]; then
   DB_PARSE=$(DATABASE_URL="$_DB_URL" php -r '
     $u = getenv("DATABASE_URL");
@@ -143,7 +143,9 @@ fi
 
 # 2) Fallback literal dari variabel template Railway (MYSQLHOST dsb.)
 #    hanya untuk bagian yang belum terisi.
-set_db DB_HOST      "${MYSQLHOST:-${MYSQL_HOST:-${RAILWAY_PRIVATE_DOMAIN:-}}}"
+# JANGAN pakai RAILWAY_PRIVATE_DOMAIN sebagai host DB: pada service App nilainya = domain app
+# sendiri sehingga mengarah ke service yang salah. Host DB hanya dari MYSQL* / URL yang benar.
+set_db DB_HOST      "${MYSQLHOST:-${MYSQL_HOST:-}}"
 set_db DB_PORT      "${MYSQLPORT:-${MYSQL_PORT:-3306}}"
 set_db DB_DATABASE  "${MYSQLDATABASE:-${MYSQL_DATABASE:-}}"
 set_db DB_USERNAME  "${MYSQLUSER:-${MYSQL_USER:-root}}"
