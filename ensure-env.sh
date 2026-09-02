@@ -100,6 +100,57 @@ if [ -n "${DATABASE_URL:-}" ]; then
   fi
 fi
 
+# ===== Auto-map variabel MySQL Railway (template add-on) =====
+# Saat service App ter-link ke service MySQL, Railway menyuntikkan variabel
+# template seperti MYSQLHOST / MYSQLPORT / MYSQLDATABASE / MYSQLUSER /
+# MYSQLPASSWORD (dan MYSQL_URL / MYSQL_HOST / MYSQL_DATABASE dsb.).
+# Laravel hanya membaca DB_*, jadi kita petakan otomatis di sini agar app
+# tersambung TANPA perlu user mengisi DB_* manual.
+# Prioritas: nilai yang eksplisit di env (DB_HOST dsb.) tetap menang.
+# Simpan nilai yang eksplisit di env (DB_* asli) agar bisa dibedakan dari autodeteksi.
+_EXPLICIT_DB_HOST="${DB_HOST:-}"
+_EXPLICIT_DB_PORT="${DB_PORT:-}"
+_EXPLICIT_DB_DATABASE="${DB_DATABASE:-}"
+_EXPLICIT_DB_USERNAME="${DB_USERNAME:-}"
+_EXPLICIT_DB_PASSWORD="${DB_PASSWORD:-}"
+
+# set_db KEY VALUE — isi DB_* hanya jika belum diisi eksplisit oleh user.
+set_db() {
+  local key="$1"; local val="$2"
+  if [ -n "$val" ] && [ -z "${!key:-}" ]; then
+    inject_env "$key" "$val"
+    export "$key"="$val"
+  fi
+}
+
+# 1) Ambil user/pass/host/port/db dari DATABASE_URL atau MYSQL_URL (url lengkap).
+_DB_URL="${DATABASE_URL:-${MYSQL_URL:-${MYSQL_URL_OLD:-}}}"
+if [ -n "$_DB_URL" ]; then
+  DB_PARSE=$(DATABASE_URL="$_DB_URL" php -r '
+    $u = getenv("DATABASE_URL");
+    $p = parse_url($u);
+    if (!$p || empty($p["host"])) { exit(1); }
+    echo implode("\n", [($p["user"] ?? ""), ($p["pass"] ?? ""), $p["host"], ($p["port"] ?? "3306"), ltrim($p["path"] ?? "", "/")]);
+  ' 2>/dev/null) || DB_PARSE=""
+  if [ -n "$DB_PARSE" ]; then
+    set_db DB_USERNAME "$(printf '%s\n' "$DB_PARSE" | sed -n '1p')"
+    set_db DB_PASSWORD "$(printf '%s\n' "$DB_PARSE" | sed -n '2p')"
+    set_db DB_HOST     "$(printf '%s\n' "$DB_PARSE" | sed -n '3p')"
+    set_db DB_PORT     "$(printf '%s\n' "$DB_PARSE" | sed -n '4p')"
+    set_db DB_DATABASE "$(printf '%s\n' "$DB_PARSE" | sed -n '5p')"
+  fi
+fi
+
+# 2) Fallback literal dari variabel template Railway (MYSQLHOST dsb.)
+#    hanya untuk bagian yang belum terisi.
+set_db DB_HOST      "${MYSQLHOST:-${MYSQL_HOST:-${RAILWAY_PRIVATE_DOMAIN:-}}}"
+set_db DB_PORT      "${MYSQLPORT:-${MYSQL_PORT:-3306}}"
+set_db DB_DATABASE  "${MYSQLDATABASE:-${MYSQL_DATABASE:-}}"
+set_db DB_USERNAME  "${MYSQLUSER:-${MYSQL_USER:-root}}"
+set_db DB_PASSWORD  "${MYSQLPASSWORD:-${MYSQL_PASSWORD:-${MYSQL_ROOT_PASSWORD:-}}}"
+
+echo "[ensure-env] host MySQL = ${DB_HOST:-<kosong>}"
+
 [ -n "${DB_HOST:-}" ]     && inject_env "DB_HOST" "$DB_HOST"
 [ -n "${DB_PORT:-}" ]     && inject_env "DB_PORT" "$DB_PORT"
 [ -n "${DB_DATABASE:-}" ] && inject_env "DB_DATABASE" "$DB_DATABASE"
