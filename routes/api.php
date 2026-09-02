@@ -3,6 +3,55 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+// ===== DIAGNOSTIK DEPLOY (sementara) =====
+// Membantu melihat kenapa halaman 500 saat deploy Railway. TANPA middleware 'web'
+// sehingga tidak bergantung pada tabel sessions (yang justru bisa jadi penyebab 500).
+// Hanya aktif kala APP_DEBUG=true. HAPUS endpoint ini setelah masalah teratasi.
+Route::get('/__diag', function () {
+    if ((bool) config('app.debug') !== true) {
+        return response()->json(['enabled' => false, 'message' => 'Set APP_DEBUG=true di Railway lalu muat ulang.'], 404);
+    }
+
+    $c = config('database.default');
+    $hidden = function ($v) {
+        if ($v === null || $v === '') {
+            return '(kosong/kehampa)';
+        }
+        return (string) $v;
+    };
+
+    $cfg = config("database.connections.$c", []);
+    $data = [
+        'app_env'         => config('app.env'),
+        'app_debug'       => var_export(config('app.debug'), true),
+        'db_connection'   => $c,
+        'db_host'         => $hidden($cfg['host'] ?? ($c === 'sqlite' ? '(sqlite)' : '')),
+        'db_port'         => $cfg['port'] ?? '',
+        'db_database'     => $hidden($cfg['database'] ?? ''),
+        'has_mysql_host_literal' => ($cfg['host'] ?? null) === '{{MYSQLHOST}}',
+        'has_databurl'    => env('DATABASE_URL') ? 'yes' : 'no',
+    ];
+
+    // Koneksi DB
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $data['db_connect'] = 'OK';
+    } catch (\Throwable $e) {
+        $data['db_connect'] = 'FAIL: '.$e->getMessage();
+    }
+
+    // Cek keberadaan tabel inti
+    foreach (['users', 'sessions', 'cache', 'jobs', 'migrations'] as $t) {
+        try {
+            $data['table_'.$t] = \Illuminate\Support\Facades\Schema::hasTable($t) ? 'ok' : 'MISSING';
+        } catch (\Throwable $e) {
+            $data['table_'.$t] = 'ERROR: '.$e->getMessage();
+        }
+    }
+
+    return response()->json($data, 200);
+})->name('api.__diag');
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
