@@ -208,18 +208,18 @@
                     <div class="welcome-feature-desc">Kumpul Tugas</div>
                 </div>
                 <div class="welcome-feature">
-                    <div class="welcome-feature-icon" style="background:rgba(16,185,129,0.2);color:#34d399;">
+                    <div class="welcome-feature-icon" style="background:rgba(34,197,94,0.2);color:#4ade80;">
                         <i class="bi bi-calendar-check"></i>
                     </div>
                     <div class="welcome-feature-title">Absensi</div>
                     <div class="welcome-feature-desc">Catat Hadir</div>
                 </div>
                 <div class="welcome-feature">
-                    <div class="welcome-feature-icon" style="background:rgba(251,191,36,0.2);color:#fbbf24;">
+                    <div class="welcome-feature-icon" style="background:rgba(245,158,11,0.2);color:#fbbf24;">
                         <i class="bi bi-wallet2"></i>
                     </div>
                     <div class="welcome-feature-title">SPP Online</div>
-                    <div class="welcome-feature-desc">Cek Tagihan Online</div>
+                    <div class="welcome-feature-desc">Cek Tagihan</div>
                 </div>
                 <div class="welcome-feature">
                     <div class="welcome-feature-icon" style="background:rgba(139,92,246,0.2);color:#a78bfa;">
@@ -228,15 +228,15 @@
                     <div class="welcome-feature-title">Chat</div>
                     <div class="welcome-feature-desc">Online Chat</div>
                 </div>
-                 <div class="welcome-feature">
+                <div class="welcome-feature">
                     <div class="welcome-feature-icon" style="background:rgba(14,165,233,0.2);color:#38bdf8;">
-                      <i class="bi bi-file-earmark-richtext"></i>
+                        <i class="bi bi-file-earmark-richtext"></i>
                     </div>
-                 <div class="welcome-feature-title">Perpus Digital</div>
-                    <div class="welcome-feature-desc">Baca Online Digital</div>
+                    <div class="welcome-feature-title">Perpus</div>
+                    <div class="welcome-feature-desc">Baca Digital</div>
                 </div>
                 <div class="welcome-feature">
-                    <div class="welcome-feature-icon" style="background:rgba(244,114,182,0.2);color:#f472b6;">
+                    <div class="welcome-feature-icon" style="background:rgba(236,72,153,0.2);color:#f472b6;">
                         <i class="bi bi-flag"></i>
                     </div>
                     <div class="welcome-feature-title">Eskul</div>
@@ -249,9 +249,8 @@
                     <div class="welcome-feature-title">E-Learning</div>
                     <div class="welcome-feature-desc">Materi & Tugas</div>
                 </div>
-
                 <div class="welcome-feature">
-                    <div class="welcome-feature-icon" style="background:rgba(16,185,129,0.2);color:#34d399;">
+                    <div class="welcome-feature-icon" style="background:rgba(249,115,22,0.2);color:#fb923c;">
                         <i class="bi bi-bar-chart-line"></i>
                     </div>
                     <div class="welcome-feature-title">Nilai</div>
@@ -262,7 +261,7 @@
                         <i class="bi bi-globe2"></i>
                     </div>
                     <div class="welcome-feature-title" style="color:#c7d2fe">Global Portal</div>
-                    <div class="welcome-feature-desc" style="color:rgba(199,210,254,.7)">Sosial media Sekolah</div>
+                    <div class="welcome-feature-desc" style="color:rgba(199,210,254,.7)">Sosmed Sekolah</div>
                 </div>
             </div>
 
