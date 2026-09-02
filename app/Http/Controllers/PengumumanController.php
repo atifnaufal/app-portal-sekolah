@@ -77,7 +77,7 @@ class PengumumanController extends Controller
             ]);
         }
 
-        return view('pengumuman.index', ['pengumumans' => $pengumumans, 'semua' => $semua]);
+        return view('pengumuman.index', ['pengumumans' => $pengumumans, 'semua' => $semua, 'user' => $user]);
     }
 
     public function create(Request $request): View

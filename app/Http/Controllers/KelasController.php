@@ -52,8 +52,8 @@ class KelasController extends Controller
 
     public function destroy(Kelas $kelas): RedirectResponse
     {
-        if (Mahasiswa::where('kelas_id', $kelas->id)->exists()) {
-            return back()->with('error', 'Kelas masih terhubung ke data mahasiswa. Pindahkan/hapus mahasiswa dahulu.');
+        if (\App\Models\User::where('kelas_id', $kelas->id)->where('role', 'siswa')->exists()) {
+            return back()->with('error', 'Kelas masih terhubung ke data siswa. Pindahkan/hapus siswa dahulu.');
         }
 
         try {

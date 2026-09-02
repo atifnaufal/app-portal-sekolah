@@ -337,7 +337,7 @@
                         @if($isGuru)
                             <i class="bi bi-people me-1"></i> {{ $m->kelas->nama }}
                         @else
-                            <i class="bi bi-person me-1"></i> {{ explode(' ', $m->guru->name)[0] }}
+                            <i class="bi bi-person me-1"></i> {{ explode(' ', $m->guru?->name ?? 'Guru')[0] }}
                         @endif
                     </div>
                 </div>

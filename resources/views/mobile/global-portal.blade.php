@@ -43,7 +43,7 @@
   <div class="ig-stories">
     <div class="ig-story">
       <div class="ig-ring add" onclick="document.getElementById('composer').scrollIntoView({behavior:'smooth'})">
-        <img src="{{ auth()->user()?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover">
+        <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover">
         <span class="ig-plus"><i class="bi bi-plus-lg"></i></span>
       </div>
       <div class="ig-name">Cerita Anda</div>
@@ -66,8 +66,8 @@
     <form method="POST" action="{{ route('global.portal.store') }}" enctype="multipart/form-data">
       @csrf
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
-        <img src="{{ auth()->user()?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover">
-        <div style="font-size:13px;font-weight:700">{{ auth()->user()?->name ?? session('admin_name') }}</div>
+        <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover">
+        <div style="font-size:13px;font-weight:700">{{ $me?->name ?? session('admin_name') }}</div>
         <select name="school_id" style="margin-left:auto;padding:6px 8px;border:1px solid #dbdbdb;border-radius:8px;font-size:11px">
           <option value="">Sekolah Saya</option>
           @foreach($schools as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach

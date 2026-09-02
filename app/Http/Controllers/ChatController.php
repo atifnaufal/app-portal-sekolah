@@ -255,7 +255,7 @@ class ChatController extends Controller
         $data = $messages->map(fn ($msg) => [
             'id' => $msg->id,
             'user_id' => $msg->user_id,
-            'nama' => $msg->user->name,
+            'nama' => $msg->user?->name ?? 'Unknown',
             'pesan' => $msg->pesan,
             'file_url' => \App\Services\FirebaseStorageService::url($msg->file),
             'waktu' => $msg->created_at->format('H:i'),

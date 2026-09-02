@@ -43,56 +43,67 @@ class AdminController extends Controller
             ->reverse()
             ->values();
 
+        $mpQ = fn($q) => $filterSchoolId ? $q->whereHas('mataPelajaran.kelas', fn($kq) => $kq->where('school_id', $filterSchoolId)) : $q;
         $totalMapel = MataPelajaran::count();
-        $totalTugas = Tugas::count();
+        $totalTugas = $mpQ(Tugas::query())->count();
         $totalMateri = Materi::count();
         $tugasBelumDinilai = PengumpulanTugas::whereNull('nilai')->where('revisi_aktif', false)->count();
 
-        // ===== Analytics tambahan =====
-        $totalNilai = Nilai::count();
-        $rataNilai = round((float) Nilai::selectRaw('(COALESCE(tugas,0)+COALESCE(uts,0)+COALESCE(uas,0))/3 as r')->get()->avg('r'), 2);
+        // ===== Analytics — heavy queries optimized to SQL =====
+        $nQ = fn($q) => $filterSchoolId ? $q->whereHas('siswa', fn($uq) => $uq->where('school_id', $filterSchoolId)) : $q;
+        $aQ = fn($q) => $filterSchoolId ? $q->whereHas('user', fn($uq) => $uq->where('school_id', $filterSchoolId)) : $q;
 
-        $totalAbsensi = Absensi::count();
-        $absensiHariIni = Absensi::whereDate('tanggal', today())->count();
-        $hadirHariIni = Absensi::whereDate('tanggal', today())->where('status', 'hadir')->count();
-        $terlambatHari = Absensi::whereDate('tanggal', today())->where('status', 'terlambat')->count();
-        $izinHariIni = Absensi::whereDate('tanggal', today())->where('status', 'izin')->count();
+        $totalNilai = $nQ(Nilai::query())->count();
+        $rataNilai = round((float) $nQ(Nilai::query())->selectRaw('AVG((COALESCE(tugas,0)+COALESCE(uts,0)+COALESCE(uas,0))/3) as avg')->value('avg'), 2);
+
+        $totalAbsensi = $aQ(Absensi::query())->count();
+        $absensiHariIni = $aQ(Absensi::whereDate('tanggal', today()))->count();
+        $hadirHariIni = $aQ(Absensi::whereDate('tanggal', today())->where('status', 'hadir'))->count();
+        $terlambatHari = $aQ(Absensi::whereDate('tanggal', today())->where('status', 'terlambat'))->count();
+        $izinHariIni = $aQ(Absensi::whereDate('tanggal', today())->where('status', 'izin'))->count();
 
         $totalPengumpulan = PengumpulanTugas::count();
         $totalTugasForm = Tugas::where('tipe', 'form')->count();
         $totalPengumpulanDinilai = PengumpulanTugas::whereNotNull('nilai')->count();
 
-        // Distribusi nilai (rata-rata per siswa) untuk grafik predikat.
+        // Distribusi nilai — group by siswa_id di PHP (ringan karena sudah di-aggregate per siswa)
         $gradeDist = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0];
-        Nilai::selectRaw('siswa_id, AVG((COALESCE(tugas,0)+COALESCE(uts,0)+COALESCE(uas,0))/3) as r')
+        $gradeAvgs = Nilai::selectRaw('siswa_id, AVG((COALESCE(tugas,0)+COALESCE(uts,0)+COALESCE(uas,0))/3) as r')
             ->groupBy('siswa_id')
-            ->get()
-            ->each(function ($n) use (&$gradeDist) {
-                $avg = (float) $n->r;
-                $key = match (true) {
-                    $avg >= 90 => 'A', $avg >= 80 => 'B', $avg >= 70 => 'C',
-                    $avg >= 60 => 'D', default => 'E',
-                };
-                $gradeDist[$key]++;
-            });
+            ->pluck('r');
+        foreach ($gradeAvgs as $avg) {
+            $avg = (float) $avg;
+            $key = match (true) {
+                $avg >= 90 => 'A', $avg >= 80 => 'B', $avg >= 70 => 'C',
+                $avg >= 60 => 'D', default => 'E',
+            };
+            $gradeDist[$key]++;
+        }
 
-        // Distribusi status absensi (keseluruhan).
+        // Distribusi status absensi (filtered per sekolah).
         $distAbsensi = [
-            'hadir' => Absensi::where('status', 'hadir')->count(),
-            'terlambat' => Absensi::where('status', 'terlambat')->count(),
-            'izin' => Absensi::where('status', 'izin')->count(),
-            'sakit' => Absensi::where('status', 'sakit')->count(),
-            'alpha' => Absensi::where('status', 'alpha')->count(),
+            'hadir' => $aQ(Absensi::where('status', 'hadir'))->count(),
+            'terlambat' => $aQ(Absensi::where('status', 'terlambat'))->count(),
+            'izin' => $aQ(Absensi::where('status', 'izin'))->count(),
+            'sakit' => $aQ(Absensi::where('status', 'sakit'))->count(),
+            'alpha' => $aQ(Absensi::where('status', 'alpha'))->count(),
         ];
 
-        // Tren pendaftaran 6 bulan terakhir (DB-agnostic, diproses di PHP).
-        $regTrend = User::whereIn('role', ['guru', 'siswa'])
-            ->get(['created_at'])
-            ->groupBy(fn ($u) => optional($u->created_at)->format('Y-m'))
-            ->map->count()
-            ->sortKeys()
-            ->take(-6);
-        $regLabels = $regTrend->keys()->map(fn ($k) => Carbon::createFromFormat('Y-m', $k)->translatedFormat('M y'))->values();
+        // Tren pendaftaran 6 bulan terakhir — SQL GROUP BY, bukan loading semua user
+        try {
+            $driver = \Illuminate\Support\Facades\DB::getDriverName();
+            $dateExpr = $driver === 'sqlite' ? "strftime('%Y-%m', created_at)" : "DATE_FORMAT(created_at, '%Y-%m')";
+            $regTrendRows = User::whereIn('role', ['guru', 'siswa'])
+                ->selectRaw("$dateExpr as month, COUNT(*) as cnt")
+                ->groupBy('month')
+                ->orderBy('month')
+                ->take(12)
+                ->get();
+            $regTrend = $regTrendRows->pluck('cnt', 'month')->take(-6);
+        } catch (\Throwable $e) {
+            $regTrend = collect();
+        }
+        $regLabels = $regTrend->keys()->map(fn ($k) => \Carbon\Carbon::createFromFormat('Y-m', $k)->translatedFormat('M y'))->values();
         $regCounts = $regTrend->values();
 
         $uQ = fn($q)=> $filterSchoolId ? $q->where('school_id',$filterSchoolId) : $q;
@@ -144,7 +155,7 @@ class AdminController extends Controller
             ->orderBy('nama')
             ->get();
 
-        $data['recentUsers'] = User::whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get();
+        $data['recentUsers'] = User::with('kelas')->whereIn('role', ['guru', 'siswa'])->latest()->take(8)->get();
 
         // Data grafik distribusi siswa per kelas.
         $data['kelasNames'] = collect($data['kelasSummaries'])->pluck('nama');
@@ -155,8 +166,14 @@ class AdminController extends Controller
         $gpQ = fn($q)=> $filterSchoolId ? $q->where('school_id',$filterSchoolId) : $q;
         $data['totalGlobalPosts'] = $gpQ(GlobalPost::query())->count();
         $data['globalPostsHariIni'] = $gpQ(GlobalPost::whereDate('created_at', today()))->count();
-        $data['totalGlobalLikes'] = \DB::table('global_likes')->count();
-        $data['totalGlobalComments'] = \DB::table('global_comments')->count();
+        if ($filterSchoolId) {
+            $postIds = GlobalPost::where('school_id', $filterSchoolId)->pluck('id');
+            $data['totalGlobalLikes'] = \DB::table('global_likes')->whereIn('post_id', $postIds)->count();
+            $data['totalGlobalComments'] = \DB::table('global_comments')->whereIn('post_id', $postIds)->count();
+        } else {
+            $data['totalGlobalLikes'] = \DB::table('global_likes')->count();
+            $data['totalGlobalComments'] = \DB::table('global_comments')->count();
+        }
         $data['totalSchools'] = School::count();
         $data['topSchool'] = School::withCount('posts')->orderByDesc('posts_count')->first();
         $data['recentGlobalPosts'] = $gpQ(GlobalPost::with(['user','school'])->latest())->take(4)->get();

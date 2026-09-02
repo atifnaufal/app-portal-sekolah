@@ -65,7 +65,7 @@ class TugasController extends Controller
             ]);
         }
 
-        $tugas = Tugas::with(['kelas', 'user', 'pengumpulan' => fn ($query) => $query->where('siswa_id', $user->id)])
+        $tugas = Tugas::with(['kelas', 'user', 'mataPelajaran', 'pengumpulan' => fn ($query) => $query->where('siswa_id', $user->id)])
             ->where('kelas_id', $user->kelas_id)
             ->latest()
             ->get();

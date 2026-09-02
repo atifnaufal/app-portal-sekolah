@@ -18,9 +18,9 @@ class GlobalPortalController extends Controller
             ->latest()->paginate(15);
         $isMobile = (bool) preg_match('/(android|iphone|mobile)/i', $request->userAgent());
         $view = $isMobile ? 'mobile.global-portal' : 'global-portal.index';
-        // fallback to mobile if desktop view not exists
         if (! view()->exists($view)) $view='mobile.global-portal';
-        return view($view, ['posts'=>$posts, 'schools'=>School::orderBy('name')->get()]);
+        $me = \App\Models\User::find(session('user_id'));
+        return view($view, ['posts'=>$posts, 'schools'=>School::orderBy('name')->get(), 'me'=>$me]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -47,8 +47,8 @@ class GlobalPortalController extends Controller
     {
         $uid = $request->session()->get('user_id');
         $like = $post->likes()->where('user_id',$uid)->first();
-        if($like){ $like->delete(); $post->decrement('likes_count'); }
-        else { $post->likes()->create(['user_id'=>$uid]); $post->increment('likes_count'); }
+        if($like){ $like->delete(); GlobalPost::withoutTimestamps(fn() => $post->decrement('likes_count')); }
+        else { $post->likes()->create(['user_id'=>$uid]); GlobalPost::withoutTimestamps(fn() => $post->increment('likes_count')); }
         return back();
     }
 
@@ -57,7 +57,7 @@ class GlobalPortalController extends Controller
         $uid = $request->session()->get('user_id');
         $data = $request->validate(['body'=>['required','string','max:500']]);
         $post->comments()->create(['user_id'=>$uid,'body'=>$data['body']]);
-        $post->increment('comments_count');
+        GlobalPost::withoutTimestamps(fn() => $post->increment('comments_count'));
         return back();
     }
 

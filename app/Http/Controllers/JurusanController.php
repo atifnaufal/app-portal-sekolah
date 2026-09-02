@@ -42,8 +42,8 @@ class JurusanController extends Controller
 
     public function destroy(Jurusan $jurusan): RedirectResponse
     {
-        if (Mahasiswa::where('jurusan_id', $jurusan->id)->exists()) {
-            return back()->with('error', 'Jurusan masih terhubung ke data mahasiswa. Pindahkan/hapus mahasiswa dahulu.');
+        if (\App\Models\User::where('jurusan_id', $jurusan->id)->exists()) {
+            return back()->with('error', 'Jurusan masih terhubung ke data user. Pindahkan/hapus user dahulu.');
         }
 
         try {

@@ -95,12 +95,12 @@ class AbsensiController extends Controller
             throw $e;
         }
 
-        $path = $request->file('foto')->store('absensi/'.$today, 'public');
-
         if ($request->tipe === 'masuk') {
             if ($attendance->waktu_masuk) {
                 return back()->with('error', 'Anda sudah absen masuk hari ini.');
             }
+
+            $path = $request->file('foto')->store('absensi/'.$today, 'public');
 
             $lateTime = Setting::getValue('attendance_late_time', '07:30');
             $status = $now->gt(now()->setTimeFromTimeString($lateTime)) ? 'terlambat' : 'hadir';
@@ -134,6 +134,7 @@ class AbsensiController extends Controller
                 return back()->with('error', 'Anda sudah absen pulang hari ini.');
             }
 
+            $path = $request->file('foto')->store('absensi/'.$today, 'public');
             $attendance->update([
                 'waktu_pulang' => $now->format('H:i:s'),
                 'foto_pulang' => $path,

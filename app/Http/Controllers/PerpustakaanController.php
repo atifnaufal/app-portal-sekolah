@@ -20,8 +20,11 @@ class PerpustakaanController extends Controller
         $query = Buku::with('kategori');
 
         if ($request->has('search')) {
-            $query->where('judul', 'like', '%'.$request->search.'%')
-                ->orWhere('penulis', 'like', '%'.$request->search.'%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', '%'.$search.'%')
+                  ->orWhere('penulis', 'like', '%'.$search.'%');
+            });
         }
 
         if ($request->has('kategori')) {
