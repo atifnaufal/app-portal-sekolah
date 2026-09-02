@@ -70,19 +70,21 @@ inject_env() {
 # Parse & injeksi ke var individual agar Laravel terbaca.
 if [ -n "${DATABASE_URL:-}" ]; then
   _DB_URL="${DATABASE_URL#mysql://}"
-  _DB_USER=$(echo "$_DB_URL" | cut -d: -f1)
-  _DB_PASS_HOST=$(echo "$_DB_URL" | cut -d@ -f2)
-  _DB_PASS=$(echo "$_DB_USER" | cut -d: -f2-)
-  _DB_HOST_PORT=$(echo "$_DB_PASS_HOST" | cut -d/ -f1)
-  _DB_HOST=$(echo "$_DB_HOST_PORT" | cut -d: -f1)
-  _DB_PORT=$(echo "$_DB_HOST_PORT" | cut -d: -f2)
-  _DB_NAME=$(echo "$_DB_PASS_HOST" | cut -d/ -f2-)
-  [ -n "$_DB_USER" ]     && inject_env "DB_USERNAME" "$_DB_USER"
-  [ -n "$_DB_PASS" ]     && inject_env "DB_PASSWORD" "$_DB_PASS"
-  [ -n "$_DB_HOST" ]     && inject_env "DB_HOST" "$_DB_HOST"
-  [ -n "$_DB_PORT" ]     && inject_env "DB_PORT" "$_DB_PORT"
-  [ -n "$_DB_NAME" ]     && inject_env "DB_DATABASE" "$_DB_NAME"
-  echo "[ensure-env] DATABASE_URL di-parse & di-inject"
+  if [[ "$_DB_URL" =~ ^([^:]+):([^@]+)@([^/:]+):([0-9]+)/(.+)$ ]]; then
+    _DB_USER="${BASH_REMATCH[1]}"
+    _DB_PASS="${BASH_REMATCH[2]}"
+    _DB_HOST="${BASH_REMATCH[3]}"
+    _DB_PORT="${BASH_REMATCH[4]}"
+    _DB_NAME="${BASH_REMATCH[5]}"
+    [ -n "$_DB_USER" ]     && inject_env "DB_USERNAME" "$_DB_USER"
+    [ -n "$_DB_PASS" ]     && inject_env "DB_PASSWORD" "$_DB_PASS"
+    [ -n "$_DB_HOST" ]     && inject_env "DB_HOST" "$_DB_HOST"
+    [ -n "$_DB_PORT" ]     && inject_env "DB_PORT" "$_DB_PORT"
+    [ -n "$_DB_NAME" ]     && inject_env "DB_DATABASE" "$_DB_NAME"
+    echo "[ensure-env] DATABASE_URL di-parse & di-inject"
+  else
+    echo "[ensure-env] WARNING: Tidak bisa parse DATABASE_URL: $_DB_URL"
+  fi
 fi
 
 [ -n "${DB_HOST:-}" ]     && inject_env "DB_HOST" "$DB_HOST"
