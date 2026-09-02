@@ -66,6 +66,25 @@ inject_env() {
 }
 
 # DB — Railway MySQL
+# Railway menyediakan DATABASE_URL saat MySQL service ditambah (format: mysql://user:pass@host:port/db).
+# Parse & injeksi ke var individual agar Laravel terbaca.
+if [ -n "${DATABASE_URL:-}" ]; then
+  _DB_URL="${DATABASE_URL#mysql://}"
+  _DB_USER=$(echo "$_DB_URL" | cut -d: -f1)
+  _DB_PASS_HOST=$(echo "$_DB_URL" | cut -d@ -f2)
+  _DB_PASS=$(echo "$_DB_USER" | cut -d: -f2-)
+  _DB_HOST_PORT=$(echo "$_DB_PASS_HOST" | cut -d/ -f1)
+  _DB_HOST=$(echo "$_DB_HOST_PORT" | cut -d: -f1)
+  _DB_PORT=$(echo "$_DB_HOST_PORT" | cut -d: -f2)
+  _DB_NAME=$(echo "$_DB_PASS_HOST" | cut -d/ -f2-)
+  [ -n "$_DB_USER" ]     && inject_env "DB_USERNAME" "$_DB_USER"
+  [ -n "$_DB_PASS" ]     && inject_env "DB_PASSWORD" "$_DB_PASS"
+  [ -n "$_DB_HOST" ]     && inject_env "DB_HOST" "$_DB_HOST"
+  [ -n "$_DB_PORT" ]     && inject_env "DB_PORT" "$_DB_PORT"
+  [ -n "$_DB_NAME" ]     && inject_env "DB_DATABASE" "$_DB_NAME"
+  echo "[ensure-env] DATABASE_URL di-parse & di-inject"
+fi
+
 [ -n "${DB_HOST:-}" ]     && inject_env "DB_HOST" "$DB_HOST"
 [ -n "${DB_PORT:-}" ]     && inject_env "DB_PORT" "$DB_PORT"
 [ -n "${DB_DATABASE:-}" ] && inject_env "DB_DATABASE" "$DB_DATABASE"

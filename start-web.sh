@@ -21,10 +21,10 @@ php artisan route:clear --no-interaction || true
 php artisan view:clear --no-interaction || true
 
 echo "Running database migrations..."
-php artisan migrate --force
+php artisan migrate --force || true
 
 echo "Seeding database..."
-php artisan db:seed --force
+php artisan db:seed --force || true
 
 echo "Caching config and routes..."
 php artisan config:cache --no-interaction
