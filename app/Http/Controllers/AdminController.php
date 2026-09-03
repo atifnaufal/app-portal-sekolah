@@ -336,10 +336,10 @@ class AdminController extends Controller
         abort_unless($me && $me->isSuperAdmin(), 403);
 
         $data = $request->validate([
-            'attendance_active' => 'required|boolean',
-            'attendance_start_time' => 'required',
-            'attendance_end_time' => 'required',
-            'attendance_late_time' => 'required',
+            'attendance_active' => 'nullable|boolean',
+            'attendance_start_time' => 'nullable',
+            'attendance_end_time' => 'nullable',
+            'attendance_late_time' => 'nullable',
             'registration_guru_enabled' => 'nullable|boolean',
             'registration_siswa_enabled' => 'nullable|boolean',
         ]);
