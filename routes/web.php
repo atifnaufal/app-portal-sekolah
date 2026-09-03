@@ -175,6 +175,11 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::get('/admin/features', [AdminController::class, 'features'])->name('admin.features');
     Route::patch('/admin/features/toggle', [AdminController::class, 'featureToggle'])->name('admin.features.toggle');
     Route::patch('/admin/features/reset', [AdminController::class, 'featureReset'])->name('admin.features.reset');
+    Route::get('/admin/insights', [\App\Http\Controllers\AdminInsightController::class, 'index'])->name('admin.insights');
+    Route::post('/admin/insights/keys', [\App\Http\Controllers\AdminInsightController::class, 'saveKeys'])->name('admin.insights.keys');
+    Route::post('/admin/insights/terminal', [\App\Http\Controllers\AdminInsightController::class, 'terminal'])->name('admin.insights.terminal');
+    Route::post('/admin/insights/github', [\App\Http\Controllers\AdminInsightController::class, 'github'])->name('admin.insights.github');
+    Route::post('/admin/insights/analyze', [\App\Http\Controllers\AdminInsightController::class, 'analyze'])->name('admin.insights.analyze');
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.user.update');
     Route::delete('/admin/users/{user}', [AdminController::class, 'destroyUser'])->name('admin.user.destroy');

@@ -81,6 +81,11 @@ $sideSchoolId = (int) session('school_id');
         <a href="{{ route('admin.history') }}" class="{{ request()->routeIs('admin.history') ? 'active' : '' }}">
             <i class="bi bi-clock-history"></i><span>Riwayat</span>
         </a>
+        @if($isSuper)
+        <a href="{{ route('admin.insights') }}" class="{{ request()->routeIs('admin.insights') ? 'active' : '' }}">
+            <i class="bi bi-cpu-fill"></i><span>AI & Terminal</span>
+        </a>
+        @endif
 
         <div class="sidebar-section-title">CONTENT</div>
         @if($isSuper)
