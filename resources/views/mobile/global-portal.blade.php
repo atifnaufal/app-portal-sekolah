@@ -123,7 +123,11 @@
   </script>
 
   <div id="composer" class="ig-composer">
-    <form method="POST" action="{{ route('global.portal.store') }}" enctype="multipart/form-data">
+    @if($errors->any())
+    <div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px 12px;font-size:12px;margin-bottom:10px;">
+      <ul style="margin:0;padding-left:18px;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+    </div>
+    @endif    <form method="POST" action="{{ route('global.portal.store') }}" enctype="multipart/form-data">
       @csrf
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
         <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover">
@@ -161,7 +165,7 @@
     <div class="ig-actions" style="gap:16px">
       @php $liked = $p->likes->contains('user_id', session('user_id')); @endphp
       <form method="POST" action="{{ route('global.portal.like',$p) }}" class="like-form" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span class="like-count" style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button><span style="font-size:11px;color:#8e8e8e">pesan</span></form>
-      <a href="#cmt-{{ $p->id }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-chat"></i><span style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></a>
+      <a href="#cmt-{{ $p->id }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-chat"></i><span class="cmt-count" style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></a>
       @if(session('user_role')!=='admin')
       <a href="{{ route('chat.startPrivate',$p->user) }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i><span style="font-size:11px;font-weight:700">pesan</span></a>
       @endif
@@ -179,7 +183,7 @@
     <div class="ig-caption"><b>{{ $p->user->name }}</b> {{ \Illuminate\Support\Str::limit($p->content,80) }}</div>
     <div class="ig-comments" id="cmt-{{ $p->id }}">
       @foreach($p->comments->take(2) as $c)<div class="ig-cmt"><b>{{ $c->user->name }}</b> {{ $c->body }}</div>@endforeach
-      <form method="POST" action="{{ route('global.portal.comment',$p) }}" style="display:flex;gap:8px;margin-top:8px">@csrf<input name="body" placeholder="Tulis komentar..." required style="flex:1;border:0;font-size:13px;outline:0"><button style="background:none;border:0;color:#0095f6;font-weight:700;font-size:13px">Kirim</button></form>
+      <form method="POST" action="{{ route('global.portal.comment',$p) }}" class="comment-form" style="display:flex;gap:8px;margin-top:8px">@csrf<input name="body" placeholder="Tulis komentar..." required maxlength="500" style="flex:1;border:0;font-size:13px;outline:0"><button style="background:none;border:0;color:#0095f6;font-weight:700;font-size:13px">Kirim</button></form>
     </div>
     <div class="ig-time">{{ $p->created_at->translatedFormat('d F Y') }}</div>
   </div>
@@ -216,6 +220,42 @@
       if (count && typeof d.likes_count !== 'undefined') count.innerText = d.likes_count;
     }).catch(function () {
       f.submit(); // fallback: cara lama bila fetch gagal
+    }).finally(function () { if (btn) btn.disabled = false; });
+  });
+
+  /* Komentar AJAX: muncul langsung + hitungan update, tanpa reload. */
+  document.addEventListener('submit', function (e) {
+    var f = e.target && e.target.closest ? e.target.closest('.comment-form') : null;
+    if (!f) return;
+    e.preventDefault();
+    var input = f.querySelector('input[name=body]');
+    var btn = f.querySelector('button');
+    var text = input ? input.value.trim() : '';
+    if (!text) return;
+    if (btn) btn.disabled = true;
+    fetch(f.action, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+      body: new FormData(f)
+    }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); }).then(function (res) {
+      if (!res.ok || !res.d.ok) {
+        alert((res.d && res.d.message) || 'Komentar ditolak sistem moderasi.');
+        return;
+      }
+      var box = f.parentElement;
+      var div = document.createElement('div');
+      div.className = 'ig-cmt';
+      var b = document.createElement('b');
+      b.innerText = res.d.comment.user + ' ';
+      var sp = document.createElement('span');
+      sp.innerText = res.d.comment.body;
+      div.appendChild(b); div.appendChild(sp);
+      box.insertBefore(div, f);
+      var card = f.closest('.ig-card');
+      if (card) card.querySelectorAll('.cmt-count').forEach(function (el) { el.innerText = res.d.comments_count; });
+      input.value = '';
+    }).catch(function () {
+      f.submit();
     }).finally(function () { if (btn) btn.disabled = false; });
   });
 

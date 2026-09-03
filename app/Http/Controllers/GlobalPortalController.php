@@ -270,18 +270,35 @@ class GlobalPortalController extends Controller
         return back();
     }
 
-    public function comment(Request $request, GlobalPost $post): RedirectResponse
+    public function comment(Request $request, GlobalPost $post): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $uid = UserContextHelper::id($request);
         $data = $request->validate(['body' => ['required', 'string', 'max:500']]);
 
         $textCheck = ImageSafetyService::checkText($data['body']);
         if (! $textCheck['safe']) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['ok' => false, 'message' => $textCheck['reason']], 422);
+            }
+
             return back()->withErrors(['body' => $textCheck['reason']]);
         }
 
-        $post->comments()->create(['user_id' => $uid, 'body' => $data['body']]);
+        $comment = $post->comments()->create(['user_id' => $uid, 'body' => $data['body']]);
         GlobalPost::withoutTimestamps(fn () => $post->increment('comments_count'));
+
+        // AJAX → JSON agar komentar muncul langsung tanpa reload/scroll.
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'ok' => true,
+                'comments_count' => (int) $post->fresh()->comments_count,
+                'comment' => [
+                    'user' => $comment->user->name,
+                    'body' => $comment->body,
+                    'time' => $comment->created_at->diffForHumans(),
+                ],
+            ]);
+        }
 
         return back();
     }

@@ -152,7 +152,7 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
                     <form method="POST" action="{{ route('global.portal.like', $p) }}" class="like-form">@csrf
                         <button class="gp-action {{ $liked ? 'liked' : '' }}"><i class="bi {{ $liked ? 'bi-heart-fill' : 'bi-heart' }}"></i> <span class="like-count">{{ $p->likes_count }}</span></button>
                     </form>
-                    <a href="#cmt-{{ $p->id }}" class="gp-action"><i class="bi bi-chat"></i> {{ $p->comments_count }}</a>
+                    <a href="#cmt-{{ $p->id }}" class="gp-action"><i class="bi bi-chat"></i> <span class="cmt-count">{{ $p->comments_count }}</span></a>
                     @if(!$isAdmin && $p->user_id !== $myId)
                         <a href="{{ route('chat.startPrivate', $p->user) }}" class="gp-action"><i class="bi bi-send"></i> Pesan</a>
                         <form method="POST" action="{{ route('global.portal.report', $p) }}" class="d-inline" onsubmit="return confirm('Laporkan postingan ini sebagai tidak pantas?')">@csrf
@@ -165,8 +165,8 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
                     @foreach($p->comments->take(3) as $c)
                         <div class="small mb-1"><b>{{ $c->user->name }}</b> <span class="text-dark">{{ $c->body }}</span></div>
                     @endforeach
-                    <form method="POST" action="{{ route('global.portal.comment', $p) }}" class="d-flex gap-2 mt-2">@csrf
-                        <input name="body" class="form-control form-control-sm" placeholder="Tulis komentar..." required style="border-radius:10px;">
+                    <form method="POST" action="{{ route('global.portal.comment', $p) }}" class="comment-form d-flex gap-2 mt-2">@csrf
+                        <input name="body" class="form-control form-control-sm" placeholder="Tulis komentar..." required maxlength="500" style="border-radius:10px;">
                         <button class="btn btn-sm btn-primary" style="border-radius:10px;">Kirim</button>
                     </form>
                 </div>
@@ -286,6 +286,41 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
             }
             if (btn) btn.classList.toggle('liked', !!d.liked);
             if (count && typeof d.likes_count !== 'undefined') count.innerText = d.likes_count;
+        }).catch(function () {
+            f.submit();
+        }).finally(function () { if (btn) btn.disabled = false; });
+    });
+
+    /* Komentar AJAX: muncul langsung + hitungan update, tanpa reload. */
+    document.addEventListener('submit', function (e) {
+        var f = e.target && e.target.closest ? e.target.closest('.comment-form') : null;
+        if (!f) return;
+        e.preventDefault();
+        var input = f.querySelector('input[name=body]');
+        var btn = f.querySelector('button');
+        var text = input ? input.value.trim() : '';
+        if (!text) return;
+        if (btn) btn.disabled = true;
+        fetch(f.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            body: new FormData(f)
+        }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); }).then(function (res) {
+            if (!res.ok || !res.d.ok) {
+                alert((res.d && res.d.message) || 'Komentar ditolak sistem moderasi.');
+                return;
+            }
+            var div = document.createElement('div');
+            div.className = 'small mb-1';
+            var b = document.createElement('b');
+            b.innerText = res.d.comment.user + ' ';
+            var sp = document.createElement('span');
+            sp.innerText = res.d.comment.body;
+            div.appendChild(b); div.appendChild(sp);
+            f.parentElement.insertBefore(div, f);
+            var card = f.closest('.gp-post');
+            if (card) card.querySelectorAll('.cmt-count').forEach(function (el) { el.innerText = res.d.comments_count; });
+            input.value = '';
         }).catch(function () {
             f.submit();
         }).finally(function () { if (btn) btn.disabled = false; });
