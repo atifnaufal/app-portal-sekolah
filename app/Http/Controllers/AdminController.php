@@ -443,6 +443,9 @@ class AdminController extends Controller
             ->take(10)
             ->get();
 
+        // Admin sekolah ini (untuk strip info + jalan pintas CRUD).
+        $schoolAdmins = $school->users()->where('role', 'admin')->get(['id', 'name', 'email', 'aktif']);
+
         // Fitur per-sekolah (efektif: baris school_features > flag global).
         $featureFlags = \App\Helpers\FeatureHelper::KEYS;
         foreach ($featureFlags as &$flag) {
@@ -463,7 +466,8 @@ class AdminController extends Controller
             'totalNilai',
             'totalTugas',
             'recentActivity',
-            'featureFlags'
+            'featureFlags',
+            'schoolAdmins'
         ));
     }
 

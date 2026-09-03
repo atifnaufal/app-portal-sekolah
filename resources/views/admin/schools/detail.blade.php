@@ -55,6 +55,10 @@
     .action-btn.btn-inactive { border-color: #fecaca; color: #dc2626; background: #fef2f2; }
     .action-btn.btn-inactive:hover { background: #fecaca; }
 
+    .school-stat-link { text-decoration: none; display: block; height: 100%; }
+    .school-stat-link .school-stat:hover { border-color: var(--blue); }
+    .school-stat-cta { font-size: 11px; font-weight: 800; color: var(--blue); margin-top: 8px; }
+
     @media (max-width: 768px) {
         .cp-page-header { padding: 24px; border-radius: 20px; }
         .cp-page-title { font-size: 22px; }
@@ -77,7 +81,13 @@
                 <h1 class="cp-page-title">{{ $school->name }}</h1>
                 <p class="cp-page-sub">{{ $school->city }} • ID: {{ $school->id }} • {{ $school->slug }}</p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ route('admin.users', ['school_id' => $school->id]) }}" class="action-btn" style="border-color:#bfdbfe;color:#1d4ed8;background:#eff6ff;text-decoration:none;">
+                    <i class="bi bi-people"></i> Kelola Akun
+                </a>
+                <a href="{{ route('admin.school-admins.index') }}" class="action-btn" style="border-color:#e2e8f0;color:var(--navy);background:#fff;text-decoration:none;">
+                    <i class="bi bi-shield-check"></i> Admin Sekolah
+                </a>
                 <form method="POST" action="{{ route('admin.schools.toggle', $school) }}">
                     @csrf @method('PATCH')
                     <button type="submit" class="action-btn {{ $school->is_active ? 'btn-inactive' : 'btn-active' }}">
@@ -98,22 +108,28 @@
 
 <div class="row g-4 mb-5">
     <div class="col-lg-3 col-md-6">
+        <a href="{{ route('admin.users', ['school_id' => $school->id]) }}" class="school-stat-link">
         <div class="school-stat">
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <div class="school-stat-icon" style="background:#eff6ff;color:var(--blue);"><i class="bi bi-person-badge"></i></div>
             </div>
             <div class="school-stat-num">{{ number_format($guruCount) }}</div>
             <div class="school-stat-lbl">Guru</div>
+            <div class="school-stat-cta">Kelola <i class="bi bi-arrow-right"></i></div>
         </div>
+        </a>
     </div>
     <div class="col-lg-3 col-md-6">
+        <a href="{{ route('admin.users', ['school_id' => $school->id]) }}" class="school-stat-link">
         <div class="school-stat">
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <div class="school-stat-icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-people"></i></div>
             </div>
             <div class="school-stat-num">{{ number_format($siswaCount) }}</div>
             <div class="school-stat-lbl">Siswa</div>
+            <div class="school-stat-cta">Kelola <i class="bi bi-arrow-right"></i></div>
         </div>
+        </a>
     </div>
     <div class="col-lg-3 col-md-6">
         <div class="school-stat">
@@ -146,13 +162,16 @@
         </div>
     </div>
     <div class="col-lg-4 col-md-6">
+        <a href="{{ route('admin.users', ['school_id' => $school->id]) }}" class="school-stat-link">
         <div class="school-stat">
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <div class="school-stat-icon" style="background:#fef2f2;color:#dc2626;"><i class="bi bi-clock"></i></div>
             </div>
             <div class="school-stat-num text-danger">{{ number_format($pendingUsers) }}</div>
             <div class="school-stat-lbl">Menunggu Aktivasi</div>
+            <div class="school-stat-cta">Setujui sekarang <i class="bi bi-arrow-right"></i></div>
         </div>
+        </a>
     </div>
     <div class="col-lg-4 col-md-6">
         <div class="school-stat">
@@ -179,6 +198,21 @@
             <div class="school-stat-num">{{ number_format($totalTugas) }}</div>
             <div class="school-stat-lbl">Total Tugas</div>
         </div>
+    </div>
+</div>
+
+<div class="section-card mb-5">
+    <div class="section-card-body d-flex align-items-center gap-3 flex-wrap" style="padding:20px 30px;">
+        <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#2563eb);display:grid;place-items:center;color:#fff;font-size:20px;flex-shrink:0;"><i class="bi bi-shield-check"></i></div>
+        <div class="flex-fill" style="min-width:200px;">
+            <div class="fw-bold" style="font-size:14px;">Admin Sekolah Ini</div>
+            @if($schoolAdmins->count())
+                <div class="small text-muted">{{ $schoolAdmins->map(fn($a) => $a->name.' [ID: '.$a->id.']'.($a->aktif ? '' : ' (nonaktif)'))->join(', ') }}</div>
+            @else
+                <div class="small text-muted">Belum ada admin — hanya Admin Pusat yang bisa mengatur sekolah ini.</div>
+            @endif
+        </div>
+        <a href="{{ route('admin.school-admins.index') }}" class="btn btn-sm btn-primary" style="border-radius:10px;"><i class="bi bi-gear me-1"></i>Kelola Admin</a>
     </div>
 </div>
 

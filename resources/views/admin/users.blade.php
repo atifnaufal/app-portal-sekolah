@@ -64,7 +64,10 @@
 <div class="cp-main">
 
 @if(!empty($isSuperAdmin) && !empty($filterSchool))
-<a href="{{ route('admin.users') }}" class="btn btn-sm btn-outline-secondary mb-3" style="border-radius:10px;"><i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar Sekolah</a>
+<div class="d-flex gap-2 mb-3 flex-wrap">
+<a href="{{ route('admin.users') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:10px;"><i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar Sekolah</a>
+<a href="{{ route('admin.schools.detail', $filterSchool->id) }}" class="btn btn-sm btn-outline-primary" style="border-radius:10px;"><i class="bi bi-eye me-1"></i> Detail Sekolah</a>
+</div>
 <div class="alert border-0 shadow-sm mb-4 d-flex align-items-center gap-3" style="border-radius:16px;background:#eef2ff;">
     <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#2563eb);display:grid;place-items:center;color:#fff;font-weight:800;">{{ strtoupper(substr($filterSchool->name, 0, 1)) }}</div>
     <div>
