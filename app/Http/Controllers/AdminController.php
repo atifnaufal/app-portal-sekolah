@@ -300,6 +300,99 @@ class AdminController extends Controller
         return back()->with('success', 'Pengaturan berhasil diperbarui.');
     }
 
+    // Admin pusat — fitur management
+    public function features(): View
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin(), 403);
+
+        $featureFlags = [
+            ['key' => 'feature_spp_enabled', 'label' => 'Manajemen SPP', 'description' => 'Sistem pembayaran dan tagihan siswa', 'icon' => 'bi-cash-stack', 'category' => 'Keuangan'],
+            ['key' => 'feature_lms_enabled', 'label' => 'Learning Management System', 'description' => 'Mata pelajaran, materi, tugas, dan nilai', 'icon' => 'bi-mortarboard', 'category' => 'Academy'],
+            ['key' => 'feature_eskul_enabled', 'label' => 'Ekstrakurikuler', 'description' => 'Manajemen eskul dan anggota', 'icon' => 'bi-people', 'category' => 'Academy'],
+            ['key' => 'feature_perpustakaan_enabled', 'label' => 'Perpustakaan Digital', 'description' => 'Katalog buku dan kategori', 'icon' => 'bi-book', 'category' => 'Academy'],
+            ['key' => 'feature_jadwal_enabled', 'label' => 'Jadwal Pelajaran', 'description' => 'Penjadwalan guru dan kelas', 'icon' => 'bi-calendar3', 'category' => 'Academy'],
+            ['key' => 'feature_nilai_enabled', 'label' => 'Manajemen Nilai', 'description' => 'Input dan export nilai siswa', 'icon' => 'bi-graph-up', 'category' => 'Academy'],
+            ['key' => 'feature_absensi_enabled', 'label' => 'Absensi', 'description' => 'Rekap kehadiran siswa', 'icon' => 'bi-person-check', 'category' => 'Academy'],
+            ['key' => 'feature_berita_enabled', 'label' => 'Portal Berita', 'description' => 'Pengumuman dan portal berita global', 'icon' => 'bi-megaphone', 'category' => 'Konten'],
+            ['key' => 'feature_registration_guru_enabled', 'label' => 'Registrasi Guru', 'description' => 'Pendaftaran akun guru baru', 'icon' => 'bi-person-badge', 'category' => 'Registrasi'],
+            ['key' => 'feature_registration_siswa_enabled', 'label' => 'Registrasi Siswa', 'description' => 'Pendaftaran akun siswa baru', 'icon' => 'bi-person-avatar', 'category' => 'Registrasi'],
+            ['key' => 'feature_raport_enabled', 'label' => 'Raport & Rapor', 'description' => 'Pembuatan raport semester', 'icon' => 'bi-file-earmark-text', 'category' => 'Academy'],
+            ['key' => 'feature_communication_enabled', 'label' => 'Komunikasi', 'description' => 'Chat dan notifikasi real-time', 'icon' => 'bi-chat-dots', 'category' => 'Komunikasi'],
+        ];
+
+        foreach ($featureFlags as &$flag) {
+            $flag['value'] = (bool) Setting::getValue($flag['key'], true);
+            $flag['currentStatus'] = $flag['value'] ? 'Aktif' : 'Nonaktif';
+            $flag['statusColor'] = $flag['value'] ? 'success' : 'danger';
+        }
+        unset($flag);
+
+        return view('admin.features', compact('featureFlags'));
+    }
+
+    public function featureToggle(Request $request): RedirectResponse
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin(), 403);
+
+        $key = $request->input('key');
+        $allowedKeys = collect([
+            'feature_spp_enabled', 'feature_lms_enabled', 'feature_eskul_enabled',
+            'feature_perpustakaan_enabled', 'feature_jadwal_enabled', 'feature_nilai_enabled',
+            'feature_absensi_enabled', 'feature_berita_enabled', 'feature_registration_guru_enabled',
+            'feature_registration_siswa_enabled', 'feature_raport_enabled', 'feature_communication_enabled',
+        ]);
+
+        if (!$allowedKeys->contains($key)) {
+            return back()->with('error', 'Fitur tidak valid.');
+        }
+
+        $currentValue = (bool) Setting::getValue($key, true);
+        Setting::setValue($key, $currentValue ? '0' : '1');
+
+        $newStatus = !$currentValue;
+        return back()->with('success', 'Fitur ' . ($newStatus ? 'diaktifkan' : 'dinonaktifkan') . ' berhasil.');
+    }
+
+    public function schoolsDetail(School $school): View
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin(), 403);
+
+        // More efficient approach
+        $guruCount = $school->users()->where('role', 'guru')->count();
+        $siswaCount = $school->users()->where('role', 'siswa')->count();
+        $totalUsers = $school->users()->count();
+        $activeUsers = $school->users()->where('aktif', true)->count();
+        $pendingUsers = $school->users()->where('aktif', false)->count();
+        $totalPosts = $school->posts()->count();
+        $totalAbsensi = Absensi::whereHas('user', fn($q) => $q->where('school_id', $school->id))->count();
+        $totalNilai = Nilai::whereHas('siswa', fn($u) => $u->where('school_id', $school->id))->count();
+        $totalTugas = Tugas::whereHas('kelas', fn($k) => $k->where('school_id', $school->id))->count();
+
+        // Recent activity for this school
+        $recentActivity = UserHistory::whereHas('user', fn($u) => $u->where('school_id', $school->id))
+            ->with('user')
+            ->latest()
+            ->take(10)
+            ->get();
+
+        return view('admin.schools.detail', compact(
+            'school',
+            'guruCount',
+            'siswaCount',
+            'totalUsers',
+            'activeUsers',
+            'pendingUsers',
+            'totalPosts',
+            'totalAbsensi',
+            'totalNilai',
+            'totalTugas',
+            'recentActivity'
+        ));
+    }
+
     // === Sekolah — premium admin only (publik bisa daftar jika is_active) ===
     public function schoolsIndex(): View
     {

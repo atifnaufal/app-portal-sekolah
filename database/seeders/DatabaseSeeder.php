@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call([
+            FeatureFlagsSeeder::class,
             LmsSeeder::class,
             TugasTestDataSeeder::class,
             CompleteTugasSeeder::class,

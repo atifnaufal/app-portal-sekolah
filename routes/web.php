@@ -163,6 +163,8 @@ Route::middleware('role:admin,guru')->group(function () {
 // Menu admin berat khusus desktop.
 Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/features', [AdminController::class, 'features'])->name('admin.features');
+    Route::patch('/admin/features/toggle', [AdminController::class, 'featureToggle'])->name('admin.features.toggle');
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.user.update');
     Route::delete('/admin/users/{user}', [AdminController::class, 'destroyUser'])->name('admin.user.destroy');
@@ -172,6 +174,7 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::post('/admin/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
     Route::get('/admin/history', [AdminController::class, 'userHistory'])->name('admin.history');
     Route::get('/admin/schools', [AdminController::class, 'schoolsIndex'])->name('admin.schools.index');
+    Route::get('/admin/schools/{school}', [AdminController::class, 'schoolsDetail'])->name('admin.schools.detail');
     Route::post('/admin/schools', [AdminController::class, 'schoolsStore'])->name('admin.schools.store');
     Route::put('/admin/schools/{school}', [AdminController::class, 'schoolsUpdate'])->name('admin.schools.update');
     Route::patch('/admin/schools/{school}/toggle', [AdminController::class, 'schoolsToggle'])->name('admin.schools.toggle');

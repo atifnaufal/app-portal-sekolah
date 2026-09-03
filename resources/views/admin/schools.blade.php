@@ -28,6 +28,7 @@
           <span class="badge rounded-pill" style="background:#eef2ff;color:#4f46e5">{{ $s->posts_count }} post</span>
           <span class="badge rounded-pill {{ $s->is_active?'bg-success':'bg-danger' }}">{{ $s->is_active?'Aktif':'Nonaktif' }}</span>
           <form method="POST" action="{{ route('admin.schools.toggle',$s) }}" class="ms-auto">@csrf @method('PATCH')<button class="btn btn-sm {{ $s->is_active?'btn-warning':'btn-success' }}" style="border-radius:10px">{{ $s->is_active?'Nonaktifkan':'Aktifkan' }}</button></form>
+          <a href="{{ route('admin.schools.detail',$s) }}" class="btn btn-sm btn-primary" style="border-radius:10px"><i class="bi bi-eye me-1"></i>Detail</a>
           <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#edit{{ $s->id }}" style="border-radius:10px">Edit</button>
           <form method="POST" action="{{ route('admin.schools.destroy',$s) }}" onsubmit="return confirm('Hapus sekolah ini?')">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger" style="border-radius:10px">Hapus</button></form>
         </div>

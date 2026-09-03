@@ -70,6 +70,38 @@
     }
 </style>
 
+{{-- cPanel shell: sidebar + konten, CSS di-scope di partial sidebar --}}
+<div class="cp-shell">
+@include('admin.partials.sidebar')
+<div class="cp-main">
+
+{{-- Filter sekolah (super admin) --}}
+@if(!empty($isSuperAdmin))
+<div class="card border-0 shadow-sm mb-4" style="border-radius:20px;">
+    <div class="card-body p-3 d-flex align-items-center gap-3 flex-wrap">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-funnel-fill text-primary"></i>
+            <span class="fw-bold small">Filter Sekolah:</span>
+        </div>
+        <form method="GET" action="{{ route('admin.dashboard') }}" class="d-flex gap-2 flex-wrap">
+            <select name="school_id" class="form-select form-select-sm" style="border-radius:10px;min-width:220px;" onchange="this.form.submit()">
+                <option value="">Semua Sekolah (Global)</option>
+                @foreach(($allSchools ?? collect()) as $sc)
+                    <option value="{{ $sc->id }}" @selected(($filterSchoolId ?? null) == $sc->id)>[ID: {{ $sc->id }}] {{ $sc->name }}</option>
+                @endforeach
+            </select>
+            @if(!empty($filterSchoolId))
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:10px;">Reset</a>
+                <a href="{{ route('admin.schools.detail', $filterSchoolId) }}" class="btn btn-sm btn-primary" style="border-radius:10px;"><i class="bi bi-eye me-1"></i>Detail Sekolah</a>
+            @endif
+        </form>
+        @if(!empty($filterSchool))
+            <span class="badge rounded-pill {{ $filterSchool->is_active ? 'bg-success' : 'bg-danger' }}">{{ $filterSchool->is_active ? 'Aktif' : 'Nonaktif' }}</span>
+        @endif
+    </div>
+</div>
+@endif
+
 {{-- Hero Section --}}
 <div class="ad-hero">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-4" style="position:relative; z-index:1;">
@@ -99,6 +131,52 @@
         </div>
     </div>
 </div>
+
+{{-- Per-school overview (cPanel table, super admin) --}}
+@if(!empty($isSuperAdmin) && !empty($allSchools) && $allSchools->count())
+<div class="row g-4 mb-5">
+    <div class="col-12">
+        <div class="ad-card shadow-sm">
+            <div class="ad-card-head d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h2 class="ad-card-title"><i class="bi bi-buildings-fill text-primary"></i> Sekolah Terdaftar ({{ $allSchools->count() }})</h2>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('admin.features') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold"><i class="bi bi-sliders me-1"></i>Kelola Fitur</a>
+                    <a href="{{ route('admin.schools.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">Kelola Sekolah</a>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size:13px;">
+                    <thead style="background:#f8fafc;">
+                        <tr>
+                            <th class="ps-4">Sekolah</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Users</th>
+                            <th class="text-center">Posts</th>
+                            <th class="text-end pe-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($allSchools as $sc)
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">[ID: {{ $sc->id }}] {{ $sc->name }}</div>
+                                <div class="text-muted small">{{ $sc->city ?? '-' }} &bull; {{ $sc->slug }}</div>
+                            </td>
+                            <td class="text-center"><span class="badge rounded-pill {{ $sc->is_active ? 'bg-success' : 'bg-danger' }}">{{ $sc->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
+                            <td class="text-center fw-bold">{{ number_format($sc->users_count ?? 0) }}</td>
+                            <td class="text-center fw-bold">{{ number_format($sc->posts_count ?? 0) }}</td>
+                            <td class="text-end pe-4">
+                                <a href="{{ route('admin.schools.detail', $sc->id) }}" class="btn btn-sm btn-primary" style="border-radius:10px;"><i class="bi bi-eye me-1"></i>Detail</a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 {{-- LMS Overview --}}
 <div class="row g-4 mb-4">
@@ -372,6 +450,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         Chart.defaults.font.family = "'Inter', sans-serif";
