@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@if(session('user_role') === 'admin')
+<div class="cp-shell">@include('admin.partials.sidebar')<div class="cp-main">
+@endif
 <style>
     .ad-card { border-radius: 24px; border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm); background: #fff; }
     .ad-card-head { padding: 24px 30px; border-bottom: 1px solid var(--border); background: #fff; }
@@ -127,4 +130,8 @@
         </table>
     </div>
 </div>
+@if(session('user_role') === 'admin')
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
+@endif
 @endsection

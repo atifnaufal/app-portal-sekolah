@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@if(session('user_role') === 'admin')
+<div class="cp-shell">@include('admin.partials.sidebar')<div class="cp-main">
+@endif
 <style>
     .announcement-page{max-width:1000px;margin:0 auto}.page-intro{width:100%}.announcement-card{border:0;border-radius:14px;overflow:hidden;box-shadow:0 5px 20px #14213d0d}.announcement-media{min-height:180px}.announcement-media img{display:block;width:100%;height:100%;min-height:180px;object-fit:cover}@media(max-width:767px){.announcement-card .card-body{padding:1.1rem!important}.announcement-media,.announcement-media img{min-height:160px;height:160px}.announcement-card .btn{font-size:12px}}
 </style>
@@ -60,4 +63,8 @@
         </div>
     @endif
 </div>
+@if(session('user_role') === 'admin')
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
+@endif
 @endsection

@@ -1,6 +1,9 @@
 @extends(session('user_role') === 'admin' ? 'layouts.app' : 'layouts.mobile-app')
 
 @section('content')
+@if(session('user_role') === 'admin')
+<div class="cp-shell">@include('admin.partials.sidebar')<div class="cp-main">
+@endif
 <style>
     :root {
         --f-ink: #0f172a;
@@ -351,4 +354,8 @@
     pickTarget(currentTa);
 })();
 </script>
+@if(session('user_role') === 'admin')
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
+@endif
 @endsection

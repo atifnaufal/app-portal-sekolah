@@ -91,8 +91,8 @@
     </style>
 </head>
 <body>
-{{-- Admin pusat memakai sidebar sebagai navigasi utama — header top disembunyikan agar rapi --}}
-@if(!(session('user_role') === 'admin' && session('is_super_admin')))
+{{-- Admin (pusat & sekolah) memakai sidebar sebagai navigasi utama — header top disembunyikan agar rapi --}}
+@if(session('user_role') !== 'admin')
 <nav class="navbar navbar-expand-lg admin-nav navbar-dark">
     <div class="container admin-container">
         <a class="navbar-brand d-flex align-items-center gap-3 fw-bold" href="{{ route('dashboard') }}">

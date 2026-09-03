@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@if(session('user_role') === 'admin')
+<div class="cp-shell">@include('admin.partials.sidebar')<div class="cp-main">
+@endif
 <style>
     .ajd-card { border-radius: 20px; border: 1px solid var(--border); overflow: hidden; }
     .ajd-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
@@ -117,4 +120,8 @@
         </form>
     </div>
 </div>
+@if(session('user_role') === 'admin')
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
+@endif
 @endsection

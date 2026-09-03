@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@if(session('user_role') === 'admin')
+<div class="cp-shell">@include('admin.partials.sidebar')<div class="cp-main">
+@endif
 @php
     $stats = $stats ?? ['total' => 0, 'lunas' => 0, 'belum' => 0, 'total_nominal' => 0, 'total_terbayar' => 0, 'total_kekurangan' => 0];
     $namaBulan = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -134,4 +137,8 @@
         </div>
     </div>
 </div>
+@if(session('user_role') === 'admin')
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
+@endif
 @endsection

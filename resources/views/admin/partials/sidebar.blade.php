@@ -13,11 +13,13 @@
     .admin-cp-sidebar-nav a {
         display: flex; align-items: center; gap: 12px; padding: 10px 12px;
         border-radius: 12px; color: #94a3b8; font-size: 13.5px; font-weight: 600;
-        text-decoration: none; transition: all .2s;
+        text-decoration: none; transition: all .2s; outline: none !important;
+        border: 1.5px solid transparent;
     }
+    .admin-cp-sidebar-nav a:focus { outline: none !important; box-shadow: none; }
     .admin-cp-sidebar-nav a i { font-size: 16px; width: 22px; text-align: center; }
-    .admin-cp-sidebar-nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
-    .admin-cp-sidebar-nav a.active { background: var(--blue); color: #fff; box-shadow: 0 4px 12px rgba(36,107,254,.35); }
+    .admin-cp-sidebar-nav a:hover { background: rgba(255,255,255,.07); color: #fff; border-color: transparent; }
+    .admin-cp-sidebar-nav a.active { background: var(--blue); color: #fff; box-shadow: 0 4px 12px rgba(36,107,254,.35); border-color: transparent; }
     .sidebar-section-title { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: #475569; padding: 14px 12px 6px; }
     .admin-cp-sidebar-footer { border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px; margin-top: auto; }
     .admin-cp-avatar {

@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@if(session('user_role') === 'admin')
+<div class="cp-shell">@include('admin.partials.sidebar')<div class="cp-main">
+@endif
 <style>
     .form-card { border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-md); background: #fff; overflow: hidden; }
     .form-header { background: #f8fafc; padding: 24px 30px; border-bottom: 1px solid var(--border); }
@@ -25,6 +28,12 @@
                 <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i> Informasi Dasar</h5>
             </div>
             <div class="form-body">
+                @if($errors->any())
+                <div class="alert alert-danger border-0 mb-4" style="border-radius:14px;">
+                    <div class="fw-bold small mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Form belum tersimpan:</div>
+                    <ul class="mb-0 small">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                </div>
+                @endif
                 <form method="POST" action="{{ $kelas->exists ? route('kelas.update',$kelas) : route('kelas.store') }}">
                     @csrf
                     @if($kelas->exists) @method('PUT') @endif
@@ -94,4 +103,8 @@
         @endif
     </div>
 </div>
+@if(session('user_role') === 'admin')
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
+@endif
 @endsection

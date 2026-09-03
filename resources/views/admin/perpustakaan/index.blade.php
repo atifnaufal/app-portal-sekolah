@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('content')
+@if(session('user_role') === 'admin')
+<div class="cp-shell">@include('admin.partials.sidebar')<div class="cp-main">
+@endif
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <div class="text-primary small fw-semibold">MANAJEMEN PERPUSTAKAAN</div>
@@ -65,4 +68,8 @@
         </div>
     </div>
 </div>
+@if(session('user_role') === 'admin')
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
+@endif
 @endsection

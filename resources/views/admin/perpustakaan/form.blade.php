@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('content')
+@if(session('user_role') === 'admin')
+<div class="cp-shell">@include('admin.partials.sidebar')<div class="cp-main">
+@endif
 <div class="mb-4">
     <a href="{{ route('admin.perpustakaan.index') }}" class="text-decoration-none small fw-bold"><i class="bi bi-arrow-left"></i> Kembali ke Daftar</a>
     <h1 class="h3 fw-bold mt-2">{{ isset($buku) ? 'Edit Buku' : 'Tambah Buku Baru' }}</h1>
@@ -86,4 +89,8 @@
         </form>
     </div>
 </div>
+@if(session('user_role') === 'admin')
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
+@endif
 @endsection
