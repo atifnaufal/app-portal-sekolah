@@ -83,6 +83,8 @@
     </style>
 </head>
 <body>
+{{-- Admin pusat memakai sidebar sebagai navigasi utama — header top disembunyikan agar rapi --}}
+@if(!(session('user_role') === 'admin' && session('is_super_admin')))
 <nav class="navbar navbar-expand-lg admin-nav navbar-dark">
     <div class="container admin-container">
         <a class="navbar-brand d-flex align-items-center gap-3 fw-bold" href="{{ route('dashboard') }}">
@@ -130,6 +132,7 @@
         </div>
     </div>
 </nav>
+@endif
 
 <div id="portal-toast" class="animate__animated animate__fadeInDown" style="display:none;">
     <a id="toast-link" href="#" style="display:block; text-decoration:none; color:inherit;">

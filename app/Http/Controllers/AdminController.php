@@ -200,6 +200,26 @@ class AdminController extends Controller
         $schoolFilter = (!$isSuper && $me && $me->school_id) ? $me->school_id : (request('school_id') ? (int)request('school_id') : null);
         $search = $request->input('search', '');
 
+        // Admin pusat tanpa filter sekolah → daftar sekolah dulu (drill-down).
+        if ($isSuper && !$schoolFilter) {
+            $schools = School::withCount([
+                    'users as guru_count' => fn ($q) => $q->where('role', 'guru'),
+                    'users as siswa_count' => fn ($q) => $q->where('role', 'siswa'),
+                    'users as pending_count' => fn ($q) => $q->where('aktif', false)->whereIn('role', ['guru', 'siswa']),
+                ])
+                ->with(['users' => fn ($q) => $q->where('role', 'admin')->select('id', 'name', 'email', 'school_id')])
+                ->orderBy('name')
+                ->get();
+
+            return view('admin.users-schools', [
+                'schools' => $schools,
+                'totalSchools' => $schools->count(),
+                'totalGuru' => $schools->sum('guru_count'),
+                'totalSiswa' => $schools->sum('siswa_count'),
+                'pendingUsers' => $schools->sum('pending_count'),
+            ]);
+        }
+
         $usersQuery = User::with(['kelas', 'mataPelajarans.kelas', 'school'])
             ->whereIn('role', ['guru', 'siswa'])
             ->when($schoolFilter, fn($q,$sid)=> $q->where('school_id',$sid))
@@ -213,13 +233,16 @@ class AdminController extends Controller
 
         $users = $usersQuery->latest()->get();
 
+        $countQ = fn($q) => $schoolFilter ? $q->where('school_id', $schoolFilter) : $q;
         $data = [
             'users' => $users,
             'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
             'schools' => \App\Models\School::orderBy('name')->get(),
-            'totalGuru' => User::where('role', 'guru')->count(),
-            'totalSiswa' => User::where('role', 'siswa')->count(),
-            'pendingUsers' => User::where('aktif', false)->whereIn('role', ['guru', 'siswa'])->count(),
+            'totalGuru' => $countQ(User::where('role', 'guru'))->count(),
+            'totalSiswa' => $countQ(User::where('role', 'siswa'))->count(),
+            'pendingUsers' => $countQ(User::where('aktif', false)->whereIn('role', ['guru', 'siswa']))->count(),
+            'filterSchool' => $schoolFilter ? School::find($schoolFilter) : null,
+            'isSuperAdmin' => $isSuper,
         ];
 
         return view($this->isMobileRequest() ? 'mobile.admin-users' : 'admin.users', $data);

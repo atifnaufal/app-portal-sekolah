@@ -59,6 +59,21 @@
     }
 </style>
 
+<div class="cp-shell">
+@include('admin.partials.sidebar')
+<div class="cp-main">
+
+@if(!empty($isSuperAdmin) && !empty($filterSchool))
+<a href="{{ route('admin.users') }}" class="btn btn-sm btn-outline-secondary mb-3" style="border-radius:10px;"><i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar Sekolah</a>
+<div class="alert border-0 shadow-sm mb-4 d-flex align-items-center gap-3" style="border-radius:16px;background:#eef2ff;">
+    <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#2563eb);display:grid;place-items:center;color:#fff;font-weight:800;">{{ strtoupper(substr($filterSchool->name, 0, 1)) }}</div>
+    <div>
+        <div class="fw-bold">[ID: {{ $filterSchool->id }}] {{ $filterSchool->name }}</div>
+        <div class="small text-muted">{{ $filterSchool->city ?? '-' }} &bull; {{ $filterSchool->slug }}</div>
+    </div>
+</div>
+@endif
+
 <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-4">
     <div>
         <div class="text-primary small fw-bold text-uppercase mb-1" style="letter-spacing: 0.1em;">Account Management</div>
@@ -114,6 +129,7 @@
             </li>
         </ul>
         <form class="ms-auto" action="{{ route('admin.users') }}" method="GET">
+            @if(request('school_id'))<input type="hidden" name="school_id" value="{{ request('school_id') }}">@endif
             <div class="input-group" style="width: 300px;">
                 <span class="input-group-text bg-white border-end-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-search text-muted"></i></span>
                 <input name="search" value="{{ request('search') }}" class="form-control border-start-0 ps-0" placeholder="Cari nama, NIK..." style="border-radius: 0 12px 12px 0;">
@@ -226,5 +242,6 @@
     </div>
 @endforeach
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
 @endsection
