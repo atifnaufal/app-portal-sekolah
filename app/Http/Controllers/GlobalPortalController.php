@@ -130,7 +130,7 @@ class GlobalPortalController extends Controller
         }
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $uid = UserContextHelper::id($request);
         $user = UserContextHelper::user($request);
@@ -149,6 +149,9 @@ class GlobalPortalController extends Controller
         // Moderasi teks — selalu jalan.
         $textCheck = ImageSafetyService::checkText($data['content']);
         if (! $textCheck['safe']) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['ok' => false, 'message' => $textCheck['reason']], 422);
+            }
             return back()->withErrors(['content' => $textCheck['reason']])->withInput();
         }
 
@@ -156,6 +159,9 @@ class GlobalPortalController extends Controller
         if ($request->hasFile('image')) {
             $imgCheck = ImageSafetyService::checkImage($request->file('image'));
             if (! $imgCheck['safe']) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['ok' => false, 'message' => $imgCheck['reason']], 422);
+                }
                 return back()->withErrors(['image' => $imgCheck['reason']])->withInput();
             }
             $data['image'] = FirebaseStorageService::put('global', $request->file('image'));
@@ -168,11 +174,15 @@ class GlobalPortalController extends Controller
         } catch (\Throwable $e) {
         }
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['ok' => true, 'message' => 'Post terkirim ke Global Portal']);
+        }
+
         return back()->with('success', 'Post terkirim ke Global Portal');
     }
 
     /** Upload cerita (maks 24 jam tayang). */
-    public function storyStore(Request $request): RedirectResponse
+    public function storyStore(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $uid = UserContextHelper::id($request);
         $user = UserContextHelper::user($request);
@@ -187,10 +197,16 @@ class GlobalPortalController extends Controller
 
         $textCheck = ImageSafetyService::checkText($data['caption'] ?? null);
         if (! $textCheck['safe']) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['ok' => false, 'message' => $textCheck['reason']], 422);
+            }
             return back()->withErrors(['caption' => $textCheck['reason']]);
         }
         $imgCheck = ImageSafetyService::checkImage($request->file('image'));
         if (! $imgCheck['safe']) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['ok' => false, 'message' => $imgCheck['reason']], 422);
+            }
             return back()->withErrors(['image' => $imgCheck['reason']]);
         }
 
@@ -201,6 +217,10 @@ class GlobalPortalController extends Controller
             'caption' => $data['caption'] ?? null,
             'expires_at' => now()->addDay(),
         ]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['ok' => true, 'message' => 'Cerita dipublikasikan']);
+        }
 
         return back()->with('success', 'Cerita dipublikasikan (tayang 24 jam).');
     }
@@ -215,7 +235,7 @@ class GlobalPortalController extends Controller
     }
 
     /** Laporkan postingan. Otomatis sembunyi saat mencapai ambang. */
-    public function report(Request $request, GlobalPost $post): RedirectResponse
+    public function report(Request $request, GlobalPost $post): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $uid = UserContextHelper::id($request);
         if (! $uid) {
@@ -230,9 +250,15 @@ class GlobalPortalController extends Controller
             $post->update(['is_hidden' => true]);
         }
 
-        return back()->with('success', $post->is_hidden
+        $msg = $post->is_hidden
             ? 'Terima kasih. Postingan disembunyikan otomatis karena banyak laporan.'
-            : 'Laporan diterima. Terima kasih sudah menjaga portal.');
+            : 'Laporan diterima. Terima kasih sudah menjaga portal.';
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['ok' => true, 'message' => $msg, 'is_hidden' => $post->is_hidden]);
+        }
+
+        return back()->with('success', $msg);
     }
 
     /** Admin Pusat: tampilkan lagi postingan yang disembunyikan. */
@@ -303,7 +329,7 @@ class GlobalPortalController extends Controller
         return back();
     }
 
-    public function toggleFollow(Request $request, \App\Models\User $user): RedirectResponse
+    public function toggleFollow(Request $request, \App\Models\User $user): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $uid = UserContextHelper::id($request);
         if ($uid == $user->id) {
@@ -312,8 +338,14 @@ class GlobalPortalController extends Controller
         $ex = \App\Models\GlobalFollow::where('follower_id', $uid)->where('followed_id', $user->id)->first();
         if ($ex) {
             $ex->delete();
+            $following = false;
         } else {
             \App\Models\GlobalFollow::create(['follower_id' => $uid, 'followed_id' => $user->id]);
+            $following = true;
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['ok' => true, 'following' => $following]);
         }
 
         return back();

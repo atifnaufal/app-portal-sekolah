@@ -33,7 +33,22 @@
 .ig-time{font-size:10px;color:#8e8e8e;letter-spacing:.02em;text-transform:uppercase;padding:0 14px 10px}
 .ig-composer{margin:12px 14px;background:#fff;border:1px solid #efefef;border-radius:16px;padding:12px}
 .ig-textarea{width:100%;border:0;outline:0;resize:none;font-size:13px}
+
+/* Global UI Feedback */
+#pui-toast{position:fixed;top:calc(70px + env(safe-area-inset-top));left:20px;right:20px;z-index:9000;background:rgba(15,23,42,.9);backdrop-filter:blur(10px);color:#fff;padding:12px 18px;border-radius:16px;font-size:13px;font-weight:700;display:none;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.2);transform:translateY(-20px);transition:all .4s cubic-bezier(.175,.885,.32,1.275)}
+#pui-toast.show{display:flex;transform:translateY(0)}
+.pui-loading-overlay{position:fixed;inset:0;z-index:9999;background:rgba(255,255,255,.7);backdrop-filter:blur(4px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--navy)}
+.pui-btn-loading{opacity:.7;pointer-events:none;position:relative;color:transparent!important}
+.pui-btn-loading::after{content:"";position:absolute;width:18px;height:18px;top:calc(50% - 9px);left:calc(50% - 9px);border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:pui-spin .6s linear infinite}
+@keyframes pui-spin{to{transform:rotate(360deg)}}
 </style>
+
+<div id="pui-toast"></div>
+<div id="pui-loading-overlay" class="pui-loading-overlay">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div id="pui-loading-text" style="font-weight:800;font-size:14px">Mohon tunggu...</div>
+</div>
+
 <div class="ig-page">
   <div class="ig-header">
     <a href="{{ route('dashboard') }}" class="ig-backbtn" title="Kembali"><i class="bi bi-chevron-left"></i></a>
@@ -47,7 +62,7 @@
         <div class="ig-ring add" style="cursor:pointer" title="Tambah cerita" id="storyAddRing">
           <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;pointer-events:none;">
           <span class="ig-plus" style="pointer-events:none;"><i class="bi bi-plus-lg"></i></span>
-          <input type="file" name="image" id="storyFile" accept="image/*" hidden onchange="document.getElementById('storyForm').submit()">
+          <input type="file" name="image" id="storyFile" accept="image/*" hidden>
         </div>
       </form>
       <div class="ig-name">Cerita Anda</div>
@@ -164,17 +179,17 @@
     @if($p->image)<img src="{{ \App\Services\FirebaseStorageService::url($p->image) }}" class="ig-img" alt="">@endif
     <div class="ig-actions" style="gap:16px">
       @php $liked = $p->likes->contains('user_id', session('user_id')); @endphp
-      <form method="POST" action="{{ route('global.portal.like',$p) }}" class="like-form" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span class="like-count" style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button><span style="font-size:11px;color:#8e8e8e">pesan</span></form>
-      <a href="#cmt-{{ $p->id }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-chat"></i><span class="cmt-count" style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></a>
+      <form method="POST" action="{{ route('global.portal.like',$p) }}" class="like-form" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span class="like-count" style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button></form>
+      <button onclick="document.querySelector('#cmt-{{ $p->id }} input').focus()" style="background:none;border:0;color:#262626;display:flex;align-items:center;gap:4px;padding:0"><i class="bi bi-chat"></i><span class="cmt-count" style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></button>
       @if(session('user_role')!=='admin')
-      <a href="{{ route('chat.startPrivate',$p->user) }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i><span style="font-size:11px;font-weight:700">pesan</span></a>
+      <a href="{{ route('chat.startPrivate',$p->user) }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i></a>
       @endif
       @if(session('user_role')!=='admin' && $p->user_id !== $myId)
-      <form method="POST" action="{{ route('global.portal.report',$p) }}" onsubmit="return confirm('Laporkan postingan ini?')">@csrf<button style="background:none;border:0;color:#8e8e8e;"><i class="bi bi-flag"></i></button></form>
+      <form method="POST" action="{{ route('global.portal.report',$p) }}" class="report-form">@csrf<button style="background:none;border:0;color:#8e8e8e;"><i class="bi bi-flag"></i></button></form>
       @endif
-      <span style="margin-left:auto" onclick="navigator.share?navigator.share({text:@json($p->content)}):alert('Link disalin')"><i class="bi bi-share"></i></span>
+      <span style="margin-left:auto;cursor:pointer" onclick="navigator.share?navigator.share({text:@json($p->content)}):alert('Link disalin')"><i class="bi bi-share"></i></span>
     </div>
-    <div style="padding:0 14px;display:flex;gap:12px;font-size:11px;color:#8e8e8e"><a href="#" onclick="event.preventDefault();document.getElementById('likes-{{ $p->id }}').style.display='block'" style="color:#262626;text-decoration:none"><b>{{ $p->likes_count }} suka</b> — lihat</a> • <a href="#cmt-{{ $p->id }}" style="color:#262626;text-decoration:none">{{ $p->comments_count }} komentar — lihat</a></div>
+    <div style="padding:0 14px;display:flex;gap:12px;font-size:11px;color:#8e8e8e"><a href="#" onclick="event.preventDefault();document.getElementById('likes-{{ $p->id }}').style.display='block'" style="color:#262626;text-decoration:none"><b>{{ $p->likes_count }} suka</b></a> • <a href="#" onclick="event.preventDefault();document.querySelector('#cmt-{{ $p->id }} input').focus()" style="color:#262626;text-decoration:none">{{ $p->comments_count }} komentar</a></div>
     <div id="likes-{{ $p->id }}" style="display:none;padding:8px 14px;background:#fafafa;border-top:1px solid #efefef">
       <div style="font-size:11px;font-weight:700">Disukai oleh</div>
       @foreach($p->likes->take(5) as $l)<div style="font-size:12px">{{ $l->user_id }} • user</div>@endforeach
@@ -199,7 +214,20 @@
   <button id="newPostsPill" style="display:none;position:fixed;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:2500;background:#0f172a;color:#fff;border:0;border-radius:99px;padding:10px 20px;font-size:13px;font-weight:800;box-shadow:0 12px 30px rgba(15,23,42,.35);"><i class="bi bi-arrow-up-circle me-1"></i><span id="newPostsTxt">Postingan baru</span></button>
 </div>
 <script>
-  /* Like AJAX: tetap di tempat, tanpa reload/scroll. */
+  /* UI Helpers */
+  function puiToast(msg, dur=3000) {
+    var t = document.getElementById('pui-toast');
+    t.innerText = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+  function puiLoading(show, text='Mohon tunggu...') {
+    var l = document.getElementById('pui-loading-overlay');
+    var lt = document.getElementById('pui-loading-text');
+    if (lt) lt.innerText = text;
+    l.style.display = show ? 'flex' : 'none';
+  }
+
+  /* Like AJAX */
   document.addEventListener('submit', function (e) {
     var f = e.target && e.target.closest ? e.target.closest('.like-form') : null;
     if (!f) return;
@@ -207,23 +235,22 @@
     var btn = f.querySelector('button');
     var icon = f.querySelector('i');
     var count = f.querySelector('.like-count');
-    if (btn) btn.disabled = true;
+    if (btn) btn.style.opacity = '0.5';
     fetch(f.action, {
       method: 'POST',
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
       body: new FormData(f)
-    }).then(function (r) { return r.json(); }).then(function (d) {
+    }).then(r => r.json()).then(d => {
       if (icon) {
         if (d.liked) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'ig-like'); }
         else { icon.classList.add('bi-heart'); icon.classList.remove('bi-heart-fill', 'ig-like'); }
       }
       if (count && typeof d.likes_count !== 'undefined') count.innerText = d.likes_count;
-    }).catch(function () {
-      f.submit(); // fallback: cara lama bila fetch gagal
-    }).finally(function () { if (btn) btn.disabled = false; });
+    }).catch(err => { puiToast('Gagal memproses suka'); console.error(err); })
+      .finally(() => { if (btn) btn.style.opacity = '1'; });
   });
 
-  /* Komentar AJAX: muncul langsung + hitungan update, tanpa reload. */
+  /* Komentar AJAX */
   document.addEventListener('submit', function (e) {
     var f = e.target && e.target.closest ? e.target.closest('.comment-form') : null;
     if (!f) return;
@@ -232,34 +259,94 @@
     var btn = f.querySelector('button');
     var text = input ? input.value.trim() : '';
     if (!text) return;
-    if (btn) btn.disabled = true;
+    btn.classList.add('pui-btn-loading');
     fetch(f.action, {
       method: 'POST',
       headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
       body: new FormData(f)
-    }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); }).then(function (res) {
-      if (!res.ok || !res.d.ok) {
-        alert((res.d && res.d.message) || 'Komentar ditolak sistem moderasi.');
-        return;
-      }
+    }).then(r => r.json().then(d => ({ ok: r.ok, d: d }))).then(res => {
+      if (!res.ok || !res.d.ok) { puiToast(res.d.message || 'Komentar ditolak sistem.'); return; }
       var box = f.parentElement;
       var div = document.createElement('div');
       div.className = 'ig-cmt';
-      var b = document.createElement('b');
-      b.innerText = res.d.comment.user + ' ';
-      var sp = document.createElement('span');
-      sp.innerText = res.d.comment.body;
-      div.appendChild(b); div.appendChild(sp);
+      div.innerHTML = `<b>${res.d.comment.user}</b> ${res.d.comment.body}`;
       box.insertBefore(div, f);
       var card = f.closest('.ig-card');
-      if (card) card.querySelectorAll('.cmt-count').forEach(function (el) { el.innerText = res.d.comments_count; });
+      if (card) card.querySelectorAll('.cmt-count').forEach(el => el.innerText = res.d.comments_count);
       input.value = '';
-    }).catch(function () {
-      f.submit();
-    }).finally(function () { if (btn) btn.disabled = false; });
+    }).catch(err => { puiToast('Gagal mengirim komentar'); console.error(err); })
+      .finally(() => btn.classList.remove('pui-btn-loading'));
   });
 
-  /* Pratinjau gambar composer dalam kontainer + tombol hapus. */
+  /* Report AJAX */
+  document.addEventListener('submit', function (e) {
+    var f = e.target && e.target.closest ? e.target.closest('.report-form') : null;
+    if (!f) return;
+    e.preventDefault();
+    if (!confirm('Laporkan postingan ini?')) return;
+    puiLoading(true, 'Mengirim laporan...');
+    fetch(f.action, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+      body: new FormData(f)
+    }).then(r => r.json()).then(d => {
+      puiToast(d.message);
+      if (d.is_hidden) {
+        var card = f.closest('.ig-card');
+        if (card) card.style.opacity = '0.3';
+      }
+    }).catch(() => puiToast('Gagal mengirim laporan'))
+      .finally(() => puiLoading(false));
+  });
+
+  /* Post Global AJAX */
+  var composerForm = document.querySelector('#composer form');
+  if (composerForm) {
+    composerForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      puiLoading(true, 'Sedang mengirim postingan...');
+      fetch(this.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+        body: new FormData(this)
+      }).then(r => r.json().then(d => ({ ok: r.ok, d: d }))).then(res => {
+        if (res.ok && res.d.ok) {
+          puiToast('Postingan terkirim!');
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          puiToast(res.d.message || 'Gagal mengirim postingan');
+        }
+      }).catch(() => puiToast('Terjadi kesalahan sistem'))
+        .finally(() => puiLoading(false));
+    });
+  }
+
+  /* Story AJAX */
+  var storyFile = document.getElementById('storyFile');
+  if (storyFile) {
+    storyFile.addEventListener('change', function() {
+      if (!this.files.length) return;
+      var f = this.files[0];
+      if (f.size > 4 * 1024 * 1024) { puiToast('Ukuran gambar maksimal 4MB'); this.value = ''; return; }
+
+      puiLoading(true, 'Mengunggah cerita...');
+      var fd = new FormData();
+      fd.append('image', f);
+      fd.append('_token', document.querySelector('meta[name=csrf-token]').content);
+
+      fetch("{{ route('global.portal.story.store') }}", {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+        body: fd
+      }).then(r => r.json()).then(d => {
+        if (d.ok) { puiToast('Cerita berhasil diunggah!'); setTimeout(() => window.location.reload(), 1000); }
+        else { puiToast(d.message || 'Gagal mengunggah cerita'); }
+      }).catch(() => puiToast('Koneksi bermasalah'))
+        .finally(() => puiLoading(false));
+    });
+  }
+
+  /* Pratinjau gambar composer */
   document.addEventListener('DOMContentLoaded', function () {
     var file = document.getElementById('composerFile');
     var box = document.getElementById('composerPreview');
@@ -270,25 +357,60 @@
     file.addEventListener('change', function () {
       var f = file.files && file.files[0];
       if (!f) { box.style.display = 'none'; return; }
-      if (f.size > 4 * 1024 * 1024) {
-        alert('Ukuran gambar maksimal 4MB.');
-        file.value = '';
-        box.style.display = 'none';
-        return;
-      }
+      if (f.size > 4 * 1024 * 1024) { puiToast('Maksimal 4MB'); file.value = ''; box.style.display = 'none'; return; }
       var rd = new FileReader();
-      rd.onload = function (ev) {
-        img.src = ev.target.result;
-        nameEl.innerText = f.name + ' • ' + Math.round(f.size / 1024) + ' KB';
-        box.style.display = 'block';
-      };
+      rd.onload = e => { img.src = e.target.result; nameEl.innerText = f.name; box.style.display = 'block'; };
       rd.readAsDataURL(f);
     });
-    if (rm) rm.addEventListener('click', function () {
-      file.value = '';
-      box.style.display = 'none';
-    });
+    if (rm) rm.addEventListener('click', () => { file.value = ''; box.style.display = 'none'; });
   });
+
+  var storyData = {!! $storiesJson ?? '[]' !!};
+  var storyTimer = null, storyList = [], storyIdx = 0;
+  function seenIds() { try { return JSON.parse(localStorage.getItem('seenStories') || '[]'); } catch (e) { return []; } }
+  function paintSeenRings() {
+    var seen = seenIds();
+    document.querySelectorAll('[data-story-ring]').forEach(el => {
+      if (seen.indexOf(parseInt(el.getAttribute('data-story-ring'), 10)) !== -1) el.classList.add('seen');
+    });
+  }
+  function markStorySeen(id) {
+    try {
+      var seen = seenIds();
+      if (seen.indexOf(id) === -1) { seen.push(id); localStorage.setItem('seenStories', JSON.stringify(seen.slice(-200))); }
+    } catch (e) {}
+    var el = document.querySelector('[data-story-ring="' + id + '"]');
+    if (el) el.classList.add('seen');
+  }
+  paintSeenRings();
+  function openStory(id) {
+    storyList = storyData; storyIdx = Math.max(0, storyList.findIndex(s => s.id === id));
+    if (storyIdx < 0) return;
+    document.getElementById('storyViewer').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    showStory();
+  }
+  function showStory() {
+    var s = storyList[storyIdx]; if (!s) return closeStory();
+    markStorySeen(s.id);
+    document.getElementById('storyImg').src = s.img;
+    document.getElementById('storyAvatar').src = s.avatar;
+    document.getElementById('storyUser').innerText = s.user;
+    document.getElementById('storyTime').innerText = s.time;
+    document.getElementById('storyCaption').innerText = s.caption || '';
+    var bar = document.getElementById('storyBar');
+    bar.style.transition = 'none'; bar.style.width = '0';
+    void bar.offsetWidth;
+    bar.style.transition = 'width 5s linear'; bar.style.width = '100%';
+    clearTimeout(storyTimer);
+    storyTimer = setTimeout(() => { storyIdx++; showStory(); }, 5000);
+  }
+  function closeStory() {
+    clearTimeout(storyTimer);
+    document.getElementById('storyViewer').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
   (function () {
     var nextUrl = @json($posts->nextPageUrl());
     var loading = false;
@@ -305,13 +427,12 @@
       if (loading || !nextUrl) return;
       loading = true; loader.style.display = 'block'; moreBtn.style.display = 'none';
       fetch(nextUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(function (r) { return r.text(); })
-        .then(function (html) {
+        .then(r => r.text())
+        .then(html => {
           var doc = new DOMParser().parseFromString(html, 'text/html');
           var cards = doc.querySelectorAll('.ig-card');
           var feed = endEl.parentElement;
-          cards.forEach(function (c) { feed.insertBefore(c, endEl); });
-          // 15 = per halaman; kurang dari itu berarti sudah halaman terakhir.
+          cards.forEach(c => feed.insertBefore(c, endEl));
           if (cards.length >= 15) {
             try {
               var u = new URL(nextUrl);
@@ -319,36 +440,26 @@
               u.searchParams.set('page', p + 1);
               nextUrl = u.toString();
             } catch (e) { nextUrl = null; }
-          } else {
-            nextUrl = null;
-          }
-          loading = false; loader.style.display = 'none';
-          refreshState();
+          } else { nextUrl = null; }
+          loading = false; loader.style.display = 'none'; refreshState();
         })
-        .catch(function () { loading = false; loader.style.display = 'none'; refreshState(); });
+        .catch(() => { loading = false; loader.style.display = 'none'; refreshState(); });
     }
     moreBtn.addEventListener('click', loadMore);
     if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (es) { if (es[0].isIntersecting) loadMore(); }, { rootMargin: '600px' }).observe(endEl);
+      new IntersectionObserver(es => { if (es[0].isIntersecting) loadMore(); }, { rootMargin: '600px' }).observe(endEl);
     }
-    // Pil postingan baru tiap 60 detik.
     var pill = document.getElementById('newPostsPill');
     var pillTxt = document.getElementById('newPostsTxt');
-    function firstId() {
-      var c = document.querySelector('.ig-card');
-      return c ? parseInt(c.getAttribute('data-post-id') || '0', 10) : 0;
-    }
+    function firstId() { var c = document.querySelector('.ig-card'); return c ? parseInt(c.getAttribute('data-post-id') || '0', 10) : 0; }
     async function checkNew() {
       try {
         var r = await fetch("{{ route('global.portal.check') }}?after_id=" + firstId(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         var d = await r.json();
-        if (d.new_count > 0) {
-          pillTxt.innerText = d.new_count + ' postingan baru — ketuk untuk muat';
-          pill.style.display = 'block';
-        }
+        if (d.new_count > 0) { pillTxt.innerText = d.new_count + ' postingan baru'; pill.style.display = 'block'; }
       } catch (e) {}
     }
-    pill.addEventListener('click', function () { window.location.reload(); });
+    pill.addEventListener('click', () => window.location.reload());
     setInterval(checkNew, 60000);
   })();
 </script>
