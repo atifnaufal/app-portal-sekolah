@@ -56,6 +56,7 @@
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-analyst" type="button"><i class="bi bi-cpu me-1"></i>Analyst</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-terminal" type="button"><i class="bi bi-terminal me-1"></i>Terminal</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-github" type="button"><i class="bi bi-github me-1"></i>GitHub</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-server" type="button"><i class="bi bi-hdd-network me-1"></i>Server</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-keys" type="button"><i class="bi bi-key me-1"></i>Integrasi</button></li>
         </ul>
     </div>
@@ -131,6 +132,20 @@
             <div class="term-box">{{ $githubResult['local'] }}</div>
             @endif
             @endif
+        </div>
+
+        {{-- SERVER --}}
+        <div class="tab-pane fade" id="tab-server">
+            <div class="list-group" style="border-radius:14px;overflow:hidden;">
+                @foreach($health as $h)
+                <div class="list-group-item d-flex align-items-center gap-3">
+                    <span class="tone-dot tone-{{ $h[2] ? 'success' : 'danger' }}"></span>
+                    <b style="font-size:13.5px;">{{ $h[0] }}</b>
+                    <span class="small text-muted ms-auto text-end">{{ $h[1] }}</span>
+                </div>
+                @endforeach
+            </div>
+            <p class="small text-muted mt-3 mb-0">Diperbarui {{ now()->translatedFormat('d M Y, H:i') }}. Detail deploy/log container tetap lewat dashboard Railway.</p>
         </div>
 
         {{-- INTEGRASI --}}

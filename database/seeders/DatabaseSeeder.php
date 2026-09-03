@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             FeatureFlagsSeeder::class,
+            PortalDemoSeeder::class,
             LmsSeeder::class,
             TugasTestDataSeeder::class,
             CompleteTugasSeeder::class,

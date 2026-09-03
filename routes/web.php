@@ -114,8 +114,11 @@ Route::middleware('role:admin,guru')->group(function () {
 Route::middleware('role:guru,siswa,admin')->group(function () {
     Route::get('/global-portal', [GlobalPortalController::class, 'index'])->name('global.portal');
     Route::post('/global-portal', [GlobalPortalController::class, 'store'])->name('global.portal.store');
+    Route::post('/global-portal/cerita', [GlobalPortalController::class, 'storyStore'])->name('global.portal.story.store');
+    Route::delete('/global-portal/cerita/{story}', [GlobalPortalController::class, 'storyDestroy'])->name('global.portal.story.destroy');
     Route::post('/global-portal/{post}/like', [GlobalPortalController::class, 'toggleLike'])->name('global.portal.like');
     Route::post('/global-portal/{post}/comment', [GlobalPortalController::class, 'comment'])->name('global.portal.comment');
+    Route::post('/global-portal/{post}/report', [GlobalPortalController::class, 'report'])->name('global.portal.report');
     Route::post('/global-portal/follow/{user}', [GlobalPortalController::class, 'toggleFollow'])->name('global.portal.follow');
     Route::get('/global-portal/profile/{user}', [GlobalPortalController::class, 'profile'])->name('global.portal.profile');
 });
@@ -201,6 +204,7 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::delete('/admin/school-admins/{user}', [AdminController::class, 'destroySchoolAdmin'])->name('admin.school-admins.destroy');
     Route::patch('/admin/schools/{school}/registration', [AdminController::class, 'schoolsRegistration'])->name('admin.schools.registration');
     Route::patch('/admin/schools/{school}/feature', [AdminController::class, 'schoolsFeatureToggle'])->name('admin.schools.feature.toggle');
+    Route::patch('/admin/portal/{post}/unhide', [\App\Http\Controllers\GlobalPortalController::class, 'unhide'])->name('admin.portal.unhide');
 
     Route::get('/admin/perpustakaan', [AdminPerpustakaanController::class, 'index'])->name('admin.perpustakaan.index');
     Route::get('/admin/perpustakaan/create', [AdminPerpustakaanController::class, 'create'])->name('admin.perpustakaan.create');

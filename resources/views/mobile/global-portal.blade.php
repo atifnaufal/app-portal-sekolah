@@ -1,4 +1,4 @@
-@php $hideNav = false; $title='Global Portal'; @endphp
+@php $hideNav = false; $title='Global Portal'; $myId = (int) session('user_id'); $isAdminMb = session('user_role')==='admin'; @endphp
 @extends('layouts.mobile-app')
 @section('content')
 <style>
@@ -42,25 +42,63 @@
 
   <div class="ig-stories">
     <div class="ig-story">
-      <div class="ig-ring add" onclick="document.getElementById('composer').scrollIntoView({behavior:'smooth'})">
-        <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover">
-        <span class="ig-plus"><i class="bi bi-plus-lg"></i></span>
-      </div>
+      <form method="POST" action="{{ route('global.portal.story.store') }}" enctype="multipart/form-data" id="storyForm">@csrf
+        <label class="ig-ring add" style="cursor:pointer" title="Tambah cerita">
+          <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover">
+          <span class="ig-plus"><i class="bi bi-plus-lg"></i></span>
+          <input type="file" name="image" accept="image/*" hidden onchange="document.getElementById('storyForm').submit()">
+        </label>
+      </form>
       <div class="ig-name">Cerita Anda</div>
     </div>
-    @foreach($schools as $s)
-    <div class="ig-story">
-      <div class="ig-ring"><img src="https://ui-avatars.com/api/?name={{ urlencode($s->name) }}&background=random&color=fff&size=128" alt=""></div>
-      <div class="ig-name">{{ \Illuminate\Support\Str::limit(strtolower($s->slug),10,'') }}</div>
-    </div>
-    @endforeach
-    @foreach($posts->take(4) as $p)
-    <div class="ig-story">
-      <div class="ig-ring"><img src="{{ $p->user->avatar_url }}" alt=""></div>
-      <div class="ig-name">{{ explode(' ', strtolower($p->user->name))[0] }}</div>
+    @foreach(($storiesGrouped ?? collect()) as $uid => $st)
+    <div class="ig-story" onclick="openStory({{ $st->id }})">
+      <div class="ig-ring"><img src="{{ \App\Services\FirebaseStorageService::url($st->image) }}" alt=""></div>
+      <div class="ig-name">{{ $uid == $myId ? 'Anda' : explode(' ', strtolower($st->user->name))[0] }}</div>
     </div>
     @endforeach
   </div>
+
+  {{-- Story viewer fullscreen --}}
+  <div id="storyViewer" style="display:none;position:fixed;inset:0;z-index:5000;background:#000;">
+    <div id="storyProgress" style="position:absolute;top:calc(10px + env(safe-area-inset-top));left:12px;right:12px;height:3px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden;"><div id="storyBar" style="height:100%;width:0;background:#fff;"></div></div>
+    <div style="position:absolute;top:calc(24px + env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:center;gap:10px;z-index:2;">
+      <img id="storyAvatar" src="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">
+      <div style="flex:1;"><div id="storyUser" style="color:#fff;font-size:13px;font-weight:700;"></div><div id="storyTime" style="color:rgba(255,255,255,.6);font-size:11px;"></div></div>
+      <button onclick="closeStory()" style="background:none;border:0;color:#fff;font-size:22px;"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <img id="storyImg" src="" style="width:100%;height:100%;object-fit:contain;">
+    <div id="storyCaption" style="position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));left:16px;right:16px;color:#fff;font-size:14px;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.6);"></div>
+  </div>
+  <script>
+    var storyData = @json(($storiesGrouped ?? collect())->map(fn($st) => ['id' => $st->id, 'img' => \App\Services\FirebaseStorageService::url($st->image), 'user' => $st->user->name, 'avatar' => $st->user->avatar_url, 'time' => $st->created_at->diffForHumans(), 'caption' => $st->caption])->values());
+    var storyTimer = null, storyList = [], storyIdx = 0;
+    function openStory(id) {
+      storyList = storyData; storyIdx = Math.max(0, storyList.findIndex(s => s.id === id));
+      document.getElementById('storyViewer').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      showStory();
+    }
+    function showStory() {
+      var s = storyList[storyIdx]; if (!s) return closeStory();
+      document.getElementById('storyImg').src = s.img;
+      document.getElementById('storyAvatar').src = s.avatar;
+      document.getElementById('storyUser').innerText = s.user;
+      document.getElementById('storyTime').innerText = s.time;
+      document.getElementById('storyCaption').innerText = s.caption || '';
+      var bar = document.getElementById('storyBar');
+      bar.style.transition = 'none'; bar.style.width = '0';
+      void bar.offsetWidth;
+      bar.style.transition = 'width 5s linear'; bar.style.width = '100%';
+      clearTimeout(storyTimer);
+      storyTimer = setTimeout(function () { storyIdx++; showStory(); }, 5000);
+    }
+    function closeStory() {
+      clearTimeout(storyTimer);
+      document.getElementById('storyViewer').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  </script>
 
   <div id="composer" class="ig-composer">
     <form method="POST" action="{{ route('global.portal.store') }}" enctype="multipart/form-data">
@@ -68,10 +106,7 @@
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
         <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover">
         <div style="font-size:13px;font-weight:700">{{ $me?->name ?? session('admin_name') }}</div>
-        <select name="school_id" style="margin-left:auto;padding:6px 8px;border:1px solid #dbdbdb;border-radius:8px;font-size:11px">
-          <option value="">Sekolah Saya</option>
-          @foreach($schools as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
-        </select>
+        <span style="margin-left:auto;font-size:10px;font-weight:700;color:#0095f6;background:#eef6ff;padding:5px 10px;border-radius:99px;">{{ $me?->school?->name ?? 'Umum' }} • otomatis</span>
       </div>
       <textarea name="content" class="ig-textarea" rows="2" placeholder="Apa yang ingin kamu bagikan hari ini?" required></textarea>
       <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
@@ -99,6 +134,9 @@
       <a href="#cmt-{{ $p->id }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-chat"></i><span style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></a>
       @if(session('user_role')!=='admin')
       <a href="{{ route('chat.startPrivate',$p->user) }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i><span style="font-size:11px;font-weight:700">pesan</span></a>
+      @endif
+      @if(session('user_role')!=='admin' && $p->user_id !== $myId)
+      <form method="POST" action="{{ route('global.portal.report',$p) }}" onsubmit="return confirm('Laporkan postingan ini?')">@csrf<button style="background:none;border:0;color:#8e8e8e;"><i class="bi bi-flag"></i></button></form>
       @endif
       <span style="margin-left:auto" onclick="navigator.share?navigator.share({text:@json($p->content)}):alert('Link disalin')"><i class="bi bi-share"></i></span>
     </div>

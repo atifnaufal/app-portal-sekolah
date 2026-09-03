@@ -52,6 +52,7 @@ class AdminInsightController extends Controller
         return view('admin.insights', [
             'metrics' => $metrics,
             'insights' => $insights,
+            'health' => $this->serverHealth(),
             'commands' => collect(self::ALLOWLIST)->map(fn ($c) => $c['label']),
             'hasGeminiKey' => (bool) Setting::getValue('gemini_api_key'),
             'hasGithubToken' => (bool) Setting::getValue('github_token'),
@@ -190,6 +191,45 @@ class AdminInsightController extends Controller
         ]);
 
         return back()->with('ai_result', $text);
+    }
+
+    /** Pemeriksaan kesehatan server (untuk tab Server). */
+    private function serverHealth(): array
+    {
+        $dbOk = true;
+        $dbInfo = DB::getDriverName();
+        try {
+            DB::select('select 1');
+            $dbSize = null;
+            if ($dbInfo === 'mysql') {
+                $row = DB::selectOne('SELECT SUM(data_length + index_length) AS s FROM information_schema.tables WHERE table_schema = DATABASE()');
+                $dbSize = $row && $row->s ? round($row->s / 1048576, 1).' MB' : null;
+            } else {
+                $f = DB::getConfig('database');
+                $dbSize = (is_string($f) && is_file($f)) ? round(filesize($f) / 1048576, 1).' MB' : null;
+            }
+        } catch (\Throwable $e) {
+            $dbOk = false;
+            $dbSize = 'error: '.mb_substr($e->getMessage(), 0, 120);
+        }
+        $storagePath = storage_path('app/public');
+        $publicStorage = is_link(public_path('storage')) || is_dir(public_path('storage'));
+
+        $rows = [
+            ['PHP', phpversion(), true],
+            ['Laravel', app()->version(), true],
+            ['Database ('.$dbInfo.')', $dbOk ? ('Terhubung'.($dbSize ? " • {$dbSize}" : '')) : $dbSize, $dbOk],
+            ['APP_DEBUG', config('app.debug') ? 'ON (matikan di produksi!)' : 'OFF (aman)', ! config('app.debug')],
+            ['Storage link', $publicStorage ? 'Terpasang' : 'HILANG — jalankan storage:link', $publicStorage],
+            ['Ruang disk storage', ($m = $this->metrics())['disk_free_mb'] !== null ? $m['disk_free_mb'].' MB bebas' : 'Tidak terbaca', true],
+            ['Queue', (string) config('queue.default'), true],
+            ['Cache', (string) config('cache.default'), true],
+            ['Session', (string) config('session.driver'), true],
+            ['Firebase Storage', config('firebase.enabled') ? 'Aktif' : 'Nonaktif (fallback lokal)', true],
+            ['AI Moderasi Gambar', Setting::getValue('gemini_api_key') ? 'Aktif (Gemini)' : 'Nonaktif (filter teks + laporan saja)', true],
+        ];
+
+        return $rows;
     }
 
     // ===== Internal =====
