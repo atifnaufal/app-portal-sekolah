@@ -288,6 +288,9 @@ public class NativeBridgePlugin extends Plugin {
     @PluginMethod
     public void requestFcmToken(PluginCall call) {
         try {
+            if (com.google.firebase.FirebaseApp.getApps(getContext()).isEmpty()) {
+                com.google.firebase.FirebaseApp.initializeApp(getContext());
+            }
             com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
                 .addOnSuccessListener(token -> {
                     BackgroundService.saveFcmToken(getContext(), token);
