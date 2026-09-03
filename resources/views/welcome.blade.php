@@ -119,10 +119,10 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
 
 <div class="section" style="background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-top:16px">
   <div class="eyebrow" style="color:#059669">Mulai Cepat</div>
-  <div class="h2">3 Langkah Jadi Warga Digital</div>
+  <div class="h2">3 Langkah Jadi Pelajar Sekolah Digital</div>
   <div class="steps" style="grid-template-columns:repeat(3,1fr);">
     <div class="step"><div class="num">1</div><div style="font-weight:800">Minta Kode</div><div style="font-size:12px;color:#64748b;margin-top:4px">Tanyakan <b>Kode Pendaftaran</b> (ID + kode kota) ke admin sekolahmu, lalu cek di halaman daftar.</div></div>
-    <div class="step"><div class="num">2</div><div style="font-weight:800">Daftar Akun</div><div style="font-size:12px;color:#64748b;margin-top:4px">Pilih Guru/Siswa yang dibuka, isi NIK & data diri. Kartu sekolah terisi otomatis.</div></div>
+    <div class="step"><div class="num">2</div><div style="font-weight:800">Daftar Akun</div><div style="font-size:12px;color:#64748b;margin-top:4px">Pilih Guru/Siswa yang dibuka, isi NIM & data diri. Kartu sekolah terisi otomatis.</div></div>
     <div class="step"><div class="num">3</div><div style="font-weight:800">Disetujui & Jelajahi</div><div style="font-size:12px;color:#64748b;margin-top:4px">Admin verifikasi akunmu → login → absen, cerita, portal, chat, tugas.</div></div>
   </div>
   <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span style="padding:6px 10px;background:#dcfce7;color:#166534;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-check-circle"></i> Kode Valid = Bisa Daftar</span><span style="padding:6px 10px;background:#fee2e2;color:#991b1b;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-x-circle"></i> Kode Salah/Tutup = Ditolak</span></div>
