@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "541949268662",
+    "project_id": "project-3d64c251-e52e-4c1a-9f4",
+    "storage_bucket": "project-3d64c251-e52e-4c1a-9f4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:541949268662:android:b430b225f4329df5fa8c17",
+        "android_client_info": {
+          "package_name": "com.sekolah.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkErrXyWi2DEbUVGEiMpRCGnNWE6ot8Sw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
