@@ -82,6 +82,7 @@ Route::post('/forgot-email', [AuthController::class, 'findEmail'])->middleware('
 
 Route::get('/register', [RegisterController::class, 'create'])->name('register');
 Route::get('/register/cek-sekolah', [RegisterController::class, 'check'])->middleware('throttle:20,1')->name('register.check');
+Route::get('/register/syarat-ketentuan', [RegisterController::class, 'syarat'])->name('register.syarat');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

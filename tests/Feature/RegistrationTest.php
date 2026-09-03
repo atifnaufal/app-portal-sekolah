@@ -65,7 +65,7 @@ class RegistrationTest extends TestCase
             'kelas_id' => $kelas->id, 'school_id' => $school->id,
         ]));
 
-        $response->assertRedirect(route('login'));
+        $response->assertRedirect(route('register.syarat'));
         $user = User::where('email', 'siswa@sekolah.com')->first();
         $this->assertNotNull($user);
         $this->assertSame('siswa', $user->role);
@@ -74,6 +74,9 @@ class RegistrationTest extends TestCase
         // Verifikasi email sudah dihapus: akun baru dibuat nonaktif sampai
         // admin menyetujuinya lewat halaman Manajemen Akun.
         $this->assertFalse($user->aktif);
+
+        // Halaman Syarat & Ketentuan tampil pasca-daftar.
+        $this->get(route('register.syarat'))->assertOk()->assertSee('Ketentuan Penting');
     }
 
     public function test_registered_siswa_cannot_login_until_admin_approves(): void

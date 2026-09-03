@@ -40,6 +40,7 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
     .story-ring { width: 68px; height: 68px; border-radius: 50%; padding: 3px; margin: 0 auto; background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5); }
     .story-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #fff; display: block; }
     .story-ring.mine { background: #e2e8f0; }
+    .story-ring.seen { background: #d4d4d4; }
     .story-name { font-size: 11px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--navy); font-weight: 600; }
     .story-viewer-img { width: 100%; max-height: 60vh; object-fit: contain; background: #0f172a; border-radius: 14px; }
 </style>
@@ -70,8 +71,8 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
             <div class="px-4 pt-3">
                 <div class="story-rail">
                     @forelse($storiesGrouped as $uid => $st)
-                    <button class="story-item" data-bs-toggle="modal" data-bs-target="#storyModal{{ $st->id }}">
-                        <div class="story-ring {{ $uid == $myId ? 'mine' : '' }}"><img src="{{ \App\Services\FirebaseStorageService::url($st->image) }}" alt=""></div>
+                    <button class="story-item" data-bs-toggle="modal" data-bs-target="#storyModal{{ $st->id }}" data-story-open="{{ $st->id }}">
+                        <div class="story-ring {{ $uid == $myId ? 'mine' : '' }}" data-story-ring="{{ $st->id }}"><img src="{{ \App\Services\FirebaseStorageService::url($st->image) }}" alt=""></div>
                         <div class="story-name">{{ $uid == $myId ? 'Cerita Anda' : explode(' ', $st->user->name)[0] }}</div>
                     </button>
                     @empty
@@ -95,8 +96,16 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
                         </div>
                     </div>
                     <textarea name="content" class="form-control mb-3" rows="3" placeholder="Apa yang ingin kamu bagikan hari ini?" required style="border-radius:14px;"></textarea>
+                    <div id="composerPreviewDesk" style="display:none;margin-bottom:12px;position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--border);">
+                        <img id="composerPreviewDeskImg" src="" style="width:100%;max-height:240px;object-fit:cover;display:block;" alt="">
+                        <div style="position:absolute;left:10px;bottom:10px;right:10px;display:flex;gap:8px;align-items:center;background:rgba(15,23,42,.65);backdrop-filter:blur(8px);border-radius:10px;padding:8px 12px;">
+                            <i class="bi bi-file-earmark-image text-white"></i>
+                            <span id="composerPreviewDeskName" style="flex:1;font-size:12px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+                            <button type="button" id="composerPreviewDeskRemove" style="background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:8px;width:28px;height:28px;">✕</button>
+                        </div>
+                    </div>
                     <div class="d-flex align-items-center gap-3">
-                        <label class="gp-action" style="cursor:pointer;color:var(--blue);"><i class="bi bi-image"></i> Gambar<input type="file" name="image" accept="image/*" hidden></label>
+                        <label class="gp-action" style="cursor:pointer;color:var(--blue);"><i class="bi bi-image"></i> Gambar<input type="file" name="image" id="composerFileDesk" accept="image/*" hidden></label>
                         <button class="btn btn-primary ms-auto px-4" style="border-radius:12px;">Posting</button>
                     </div>
                 </form>
@@ -140,8 +149,8 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
                     <img src="{{ \App\Services\FirebaseStorageService::url($p->image) }}" class="img-fluid rounded-4 mt-3" style="max-height:420px;width:100%;object-fit:cover;" alt="">
                 @endif
                 <div class="d-flex align-items-center gap-1 mt-3 pt-2 border-top flex-wrap">
-                    <form method="POST" action="{{ route('global.portal.like', $p) }}">@csrf
-                        <button class="gp-action {{ $liked ? 'liked' : '' }}"><i class="bi {{ $liked ? 'bi-heart-fill' : 'bi-heart' }}"></i> {{ $p->likes_count }}</button>
+                    <form method="POST" action="{{ route('global.portal.like', $p) }}" class="like-form">@csrf
+                        <button class="gp-action {{ $liked ? 'liked' : '' }}"><i class="bi {{ $liked ? 'bi-heart-fill' : 'bi-heart' }}"></i> <span class="like-count">{{ $p->likes_count }}</span></button>
                     </form>
                     <a href="#cmt-{{ $p->id }}" class="gp-action"><i class="bi bi-chat"></i> {{ $p->comments_count }}</a>
                     @if(!$isAdmin && $p->user_id !== $myId)
@@ -225,9 +234,84 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
     </div>
 </div>
 @endforeach
-{{-- Infinite scroll + pil postingan baru --}}
+{{-- Infinite scroll + pil postingan baru + ring dilihat + like AJAX + preview upload --}}
 <script>
 (function () {
+    /* Pratinjau gambar composer dalam kontainer. */
+    var dFile = document.getElementById('composerFileDesk');
+    var dBox = document.getElementById('composerPreviewDesk');
+    var dImg = document.getElementById('composerPreviewDeskImg');
+    var dName = document.getElementById('composerPreviewDeskName');
+    var dRm = document.getElementById('composerPreviewDeskRemove');
+    if (dFile && dBox) {
+        dFile.addEventListener('change', function () {
+            var f = dFile.files && dFile.files[0];
+            if (!f) { dBox.style.display = 'none'; return; }
+            if (f.size > 4 * 1024 * 1024) {
+                alert('Ukuran gambar maksimal 4MB.');
+                dFile.value = '';
+                dBox.style.display = 'none';
+                return;
+            }
+            var rd = new FileReader();
+            rd.onload = function (ev) {
+                dImg.src = ev.target.result;
+                dName.innerText = f.name + ' • ' + Math.round(f.size / 1024) + ' KB';
+                dBox.style.display = 'block';
+            };
+            rd.readAsDataURL(f);
+        });
+        if (dRm) dRm.addEventListener('click', function () {
+            dFile.value = '';
+            dBox.style.display = 'none';
+        });
+    }
+    /* Like AJAX: tetap di tempat, tanpa reload/scroll. */
+    document.addEventListener('submit', function (e) {
+        var f = e.target && e.target.closest ? e.target.closest('.like-form') : null;
+        if (!f) return;
+        e.preventDefault();
+        var btn = f.querySelector('button');
+        var icon = f.querySelector('i');
+        var count = f.querySelector('.like-count');
+        if (btn) btn.disabled = true;
+        fetch(f.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(f)
+        }).then(function (r) { return r.json(); }).then(function (d) {
+            if (icon) {
+                if (d.liked) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill'); }
+                else { icon.classList.add('bi-heart'); icon.classList.remove('bi-heart-fill'); }
+            }
+            if (btn) btn.classList.toggle('liked', !!d.liked);
+            if (count && typeof d.likes_count !== 'undefined') count.innerText = d.likes_count;
+        }).catch(function () {
+            f.submit();
+        }).finally(function () { if (btn) btn.disabled = false; });
+    });
+    function seenIds() {
+        try { return JSON.parse(localStorage.getItem('seenStories') || '[]'); }
+        catch (e) { return []; }
+    }
+    function paintSeen() {
+        var seen = seenIds();
+        document.querySelectorAll('[data-story-ring]').forEach(function (el) {
+            if (seen.indexOf(parseInt(el.getAttribute('data-story-ring'), 10)) !== -1) el.classList.add('seen');
+        });
+    }
+    paintSeen();
+    document.addEventListener('click', function (e) {
+        var b = e.target && e.target.closest ? e.target.closest('[data-story-open]') : null;
+        if (!b) return;
+        var id = parseInt(b.getAttribute('data-story-open'), 10);
+        try {
+            var seen = seenIds();
+            if (seen.indexOf(id) === -1) { seen.push(id); localStorage.setItem('seenStories', JSON.stringify(seen.slice(-200))); }
+        } catch (err) {}
+        var ring = document.querySelector('[data-story-ring="' + id + '"]');
+        if (ring) ring.classList.add('seen');
+    });
     var nextUrl = @json($posts->nextPageUrl());
     var endEl = document.getElementById('feedEnd');
     if (!endEl) return;

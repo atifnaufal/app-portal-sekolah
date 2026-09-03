@@ -107,7 +107,13 @@ class RegisterController extends Controller
         $data['aktif'] = false;
         $user = User::create($data);
 
-        return redirect()->route('login')->with('success',
-            'Pendaftaran berhasil. Akun Anda menunggu persetujuan admin sebelum bisa digunakan.');
+        // Wajibkan membaca Syarat & Ketentuan sebelum ke login.
+        return redirect()->route('register.syarat')->with('registered_name', $user->name);
+    }
+
+    /** Halaman Syarat & Ketentuan pasca-pendaftaran (wajib dibaca + disetujui). */
+    public function syarat()
+    {
+        return view('auth.syarat', ['name' => session('registered_name')]);
     }
 }

@@ -9,7 +9,8 @@
 .ig-stories{display:flex;gap:12px;overflow-x:auto;padding:12px 14px;border-bottom:1px solid #efefef;scrollbar-width:none}
 .ig-stories::-webkit-scrollbar{display:none}
 .ig-story{flex-shrink:0;text-align:center;width:66px}
-.ig-ring{width:66px;height:66px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5)}
+.ig-ring{width:66px;height:66px;border-radius:50%;padding:3px;background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5);transition:background .3s}
+.ig-ring.seen{background:#d4d4d4}
 .ig-ring img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid #fff;display:block}
 .ig-ring.add{position:relative;background:#fff;border:2px dashed #dbdbdb;padding:0;display:grid;place-items:center}
 .ig-plus{position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:#0095f6;color:#fff;display:grid;place-items:center;border:2px solid #fff;font-size:12px}
@@ -53,7 +54,7 @@
     </div>
     @foreach(($storiesGrouped ?? collect()) as $uid => $st)
     <div class="ig-story" data-story-id="{{ $st->id }}">
-      <div class="ig-ring"><img src="{{ \App\Services\FirebaseStorageService::url($st->image) }}" alt=""></div>
+      <div class="ig-ring story-ring" data-story-ring="{{ $st->id }}"><img src="{{ \App\Services\FirebaseStorageService::url($st->image) }}" alt=""></div>
       <div class="ig-name">{{ $uid == $myId ? 'Anda' : explode(' ', strtolower($st->user->name))[0] }}</div>
     </div>
     @endforeach
@@ -72,7 +73,27 @@
   </div>
   <script>
     var storyData = {!! $storiesJson ?? '[]' !!};
+    /* Cerita dilihat → ring abu-abu (tersimpan per perangkat). */
     var storyTimer = null, storyList = [], storyIdx = 0;
+    function seenIds() {
+      try { return JSON.parse(localStorage.getItem('seenStories') || '[]'); }
+      catch (e) { return []; }
+    }
+    function paintSeenRings() {
+      var seen = seenIds();
+      document.querySelectorAll('[data-story-ring]').forEach(function (el) {
+        if (seen.indexOf(parseInt(el.getAttribute('data-story-ring'), 10)) !== -1) el.classList.add('seen');
+      });
+    }
+    function markStorySeen(id) {
+      try {
+        var seen = seenIds();
+        if (seen.indexOf(id) === -1) { seen.push(id); localStorage.setItem('seenStories', JSON.stringify(seen.slice(-200))); }
+      } catch (e) {}
+      var el = document.querySelector('[data-story-ring="' + id + '"]');
+      if (el) el.classList.add('seen');
+    }
+    paintSeenRings();
     function openStory(id) {
       storyList = storyData; storyIdx = Math.max(0, storyList.findIndex(s => s.id === id));
       document.getElementById('storyViewer').style.display = 'block';
@@ -81,6 +102,7 @@
     }
     function showStory() {
       var s = storyList[storyIdx]; if (!s) return closeStory();
+      markStorySeen(s.id);
       document.getElementById('storyImg').src = s.img;
       document.getElementById('storyAvatar').src = s.avatar;
       document.getElementById('storyUser').innerText = s.user;
@@ -109,8 +131,16 @@
         <span style="margin-left:auto;font-size:10px;font-weight:700;color:#0095f6;background:#eef6ff;padding:5px 10px;border-radius:99px;">{{ $me?->school?->name ?? 'Umum' }} • otomatis</span>
       </div>
       <textarea name="content" class="ig-textarea" rows="2" placeholder="Apa yang ingin kamu bagikan hari ini?" required></textarea>
+      <div id="composerPreview" style="display:none;margin-top:8px;position:relative;border-radius:14px;overflow:hidden;border:1px solid #efefef;">
+        <img id="composerPreviewImg" src="" style="width:100%;max-height:220px;object-fit:cover;display:block;" alt="">
+        <div style="position:absolute;left:8px;bottom:8px;right:8px;display:flex;gap:8px;align-items:center;background:rgba(15,23,42,.65);backdrop-filter:blur(8px);border-radius:10px;padding:7px 10px;">
+          <i class="bi bi-file-earmark-image" style="color:#fff;"></i>
+          <span id="composerPreviewName" style="flex:1;font-size:11px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+          <button type="button" id="composerPreviewRemove" style="background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:8px;width:26px;height:26px;font-size:13px;">✕</button>
+        </div>
+      </div>
       <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-        <label style="display:flex;gap:6px;align-items:center;font-size:12px;color:#0095f6;font-weight:700;cursor:pointer"><i class="bi bi-image"></i> Gambar <input type="file" name="image" accept="image/*" hidden></label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:12px;color:#0095f6;font-weight:700;cursor:pointer"><i class="bi bi-image"></i> Gambar <input type="file" name="image" id="composerFile" accept="image/*" hidden></label>
         <button class="btn" style="margin-left:auto;background:#0095f6;color:#fff;padding:8px 16px;border-radius:10px;font-weight:700;border:0">Posting</button>
       </div>
     </form>
@@ -130,7 +160,7 @@
     @if($p->image)<img src="{{ \App\Services\FirebaseStorageService::url($p->image) }}" class="ig-img" alt="">@endif
     <div class="ig-actions" style="gap:16px">
       @php $liked = $p->likes->contains('user_id', session('user_id')); @endphp
-      <form method="POST" action="{{ route('global.portal.like',$p) }}" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button><span style="font-size:11px;color:#8e8e8e">pesan</span></form>
+      <form method="POST" action="{{ route('global.portal.like',$p) }}" class="like-form" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span class="like-count" style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button><span style="font-size:11px;color:#8e8e8e">pesan</span></form>
       <a href="#cmt-{{ $p->id }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-chat"></i><span style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></a>
       @if(session('user_role')!=='admin')
       <a href="{{ route('chat.startPrivate',$p->user) }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i><span style="font-size:11px;font-weight:700">pesan</span></a>
@@ -165,7 +195,60 @@
   <button id="newPostsPill" style="display:none;position:fixed;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:2500;background:#0f172a;color:#fff;border:0;border-radius:99px;padding:10px 20px;font-size:13px;font-weight:800;box-shadow:0 12px 30px rgba(15,23,42,.35);"><i class="bi bi-arrow-up-circle me-1"></i><span id="newPostsTxt">Postingan baru</span></button>
 </div>
 <script>
-  /* Infinite scroll + pil postingan baru (60 detik). */
+  /* Like AJAX: tetap di tempat, tanpa reload/scroll. */
+  document.addEventListener('submit', function (e) {
+    var f = e.target && e.target.closest ? e.target.closest('.like-form') : null;
+    if (!f) return;
+    e.preventDefault();
+    var btn = f.querySelector('button');
+    var icon = f.querySelector('i');
+    var count = f.querySelector('.like-count');
+    if (btn) btn.disabled = true;
+    fetch(f.action, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: new FormData(f)
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (icon) {
+        if (d.liked) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill', 'ig-like'); }
+        else { icon.classList.add('bi-heart'); icon.classList.remove('bi-heart-fill', 'ig-like'); }
+      }
+      if (count && typeof d.likes_count !== 'undefined') count.innerText = d.likes_count;
+    }).catch(function () {
+      f.submit(); // fallback: cara lama bila fetch gagal
+    }).finally(function () { if (btn) btn.disabled = false; });
+  });
+
+  /* Pratinjau gambar composer dalam kontainer + tombol hapus. */
+  document.addEventListener('DOMContentLoaded', function () {
+    var file = document.getElementById('composerFile');
+    var box = document.getElementById('composerPreview');
+    var img = document.getElementById('composerPreviewImg');
+    var nameEl = document.getElementById('composerPreviewName');
+    var rm = document.getElementById('composerPreviewRemove');
+    if (!file || !box) return;
+    file.addEventListener('change', function () {
+      var f = file.files && file.files[0];
+      if (!f) { box.style.display = 'none'; return; }
+      if (f.size > 4 * 1024 * 1024) {
+        alert('Ukuran gambar maksimal 4MB.');
+        file.value = '';
+        box.style.display = 'none';
+        return;
+      }
+      var rd = new FileReader();
+      rd.onload = function (ev) {
+        img.src = ev.target.result;
+        nameEl.innerText = f.name + ' • ' + Math.round(f.size / 1024) + ' KB';
+        box.style.display = 'block';
+      };
+      rd.readAsDataURL(f);
+    });
+    if (rm) rm.addEventListener('click', function () {
+      file.value = '';
+      box.style.display = 'none';
+    });
+  });
   (function () {
     var nextUrl = @json($posts->nextPageUrl());
     var loading = false;

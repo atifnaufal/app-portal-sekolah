@@ -245,16 +245,26 @@ class GlobalPortalController extends Controller
         return back()->with('success', 'Postingan ditampilkan kembali.');
     }
 
-    public function toggleLike(Request $request, GlobalPost $post): RedirectResponse
+    public function toggleLike(Request $request, GlobalPost $post): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $uid = UserContextHelper::id($request);
         $like = $post->likes()->where('user_id', $uid)->first();
         if ($like) {
             $like->delete();
             GlobalPost::withoutTimestamps(fn () => $post->decrement('likes_count'));
+            $liked = false;
         } else {
             $post->likes()->create(['user_id' => $uid]);
             GlobalPost::withoutTimestamps(fn () => $post->increment('likes_count'));
+            $liked = true;
+        }
+
+        // AJAX (fetch) → JSON agar UI update di tempat tanpa reload/scroll.
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'liked' => $liked,
+                'likes_count' => (int) $post->fresh()->likes_count,
+            ]);
         }
 
         return back();
