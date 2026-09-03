@@ -144,6 +144,7 @@ Route::middleware('role:guru,siswa,admin')->group(function () {
     Route::post('/global-portal/follow/{user}', [GlobalPortalController::class, 'toggleFollow'])->name('global.portal.follow');
     Route::get('/global-portal/aktivitas', [GlobalPortalController::class, 'activity'])->name('global.portal.activity');
     Route::get('/global-portal/cek-baru', [GlobalPortalController::class, 'check'])->name('global.portal.check');
+    Route::get('/global-portal/segar', [GlobalPortalController::class, 'refresh'])->name('global.portal.refresh');
     Route::get('/global-portal/profile/{user}', [GlobalPortalController::class, 'profile'])->name('global.portal.profile');
 });
 

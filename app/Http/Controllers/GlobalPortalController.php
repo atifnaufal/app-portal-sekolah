@@ -367,6 +367,70 @@ class GlobalPortalController extends Controller
         return response()->json(['new_count' => $q->count()]);
     }
 
+    /** Segarkan feed postingan (AJAX) — return HTML card baru. */
+    public function refresh(Request $request)
+    {
+        $me = UserContextHelper::user($request);
+        $isSuper = $me && $me->isSuperAdmin();
+        $hasModeration = Schema::hasColumn('global_posts', 'is_hidden');
+
+        $paginated = GlobalPost::with(['user.school', 'user.followers', 'school', 'likes.user', 'comments.user'])
+            ->when(! $isSuper && $hasModeration, fn ($q) => $q->where('is_hidden', false))
+            ->latest()->paginate(15);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            $html = '';
+            foreach ($paginated as $p) {
+                $liked = $p->likes->contains('user_id', session('user_id'));
+                $commentsHtml = '';
+                foreach ($p->comments->take(2) as $c) {
+                    $commentsHtml .= '<div class="ig-cmt"><b>' . e($c->user->name) . '</b> ' . e($c->body) . '</div>';
+                }
+                $html .= '<div class="ig-card" data-post-id="' . $p->id . '">
+                    <a href="' . route('global.portal.profile', $p->user) . '" class="ig-head" style="text-decoration:none;color:inherit">
+                        <div class="ig-avatar"><img src="' . e($p->user->avatar_url) . '" alt=""></div>
+                        <div class="ig-meta">
+                            <div class="ig-user">' . e($p->user->name) . ' @if($p->user->isOnline())<span style="width:6px;height:6px;background:#22c55e;border-radius:50%;display:inline-block"></span>@endif <span style="font-size:11px;color:#0095f6">• ' . e($p->school->name ?? $p->user->school->name ?? 'Umum') . '</span></div>
+                            <div class="ig-sub">' . e($p->created_at->diffForHumans()) . ' • ' . e($p->user->followers->count()) . ' followers • ' . e($p->created_at->translatedFormat('d M Y')) . '</div>
+                        </div>
+                        <i class="bi bi-three-dots"></i>
+                    </a>
+                    <div style="padding:0 14px 8px;font-size:13px;white-space:pre-wrap">' . e($p->content) . '</div>
+                    ' . ($p->image ? '<img src="' . \App\Services\FirebaseStorageService::url($p->image) . '" class="ig-img" alt="">' : '') . '
+                    <div class="ig-actions" style="gap:16px">
+                        <form method="POST" action="' . route('global.portal.like', $p) . '" class="like-form" style="display:flex;align-items:center;gap:4px">
+                            <button style="background:none;border:0;display:flex;align-items:center;gap:4px">
+                                <i class="bi ' . ($liked ? 'bi-heart-fill ig-like' : 'bi-heart') . '"></i>
+                                <span class="like-count" style="font-size:12px;font-weight:700">' . $p->likes_count . '</span>
+                            </button>
+                        </form>
+                        <button onclick="openCmtSheet(' . $p->id . ', ' . json_encode($p->comments->map(fn($c) => ['user' => $c->user->name, 'avatar' => $c->user->avatar_url, 'body' => $c->body, 'time' => $c->created_at->diffForHumans()])) . ')" style="background:none;border:0;color:#262626;display:flex;align-items:center;gap:4px;padding:0">
+                            <i class="bi bi-chat"></i><span class="cmt-count" style="font-size:12px;font-weight:700">' . $p->comments_count . '</span>
+                        </button>
+                        ' . (session('user_role') !== 'admin' ? '<a href="' . route('chat.startPrivate', $p->user) . '" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i></a>' : '') . '
+                        ' . (session('user_role') !== 'admin' && $p->user_id !== (int)session('user_id') ? '<form method="POST" action="' . route('global.portal.report', $p) . '" class="report-form"><button style="background:none;border:0;color:#8e8e8e;"><i class="bi bi-flag"></i></button></form>' : '') . '
+                        <span style="margin-left:auto;cursor:pointer" onclick="navigator.share?navigator.share({text:' . json_encode($p->content) . '}):alert(\'Link disalin\')"><i class="bi bi-share"></i></span>
+                    </div>
+                    <div style="padding:0 14px;display:flex;gap:12px;font-size:11px;color:#8e8e8e">
+                        <a href="#" onclick="event.preventDefault();document.getElementById(\'likes-' . $p->id . '\').style.display=\'block\'" style="color:#262626;text-decoration:none"><b>' . $p->likes_count . ' suka</b></a> • 
+                        <a href="#" onclick="event.preventDefault();openCmtSheet(' . $p->id . ', ' . json_encode($p->comments->map(fn($c) => ['user' => $c->user->name, 'avatar' => $c->user->avatar_url, 'body' => $c->body, 'time' => $c->created_at->diffForHumans()])) . ')" style="color:#262626;text-decoration:none">' . $p->comments_count . ' komentar</a>
+                    </div>
+                    <div class="ig-caption"><b>' . e($p->user->name) . '</b> ' . \Illuminate\Support\Str::limit($p->content, 80) . '</div>
+                    <div class="ig-comments" id="cmt-' . $p->id . '" style="display:none">' . $commentsHtml . '
+                        <form method="POST" action="' . route('global.portal.comment', $p) . '" class="comment-form" style="display:flex;gap:8px;margin-top:8px">
+                            <input name="body" placeholder="Tulis komentar..." required maxlength="500" style="flex:1;border:0;font-size:13px;outline:0">
+                            <button style="background:none;border:0;color:#0095f6;font-weight:700;font-size:13px">Kirim</button>
+                        </form>
+                    </div>
+                    <div class="ig-time">' . $p->created_at->translatedFormat('d F Y') . '</div>
+                </div>';
+            }
+            return response()->json(['ok' => true, 'html' => $html, 'count' => $paginated->count(), 'nextUrl' => $paginated->nextPageUrl()]);
+        }
+
+        return back();
+    }
+
     /** Halaman Aktivitas ala IG: like, follower baru, komentar terbaru. */
     public function activity(Request $request): View
     {

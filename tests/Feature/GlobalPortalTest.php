@@ -234,6 +234,19 @@ class GlobalPortalTest extends TestCase
             ->assertJsonPath('new_count', 0);
     }
 
+    public function test_refresh_endpoint_returns_fresh_posts(): void
+    {
+        $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 's1-rf', 'is_active' => true]);
+        $guru = $this->makeGuru($school, 'grf@t.id');
+        GlobalPost::create(['user_id' => $guru->id, 'school_id' => $school->id, 'content' => 'post lama']);
+
+        $this->withSession($this->sessionFor($guru))
+            ->getJson(route('global.portal.refresh'))
+            ->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonStructure(['ok', 'html', 'count', 'nextUrl']);
+    }
+
     public function test_activity_page_renders_mobile_and_desktop(): void
     {
         $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 's1-a', 'is_active' => true]);

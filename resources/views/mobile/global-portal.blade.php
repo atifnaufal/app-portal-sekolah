@@ -59,7 +59,25 @@
 .cmt-content{flex:1;font-size:13px}
 .cmt-user{font-weight:800;margin-right:4px}
 .cmt-meta{font-size:11px;color:#8e8e8e;margin-top:2px;display:flex;gap:10px}
+/* Pull to Refresh Indicator */
+.ptr-box {
+    position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%) translateY(-80px);
+    z-index: 9500; background: #fff; padding: 8px 16px; border-radius: 999px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; color: var(--navy); border: 1px solid #e2e8f0;
+    transition: transform .25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity .25s;
+    opacity: 0; pointer-events: none;
+}
+.ptr-box.visible { opacity: 1; }
+.ptr-spinner { width: 16px; height: 16px; border: 2px solid var(--blue); border-right-color: transparent; border-radius: 50%; animation: pui-spin .6s linear infinite; display: none; }
+.ptr-arrow { font-size: 14px; color: var(--blue); transition: transform .2s; }
 </style>
+
+<div id="ptrBox" class="ptr-box">
+    <div id="ptrSpinner" class="ptr-spinner"></div>
+    <i id="ptrArrow" class="bi bi-arrow-down ptr-arrow"></i>
+    <span id="ptrText">Tarik untuk memuat ulang</span>
+</div>
 
 <div id="cmt-sheet-overlay" onclick="if(event.target===this)closeCmtSheet()">
     <div id="cmt-sheet">
@@ -249,6 +267,99 @@
   <button id="newPostsPill" style="display:none;position:fixed;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:2500;background:#0f172a;color:#fff;border:0;border-radius:99px;padding:10px 20px;font-size:13px;font-weight:800;box-shadow:0 12px 30px rgba(15,23,42,.35);"><i class="bi bi-arrow-up-circle me-1"></i><span id="newPostsTxt">Postingan baru</span></button>
 </div>
 <script>
+  /* Pull to Refresh Logic (Native-like touch gesture) */
+  (function() {
+    let startY = 0, pulling = false, refreshing = false;
+    const ptrBox = document.getElementById('ptrBox');
+    const ptrText = document.getElementById('ptrText');
+    const ptrArrow = document.getElementById('ptrArrow');
+    const ptrSpinner = document.getElementById('ptrSpinner');
+    const threshold = 85;
+
+    window.addEventListener('touchstart', function(e) {
+      if (window.scrollY === 0) {
+        startY = e.touches[0].clientY;
+        pulling = true;
+      }
+    }, {passive: true});
+
+    window.addEventListener('touchmove', function(e) {
+      if (!pulling || refreshing) return;
+      let y = e.touches[0].clientY;
+      let diff = y - startY;
+      if (diff > 0 && window.scrollY === 0) {
+        let pullDist = Math.min(diff * 0.4, 110);
+        ptrBox.style.transform = `translateX(-50%) translateY(${pullDist - 60}px)`;
+        ptrBox.classList.add('visible');
+        if (pullDist >= threshold) {
+          ptrText.innerText = 'Lepaskan untuk memuat ulang';
+          ptrArrow.style.transform = 'rotate(180deg)';
+        } else {
+          ptrText.innerText = 'Tarik untuk memuat ulang';
+          ptrArrow.style.transform = 'rotate(0deg)';
+        }
+      }
+    }, {passive: true});
+
+    window.addEventListener('touchend', function() {
+      if (!pulling || refreshing) return;
+      pulling = false;
+      let currentTransform = ptrBox.style.transform;
+      let match = currentTransform.match(/translateY\(([-\d.]+)px\)/);
+      let pos = match ? parseFloat(match[1]) : -80;
+
+      if (pos >= threshold - 70) {
+        refreshing = true;
+        ptrBox.style.transform = 'translateX(-50%) translateY(20px)';
+        ptrText.innerText = 'Memuat ulang...';
+        ptrArrow.style.display = 'none';
+        ptrSpinner.style.display = 'block';
+        puiLoading(true, 'Menyegarkan halaman...');
+        fetch("{{ route('global.portal.refresh') }}", { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+          .then(function(r) { return r.json(); })
+          .then(function(res) {
+            if (res.ok && res.html) {
+              var doc = new DOMParser().parseFromString(res.html, 'text/html');
+              var newCards = doc.querySelectorAll('.ig-card');
+              var oldCards = document.querySelectorAll('.ig-card');
+              oldCards.forEach(function(c) { c.remove(); });
+              var feed = document.getElementById('feedEnd').parentElement;
+              newCards.forEach(function(c) { feed.insertBefore(c, document.getElementById('feedEnd')); });
+              var newStories = doc.querySelectorAll('.ig-story[data-story-id]');
+              newStories.forEach(function(s) {
+                var existing = document.querySelector('.ig-story[data-story-id="' + s.getAttribute('data-story-id') + '"]');
+                if (existing) existing.replaceWith(s);
+              });
+              var newStoryRings = doc.querySelectorAll('[data-story-ring]');
+              newStoryRings.forEach(function(r) {
+                var existing = document.querySelector('[data-story-ring="' + r.getAttribute('data-story-ring') + '"]');
+                if (existing) existing.classList.remove('seen');
+                var seen = seenIds();
+                if (seen.indexOf(parseInt(r.getAttribute('data-story-ring'), 10)) !== -1) r.classList.add('seen');
+              });
+              puiToast('Halaman berhasil diperbarui! ' + res.count + ' postingan baru.');
+              if (res.nextUrl) window.nextUrl = res.nextUrl; else window.nextUrl = null;
+            } else {
+              puiToast('Gagal menyegarkan halaman');
+            }
+          })
+          .catch(function() { puiToast('Koneksi bermasalah, coba lagi'); })
+          .finally(function() {
+            puiLoading(false);
+            ptrBox.style.transform = 'translateX(-50%) translateY(-80px)';
+            ptrBox.classList.remove('visible');
+            ptrSpinner.style.display = 'none';
+            ptrArrow.style.display = 'block';
+            ptrText.innerText = 'Tarik untuk memuat ulang';
+            refreshing = false;
+          });
+      } else {
+        ptrBox.style.transform = 'translateX(-50%) translateY(-80px)';
+        ptrBox.classList.remove('visible');
+      }
+    });
+  })();
+
   /* UI Helpers */
   function puiToast(msg, dur=3000) {
     var t = document.getElementById('pui-toast');
@@ -518,21 +629,21 @@
   }
 
   (function () {
-    var nextUrl = @json($posts->nextPageUrl());
+    window.nextUrl = @json($posts->nextPageUrl());
     var loading = false;
     var loader = document.getElementById('feedLoader');
     var moreBtn = document.getElementById('feedMoreBtn');
     var doneEl = document.getElementById('feedDone');
     var endEl = document.getElementById('feedEnd');
     function refreshState() {
-      if (nextUrl) { moreBtn.style.display = 'inline-block'; doneEl.style.display = 'none'; }
+      if (window.nextUrl) { moreBtn.style.display = 'inline-block'; doneEl.style.display = 'none'; }
       else { moreBtn.style.display = 'none'; loader.style.display = 'none'; doneEl.style.display = 'block'; }
     }
     refreshState();
     function loadMore() {
-      if (loading || !nextUrl) return;
+      if (loading || !window.nextUrl) return;
       loading = true; loader.style.display = 'block'; moreBtn.style.display = 'none';
-      fetch(nextUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      fetch(window.nextUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(r => r.text())
         .then(html => {
           var doc = new DOMParser().parseFromString(html, 'text/html');
@@ -541,12 +652,12 @@
           cards.forEach(c => feed.insertBefore(c, endEl));
           if (cards.length >= 15) {
             try {
-              var u = new URL(nextUrl);
+              var u = new URL(window.nextUrl);
               var p = parseInt(u.searchParams.get('page') || '1', 10);
               u.searchParams.set('page', p + 1);
-              nextUrl = u.toString();
-            } catch (e) { nextUrl = null; }
-          } else { nextUrl = null; }
+              window.nextUrl = u.toString();
+            } catch (e) { window.nextUrl = null; }
+          } else { window.nextUrl = null; }
           loading = false; loader.style.display = 'none'; refreshState();
         })
         .catch(() => { loading = false; loader.style.display = 'none'; refreshState(); });
