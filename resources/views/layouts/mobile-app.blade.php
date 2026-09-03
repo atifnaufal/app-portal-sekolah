@@ -276,6 +276,8 @@
         <a class="{{ request()->routeIs('global.portal') ? 'active' : '' }}" href="{{ route('global.portal') }}">
             <i class="bi bi-globe2 nav-icon"></i>Global
         </a>
+        @if(session('user_role') !== 'admin')
+        {{-- Tab berikut 403 untuk admin (route guru/siswa) — disembunyikan otomatis --}}
         <a class="{{ request()->routeIs('absensi.*') ? 'active' : '' }}" href="{{ route('absensi.index') }}">
             <i class="bi bi-calendar-check nav-icon"></i>Absen
         </a>
@@ -288,6 +290,7 @@
         <a class="{{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.show') }}">
             <i class="bi bi-person nav-icon"></i>Profil
         </a>
+        @endif
     </nav>
     @endif
 

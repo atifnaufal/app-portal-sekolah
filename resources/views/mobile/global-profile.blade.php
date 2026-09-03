@@ -16,7 +16,7 @@
       <div><div style="font-weight:900">{{ $posts->total() }}</div><div style="font-size:11px;color:#8e8e8e">Post</div></div>
     </div>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:14px">
-      @if(session('user_id')!=$profileUser->id)
+      @if(session('user_id')!=$profileUser->id && session('user_role')!=='admin')
         <form method="POST" action="{{ route('global.portal.follow',$profileUser) }}">@csrf<button class="btn" style="background:{{ $isFollowing?'#fff':'#0095f6' }};color:{{ $isFollowing?'#262626':'#fff' }};border:1px solid #dbdbdb;padding:8px 16px;border-radius:10px;font-weight:700">{{ $isFollowing?'Mengikuti':'Ikuti' }}</button></form>
         <a href="{{ route('chat.startPrivate',$profileUser) }}" class="btn" style="background:#efefef;color:#262626;padding:8px 16px;border-radius:10px;font-weight:700;text-decoration:none"><i class="bi bi-send"></i> Pesan</a>
       @endif

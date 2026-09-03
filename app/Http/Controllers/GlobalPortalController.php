@@ -78,6 +78,9 @@ class GlobalPortalController extends Controller
     {
         $posts = \App\Models\GlobalPost::where('user_id',$user->id)->latest()->paginate(12);
         $isFollowing = \App\Models\GlobalFollow::where('follower_id', UserContextHelper::id($request))->where('followed_id',$user->id)->exists();
-        return view('mobile.global-profile', ['profileUser'=>$user->load(['school','followers','following']), 'posts'=>$posts, 'isFollowing'=>$isFollowing]);
+        $isMobile = (bool) preg_match('/(android|iphone|mobile)/i', $request->userAgent());
+        $view = $isMobile ? 'mobile.global-profile' : 'global-portal.profile';
+        if (! view()->exists($view)) $view = 'mobile.global-profile';
+        return view($view, ['profileUser'=>$user->load(['school','followers','following']), 'posts'=>$posts, 'isFollowing'=>$isFollowing]);
     }
 }

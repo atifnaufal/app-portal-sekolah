@@ -96,8 +96,10 @@
     <div class="ig-actions" style="gap:16px">
       @php $liked = $p->likes->contains('user_id', session('user_id')); @endphp
       <form method="POST" action="{{ route('global.portal.like',$p) }}" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button><span style="font-size:11px;color:#8e8e8e">pesan</span></form>
-      <a href="{{ route('chat.startPrivate',$p->user) }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i><span style="font-size:11px;font-weight:700">pesan</span></a>
       <a href="#cmt-{{ $p->id }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-chat"></i><span style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></a>
+      @if(session('user_role')!=='admin')
+      <a href="{{ route('chat.startPrivate',$p->user) }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i><span style="font-size:11px;font-weight:700">pesan</span></a>
+      @endif
       <span style="margin-left:auto" onclick="navigator.share?navigator.share({text:@json($p->content)}):alert('Link disalin')"><i class="bi bi-share"></i></span>
     </div>
     <div style="padding:0 14px;display:flex;gap:12px;font-size:11px;color:#8e8e8e"><a href="#" onclick="event.preventDefault();document.getElementById('likes-{{ $p->id }}').style.display='block'" style="color:#262626;text-decoration:none"><b>{{ $p->likes_count }} suka</b> — lihat</a> • <a href="#cmt-{{ $p->id }}" style="color:#262626;text-decoration:none">{{ $p->comments_count }} komentar — lihat</a></div>
