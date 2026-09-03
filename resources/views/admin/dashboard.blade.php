@@ -102,7 +102,70 @@
 </div>
 @endif
 
-{{-- Hero Section --}}
+{{-- Hero Section (admin sekolah) / Header ramping (admin pusat) --}}
+@if(!empty($isSuperAdmin))
+<div class="ad-hero">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-4" style="position:relative; z-index:1;">
+        <div>
+            <div class="ad-hero-eyebrow">Admin Pusat &bull; Control Center</div>
+            <h1 class="ad-hero-title">Kelola Semua Sekolah</h1>
+            <p class="ad-hero-subtitle">Aktivasi akun sekolah, atur fitur, dan pantau statistik tiap sekolah.</p>
+        </div>
+        <div class="d-flex gap-3 flex-wrap">
+            <a href="{{ route('admin.features') }}" class="btn btn-light fw-bold px-4" style="border-radius:14px;">
+                <i class="bi bi-sliders me-2"></i> Kelola Fitur
+            </a>
+            <a href="{{ route('global.portal') }}" class="btn btn-outline-light fw-bold px-4" style="border-radius:14px;">
+                <i class="bi bi-globe me-2"></i> Global Portal
+            </a>
+        </div>
+    </div>
+</div>
+
+{{-- Ringkasan global admin pusat --}}
+<div class="row g-4 mb-5">
+    <div class="col-lg-3 col-md-6">
+        <div class="ad-stat">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="ad-stat-lbl">Sekolah</div>
+                <div class="ad-stat-icon" style="background:#eff6ff; color:var(--blue);"><i class="bi bi-buildings-fill"></i></div>
+            </div>
+            <div class="ad-stat-num">{{ number_format($totalSchools ?? 0) }}</div>
+            <div class="small text-muted mt-2"><i class="bi bi-check-circle text-primary"></i> Terdaftar</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="ad-stat">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="ad-stat-lbl">Guru</div>
+                <div class="ad-stat-icon" style="background:#f0fdf4; color:#16a34a;"><i class="bi bi-person-badge"></i></div>
+            </div>
+            <div class="ad-stat-num">{{ number_format($totalGuru) }}</div>
+            <div class="small text-muted mt-2"><i class="bi bi-people text-success"></i> Semua Sekolah</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="ad-stat">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="ad-stat-lbl">Siswa</div>
+                <div class="ad-stat-icon" style="background:#fefce8; color:#d97706;"><i class="bi bi-people"></i></div>
+            </div>
+            <div class="ad-stat-num">{{ number_format($totalSiswa) }}</div>
+            <div class="small text-muted mt-2"><i class="bi bi-mortarboard text-primary"></i> Semua Sekolah</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="ad-stat">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="ad-stat-lbl">Pending Aktivasi</div>
+                <div class="ad-stat-icon" style="background:#fef2f2; color:#dc2626;"><i class="bi bi-clock-history"></i></div>
+            </div>
+            <div class="ad-stat-num text-danger">{{ number_format($pendingCount) }}</div>
+            <div class="small text-muted mt-2"><i class="bi bi-exclamation-circle"></i> Butuh Persetujuan</div>
+        </div>
+    </div>
+</div>
+@else
 <div class="ad-hero">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-4" style="position:relative; z-index:1;">
         <div>
@@ -131,6 +194,7 @@
         </div>
     </div>
 </div>
+@endif
 
 {{-- Per-school overview (cPanel table, super admin) --}}
 @if(!empty($isSuperAdmin) && !empty($allSchools) && $allSchools->count())
@@ -178,7 +242,8 @@
 </div>
 @endif
 
-{{-- LMS Overview --}}
+@if(empty($isSuperAdmin))
+{{-- LMS Overview (khusus admin sekolah — disembunyikan di admin pusat) --}}
 <div class="row g-4 mb-4">
     <div class="col-12">
         <div class="ad-card shadow-sm">
@@ -450,6 +515,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@endif{{-- /blok academy khusus admin sekolah --}}
 </div>{{-- /.cp-main --}}
 </div>{{-- /.cp-shell --}}
 <script>

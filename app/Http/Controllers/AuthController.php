@@ -51,6 +51,7 @@ class AuthController extends Controller
             'user_role' => $user->role,
             'user_kelas_id' => $user->kelas_id,
             'admin_name' => $user->name,
+            'is_super_admin' => $user->isSuperAdmin(),
         ]);
 
         // Persistent login untuk SEMUA role (default ON). Dengan remember-token

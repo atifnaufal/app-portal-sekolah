@@ -37,7 +37,10 @@
         .cp-toggle-btn { display: inline-flex; margin-left: auto; }
     }
 </style>
-@php $adminName = (string) (session('admin_name') ?? 'Admin'); @endphp
+@php
+$adminName = (string) (session('admin_name') ?? 'Admin');
+$isSuper = ($isSuperAdmin ?? null) ?? (bool) session('is_super_admin', false);
+@endphp
 <aside class="admin-cp-sidebar" id="adminSidebar">
     <div class="admin-cp-sidebar-brand" onclick="document.getElementById('adminSidebar').classList.toggle('collapsed')">
         <div class="brand-mark" style="width:44px;height:44px;border-radius:14px;display:grid;place-items:center;">
@@ -74,6 +77,12 @@
         </a>
 
         <div class="sidebar-section-title">CONTENT</div>
+        @if($isSuper)
+            {{-- Admin pusat: hanya Global Portal --}}
+            <a href="{{ route('global.portal') }}" class="{{ request()->routeIs('global.portal*') ? 'active' : '' }}">
+                <i class="bi bi-globe"></i><span>Global Portal</span>
+            </a>
+        @else
         <a href="{{ route('admin.perpustakaan.index') }}" class="{{ request()->routeIs('admin.perpustakaan.*') ? 'active' : '' }}">
             <i class="bi bi-book-fill"></i><span>Perpustakaan</span>
         </a>
@@ -89,6 +98,7 @@
         <a href="{{ route('global.portal') }}" class="{{ request()->routeIs('global.portal*') ? 'active' : '' }}">
             <i class="bi bi-globe"></i><span>Global Portal</span>
         </a>
+        @endif
     </nav>
 
     <div class="admin-cp-sidebar-footer">
