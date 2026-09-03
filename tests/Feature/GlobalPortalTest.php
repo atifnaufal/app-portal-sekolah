@@ -161,6 +161,29 @@ class GlobalPortalTest extends TestCase
         $this->assertFalse($post->fresh()->is_hidden);
     }
 
+    public function test_activity_page_renders_mobile_and_desktop(): void
+    {
+        $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 's1-a', 'is_active' => true]);
+        $guru = $this->makeGuru($school, 'ga@t.id');
+        $fan = $this->makeGuru($school, 'fan@t.id');
+        $post = GlobalPost::create(['user_id' => $guru->id, 'school_id' => $school->id, 'content' => 'punyaku']);
+        \App\Models\GlobalLike::create(['global_post_id' => $post->id, 'user_id' => $fan->id]);
+        \App\Models\GlobalFollow::create(['follower_id' => $fan->id, 'followed_id' => $guru->id]);
+        \App\Models\GlobalComment::create(['global_post_id' => $post->id, 'user_id' => $fan->id, 'body' => 'keren!']);
+
+        $this->withServerVariables(['HTTP_USER_AGENT' => 'Mozilla/5.0 (Linux; Android 13; Mobile)'])
+            ->withSession($this->sessionFor($guru))
+            ->get(route('global.portal.activity'))
+            ->assertOk()
+            ->assertSee('keren!');
+
+        $this->withServerVariables(['HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'])
+            ->withSession($this->sessionFor($guru))
+            ->get(route('global.portal.activity'))
+            ->assertOk()
+            ->assertSee('keren!');
+    }
+
     public function test_portal_renders_when_new_tables_missing(): void
     {
         // Simulasi migrasi cerita/moderasi belum jalan di server.

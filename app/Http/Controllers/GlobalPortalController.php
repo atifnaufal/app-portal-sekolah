@@ -42,6 +42,17 @@ class GlobalPortalController extends Controller
         } catch (\Throwable $e) {
         }
 
+        // Badge aktivitas: like diterima + follower baru + komentar di postingan saya.
+        $activityCount = 0;
+        if ($me) {
+            try {
+                $activityCount += \App\Models\GlobalLike::whereHas('post', fn ($q) => $q->where('user_id', $me->id))->count();
+                $activityCount += \App\Models\GlobalFollow::where('followed_id', $me->id)->count();
+                $activityCount += \App\Models\GlobalComment::whereHas('post', fn ($q) => $q->where('user_id', $me->id))->count();
+            } catch (\Throwable $e) {
+            }
+        }
+
         $isMobile = (bool) preg_match('/(android|iphone|mobile)/i', $request->userAgent());
         $view = $isMobile ? 'mobile.global-portal' : 'global-portal.index';
         if (! view()->exists($view)) {
@@ -55,6 +66,7 @@ class GlobalPortalController extends Controller
             'isSuper' => $isSuper,
             'storiesGrouped' => $storiesGrouped,
             'myStory' => $myStory,
+            'activityCount' => $activityCount,
             // JSON viewer disiapkan di controller (ekspresi kompleks di @json merusak kompilasi Blade).
             'storiesJson' => $storiesGrouped->map(fn ($st) => [
                 'id' => $st->id,
@@ -227,6 +239,33 @@ class GlobalPortalController extends Controller
         }
 
         return back();
+    }
+
+    /** Halaman Aktivitas ala IG: like, follower baru, komentar terbaru. */
+    public function activity(Request $request): View
+    {
+        $me = UserContextHelper::user($request);
+        if (! $me) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+
+        $likes = \App\Models\GlobalLike::with(['user', 'post'])
+            ->whereHas('post', fn ($q) => $q->where('user_id', $me->id))
+            ->latest()->take(20)->get();
+        $followers = \App\Models\GlobalFollow::with('follower')
+            ->where('followed_id', $me->id)
+            ->latest()->take(20)->get();
+        $comments = \App\Models\GlobalComment::with(['user', 'post'])
+            ->whereHas('post', fn ($q) => $q->where('user_id', $me->id))
+            ->latest()->take(20)->get();
+
+        $isMobile = (bool) preg_match('/(android|iphone|mobile)/i', $request->userAgent());
+        $view = $isMobile ? 'mobile.global-activity' : 'global-portal.activity';
+        if (! view()->exists($view)) {
+            $view = 'mobile.global-activity';
+        }
+
+        return view($view, compact('likes', 'followers', 'comments', 'me'));
     }
 
     public function profile(Request $request, \App\Models\User $user): View

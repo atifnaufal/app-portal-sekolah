@@ -3,9 +3,9 @@
 @section('content')
 <style>
 .ig-page{max-width:640px;margin:0 auto;padding-bottom:110px;background:#fff}
-.ig-back{position:fixed;top:calc(12px + env(safe-area-inset-top));left:12px;z-index:3000;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border:1px solid rgba(15,23,42,.08);display:grid;place-items:center;color:#0f172a;box-shadow:0 8px 24px rgba(15,23,42,.12);text-decoration:none}
-.ig-header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #efefef;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top))}
-.ig-logo{font-family:'Brush Script MT',cursive;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.ig-header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #efefef;display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top))}
+.ig-backbtn{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#0f172a;text-decoration:none;font-size:18px;flex-shrink:0}
+.ig-logo{font-family:'Brush Script MT',cursive;font-size:24px;font-weight:800;letter-spacing:-.02em;flex:1;text-align:center}
 .ig-stories{display:flex;gap:12px;overflow-x:auto;padding:12px 14px;border-bottom:1px solid #efefef;scrollbar-width:none}
 .ig-stories::-webkit-scrollbar{display:none}
 .ig-story{flex-shrink:0;text-align:center;width:66px}
@@ -33,11 +33,11 @@
 .ig-composer{margin:12px 14px;background:#fff;border:1px solid #efefef;border-radius:16px;padding:12px}
 .ig-textarea{width:100%;border:0;outline:0;resize:none;font-size:13px}
 </style>
-<a href="{{ route('dashboard') }}" class="ig-back" title="Beranda"><i class="bi bi-house-door-fill"></i></a>
 <div class="ig-page">
-  <div class="ig-header" style="margin-top:42px;justify-content:center">
+  <div class="ig-header">
+    <a href="{{ route('dashboard') }}" class="ig-backbtn" title="Kembali"><i class="bi bi-chevron-left"></i></a>
     <div class="ig-logo">Global Portal</div>
-    <a href="{{ route('global.portal') }}" style="position:absolute;right:14px;color:#262626"><i class="bi bi-heart" style="font-size:22px"></i><span style="position:absolute;top:-6px;right:-6px;background:#ed4956;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:999px">{{ $posts->total() >99?'99+':$posts->total() }}</span></a>
+    <a href="{{ route('global.portal.activity') }}" style="position:relative;color:#262626;width:34px;text-align:center;"><i class="bi bi-heart" style="font-size:22px"></i>@if(($activityCount ?? 0) > 0)<span style="position:absolute;top:-6px;right:0;background:#ed4956;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:999px">{{ $activityCount > 99 ? '99+' : $activityCount }}</span>@endif</a>
   </div>
 
   <div class="ig-stories">
@@ -158,4 +158,97 @@
   @endforelse
   <div style="padding:12px 14px">{{ $posts->links() }}</div>
 </div>
+
+{{-- Tombol kamera cerita (di bawah ring cerita) --}}
+<div style="max-width:640px;margin:0 auto;padding:0 14px 8px;display:flex;gap:8px;">
+  <button onclick="openCamera()" style="flex:1;background:#0f172a;color:#fff;border:0;border-radius:14px;padding:12px;font-weight:800;font-size:13px;"><i class="bi bi-camera-fill me-1"></i> Kamera Cerita</button>
+  <div style="flex:2;font-size:11px;color:#8e8e8e;align-self:center;">Foto langsung kamera depan/belakang + filter, tayang 24 jam.</div>
+</div>
+
+{{-- Modal kamera: live preview, ganti depan/belakang, filter, jepret --}}
+<div id="camModal" style="display:none;position:fixed;inset:0;z-index:6000;background:#000;">
+  <div style="position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:center;gap:8px;z-index:2;">
+    <button onclick="closeCamera()" style="background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;"><i class="bi bi-x-lg"></i></button>
+    <div style="flex:1;text-align:center;color:#fff;font-weight:800;font-size:14px;">Kamera Cerita</div>
+    <button onclick="switchCamera()" style="background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;" title="Ganti kamera"><i class="bi bi-arrow-repeat"></i></button>
+  </div>
+  <video id="camVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;"></video>
+  <div style="position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));left:0;right:0;z-index:2;">
+    <div id="camFilters" style="display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none;">
+      <button data-f="none" class="cam-filter on" style="flex-shrink:0;border:2px solid #fff;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Normal</button>
+      <button data-f="grayscale(1)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Mono</button>
+      <button data-f="sepia(.8)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Vintage</button>
+      <button data-f="saturate(1.8) contrast(1.1)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Vivid</button>
+      <button data-f="brightness(1.15) saturate(1.2)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Cerah</button>
+      <button data-f="contrast(1.2) brightness(.95)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Dramatis</button>
+    </div>
+    <div style="display:flex;justify-content:center;">
+      <button onclick="captureStory()" id="camShoot" style="width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.4);font-size:26px;color:#0f172a;"><i class="bi bi-camera-fill"></i></button>
+    </div>
+    <div id="camMsg" style="text-align:center;color:#fff;font-size:12px;margin-top:8px;min-height:18px;"></div>
+  </div>
+  <canvas id="camCanvas" style="display:none;"></canvas>
+</div>
+<script>
+  var camStream = null, camFacing = 'environment', camFilter = 'none';
+  document.querySelectorAll('.cam-filter').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.cam-filter').forEach(function (x) { x.style.borderColor = 'transparent'; });
+      b.style.borderColor = '#fff';
+      camFilter = b.dataset.f;
+      document.getElementById('camVideo').style.filter = camFilter;
+    });
+  });
+  async function openCamera() {
+    document.getElementById('camModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    await startCam();
+  }
+  async function startCam() {
+    stopCam();
+    var msg = document.getElementById('camMsg');
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: false });
+      var v = document.getElementById('camVideo');
+      v.srcObject = camStream;
+      v.style.filter = camFilter;
+      msg.innerText = '';
+    } catch (e) {
+      msg.innerText = 'Kamera tidak tersedia di browser ini — pakai tombol + galeri sebagai gantinya.';
+    }
+  }
+  function switchCamera() {
+    camFacing = (camFacing === 'user') ? 'environment' : 'user';
+    startCam();
+  }
+  function closeCamera() {
+    stopCam();
+    document.getElementById('camModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  function stopCam() {
+    if (camStream) { camStream.getTracks().forEach(function (t) { t.stop(); }); camStream = null; }
+  }
+  function captureStory() {
+    var v = document.getElementById('camVideo');
+    var msg = document.getElementById('camMsg');
+    if (!camStream || !v.videoWidth) { msg.innerText = 'Kamera belum siap.'; return; }
+    var c = document.getElementById('camCanvas');
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    var ctx = c.getContext('2d');
+    if ('filter' in ctx) ctx.filter = camFilter;
+    ctx.drawImage(v, 0, 0);
+    msg.innerText = 'Mengunggah...';
+    c.toBlob(function (blob) {
+      var fd = new FormData();
+      fd.append('image', blob, 'cerita.jpg');
+      fetch("{{ route('global.portal.story.store') }}", {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'X-Requested-With': 'XMLHttpRequest' },
+        body: fd
+      }).then(function () { closeCamera(); window.location.reload(); })
+        .catch(function () { msg.innerText = 'Gagal mengunggah. Coba lagi.'; });
+    }, 'image/jpeg', 0.85);
+  }
+</script>
 @endsection

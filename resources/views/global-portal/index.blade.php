@@ -107,7 +107,10 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
         <div class="gp-card">
             <div class="gp-card-head d-flex justify-content-between align-items-center">
                 <h2 class="gp-card-title"><i class="bi bi-globe me-2 text-primary"></i>Kabar Terbaru</h2>
-                <span class="badge rounded-pill bg-primary-subtle text-primary">{{ $posts->total() }} postingan</span>
+                <div class="d-flex gap-2 align-items-center">
+                    <a href="{{ route('global.portal.activity') }}" class="btn btn-sm btn-outline-danger position-relative" style="border-radius:10px;" title="Aktivitas"><i class="bi bi-heart"></i>@if(($activityCount ?? 0) > 0)<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $activityCount > 99 ? '99+' : $activityCount }}</span>@endif</a>
+                    <span class="badge rounded-pill bg-primary-subtle text-primary">{{ $posts->total() }} postingan</span>
+                </div>
             </div>
             @forelse($posts as $p)
             @php $liked = $p->likes->contains('user_id', $myId); @endphp
