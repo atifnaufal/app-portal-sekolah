@@ -122,7 +122,7 @@
         <a href="{{ route('dashboard') }}" class="back-btn">
             <i class="bi bi-chevron-left"></i>
         </a>
-        <div style="font-weight: 800; font-size: 16px; color: var(--ink);">Pesan</div>
+
         <a href="{{ route('chat.create') }}" class="cg-fab" title="Buat grup baru"><i class="bi bi-person-plus-fill"></i></a>
     </div>
 
