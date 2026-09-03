@@ -648,6 +648,11 @@
             var icon = ext === 'excel' ? 'bi-file-earmark-excel' : 'bi-file-earmark-pdf';
             var color = ext === 'excel' ? '#16a34a' : '#dc2626';
 
+            // Resolve relative URL to absolute
+            if (url.charAt(0) === '/') {
+                url = window.location.origin + url;
+            }
+
             // Tampilkan overlay UI
             var overlay = document.getElementById('pui-file-overlay');
             if (overlay) {
@@ -659,36 +664,70 @@
                 overlay.querySelector('.pui-file-status').textContent = 'File ' + ext.toUpperCase() + ' sedang diproses.';
             }
 
-            // Coba download native via Capacitor plugin
-            if (isAndroidApp && window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
-                window.Capacitor.Plugins.NativeBridge.downloadFile({
-                    url: url,
-                    filename: (label || 'download') + '.' + (ext === 'excel' ? 'xls' : 'pdf')
-                }).then(function(res) {
-                    if (overlay) {
-                        overlay.querySelector('.pui-file-sub').textContent = 'Berhasil!';
-                        overlay.querySelector('.pui-file-status').textContent = 'File tersimpan di folder Downloads.';
-                        setTimeout(function() { overlay.classList.remove('on'); }, 2000);
-                    }
-                }).catch(function(e) {
-                    if (overlay) {
-                        overlay.querySelector('.pui-file-sub').textContent = 'Gagal mengunduh';
-                        overlay.querySelector('.pui-file-status').textContent = (e.message || e) + '. Mencoba cara lain...';
-                    }
-                    // Fallback: window.open
-                    window.open(url, '_blank');
-                    setTimeout(function() { if (overlay) overlay.classList.remove('on'); }, 2500);
-                });
-            } else if (isAndroidApp && window.Android && window.Android.downloadFile) {
-                // Legacy bridge fallback
-                window.Android.downloadFile(url);
-                setTimeout(function() { if (overlay) overlay.classList.remove('on'); }, 2000);
-            } else {
-                // Browser: buka di tab baru
+            // Fetch file as blob then save (works for both Capacitor & browser with auth)
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': ext === 'excel' ? 'application/vnd.ms-excel' : 'application/pdf'
+                },
+                credentials: 'same-origin'
+            }).then(function(response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.blob();
+            }).then(function(blob) {
+                var filename = (label || 'download') + '.' + (ext === 'excel' ? 'xls' : 'pdf');
+
+                // Try Capacitor native download first (saves to Downloads folder)
+                if (isAndroidApp && window.Capacitor && window.Capacitor.Plugins.NativeBridge) {
+                    // Create a temporary blob URL for the native downloader
+                    var blobUrl = URL.createObjectURL(blob);
+                    window.Capacitor.Plugins.NativeBridge.downloadFile({
+                        url: blobUrl,
+                        filename: filename
+                    }).then(function() {
+                        URL.revokeObjectURL(blobUrl);
+                        if (overlay) {
+                            overlay.querySelector('.pui-file-sub').textContent = 'Berhasil!';
+                            overlay.querySelector('.pui-file-status').textContent = 'File tersimpan di folder Downloads.';
+                            setTimeout(function() { overlay.classList.remove('on'); }, 2000);
+                        }
+                    }).catch(function() {
+                        URL.revokeObjectURL(blobUrl);
+                        // Fallback: save via blob URL + anchor click
+                        saveBlobAs(blob, filename, overlay);
+                    });
+                } else {
+                    // Browser: save via anchor click
+                    saveBlobAs(blob, filename, overlay);
+                }
+            }).catch(function(err) {
+                console.error('Download error:', err);
+                // Final fallback: open URL directly
                 window.open(url, '_blank');
-                setTimeout(function() { if (overlay) overlay.classList.remove('on'); }, 1500);
-            }
+                if (overlay) {
+                    overlay.querySelector('.pui-file-sub').textContent = 'Mencoba cara lain...';
+                    overlay.querySelector('.pui-file-status').textContent = 'File akan dibuka di tab baru.';
+                    setTimeout(function() { overlay.classList.remove('on'); }, 2000);
+                }
+            });
         };
+
+        function saveBlobAs(blob, filename, overlay) {
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function() {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            }, 100);
+            if (overlay) {
+                overlay.querySelector('.pui-file-sub').textContent = 'Berhasil!';
+                overlay.querySelector('.pui-file-status').textContent = 'File ' + filename + ' sedang diunduh.';
+                setTimeout(function() { overlay.classList.remove('on'); }, 2000);
+            }
+        }
     </script>
 
     <script>

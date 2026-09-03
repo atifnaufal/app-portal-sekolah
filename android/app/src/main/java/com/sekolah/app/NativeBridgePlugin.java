@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.webkit.CookieManager;
 
 import androidx.annotation.NonNull;
 import androidx.biometric.BiometricManager;
@@ -376,24 +377,37 @@ public class NativeBridgePlugin extends Plugin {
         }
 
         try {
-            DownloadManager.Request request;
+            // Resolve relative URL to full URL using WebView base
+            String fullUrl = url;
+            if (url.startsWith("/")) {
+                fullUrl = "http://10.0.2.2:8000" + url; // Laravel dev server
+            }
+
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(fullUrl));
+
+            // Add session cookies from WebView for authenticated downloads
+            CookieManager cookieManager = CookieManager.getInstance();
+            String cookies = cookieManager.getCookie(fullUrl);
+            if (cookies != null && !cookies.isEmpty()) {
+                request.addRequestHeader("Cookie", cookies);
+            }
+
             if (filename != null && !filename.isEmpty()) {
-                request = new DownloadManager.Request(Uri.parse(url));
                 request.setTitle(filename);
                 request.setDescription("Mengunduh file...");
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename);
             } else {
-                request = new DownloadManager.Request(Uri.parse(url));
-                // Extract filename from URL
-                String path = Uri.parse(url).getPath();
-                String fileName = path != null ? path.substring(path.lastIndexOf('/') + 1) : "download";
-                request.setTitle(fileName);
+                String path = Uri.parse(fullUrl).getPath();
+                String fName = path != null ? path.substring(path.lastIndexOf('/') + 1) : "download";
+                request.setTitle(fName);
                 request.setDescription("Mengunduh file...");
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fName);
             }
 
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename != null ? filename : "download");
             request.setAllowedOverMetered(true);
             request.setAllowedOverRoaming(true);
+            request.addRequestHeader("X-Requested-With", "XMLHttpRequest");
 
             DownloadManager manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
             if (manager != null) {

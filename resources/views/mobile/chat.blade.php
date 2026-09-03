@@ -35,11 +35,6 @@
         border-radius: var(--radius-lg); margin: 0 16px 24px;
         box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
     }
-    .header-block::after {
-        content: ''; position: absolute; top: -40px; right: -30px;
-        width: 160px; height: 160px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(99,102,241,.3) 0%, transparent 70%);
-    }
 
     .section-label {
         padding: 24px 20px 12px; display: flex; align-items: center; gap: 10px;
@@ -82,10 +77,12 @@
 
     .cg-fab {
         position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-        width: 40px; height: 40px; border-radius: 14px; background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        color: #fff; display: flex; align-items: center; justify-content: center;
-        font-size: 20px; text-decoration: none; box-shadow: 0 8px 16px rgba(99,102,241,.35);
+        width: 40px; height: 40px; border-radius: 14px; background: #e2e8f0;
+        color: #64748b; display: flex; align-items: center; justify-content: center;
+        font-size: 20px; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: all 0.2s;
     }
+    .cg-fab:active { transform: translateY(-50%) scale(0.9); background: #cbd5e1; }
     .invite-card {
         margin: 0 16px 12px; background: linear-gradient(135deg, #eef2ff, #f5f3ff);
         border-radius: 20px; padding: 14px 16px; border: 1px solid #e0e7ff;
