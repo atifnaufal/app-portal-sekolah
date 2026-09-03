@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kelas extends Model
 {
-    protected $fillable = ['nama', 'tingkat', 'tahun_ajaran', 'pembina_id'];
+    protected $fillable = ['nama', 'tingkat', 'tahun_ajaran', 'pembina_id', 'school_id'];
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     public function pembina(): BelongsTo
     {

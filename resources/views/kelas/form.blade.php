@@ -48,6 +48,18 @@
                             <label class="form-label">Tahun Ajaran</label>
                             <input name="tahun_ajaran" value="{{ old('tahun_ajaran',$kelas->tahun_ajaran) }}" placeholder="2026/2027" class="form-control" required>
                         </div>
+                        @if(!empty($isSuperAdmin))
+                        <div class="col-md-6">
+                            <label class="form-label">Sekolah <span class="text-danger">*</span></label>
+                            <select name="school_id" class="form-select form-control" required>
+                                <option value="" disabled {{ old('school_id', $kelas->school_id) ? '' : 'selected' }}>Pilih Sekolah</option>
+                                @foreach($schools as $sc)
+                                    <option value="{{ $sc->id }}" @selected(old('school_id', $kelas->school_id) == $sc->id)>[{{ $sc->id }}] {{ $sc->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text mt-2 small text-muted">Kelas milik sekolah ini (untuk filter per-sekolah).</div>
+                        </div>
+                        @endif
                     </div>
 
                     <div class="mt-5 d-flex gap-2">

@@ -236,7 +236,7 @@ class AdminController extends Controller
         $countQ = fn($q) => $schoolFilter ? $q->where('school_id', $schoolFilter) : $q;
         $data = [
             'users' => $users,
-            'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
+            'kelases' => Kelas::when($schoolFilter, fn ($q, $sid) => $q->where('school_id', $sid))->orderBy('tingkat')->orderBy('nama')->get(),
             'schools' => \App\Models\School::orderBy('name')->get(),
             'totalGuru' => $countQ(User::where('role', 'guru'))->count(),
             'totalSiswa' => $countQ(User::where('role', 'siswa'))->count(),
