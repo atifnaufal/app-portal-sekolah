@@ -264,6 +264,47 @@ public class NativeBridgePlugin extends Plugin {
     }
 
     @PluginMethod
+    public void saveFcmToken(PluginCall call) {
+        String fcmToken = call.getString("fcmToken");
+        if (fcmToken == null || fcmToken.isEmpty()) {
+            call.reject("FCM token is required");
+            return;
+        }
+        BackgroundService.saveFcmToken(getContext(), fcmToken);
+        BackgroundService.registerFcmToken(getContext());
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void getFcmToken(PluginCall call) {
+        String token = BackgroundService.getFcmToken(getContext());
+        JSObject ret = new JSObject();
+        ret.put("token", token != null ? token : "");
+        ret.put("available", token != null && !token.isEmpty());
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void requestFcmToken(PluginCall call) {
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
+                .addOnSuccessListener(token -> {
+                    BackgroundService.saveFcmToken(getContext(), token);
+                    BackgroundService.registerFcmToken(getContext());
+                    JSObject ret = new JSObject();
+                    ret.put("token", token);
+                    ret.put("available", true);
+                    call.resolve(ret);
+                })
+                .addOnFailureListener(e -> {
+                    call.reject("Gagal dapat FCM token: " + e.getMessage());
+                });
+        } catch (Exception e) {
+            call.reject("Firebase tidak tersedia: " + e.getMessage());
+        }
+    }
+
+    @PluginMethod
     public void requestBatteryExemption(PluginCall call) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Intent intent = new Intent();

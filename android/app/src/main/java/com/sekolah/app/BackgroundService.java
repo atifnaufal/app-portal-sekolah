@@ -299,6 +299,52 @@ public class BackgroundService extends Service {
         editor.apply();
     }
 
+    public static String getToken(Context context) {
+        return context.getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(AppConfig.KEY_TOKEN, "");
+    }
+
+    public static void saveFcmToken(Context context, String fcmToken) {
+        context.getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putString(AppConfig.KEY_FCM_TOKEN, fcmToken)
+                .apply();
+    }
+
+    public static String getFcmToken(Context context) {
+        return context.getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(AppConfig.KEY_FCM_TOKEN, "");
+    }
+
+    public static void registerFcmToken(Context context) {
+        String fcmToken = getFcmToken(context);
+        if (fcmToken == null || fcmToken.isEmpty()) return;
+        String apiToken = getToken(context);
+        if (apiToken == null || apiToken.isEmpty()) return;
+        new Thread(() -> {
+            try {
+                String baseUrl = AppConfig.API_BASE_URL;
+                if (!baseUrl.endsWith("/api")) baseUrl = baseUrl + "/api";
+                URL url = new URL(baseUrl + "/device-token");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setRequestProperty("Authorization", "Bearer " + apiToken);
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+                String json = "{\"token\":\"" + fcmToken + "\",\"platform\":\"android\"}";
+                conn.getOutputStream().write(json.getBytes());
+                int rc = conn.getResponseCode();
+                Log.d(TAG, "FCM token registered: " + rc);
+                conn.disconnect();
+            } catch (Exception e) {
+                Log.e(TAG, "FCM reg error: " + e.getMessage());
+            }
+        }).start();
+    }
+
     public static void saveUserId(Context context, int userId) {
         context.getSharedPreferences(AppConfig.PREFS_NAME, Context.MODE_PRIVATE)
                 .edit().putInt(AppConfig.KEY_USER_ID, userId).apply();

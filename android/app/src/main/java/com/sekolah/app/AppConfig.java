@@ -13,6 +13,7 @@ public class AppConfig {
     // Shared Preferences keys
     public static final String PREFS_NAME = "app_portal_prefs";
     public static final String KEY_TOKEN = "token";
+    public static final String KEY_FCM_TOKEN = "fcm_token";
     public static final String KEY_USER_ID = "user_id";
     public static final String KEY_LAST_NOTIFICATION_ID = "last_notification_id";
     public static final String KEY_NOTIFICATION_INITIALIZED = "notification_cursor_initialized";

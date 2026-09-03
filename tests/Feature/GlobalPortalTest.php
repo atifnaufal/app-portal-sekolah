@@ -294,4 +294,5 @@ class GlobalPortalTest extends TestCase
             ->get(route('global.portal'))
             ->assertOk();
     }
+
 }

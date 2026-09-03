@@ -190,7 +190,7 @@ Route::middleware(['auth:sanctum', 'api.role:siswa'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/notifikasi/poll', [\App\Http\Controllers\NotifikasiController::class, 'poll']);
+    Route::get('/notifikasi/poll', [\App\Http\Controllers\NotifikasiController::class, 'poll'])->name('api.notifikasi.poll');
     Route::get('/session/status', [\App\Http\Controllers\SessionController::class, 'status']);
     // Daftarkan token FCM perangkat (aplikasi native) untuk push notification.
     Route::post('/device-token', function (\Illuminate\Http\Request $request) {

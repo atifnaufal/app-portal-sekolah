@@ -52,15 +52,24 @@ dependencies {
 
     // Biometric & Security
     implementation "androidx.biometric:biometric:1.2.0-alpha05"
+
+    // Firebase Cloud Messaging (Push Notifications)
+    implementation platform('com.google.firebase:firebase-bom:32.8.1')
+    implementation 'com.google.firebase:firebase-messaging'
 }
 
 apply from: 'capacitor.build.gradle'
 
+// Google Services (Firebase). Bila google-services.json tersedia (dari Firebase Console),
+// plugin otomatis mengkonfigurasi Firebase. Bila belum, dependency tetap terpasang
+// dan siap saat json ditambahkan.
 try {
     def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
+    if (servicesJSON.exists()) {
         apply plugin: 'com.google.gms.google-services'
+    } else {
+        logger.lifecycle("google-services.json belum ada. Tambahkan dari Firebase Console agar FCM berjalan.")
     }
 } catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+    logger.lifecycle("google-services.json tidak ditemukan: " + e.getMessage())
 }

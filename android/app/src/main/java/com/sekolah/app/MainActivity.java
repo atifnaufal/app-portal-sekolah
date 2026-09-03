@@ -25,6 +25,8 @@ import android.webkit.WebView;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 
+import com.google.firebase.messaging.FirebaseMessaging;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +56,22 @@ public class MainActivity extends BridgeActivity {
         // Ensure web view doesn't handle everything if permissions missing
         handleForcedPermissions();
         setupOfflineHandler();
+        requestFcmToken();
+    }
+
+    private void requestFcmToken() {
+        FirebaseMessaging.getInstance().getToken().addOnSuccessListener(token -> {
+            if (token != null && !token.isEmpty()) {
+                BackgroundService.saveFcmToken(this, token);
+                BackgroundService.registerFcmToken(this);
+                Log.d(TAG, "FCM token obtained and registered");
+                if (BackgroundService.hasToken(this)) {
+                    startBackgroundService();
+                }
+            }
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Failed to get FCM token: " + e.getMessage());
+        });
     }
 
     private void setupOfflineHandler() {
