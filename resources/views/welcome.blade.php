@@ -17,15 +17,38 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
 .btn{appearance:none;border:0;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;font-weight:800;font-size:13px}
 .btn-ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)}
 .btn-primary{background:#fff;color:#4f46e5;box-shadow:0 10px 24px rgba(15,23,42,.18)}
-.hero-main{max-width:1120px;margin:0 auto;padding:36px 20px 40px;display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;position:relative;z-index:1}
-@media(max-width:900px){.hero-main{grid-template-columns:1fr}.nav-links{display:none}}
+.hero-main{max-width:1120px;margin:0 auto;padding:36px 20px 44px;display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;position:relative;z-index:1}
+@media(max-width:900px){.hero-main{grid-template-columns:1fr}.nav-links .btn-primary{display:none}}
 .eyebrow{font-size:11px;letter-spacing:.14em;opacity:.7;font-weight:800;text-transform:uppercase}
 .h1{font-size:36px;font-weight:900;letter-spacing:-.03em;line-height:1.05;margin-top:8px}
 @media(max-width:640px){.h1{font-size:30px}}
 .lead{font-size:14px;opacity:.85;line-height:1.6;margin-top:12px}
-.hero-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:14px;backdrop-filter:blur(12px)}
-.mock{width:100%;max-width:320px;margin:0 auto;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 20px 60px rgba(15,23,42,.25);border:6px solid rgba(255,255,255,.9)}
-.mock img{width:100%;display:block}
+.badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);font-size:11px;font-weight:800}
+
+/* ===== Onboarding carousel (mobile-first, premium) ===== */
+.onboard{width:100%;max-width:400px;margin:0 auto;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.14);border-radius:32px;backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;position:relative}
+.slides{display:flex;transition:transform .45s cubic-bezier(.22,.9,.3,1);touch-action:pan-y}
+.slide{flex:0 0 100%;padding:30px 24px 18px;text-align:center;min-height:430px;display:flex;flex-direction:column}
+.orb{width:128px;height:128px;margin:6px auto 20px;border-radius:40px;display:grid;place-items:center;position:relative;box-shadow:0 16px 40px rgba(0,0,0,.3)}
+.orb i{font-size:56px;color:#fff;filter:drop-shadow(0 4px 10px rgba(0,0,0,.3))}
+.orb::after{content:'';position:absolute;inset:-10px;border-radius:48px;border:1.5px dashed rgba(255,255,255,.25)}
+.orb-1{background:linear-gradient(135deg,#6366f1,#2563eb)}
+.orb-2{background:linear-gradient(135deg,#059669,#10b981)}
+.orb-3{background:linear-gradient(135deg,#d97706,#f59e0b)}
+.slide h3{font-size:23px;font-weight:900;letter-spacing:-.02em}
+.slide p{font-size:13px;opacity:.72;line-height:1.65;margin-top:10px;flex:1}
+.chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.chip{font-size:10.5px;font-weight:800;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16)}
+.code-demo{margin:14px auto 0;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:12px 16px;max-width:280px}
+.code-demo .c{font-size:24px;font-weight:900;letter-spacing:.2em}
+.code-demo .s{font-size:10.5px;opacity:.65;margin-top:4px}
+.ob-dots{display:flex;gap:8px;justify-content:center;padding:6px 0 4px}
+.ob-dot{width:8px;height:8px;border-radius:99px;background:rgba(255,255,255,.25);transition:all .3s;cursor:pointer;border:0;padding:0}
+.ob-dot.on{width:28px;background:#fff}
+.ob-foot{display:flex;gap:10px;padding:14px 18px 18px}
+.ob-skip{flex:1;background:transparent;border:0;color:rgba(255,255,255,.6);font-weight:800;font-size:13px;cursor:pointer}
+.ob-next{flex:2;background:#fff;color:#1e3a5f;border:0;border-radius:16px;padding:14px;font-weight:800;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.hero-cta{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
 .section{max-width:1120px;margin:0 auto;padding:28px 20px}
 .h2{font-size:20px;font-weight:900;letter-spacing:-.02em}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
@@ -38,7 +61,6 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
 .step{position:relative;background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:20px;padding:18px}
 .step .num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#2563eb);color:#fff;display:grid;place-items:center;font-weight:900;font-size:13px;margin-bottom:10px}
 .footer{max-width:1120px;margin:0 auto;padding:24px 20px;color:#94a3b8;font-size:11px;text-align:center}
-.badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);font-size:11px;font-weight:800}
 </style>
 </head>
 <body>
@@ -52,46 +74,64 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
       <a href="{{ route('register') }}" class="btn btn-primary"><i class="bi bi-person-plus"></i> Daftar Akun</a>
     </div>
   </nav>
-  <div class="hero-main" style="justify-items:center">
-    <!-- Figma premium mobile card — tampil di semua, desktop tetap centered premium -->
-    <div style="width:100%;max-width:420px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.12);border-radius:32px;padding:28px 18px 20px;backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center">
-      <div style="width:120px;height:120px;margin:0 auto 16px;filter:drop-shadow(0 12px 24px rgba(0,0,0,.25))">
-        <img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f1ee-1f1e9.png" alt="flag" style="display:none">
-        <div style="font-size:64px">🇮🇩</div>
-        <div style="margin-top:-18px;font-size:48px">🏃‍♂️</div>
+  <div class="hero-main">
+    <div>
+      <div class="eyebrow">Platform Digital Antar Sekolah</div>
+      <div class="h1">Satu Portal untuk Seluruh Sekolah</div>
+      <p class="lead">Absensi, tugas, nilai, SPP, perpustakaan, eskul, chat, hingga Global Portal antar sekolah — dalam satu aplikasi ringan. Geser kartu perkenalan <span class="badge"><i class="bi bi-phone"></i> di samping</span> untuk tur 30 detik.</p>
+      <div class="hero-cta">
+        <a href="{{ route('login') }}" class="btn btn-primary"><i class="bi bi-box-arrow-in-right"></i> Masuk Portal</a>
+        <a href="{{ route('register') }}" class="btn btn-ghost"><i class="bi bi-person-plus"></i> Daftar dengan Kode</a>
       </div>
-      <div style="font-size:28px;font-weight:900;letter-spacing:-.02em">Portal Sekolah Digital</div>
-      <div style="font-size:13px;opacity:.7;margin-top:4px">Portal Akademik Mahasiswa & Guru</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px">
-        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,.2);color:#60a5fa;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-journal-check"></i></div><div style="font-size:11px;font-weight:800">Tugas</div><div style="font-size:9px;opacity:.5">Kumpul Tugas</div></div>
-        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(34,197,94,.2);color:#4ade80;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-calendar-check"></i></div><div style="font-size:11px;font-weight:800">Absensi</div><div style="font-size:9px;opacity:.5">Catat Hadir</div></div>
-        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(245,158,11,.2);color:#fbbf24;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-wallet2"></i></div><div style="font-size:11px;font-weight:800">SPP Online</div><div style="font-size:9px;opacity:.5">Cek Tagihan</div></div>
-        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(139,92,246,.2);color:#a78bfa;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-chat-dots"></i></div><div style="font-size:11px;font-weight:800">Chat</div><div style="font-size:9px;opacity:.5">Online Chat</div></div>
-        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(14,165,233,.2);color:#38bdf8;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-file-earmark-richtext"></i></div><div style="font-size:11px;font-weight:800">Perpus</div><div style="font-size:9px;opacity:.5">Baca Digital</div></div>
-        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(236,72,153,.2);color:#f472b6;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-flag"></i></div><div style="font-size:11px;font-weight:800">Eskul</div><div style="font-size:9px;opacity:.5">Minat Bakat</div></div>
-        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,.2);color:#c084fc;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-mortarboard-fill"></i></div><div style="font-size:11px;font-weight:800">E-Learning</div><div style="font-size:9px;opacity:.5">Materi & Tugas</div></div>
-        <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 6px"><div style="width:28px;height:28px;border-radius:8px;background:rgba(249,115,22,.2);color:#fb923c;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-bar-chart-line"></i></div><div style="font-size:11px;font-weight:800">Nilai</div><div style="font-size:9px;opacity:.5">Rapor Online</div></div>
-        <div style="background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:16px;padding:10px 6px;box-shadow:0 8px 20px rgba(99,102,241,.3)"><div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.2);color:#fff;display:grid;place-items:center;margin:0 auto 6px"><i class="bi bi-globe2"></i></div><div style="font-size:11px;font-weight:800;color:#fff">Global Portal</div><div style="font-size:9px;color:rgba(255,255,255,.8)">Sosmed Sekolah</div></div>
+      <div style="margin-top:12px;"><a href="{{ route('download.apk') }}" style="font-size:11px;color:rgba(255,255,255,.55);text-decoration:none"><i class="bi bi-cloud-arrow-down"></i> Unduh Aplikasi Android (APK)</a></div>
+    </div>
+
+    {{-- Onboarding carousel --}}
+    <div class="onboard" id="onboard">
+      <div class="slides" id="slides">
+        <div class="slide">
+          <div class="orb orb-1"><i class="bi bi-globe2"></i></div>
+          <h3>Portal Sekolah Digital</h3>
+          <p>Portal akademik untuk guru & siswa: absensi, tugas, nilai, SPP, chat, dan linimasa antar sekolah dalam satu genggaman.</p>
+          <div class="chips"><span class="chip">Absensi</span><span class="chip">Tugas</span><span class="chip">Nilai</span><span class="chip">SPP</span><span class="chip">Global Portal</span></div>
+        </div>
+        <div class="slide">
+          <div class="orb orb-2"><i class="bi bi-upc-scan"></i></div>
+          <h3>Daftar Pakai Kode</h3>
+          <p>Minta <b>Kode Pendaftaran</b> ke admin sekolahmu. Masukkan kode — data sekolah terisi otomatis, tinggal pilih peran & lengkapi data diri.</p>
+          <div class="code-demo"><div class="c">1851372</div><div class="s">ID 18 + kode kota 51372</div></div>
+        </div>
+        <div class="slide">
+          <div class="orb orb-3"><i class="bi bi-patch-check-fill"></i></div>
+          <h3>Disetujui & Jelajahi</h3>
+          <p>Akun barumu diverifikasi admin sekolah, lalu bebas absen harian, posting cerita, diskusi chat, dan pantau nilai real-time.</p>
+          <div class="chips"><span class="chip">Cerita 24 Jam</span><span class="chip">Chat</span><span class="chip">Rapor Online</span></div>
+        </div>
       </div>
-      <a href="{{ route('login') }}" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;background:#fff;color:#1e3a5f;padding:14px;border-radius:16px;font-weight:800;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.15)"><i class="bi bi-box-arrow-in-right"></i> Login</a>
-      <a href="{{ route('download.apk') }}" style="display:block;margin-top:10px;font-size:11px;color:rgba(255,255,255,.5);text-decoration:none"><i class="bi bi-cloud-arrow-down"></i> Unduh Aplikasi Android</a>
+      <div class="ob-dots" id="dots"></div>
+      <div class="ob-foot">
+        <button class="ob-skip" id="obSkip">Lewati</button>
+        <button class="ob-next" id="obNext">Lanjut <i class="bi bi-arrow-right"></i></button>
+      </div>
     </div>
   </div>
 </div>
+
 <div class="section" style="background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-top:16px">
   <div class="eyebrow" style="color:#059669">Panduan Lengkap</div>
-  <div class="h2">Cara Daftar — Publik Se-Dunia Bisa, Jika Sekolah Aktif</div>
-  <div style="font-size:13px;color:#64748b;line-height:1.6;margin-top:6px">1. <b>Cari ID Sekolah</b> dari admin sekolahmu (contoh: [ID:1] Sekolah Pusat Semarang). Tanpa ID tidak bisa lanjut.<br>2. Pilih <b>Daftar</b> → isi NIK, Nama, WA, Email, Kelas, <b>Sekolah (ID)</b> → buat password.<br>3. Akun <b>menunggu persetujuan Admin Sekolah</b> (jika DB ada data murid/guru, admin tinggal klik Setujui).<br>4. Jika sekolah <b>dinonaktifkan/di hapus Admin Pusat</b>, tombol daftar hilang & NIK tertolak — hubungi adminpusat@pusat.com.<br>5. Setelah disetujui, login → atur PIN → jelajahi Global Portal & Chat.</div>
-  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span style="padding:6px 10px;background:#dcfce7;color:#166534;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-check-circle"></i> ID Aktif = Bisa Daftar</span><span style="padding:6px 10px;background:#fee2e2;color:#991b1b;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-x-circle"></i> ID Nonaktif = Tertutup</span></div>
+  <div class="h2">Cara Daftar — Kode Pendaftaran Sekolah</div>
+  <div style="font-size:13px;color:#64748b;line-height:1.7;margin-top:6px">1. Minta <b>Kode Pendaftaran</b> dari admin sekolahmu (format: ID + kode kota, mis. <b>1851372</b>).<br>2. Buka <b>Daftar</b> → masukkan kode → kartu sekolah muncul otomatis → pilih <b>Guru/Siswa</b> sesuai yang dibuka.<br>3. Lengkapi NIK, nama, WA, email, kelas & password → akun <b>menunggu persetujuan admin</b>.<br>4. Jika sekolah <b>nonaktif atau pendaftaran ditutup</b>, kode ditolak — hubungi admin sekolah atau adminpusat@pusat.com.<br>5. Setelah disetujui, login → jelajahi Cerita, Global Portal & Chat.</div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span style="padding:6px 10px;background:#dcfce7;color:#166534;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-check-circle"></i> Kode Valid = Bisa Daftar</span><span style="padding:6px 10px;background:#fee2e2;color:#991b1b;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-x-circle"></i> Kode Salah/Tutup = Ditolak</span></div>
 </div>
+
 <div class="section" style="background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-top:8px">
   <div class="eyebrow" style="color:#6366f1">Cara Memulai</div>
   <div class="h2">4 Langkah Jadi Warga Digital</div>
   <div class="steps">
-    <div class="step"><div class="num">1</div><div style="font-weight:800">Install APK</div><div style="font-size:12px;color:#64748b;margin-top:4px">Download APK 11MB, izinkan notifikasi & akses.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Download → Izinkan</div></div>
-    <div class="step"><div class="num">2</div><div style="font-weight:800">Daftar Akun</div><div style="font-size:12px;color:#64748b;margin-top:4px">Pilih Guru/Siswa, isi NIK & data.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Daftar → Tunggu</div></div>
-    <div class="step"><div class="num">3</div><div style="font-weight:800">Verifikasi Admin</div><div style="font-size:12px;color:#64748b;margin-top:4px">Admin setujui + atur Kelas & Sekolah.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Disetujui → Login</div></div>
-    <div class="step"><div class="num">4</div><div style="font-weight:800">Jelajahi</div><div style="font-size:12px;color:#64748b;margin-top:4px">Absen, Global Portal, Chat, Tugas.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Explore → Produktif</div></div>
+    <div class="step"><div class="num">1</div><div style="font-weight:800">Minta Kode</div><div style="font-size:12px;color:#64748b;margin-top:4px">Tanyakan Kode Pendaftaran ke admin sekolah.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Kode → Cek</div></div>
+    <div class="step"><div class="num">2</div><div style="font-weight:800">Daftar Akun</div><div style="font-size:12px;color:#64748b;margin-top:4px">Pilih peran, isi NIK & data diri.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Daftar → Tunggu</div></div>
+    <div class="step"><div class="num">3</div><div style="font-weight:800">Verifikasi Admin</div><div style="font-size:12px;color:#64748b;margin-top:4px">Admin setujui akunmu.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Disetujui → Login</div></div>
+    <div class="step"><div class="num">4</div><div style="font-weight:800">Jelajahi</div><div style="font-size:12px;color:#64748b;margin-top:4px">Absen, Cerita, Portal, Chat, Tugas.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Explore → Produktif</div></div>
   </div>
   <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
     <a href="{{ route('login') }}" class="btn" style="background:#0f172a;color:#fff;border-radius:12px">Saya Sudah Punya Akun</a>
@@ -100,5 +140,39 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
 </div>
 
 <div class="footer">© {{ date('Y') }} {{ config('app.name') }} — Platform Digital Antar Sekolah • <a href="{{ route('offline') }}" style="color:#6366f1;text-decoration:none">Offline Mode</a> • Admin Pusat: adminpusat@pusat.com</div>
+
+<script>
+(function () {
+    var idx = 0, total = 3;
+    var slides = document.getElementById('slides');
+    var dotsBox = document.getElementById('dots');
+    var nextBtn = document.getElementById('obNext');
+    for (var i = 0; i < total; i++) {
+        var d = document.createElement('button');
+        d.className = 'ob-dot' + (i === 0 ? ' on' : '');
+        d.setAttribute('aria-label', 'Slide ' + (i + 1));
+        (function (n) { d.addEventListener('click', function () { go(n); }); })(i);
+        dotsBox.appendChild(d);
+    }
+    function go(n) {
+        idx = (n + total) % total;
+        slides.style.transform = 'translateX(-' + (idx * 100) + '%)';
+        dotsBox.querySelectorAll('.ob-dot').forEach(function (el, k) { el.classList.toggle('on', k === idx); });
+        nextBtn.innerHTML = idx === total - 1
+            ? 'Mulai Sekarang <i class="bi bi-arrow-right"></i>'
+            : 'Lanjut <i class="bi bi-arrow-right"></i>';
+    }
+    function finish() { window.location.href = "{{ route('register') }}"; }
+    nextBtn.addEventListener('click', function () { idx === total - 1 ? finish() : go(idx + 1); });
+    document.getElementById('obSkip').addEventListener('click', finish);
+    // Swipe
+    var sx = 0;
+    slides.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; }, { passive: true });
+    slides.addEventListener('touchend', function (e) {
+        var dx = e.changedTouches[0].clientX - sx;
+        if (Math.abs(dx) > 40) go(idx + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+})();
+</script>
 </body>
 </html>
