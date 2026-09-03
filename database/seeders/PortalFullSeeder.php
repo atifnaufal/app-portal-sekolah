@@ -70,20 +70,17 @@ class PortalFullSeeder extends Seeder
 
     public function run(): void
     {
-        $schoolSlugs = ['portal-pusat', 'sman1-jkt', 'smk-telkom'];
-        $schools = School::whereIn('slug', $schoolSlugs)->get();
+        // Target: 3 sekolah PERTAMA (id terkecil), apa pun slug-nya — jangan buat baru.
+        // (Slug bawaan bisa sudah dihapus/diganti admin; mengunci ke slug bikin seed skip semua.)
+        $schools = School::orderBy('id')->take(3)->get();
 
-        // Jangan abort keras: jika salah satu sekolah bawaan belum ada (mis. migrasi
-        // belum jalan di DB baru), tetap seed sekolah yang tersedia dan beri peringatan.
-        foreach ($schoolSlugs as $slug) {
-            if (! $schools->contains('slug', $slug)) {
-                $this->command->warn("Sekolah bawaan '{$slug}' belum ada — lewati. Pastikan migrasi create_schools_and_global_portal sudah jalan.");
-            }
-        }
         if ($schools->isEmpty()) {
-            $this->command->error('Tidak ada sekolah bawaan sama sekali — seeding tidak dilanjutkan. Jalankan migrasi dulu.');
+            $this->command->error('Tidak ada sekolah sama sekali — seeding tidak dilanjutkan. Tambahkan sekolah dulu via Admin Pusat.');
 
             return;
+        }
+        if ($schools->count() < 3) {
+            $this->command->warn('Hanya '.$schools->count().' sekolah ditemukan (target 3) — seed yang tersedia.');
         }
 
         try {
@@ -105,24 +102,20 @@ class PortalFullSeeder extends Seeder
         $this->command->info('PortalFullSeeder selesai: 3 sekolah × (3 kelas, 8 guru, 10 siswa, 48 tugas, 120 jadwal) + 10 buku + 10 eskul + SPP Agu + portal.');
     }
 
-    public static function expectedSlugs(): array
+    /** 3 sekolah target (id terkecil) — dipakai panel audit juga. */
+    public static function targetSchools()
     {
-        return ['portal-pusat', 'sman1-jkt', 'smk-telkom'];
+        return School::orderBy('id')->take(3)->get();
     }
 
     /** Ringkasan isi DB per sekolah (read-only, untuk panel Cek Seed). */
     public static function audit(): array
     {
         $rows = [];
-        foreach (self::expectedSlugs() as $slug) {
-            $school = School::where('slug', $slug)->first();
-            if (! $school) {
-                $rows[] = ['slug' => $slug, 'ada' => false];
-                continue;
-            }
+        foreach (self::targetSchools() as $school) {
             $siswaIds = User::where('school_id', $school->id)->where('role', 'siswa')->pluck('id');
             $rows[] = [
-                'slug' => $slug, 'ada' => true, 'id' => $school->id, 'name' => $school->name,
+                'slug' => $school->slug, 'ada' => true, 'id' => $school->id, 'name' => $school->name,
                 'kelas' => Kelas::where('school_id', $school->id)->count(),
                 'guru' => User::where('school_id', $school->id)->where('role', 'guru')->count(),
                 'siswa' => $siswaIds->count(),
@@ -140,7 +133,8 @@ class PortalFullSeeder extends Seeder
 
     private function seedSchool(School $school, int $si, array $eskulNames): void
     {
-            $tag = preg_replace('/[^a-z0-9]/', '', strtolower($school->slug));
+            // Tag stabil berbasis ID (slug bisa diganti admin kapan saja).
+            $tag = 'sch'.$school->id;
 
             // 3 kelas.
             $kelasIds = [];
