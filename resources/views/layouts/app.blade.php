@@ -46,6 +46,14 @@
         .admin-nav .nav-link {
             color: #94a3b8; font-size: 14px; font-weight: 500;
             padding: 0.6rem 1rem; border-radius: 10px; transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .admin-nav .navbar-nav { align-items: center; }
+        .admin-nav-user { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        @media(max-width:1199px) {
+            .admin-nav .nav-link { padding: 0.6rem 0.7rem; font-size: 13px; }
+            .admin-nav-user { max-width: 140px; }
         }
 
         .admin-nav .nav-link:hover, .admin-nav .nav-link.active {
@@ -129,9 +137,9 @@
                 @endif
             </div>
             <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
-                <div class="d-flex flex-column text-end d-none d-lg-flex">
-                    <span class="text-white small fw-bold">{{ session('admin_name') }}</span>
-                    <span class="text-muted small" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;">Administrator</span>
+                <div class="d-flex flex-column text-end d-none d-lg-flex" style="min-width:0;">
+                    <span class="text-white small fw-bold admin-nav-user">{{ session('admin_name') }}</span>
+                    <span class="text-muted small" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;">{{ session('is_super_admin') ? 'Admin Pusat' : 'Administrator' }}</span>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

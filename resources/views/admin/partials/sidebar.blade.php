@@ -62,19 +62,21 @@ $sideSchoolId = (int) session('school_id');
         <a href="{{ route('admin.users') }}" class="{{ request()->routeIs('admin.users') ? 'active' : '' }}">
             <i class="bi bi-people-fill"></i><span>Akun Pengguna</span>
         </a>
+        @if($isSuper)
         <a href="{{ route('admin.schools.index') }}" class="{{ request()->routeIs('admin.schools.*') ? 'active' : '' }}">
             <i class="bi bi-buildings-fill"></i><span>Sekolah</span>
         </a>
-        @if($isSuper)
         <a href="{{ route('admin.school-admins.index') }}" class="{{ request()->routeIs('admin.school-admins.*') ? 'active' : '' }}">
             <i class="bi bi-shield-check"></i><span>Admin Sekolah</span>
         </a>
         @endif
 
         <div class="sidebar-section-title">SYSTEM</div>
+        @if($isSuper)
         <a href="{{ route('admin.features') }}" class="{{ request()->routeIs('admin.features*') ? 'active' : '' }}">
             <i class="bi bi-sliders"></i><span>Fitur</span>
         </a>
+        @endif
         <a href="{{ route('admin.settings') }}" class="{{ request()->routeIs('admin.settings') ? 'active' : '' }}">
             <i class="bi bi-gear-fill"></i><span>Pengaturan</span>
         </a>
@@ -123,7 +125,7 @@ $sideSchoolId = (int) session('school_id');
             <div class="admin-cp-avatar">{{ strtoupper(substr($adminName, 0, 1)) }}</div>
             <div class="flex-fill" style="min-width:0;">
                 <div class="text-white small fw-bold text-truncate">{{ $adminName }}</div>
-                <div class="text-muted" style="font-size:10px;">Super Administrator</div>
+                <div class="text-muted" style="font-size:10px;">{{ $isSuper ? 'Admin Pusat' : 'Admin Sekolah' }}</div>
             </div>
         </div>
         <form method="POST" action="{{ route('logout') }}" class="px-2 mt-2">

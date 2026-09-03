@@ -107,6 +107,9 @@ class AdminController extends Controller
         $regCounts = $regTrend->values();
 
         $uQ = fn($q)=> $filterSchoolId ? $q->where('school_id',$filterSchoolId) : $q;
+        // Toggle hero: admin sekolah pakai bendera sekolahnya sendiri (scoped),
+        // admin pusat pakai default global.
+        $heroSchool = (! $isSuper && $filterSchoolId) ? School::find($filterSchoolId, ['id', 'reg_guru_open', 'reg_siswa_open']) : null;
         $data = [
             'totalGuru' => $uQ(User::where('role', 'guru'))->count(),
             'totalSiswa' => $uQ(User::where('role', 'siswa'))->count(),
@@ -118,8 +121,8 @@ class AdminController extends Controller
             'chartLabels' => $sppData->map(fn ($item) => "$item->bulan/$item->tahun"),
             'chartTagihan' => $sppData->map(fn ($item) => $item->tagihan),
             'chartTerbayar' => $sppData->map(fn ($item) => $item->terbayar),
-            'registrationGuruEnabled' => (bool) Setting::getValue('registration_guru_enabled', false),
-            'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false),
+            'registrationGuruEnabled' => $heroSchool ? (bool) $heroSchool->reg_guru_open : (bool) Setting::getValue('registration_guru_enabled', false),
+            'registrationSiswaEnabled' => $heroSchool ? (bool) $heroSchool->reg_siswa_open : (bool) Setting::getValue('registration_siswa_enabled', false),
             // Statistik LMS
             'totalMapel' => $totalMapel,
             'totalTugas' => $totalTugas,

@@ -59,6 +59,17 @@
     .ad-kelas-bar { height: 10px; border-radius: 99px; background: #f1f5f9; overflow: hidden; margin-top: 8px; }
     .ad-kelas-fill { height: 100%; border-radius: 99px; transition: width 1s ease-out; }
 
+    .lms-tile {
+        border: 1px solid var(--border); border-radius: 20px; padding: 26px 18px;
+        height: 100%; background: #fff; transition: all 0.3s ease;
+    }
+    .lms-tile:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: transparent; }
+    .lms-tile-ico {
+        width: 52px; height: 52px; border-radius: 16px; margin: 0 auto 14px;
+        display: grid; place-items: center; color: #fff; font-size: 22px;
+        box-shadow: 0 8px 16px rgba(15,23,42,.18);
+    }
+
     @media (max-width: 768px) {
         .ad-hero { padding: 30px; border-radius: 24px; text-align: center; }
         .ad-hero-title { font-size: 24px; }
@@ -166,12 +177,17 @@
     </div>
 </div>
 @else
-<div class="ad-hero">
+<div class="ad-hero" style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#1d4ed8 100%);">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-4" style="position:relative; z-index:1;">
-        <div>
-            <div class="ad-hero-eyebrow">Control Center</div>
-            <h1 class="ad-hero-title">Academic Dashboard</h1>
-            <p class="ad-hero-subtitle">Monitoring and managing school data in real-time.</p>
+        <div class="d-flex gap-3 align-items-center">
+            <div style="width:64px;height:64px;border-radius:20px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);display:grid;place-items:center;font-weight:800;font-size:26px;color:#fff;flex-shrink:0;">
+                {{ strtoupper(substr($filterSchool->name ?? 'S', 0, 1)) }}
+            </div>
+            <div>
+                <div class="ad-hero-eyebrow" style="color:#c7d2fe;">Dashboard Sekolah</div>
+                <h1 class="ad-hero-title">{{ $filterSchool->name ?? 'Sekolah Saya' }}</h1>
+                <p class="ad-hero-subtitle" style="color:#c7d2fe;">{{ $filterSchool->city ?? '' }}{{ !empty($filterSchool->enroll_code) ? ' • Kode: '.$filterSchool->enroll_code : '' }}</p>
+            </div>
         </div>
         <div class="d-flex gap-3 flex-wrap">
             <form method="POST" action="{{ route('admin.registration.toggle') }}">
@@ -253,30 +269,20 @@
             </div>
             <div class="ad-card-body">
                 <div class="row g-3 text-center">
+                    @foreach([
+                        ['n' => $totalMapel, 'l' => 'Mata Pelajaran', 'i' => 'bi-journal-bookmark-fill', 'g' => 'linear-gradient(135deg,#4f46e5,#2563eb)', 't' => '#4f46e5'],
+                        ['n' => $totalMateri, 'l' => 'Materi Dibagikan', 'i' => 'bi-file-earmark-text-fill', 'g' => 'linear-gradient(135deg,#059669,#10b981)', 't' => '#059669'],
+                        ['n' => $totalTugas, 'l' => 'Total Tugas', 'i' => 'bi-clipboard-check-fill', 'g' => 'linear-gradient(135deg,#d97706,#f59e0b)', 't' => '#d97706'],
+                        ['n' => $tugasBelumDinilai, 'l' => 'Jawaban Perlu Dinilai', 'i' => 'bi-exclamation-circle-fill', 'g' => $tugasBelumDinilai > 0 ? 'linear-gradient(135deg,#dc2626,#ef4444)' : 'linear-gradient(135deg,#94a3b8,#cbd5e1)', 't' => $tugasBelumDinilai > 0 ? '#dc2626' : '#64748b'],
+                    ] as $tile)
                     <div class="col-lg-3 col-md-6">
-                        <div class="border rounded-4 p-4 h-100" style="background:#f5f8ff;">
-                            <div class="fw-extrabold text-primary" style="font-size:34px;">{{ number_format($totalMapel) }}</div>
-                            <div class="small fw-bold text-muted text-uppercase mt-1" style="letter-spacing:0.06em;">Mata Pelajaran</div>
+                        <div class="lms-tile">
+                            <div class="lms-tile-ico" style="background:{{ $tile['g'] }};"><i class="bi {{ $tile['i'] }}"></i></div>
+                            <div class="fw-extrabold" style="font-size:34px;color:{{ $tile['t'] }};line-height:1;">{{ number_format($tile['n']) }}</div>
+                            <div class="small fw-bold text-muted text-uppercase mt-2" style="letter-spacing:0.06em;font-size:11px;">{{ $tile['l'] }}</div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="border rounded-4 p-4 h-100" style="background:#f0fdf4;">
-                            <div class="fw-extrabold text-success" style="font-size:34px;">{{ number_format($totalMateri) }}</div>
-                            <div class="small fw-bold text-muted text-uppercase mt-1" style="letter-spacing:0.06em;">Materi Dibagikan</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="border rounded-4 p-4 h-100" style="background:#fffbeb;">
-                            <div class="fw-extrabold text-warning" style="font-size:34px;">{{ number_format($totalTugas) }}</div>
-                            <div class="small fw-bold text-muted text-uppercase mt-1" style="letter-spacing:0.06em;">Total Tugas</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="border rounded-4 p-4 h-100" style="background:#fff5f6;">
-                            <div class="fw-extrabold {{ $tugasBelumDinilai > 0 ? 'text-danger' : 'text-muted' }}" style="font-size:34px;">{{ number_format($tugasBelumDinilai) }}</div>
-                            <div class="small fw-bold text-muted text-uppercase mt-1" style="letter-spacing:0.06em;">Jawaban Perlu Dinilai</div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
         </div>
