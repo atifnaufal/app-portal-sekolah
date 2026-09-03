@@ -43,7 +43,7 @@
   <div class="ig-stories">
     <div class="ig-story">
       <form method="POST" action="{{ route('global.portal.story.store') }}" enctype="multipart/form-data" id="storyForm">@csrf
-        <div class="ig-ring add" style="cursor:pointer" title="Tambah cerita" onclick="storyAddTap(event)">
+        <div class="ig-ring add" style="cursor:pointer" title="Tambah cerita" id="storyAddRing">
           <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;pointer-events:none;">
           <span class="ig-plus" style="pointer-events:none;"><i class="bi bi-plus-lg"></i></span>
           <input type="file" name="image" id="storyFile" accept="image/*" hidden onchange="document.getElementById('storyForm').submit()">
@@ -52,7 +52,7 @@
       <div class="ig-name">Cerita Anda</div>
     </div>
     @foreach(($storiesGrouped ?? collect()) as $uid => $st)
-    <div class="ig-story" onclick="openStory({{ $st->id }})">
+    <div class="ig-story" data-story-id="{{ $st->id }}">
       <div class="ig-ring"><img src="{{ \App\Services\FirebaseStorageService::url($st->image) }}" alt=""></div>
       <div class="ig-name">{{ $uid == $myId ? 'Anda' : explode(' ', strtolower($st->user->name))[0] }}</div>
     </div>
@@ -65,7 +65,7 @@
     <div style="position:absolute;top:calc(24px + env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:center;gap:10px;z-index:2;">
       <img id="storyAvatar" src="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">
       <div style="flex:1;"><div id="storyUser" style="color:#fff;font-size:13px;font-weight:700;"></div><div id="storyTime" style="color:rgba(255,255,255,.6);font-size:11px;"></div></div>
-      <button onclick="closeStory()" style="background:none;border:0;color:#fff;font-size:22px;"><i class="bi bi-x-lg"></i></button>
+      <button id="storyViewerClose" style="background:none;border:0;color:#fff;font-size:22px;"><i class="bi bi-x-lg"></i></button>
     </div>
     <img id="storyImg" src="" style="width:100%;height:100%;object-fit:contain;">
     <div id="storyCaption" style="position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));left:16px;right:16px;color:#fff;font-size:14px;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.6);"></div>
@@ -160,22 +160,22 @@
 </div>
 
 {{-- Bottom sheet tambah cerita: kamera + galeri digabung --}}
-<div id="sheetAdd" style="display:none;position:fixed;inset:0;z-index:6500;" onclick="if(event.target===this)closeSheetAdd()">
+<div id="sheetAdd" style="display:none;position:fixed;inset:0;z-index:6500;">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;padding:12px 16px calc(20px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto;box-shadow:0 -12px 40px rgba(0,0,0,.25);">
     <div style="width:40px;height:4px;border-radius:99px;background:#e2e8f0;margin:0 auto 12px;"></div>
     <div style="font-weight:800;font-size:15px;text-align:center;margin-bottom:12px;">Tambah Cerita</div>
-    <button onclick="galleryPick()" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #eef2f7;border-radius:16px;background:#f8fafc;font-weight:700;font-size:14px;margin-bottom:8px;"><span style="width:40px;height:40px;border-radius:12px;background:#eef2ff;color:#4f46e5;display:grid;place-items:center;font-size:18px;"><i class="bi bi-image"></i></span>Pilih dari Galeri</button>
-    <button onclick="openCamera()" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #eef2f7;border-radius:16px;background:#f8fafc;font-weight:700;font-size:14px;margin-bottom:8px;"><span style="width:40px;height:40px;border-radius:12px;background:#0f172a;color:#fff;display:grid;place-items:center;font-size:18px;"><i class="bi bi-camera-fill"></i></span>Ambil Foto <span style="margin-left:auto;font-size:11px;color:#8e8e8e;">depan/belakang + efek</span></button>
-    <button onclick="closeSheetAdd()" style="width:100%;padding:12px;border:0;background:none;color:#8e8e8e;font-weight:700;font-size:14px;">Batal</button>
+    <button id="sheetGalleryBtn" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #eef2f7;border-radius:16px;background:#f8fafc;font-weight:700;font-size:14px;margin-bottom:8px;"><span style="width:40px;height:40px;border-radius:12px;background:#eef2ff;color:#4f46e5;display:grid;place-items:center;font-size:18px;"><i class="bi bi-image"></i></span>Pilih dari Galeri</button>
+    <button id="sheetCameraBtn" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #eef2f7;border-radius:16px;background:#f8fafc;font-weight:700;font-size:14px;margin-bottom:8px;"><span style="width:40px;height:40px;border-radius:12px;background:#0f172a;color:#fff;display:grid;place-items:center;font-size:18px;"><i class="bi bi-camera-fill"></i></span>Ambil Foto <span style="margin-left:auto;font-size:11px;color:#8e8e8e;">depan/belakang + efek</span></button>
+    <button id="sheetCancelBtn" style="width:100%;padding:12px;border:0;background:none;color:#8e8e8e;font-weight:700;font-size:14px;">Batal</button>
   </div>
 </div>
 
 {{-- Modal kamera premium: live stabil + pratinjau efek --}}
 <div id="camModal" style="display:none;position:fixed;inset:0;z-index:6000;background:#000;">
   <div style="position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:center;gap:8px;z-index:3;">
-    <button onclick="closeCamera()" style="background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;"><i class="bi bi-x-lg"></i></button>
+    <button id="camCloseBtn" style="background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;"><i class="bi bi-x-lg"></i></button>
     <div style="flex:1;text-align:center;color:#fff;font-weight:800;font-size:14px;">Kamera Cerita</div>
-    <button onclick="switchCamera()" id="camSwitch" style="background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;" title="Ganti kamera depan/belakang"><i class="bi bi-arrow-repeat"></i></button>
+    <button id="camSwitchBtn" style="background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;" title="Ganti kamera depan/belakang"><i class="bi bi-arrow-repeat"></i></button>
   </div>
   <video id="camVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;"></video>
   <div id="camLiveUI" style="position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));left:0;right:0;z-index:2;">
@@ -190,7 +190,7 @@
       <button data-f="saturate(1.1) contrast(1.05) brightness(1.08)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Crema</button>
     </div>
     <div style="display:flex;justify-content:center;">
-      <button onclick="captureStory()" style="width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.4);font-size:26px;color:#0f172a;"><i class="bi bi-camera-fill"></i></button>
+      <button id="camShootBtn" style="width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.4);font-size:26px;color:#0f172a;"><i class="bi bi-camera-fill"></i></button>
     </div>
     <div id="camMsg" style="text-align:center;color:#fff;font-size:12px;margin-top:8px;min-height:18px;"></div>
   </div>
@@ -208,8 +208,8 @@
       <button data-fx="hearts" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Hati</button>
     </div>
     <div style="display:flex;gap:10px;padding:4px 16px calc(20px + env(safe-area-inset-bottom));">
-      <button onclick="retakeStory()" style="flex:1;background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:14px;padding:13px;font-weight:800;font-size:14px;">Ambil Ulang</button>
-      <button onclick="sendStory()" id="camSend" style="flex:2;background:#fff;border:0;color:#0f172a;border-radius:14px;padding:13px;font-weight:800;font-size:14px;">Kirim Cerita</button>
+      <button id="camRetakeBtn" style="flex:1;background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:14px;padding:13px;font-weight:800;font-size:14px;">Ambil Ulang</button>
+      <button id="camSendBtn" style="flex:2;background:#fff;border:0;color:#0f172a;border-radius:14px;padding:13px;font-weight:800;font-size:14px;">Kirim Cerita</button>
     </div>
   </div>
   <canvas id="camCanvas" style="display:none;"></canvas>
@@ -234,6 +234,33 @@
   /* ===== Kamera stabil: deviceId + mirror depan konsisten ===== */
   var camStream = null, camFacing = 'environment', camFilter = 'none';
   var camPhoto = null; // dataURL foto mentah hasil jepret
+
+  /* ===== Wiring TANPA inline-onclick (tahan WebView) + null-guard ===== */
+  function bindClick(id, fn) {
+    try {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', function (e) { e.preventDefault(); fn(e); });
+    } catch (err) {}
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    bindClick('storyAddRing', function () { openStoryAdd(); });
+    bindClick('storyViewerClose', function () { closeStory(); });
+    bindClick('sheetGalleryBtn', function () { galleryPick(); });
+    bindClick('sheetCameraBtn', function () { openCamera(); });
+    bindClick('sheetCancelBtn', function () { closeSheetAdd(); });
+    bindClick('camCloseBtn', function () { closeCamera(); });
+    bindClick('camSwitchBtn', function () { switchCamera(); });
+    bindClick('camShootBtn', function () { captureStory(); });
+    bindClick('camRetakeBtn', function () { retakeStory(); });
+    bindClick('camSendBtn', function () { sendStory(); });
+    var sh = document.getElementById('sheetAdd');
+    if (sh) sh.addEventListener('click', function (e) { if (e.target === sh) closeSheetAdd(); });
+    // Buka viewer cerita via delegasi (tanpa inline handler).
+    document.addEventListener('click', function (e) {
+      var s = (e.target && e.target.closest) ? e.target.closest('[data-story-id]') : null;
+      if (s) openStory(parseInt(s.getAttribute('data-story-id'), 10));
+    });
+  });
   document.querySelectorAll('.cam-filter').forEach(function (b) {
     b.addEventListener('click', function () {
       document.querySelectorAll('.cam-filter').forEach(function (x) { x.style.borderColor = 'transparent'; });
@@ -560,7 +587,7 @@
   function sendStory() {
     var c = document.getElementById('camCanvas');
     var msg = document.getElementById('camFxMsg');
-    var btn = document.getElementById('camSend');
+    var btn = document.getElementById('camSendBtn');
     btn.disabled = true; btn.innerText = 'Mengunggah...';
     c.toBlob(function (blob) {
       var fd = new FormData();
