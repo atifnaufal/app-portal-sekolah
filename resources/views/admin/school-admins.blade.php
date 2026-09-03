@@ -45,6 +45,12 @@
     <div class="tbl-card-head d-flex justify-content-between align-items-center">
         <h2 class="tbl-card-title"><i class="bi bi-shield-check me-2 text-primary"></i>Daftar Admin ({{ $admins->count() }})</h2>
     </div>
+    @if($errors->any())
+    <div class="alert alert-danger border-0 mx-4 mt-3 mb-0" style="border-radius:14px;">
+        <div class="fw-bold small mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Form belum tersimpan:</div>
+        <ul class="mb-0 small">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+    </div>
+    @endif
     <div class="table-responsive">
         <table class="table table-premium table-hover align-middle mb-0">
             <thead><tr><th class="ps-4">Admin</th><th>Sekolah</th><th class="text-center">Status</th><th class="text-end pe-4">Aksi</th></tr></thead>
@@ -71,18 +77,6 @@
                         </div>
                     </td>
                 </tr>
-                <div class="modal fade" id="edit{{ $a->id }}" tabindex="-1"><div class="modal-dialog"><form method="POST" action="{{ route('admin.school-admins.update', $a) }}" class="modal-content" style="border-radius:20px;">@csrf @method('PUT')
-                    <div class="modal-header"><h6 class="fw-bold mb-0">Edit Admin [ID: {{ $a->id }}]</h6><button class="btn-close" data-bs-dismiss="modal" type="button"></button></div>
-                    <div class="modal-body">
-                        <label class="small fw-bold">Nama</label><input name="name" value="{{ $a->name }}" class="form-control mb-2" required>
-                        <label class="small fw-bold">Email</label><input name="email" type="email" value="{{ $a->email }}" class="form-control mb-2" required>
-                        <label class="small fw-bold">Sekolah</label>
-                        <select name="school_id" class="form-select mb-2" required>@foreach($schools as $sc)<option value="{{ $sc->id }}" @selected($a->school_id == $sc->id)>[{{ $sc->id }}] {{ $sc->name }}</option>@endforeach</select>
-                        <label class="small fw-bold">Password Baru <span class="text-muted">(kosongkan jika tidak diganti)</span></label><input name="password" type="password" class="form-control mb-2" minlength="8">
-                        <input name="password_confirmation" type="password" class="form-control" placeholder="Konfirmasi password baru">
-                    </div>
-                    <div class="modal-footer"><button class="btn btn-primary" style="border-radius:12px;">Simpan</button></div>
-                </form></div></div>
                 @empty
                 <tr><td colspan="4" class="text-center py-5 text-muted">Belum ada admin sekolah. Buat lewat tombol Tambah Admin.</td></tr>
                 @endforelse
@@ -91,19 +85,73 @@
     </div>
 </div>
 
+{{-- Modal edit DI LUAR tabel (div di dalam tbody merusak backdrop/posisi modal) --}}
+@foreach($admins as $a)
+<div class="modal fade" id="edit{{ $a->id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius:20px;overflow:hidden;">
+        <div class="modal-header" style="background:#f8fafc;border-bottom:1px solid var(--border);">
+            <div>
+                <h6 class="fw-bold mb-0">Edit Admin [ID: {{ $a->id }}]</h6>
+                <div class="small text-muted">{{ $a->school->name ?? '-' }}</div>
+            </div>
+            <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+        </div>
+        <form method="POST" action="{{ route('admin.school-admins.update', $a) }}">
+            @csrf @method('PUT')
+            <input type="hidden" name="admin_id" value="{{ $a->id }}">
+            <div class="modal-body" style="padding:24px;">
+                <label class="small fw-bold mb-1">Nama</label>
+                <input name="name" value="{{ old('admin_id') == $a->id ? old('name') : $a->name }}" class="form-control mb-3" style="border-radius:12px;" required>
+                <label class="small fw-bold mb-1">Email</label>
+                <input name="email" type="email" value="{{ old('admin_id') == $a->id ? old('email') : $a->email }}" class="form-control mb-3" style="border-radius:12px;" required>
+                <label class="small fw-bold mb-1">Sekolah</label>
+                <select name="school_id" class="form-select mb-3" style="border-radius:12px;" required>@foreach($schools as $sc)<option value="{{ $sc->id }}" @selected((old('admin_id') == $a->id ? old('school_id') : $a->school_id) == $sc->id)>[{{ $sc->id }}] {{ $sc->name }}</option>@endforeach</select>
+                <div class="p-3 rounded-3 mb-1" style="background:#f8fafc;border:1px dashed #e2e8f0;">
+                    <label class="small fw-bold mb-1">Password Baru <span class="text-muted fw-normal">(kosongkan jika tidak diganti)</span></label>
+                    <input name="password" type="password" class="form-control mb-2" style="border-radius:12px;" minlength="8" autocomplete="new-password">
+                    <input name="password_confirmation" type="password" class="form-control" style="border-radius:12px;" placeholder="Konfirmasi password baru" autocomplete="new-password">
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid var(--border);">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:12px;">Batal</button>
+                <button class="btn btn-primary px-4" style="border-radius:12px;">Simpan</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+@endforeach
+
 </div>{{-- /.cp-main --}}
 </div>{{-- /.cp-shell --}}
 
-<div class="modal fade" id="addAdmin" tabindex="-1"><div class="modal-dialog"><form method="POST" action="{{ route('admin.schools.admin.create') }}" class="modal-content" style="border-radius:20px;">@csrf
-    <div class="modal-header"><h6 class="fw-bold mb-0">Tambah Admin Sekolah</h6><button class="btn-close" data-bs-dismiss="modal" type="button"></button></div>
-    <div class="modal-body">
-        <label class="small fw-bold">Nama Admin</label><input name="name" class="form-control mb-2" required>
-        <label class="small fw-bold">Email</label><input name="email" type="email" class="form-control mb-2" required>
-        <label class="small fw-bold">Password</label><input name="password" type="password" class="form-control mb-2" required minlength="8">
-        <label class="small fw-bold">Konfirmasi Password</label><input name="password_confirmation" type="password" class="form-control mb-2" required>
-        <label class="small fw-bold">Sekolah</label>
-        <select name="school_id" class="form-select" required><option value="">Pilih Sekolah</option>@foreach($schools as $sc)<option value="{{ $sc->id }}">[{{ $sc->id }}] {{ $sc->name }}</option>@endforeach</select>
+<div class="modal fade" id="addAdmin" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius:20px;overflow:hidden;">
+    <div class="modal-header" style="background:#f8fafc;border-bottom:1px solid var(--border);">
+        <div><h6 class="fw-bold mb-0">Tambah Admin Sekolah</h6><div class="small text-muted">Akun langsung aktif & bisa kelola sekolahnya</div></div>
+        <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
     </div>
-    <div class="modal-footer"><button class="btn btn-primary" style="border-radius:12px;">Buat Admin</button></div>
-</form></div></div>
+    <form method="POST" action="{{ route('admin.schools.admin.create') }}">@csrf
+    <div class="modal-body" style="padding:24px;">
+        <label class="small fw-bold mb-1">Nama Admin</label><input name="name" value="{{ old('name') }}" class="form-control mb-3" style="border-radius:12px;" required>
+        <label class="small fw-bold mb-1">Email</label><input name="email" type="email" value="{{ old('email') }}" class="form-control mb-3" style="border-radius:12px;" required>
+        <label class="small fw-bold mb-1">Password</label><input name="password" type="password" class="form-control mb-3" style="border-radius:12px;" required minlength="8" autocomplete="new-password">
+        <label class="small fw-bold mb-1">Konfirmasi Password</label><input name="password_confirmation" type="password" class="form-control mb-3" style="border-radius:12px;" required autocomplete="new-password">
+        <label class="small fw-bold mb-1">Sekolah</label>
+        <select name="school_id" class="form-select" style="border-radius:12px;" required><option value="">Pilih Sekolah</option>@foreach($schools as $sc)<option value="{{ $sc->id }}" @selected(old('school_id') == $sc->id)>[{{ $sc->id }}] {{ $sc->name }}</option>@endforeach</select>
+    </div>
+    <div class="modal-footer" style="border-top:1px solid var(--border);">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:12px;">Batal</button>
+        <button class="btn btn-primary px-4" style="border-radius:12px;">Buat Admin</button>
+    </div>
+    </form>
+</div></div></div>
+<script>
+    // Buka kembali modal yang gagal validasi agar pesan error terlihat.
+    document.addEventListener('DOMContentLoaded', function () {
+        @if($errors->any() && old('admin_id'))
+            new bootstrap.Modal(document.getElementById('edit{{ old('admin_id') }}')).show();
+        @elseif($errors->any())
+            new bootstrap.Modal(document.getElementById('addAdmin')).show();
+        @endif
+    });
+</script>
 @endsection
