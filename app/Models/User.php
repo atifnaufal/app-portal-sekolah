@@ -25,7 +25,7 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute(): string
     {
         if ($this->foto) {
-            return asset('storage/'.$this->foto);
+            return \App\Services\FirebaseStorageService::url($this->foto);
         }
 
         $name = urlencode($this->name);

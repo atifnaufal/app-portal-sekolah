@@ -165,6 +165,7 @@ safe_inject FIREBASE_PROJECT_ID         "${FIREBASE_PROJECT_ID:-}"
 safe_inject FIREBASE_DATABASE_URL       "${FIREBASE_DATABASE_URL:-}"
 
 # 9) Reverb / Broadcasting
+safe_inject BROADCAST_CONNECTION "${BROADCAST_CONNECTION:-reverb}"
 safe_inject REVERB_APP_ID       "${REVERB_APP_ID:-}"
 safe_inject REVERB_APP_KEY      "${REVERB_APP_KEY:-}"
 safe_inject REVERB_APP_SECRET   "${REVERB_APP_SECRET:-}"
@@ -172,10 +173,14 @@ safe_inject REVERB_HOST         "${REVERB_HOST:-}"
 safe_inject REVERB_SERVER_PORT  "${REVERB_SERVER_PORT:-}"
 safe_inject REVERB_PORT         "${REVERB_PORT:-}"
 safe_inject REVERB_SCHEME       "${REVERB_SCHEME:-}"
-safe_inject VITE_REVERB_APP_KEY "${VITE_REVERB_APP_KEY:-}"
+
+# Vite Reverb (Frontend)
+# Jika VITE_REVERB_HOST tidak diset, fallback ke REVERB_HOST (untuk local)
+# atau domain Railway yang harusnya di-set di platform.
+safe_inject VITE_REVERB_APP_KEY "${VITE_REVERB_APP_KEY:-$REVERB_APP_KEY}"
 safe_inject VITE_REVERB_HOST    "${VITE_REVERB_HOST:-}"
-safe_inject VITE_REVERB_PORT    "${VITE_REVERB_PORT:-}"
-safe_inject VITE_REVERB_SCHEME  "${VITE_REVERB_SCHEME:-}"
+safe_inject VITE_REVERB_PORT    "${VITE_REVERB_PORT:-$REVERB_PORT}"
+safe_inject VITE_REVERB_SCHEME  "${VITE_REVERB_SCHEME:-$REVERB_SCHEME}"
 
 # 10) Log & proxy
 safe_inject LOG_LEVEL     "${LOG_LEVEL:-}"
