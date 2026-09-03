@@ -26,6 +26,9 @@ php artisan migrate --force || true
 echo "Seeding feature flags (idempotent, hanya isi key yang belum ada)..."
 php artisan db:seed --class="Database\Seeders\FeatureFlagsSeeder" --force --no-interaction || true
 
+echo "Seeding data portal (idempotent via firstOrCreate)..."
+php artisan db:seed --class="Database\Seeders\PortalFullSeeder" --force --no-interaction || true
+
 echo "Caching config and routes..."
 php artisan config:cache --no-interaction
 php artisan route:cache --no-interaction
