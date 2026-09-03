@@ -184,6 +184,26 @@ Route::middleware(['auth:sanctum', 'api.role:siswa'])->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/notifikasi/poll', [\App\Http\Controllers\NotifikasiController::class, 'poll']);
     Route::get('/session/status', [\App\Http\Controllers\SessionController::class, 'status']);
+    // Daftarkan token FCM perangkat (aplikasi native) untuk push notification.
+    Route::post('/device-token', function (\Illuminate\Http\Request $request) {
+        $data = $request->validate([
+            'token' => ['required', 'string', 'max:255'],
+            'platform' => ['nullable', 'in:android,ios,web'],
+        ]);
+        \App\Models\DeviceToken::updateOrCreate(
+            ['token' => $data['token']],
+            ['user_id' => $request->user()->id, 'platform' => $data['platform'] ?? 'android']
+        );
+
+        return response()->json(['ok' => true]);
+    });
+    Route::delete('/device-token', function (\Illuminate\Http\Request $request) {
+        $data = $request->validate(['token' => ['required', 'string', 'max:255']]);
+        \App\Models\DeviceToken::where('token', $data['token'])
+            ->where('user_id', $request->user()->id)->delete();
+
+        return response()->json(['ok' => true]);
+    });
 });
 
 Route::get('/status-aplikasi', function () {

@@ -33,6 +33,17 @@ class NotificationHelper
             // Notifikasi tetap tersimpan di DB dan terbaca di menu notifikasi.
             \Illuminate\Support\Facades\Log::warning('Broadcast notifikasi gagal: '.$e->getMessage());
         }
+
+        // Push native (FCM) — best-effort, gagal aman. Jalan bila Firebase
+        // dikonfigurasi DAN user punya token perangkat terdaftar.
+        try {
+            \App\Services\FcmService::sendToUser((int) $userId, $title, $message, [
+                'type' => (string) $type,
+                'url' => (string) ($url ?? ''),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('FCM hook gagal: '.$e->getMessage());
+        }
     }
 
     /**

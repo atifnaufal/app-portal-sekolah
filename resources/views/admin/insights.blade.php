@@ -146,6 +146,13 @@
                 @endforeach
             </div>
             <p class="small text-muted mt-3 mb-0">Diperbarui {{ now()->translatedFormat('d M Y, H:i') }}. Detail deploy/log container tetap lewat dashboard Railway.</p>
+            <hr>
+            <div class="d-flex align-items-center gap-2 small">
+                <i class="bi bi-bell-fill text-primary"></i>
+                <b>Push Notification (FCM):</b>
+                <span class="text-muted">{{ \App\Services\FcmService::statusLine() }}</span>
+            </div>
+            <div class="small text-muted mt-1">Aktifkan: set <b>FIREBASE_ENABLED=true</b> + <b>FIREBASE_CREDENTIALS</b> (isi JSON service account) di Railway. Aplikasi native mendaftarkan token via <b>POST /api/device-token</b> (Sanctum).</div>
         </div>
 
         {{-- INTEGRASI --}}
