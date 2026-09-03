@@ -82,6 +82,19 @@ class PortalDemoSeeder extends Seeder
                     ['school_id' => $school->id]
                 );
             }
+
+            // Auto-follow: warga sekolah mengikuti adminnya + Admin Pusat.
+            $pusatIds = User::where('role', 'admin')->whereNull('school_id')->pluck('id')->all();
+            $schoolAdminId = User::where('role', 'admin')->where('school_id', $school->id)->value('id');
+            $memberIds = User::where('school_id', $school->id)->whereIn('role', ['guru', 'siswa'])->pluck('id')->all();
+            foreach ($memberIds as $mid) {
+                foreach (array_unique(array_merge($pusatIds, $schoolAdminId ? [$schoolAdminId] : [])) as $aid) {
+                    if ((int) $aid === (int) $mid) {
+                        continue;
+                    }
+                    \App\Models\GlobalFollow::firstOrCreate(['follower_id' => $mid, 'followed_id' => $aid]);
+                }
+            }
         }
 
         $this->command->info('PortalDemoSeeder: 3 sekolah, 6 guru, 12 siswa, 3 admin, 6 postingan.');

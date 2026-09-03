@@ -7,6 +7,7 @@ use App\Helpers\UserContextHelper;
 use App\Models\GlobalPost;
 use App\Models\GlobalStory;
 use App\Models\School;
+use App\Models\User;
 use App\Services\FirebaseStorageService;
 use App\Services\ImageSafetyService;
 use Illuminate\Http\RedirectResponse;
@@ -29,8 +30,14 @@ class GlobalPortalController extends Controller
             ->latest()->paginate(15);
 
         // Cerita aktif (24 jam), grup per user — versi terbaru tiap user.
+        // Privasi: terlihat bila milik sendiri / mengikuti penulis / satu sekolah / admin.
+        $followedIds = $me
+            ? \App\Models\GlobalFollow::where('follower_id', $me->id)->pluck('followed_id')->all()
+            : [];
         $storiesGrouped = $hasStories
             ? GlobalStory::with('user')->active()->latest()->get()->groupBy('user_id')->map(fn ($g) => $g->first())
+                ->filter(fn ($st) => $this->canSeeStory($me, $isSuper, $followedIds, $st))
+                ->values()
             : collect();
         $myStory = ($me && $hasStories) ? $storiesGrouped->get($me->id) : null;
 
@@ -79,6 +86,50 @@ class GlobalPortalController extends Controller
         ]);
     }
 
+    /** Aturan lihat cerita: sendiri > admin (pusat/sekolah ybs) > satu sekolah > mengikuti. */
+    public static function canSeeStory(?\App\Models\User $me, bool $isSuper, array $followedIds, GlobalStory $st): bool
+    {
+        if (! $me) {
+            return false;
+        }
+        if ((int) $st->user_id === (int) $me->id) {
+            return true;
+        }
+        if ($isSuper) {
+            return true; // Admin Pusat melihat semua tanpa follow.
+        }
+        if ($me->role === 'admin' && $me->school_id && (int) $st->school_id === (int) $me->school_id) {
+            return true; // Admin sekolah melihat cerita sekolahnya.
+        }
+        if ($me->school_id && (int) $st->school_id === (int) $me->school_id) {
+            return true; // Satu sekolah otomatis saling melihat.
+        }
+
+        return in_array((int) $st->user_id, array_map('intval', $followedIds), true);
+    }
+
+    /** Auto-follow: user aktif otomatis mengikuti admin sekolahnya + Admin Pusat. */
+    public static function autoFollowAdmins(User $user): void
+    {
+        if (! in_array($user->role, ['guru', 'siswa'], true) || ! $user->aktif) {
+            return;
+        }
+        try {
+            $adminIds = User::where('role', 'admin')
+                ->where(fn ($q) => $q->where('school_id', $user->school_id)->orWhereNull('school_id'))
+                ->pluck('id');
+            foreach ($adminIds as $adminId) {
+                if ((int) $adminId === (int) $user->id) {
+                    continue;
+                }
+                \App\Models\GlobalFollow::firstOrCreate([
+                    'follower_id' => $user->id, 'followed_id' => $adminId,
+                ]);
+            }
+        } catch (\Throwable $e) {
+        }
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $uid = UserContextHelper::id($request);
@@ -111,9 +162,9 @@ class GlobalPortalController extends Controller
         }
 
         $post = GlobalPost::create($data);
-        // notif ringan ke followers global (skip self)
+        // Notif mengarah langsung ke komentar postingan (detail flow).
         try {
-            NotificationHelper::sendToAll('Portal Global Baru', mb_substr($post->content, 0, 80), route('global.portal'), 'pengumuman', null, $uid);
+            NotificationHelper::sendToAll('Portal Global Baru', mb_substr($post->content, 0, 80), route('global.portal').'#cmt-'.$post->id, 'pengumuman', null, $uid);
         } catch (\Throwable $e) {
         }
 

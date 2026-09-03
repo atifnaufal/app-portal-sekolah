@@ -264,6 +264,10 @@ class AdminController extends Controller
     {
         abort_unless(in_array($user->role, ['guru', 'siswa'], true), 404);
         $user->update(['aktif' => ! $user->aktif]);
+        if ($user->aktif) {
+            // Baru diaktifkan → otomatis ikuti admin sekolahnya + Admin Pusat.
+            \App\Http\Controllers\GlobalPortalController::autoFollowAdmins($user->fresh());
+        }
 
         return back()->with('success', 'Status akun berhasil diubah.');
     }
@@ -643,6 +647,16 @@ class AdminController extends Controller
         abort_unless($me && $me->isSuperAdmin(),403);
         $data=$request->validate(['name'=>['required','max:100'],'email'=>['required','email','unique:users,email'],'password'=>['required','min:8','confirmed'],'school_id'=>['required','exists:schools,id']]);
         \App\Models\User::create(['name'=>$data['name'],'email'=>$data['email'],'password'=>\Illuminate\Support\Facades\Hash::make($data['password']),'role'=>'admin','school_id'=>$data['school_id'],'aktif'=>true,'nik'=>'ADM'.rand(1000,9999),'no_hp'=>'08'.rand(1000000000,9999999999)]);
+        // User aktif sekolah ini otomatis mengikuti admin barunya.
+        try {
+            $newAdminId = \App\Models\User::where('email', $data['email'])->value('id');
+            $followerIds = \App\Models\User::where('school_id', $data['school_id'])
+                ->whereIn('role', ['guru', 'siswa'])->where('aktif', true)->pluck('id');
+            foreach ($followerIds as $fid) {
+                \App\Models\GlobalFollow::firstOrCreate(['follower_id' => $fid, 'followed_id' => $newAdminId]);
+            }
+        } catch (\Throwable $e) {
+        }
         return back()->with('success','Admin sekolah dibuat');
     }
 

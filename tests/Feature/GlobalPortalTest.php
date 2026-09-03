@@ -161,6 +161,61 @@ class GlobalPortalTest extends TestCase
         $this->assertFalse($post->fresh()->is_hidden);
     }
 
+    public function test_story_privacy_follow_school_admin_rules(): void
+    {
+        $a = School::create(['name' => 'A', 'city' => 'C', 'slug' => 'pv-a', 'is_active' => true]);
+        $b = School::create(['name' => 'B', 'city' => 'C', 'slug' => 'pv-b', 'is_active' => true]);
+        $author = $this->makeGuru($a, 'author@pv.id');
+        $sameSchool = $this->makeGuru($a, 'same@pv.id');
+        $otherSchool = $this->makeGuru($b, 'other@pv.id');
+        $super = User::create([
+            'name' => 'Pusat', 'email' => 'pusat@pv.id', 'password' => Hash::make('secret123'),
+            'role' => 'admin', 'aktif' => true, 'nik' => 'ADMPV1', 'no_hp' => '081', 'school_id' => null,
+        ]);
+        $story = \App\Models\GlobalStory::create([
+            'user_id' => $author->id, 'school_id' => $a->id,
+            'image' => 'stories/x.jpg', 'expires_at' => now()->addDay(),
+        ]);
+
+        $this->assertTrue(\App\Http\Controllers\GlobalPortalController::canSeeStory($author, false, [], $story));
+        $this->assertTrue(\App\Http\Controllers\GlobalPortalController::canSeeStory($sameSchool, false, [], $story));
+        $this->assertFalse(\App\Http\Controllers\GlobalPortalController::canSeeStory($otherSchool, false, [], $story));
+        $this->assertTrue(\App\Http\Controllers\GlobalPortalController::canSeeStory($super, true, [], $story));
+
+        // Setelah follow, sekolah lain bisa melihat.
+        \App\Models\GlobalFollow::create(['follower_id' => $otherSchool->id, 'followed_id' => $author->id]);
+        $this->assertTrue(\App\Http\Controllers\GlobalPortalController::canSeeStory($otherSchool, false, [$author->id], $story));
+    }
+
+    public function test_activation_auto_follows_admins(): void
+    {
+        $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 'af-s', 'is_active' => true]);
+        $schoolAdmin = User::create([
+            'name' => 'Adm', 'email' => 'adm@af.id', 'password' => Hash::make('secret123'),
+            'role' => 'admin', 'aktif' => true, 'school_id' => $school->id, 'nik' => 'ADMAF1', 'no_hp' => '081',
+        ]);
+        $pusat = User::create([
+            'name' => 'Pusat', 'email' => 'pusat@af.id', 'password' => Hash::make('secret123'),
+            'role' => 'admin', 'aktif' => true, 'nik' => 'ADMAF0', 'no_hp' => '081', 'school_id' => null,
+        ]);
+        $siswa = User::create([
+            'name' => 'Sis', 'email' => 'sis@af.id', 'password' => Hash::make('secret123'),
+            'role' => 'siswa', 'aktif' => false, 'school_id' => $school->id, 'nik' => 'SWAF1', 'no_hp' => '081',
+        ]);
+        $super = User::create([
+            'name' => 'Op', 'email' => 'op@af.id', 'password' => Hash::make('secret123'),
+            'role' => 'admin', 'aktif' => true, 'nik' => 'ADMAF9', 'no_hp' => '081', 'school_id' => null,
+        ]);
+
+        $this->withSession(['user_id' => $super->id, 'user_role' => 'admin', 'admin_name' => 'Op',
+                'is_super_admin' => true, 'school_id' => null])
+            ->patch(route('admin.user.toggle', $siswa))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('global_follows', ['follower_id' => $siswa->id, 'followed_id' => $schoolAdmin->id]);
+        $this->assertDatabaseHas('global_follows', ['follower_id' => $siswa->id, 'followed_id' => $pusat->id]);
+    }
+
     public function test_activity_page_renders_mobile_and_desktop(): void
     {
         $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 's1-a', 'is_active' => true]);

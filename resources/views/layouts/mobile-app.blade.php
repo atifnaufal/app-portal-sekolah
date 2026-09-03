@@ -556,6 +556,10 @@
                 // Notifikasi di-poll lebih rapat untuk nuansa "langsung"
                 pollNotifications();
                 pollTimer = setInterval(pollNotifications, 15000);
+                // Kembali dari latar belakang → langsung cek notifikasi baru.
+                document.addEventListener('visibilitychange', function () {
+                    if (!document.hidden) { heartbeat(); pollNotifications(); }
+                });
             }
             function stopHeartbeat() {
                 if (stdout) { clearInterval(stdout); stdout = null; }

@@ -43,7 +43,7 @@
   <div class="ig-stories">
     <div class="ig-story">
       <form method="POST" action="{{ route('global.portal.story.store') }}" enctype="multipart/form-data" id="storyForm">@csrf
-        <div class="ig-ring add" style="cursor:pointer" title="Tambah cerita" onclick="openStoryAdd(event)">
+        <div class="ig-ring add" style="cursor:pointer" title="Tambah cerita" onclick="storyAddTap(event)">
           <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;pointer-events:none;">
           <span class="ig-plus" style="pointer-events:none;"><i class="bi bi-plus-lg"></i></span>
           <input type="file" name="image" id="storyFile" accept="image/*" hidden onchange="document.getElementById('storyForm').submit()">
@@ -215,8 +215,19 @@
   <canvas id="camCanvas" style="display:none;"></canvas>
 </div>
 <script>
-  /* ===== Tambah cerita: bottom sheet ===== */
-  function openStoryAdd(e) { if (e) e.preventDefault(); document.getElementById('sheetAdd').style.display = 'block'; }
+  function openStoryAdd(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    document.getElementById('sheetAdd').style.display = 'block';
+  }
+  function storyAddTap(e) {
+    try {
+      openStoryAdd(e);
+    } catch (err) {
+      // Fallback: langsung buka galeri agar tombol tidak pernah mati.
+      var f = document.getElementById('storyFile');
+      if (f) f.click();
+    }
+  }
   function closeSheetAdd() { document.getElementById('sheetAdd').style.display = 'none'; }
   function galleryPick() { closeSheetAdd(); document.getElementById('storyFile').click(); }
 
