@@ -117,7 +117,7 @@
   </div>
 
   @forelse($posts as $p)
-  <div class="ig-card">
+  <div class="ig-card" data-post-id="{{ $p->id }}">
     <a href="{{ route('global.portal.profile',$p->user) }}" class="ig-head" style="text-decoration:none;color:inherit">
       <div class="ig-avatar"><img src="{{ $p->user->avatar_url }}" alt=""></div>
       <div class="ig-meta">
@@ -156,8 +156,79 @@
   @empty
   <div style="padding:40px;text-align:center;color:#8e8e8e"><i class="bi bi-images" style="font-size:32px"></i><div style="margin-top:8px;font-weight:700">Belum ada postingan</div></div>
   @endforelse
-  <div style="padding:12px 14px">{{ $posts->links() }}</div>
+  {{-- Infinite scroll ala IG: sentinel + tombol muat (pengganti pagination mentah) --}}
+  <div id="feedEnd" style="padding:20px 14px 8px;text-align:center;">
+    <div id="feedLoader" style="display:none;color:#8e8e8e;font-size:13px;"><span class="spinner-border spinner-border-sm me-1"></span>Memuat...</div>
+    <button id="feedMoreBtn" style="display:none;background:#f1f5f9;border:0;border-radius:99px;padding:10px 22px;font-size:13px;font-weight:800;color:#0f172a;">Muat Lebih Banyak</button>
+    <div id="feedDone" style="display:none;color:#cbd5e1;font-size:12px;font-weight:700;">— Sudah paling bawah —</div>
+  </div>
+  <button id="newPostsPill" style="display:none;position:fixed;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:2500;background:#0f172a;color:#fff;border:0;border-radius:99px;padding:10px 20px;font-size:13px;font-weight:800;box-shadow:0 12px 30px rgba(15,23,42,.35);"><i class="bi bi-arrow-up-circle me-1"></i><span id="newPostsTxt">Postingan baru</span></button>
 </div>
+<script>
+  /* Infinite scroll + pil postingan baru (60 detik). */
+  (function () {
+    var nextUrl = @json($posts->nextPageUrl());
+    var loading = false;
+    var loader = document.getElementById('feedLoader');
+    var moreBtn = document.getElementById('feedMoreBtn');
+    var doneEl = document.getElementById('feedDone');
+    var endEl = document.getElementById('feedEnd');
+    function refreshState() {
+      if (nextUrl) { moreBtn.style.display = 'inline-block'; doneEl.style.display = 'none'; }
+      else { moreBtn.style.display = 'none'; loader.style.display = 'none'; doneEl.style.display = 'block'; }
+    }
+    refreshState();
+    function loadMore() {
+      if (loading || !nextUrl) return;
+      loading = true; loader.style.display = 'block'; moreBtn.style.display = 'none';
+      fetch(nextUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.text(); })
+        .then(function (html) {
+          var doc = new DOMParser().parseFromString(html, 'text/html');
+          var cards = doc.querySelectorAll('.ig-card');
+          var feed = endEl.parentElement;
+          cards.forEach(function (c) { feed.insertBefore(c, endEl); });
+          // 15 = per halaman; kurang dari itu berarti sudah halaman terakhir.
+          if (cards.length >= 15) {
+            try {
+              var u = new URL(nextUrl);
+              var p = parseInt(u.searchParams.get('page') || '1', 10);
+              u.searchParams.set('page', p + 1);
+              nextUrl = u.toString();
+            } catch (e) { nextUrl = null; }
+          } else {
+            nextUrl = null;
+          }
+          loading = false; loader.style.display = 'none';
+          refreshState();
+        })
+        .catch(function () { loading = false; loader.style.display = 'none'; refreshState(); });
+    }
+    moreBtn.addEventListener('click', loadMore);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { if (es[0].isIntersecting) loadMore(); }, { rootMargin: '600px' }).observe(endEl);
+    }
+    // Pil postingan baru tiap 60 detik.
+    var pill = document.getElementById('newPostsPill');
+    var pillTxt = document.getElementById('newPostsTxt');
+    function firstId() {
+      var c = document.querySelector('.ig-card');
+      return c ? parseInt(c.getAttribute('data-post-id') || '0', 10) : 0;
+    }
+    async function checkNew() {
+      try {
+        var r = await fetch("{{ route('global.portal.check') }}?after_id=" + firstId(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        var d = await r.json();
+        if (d.new_count > 0) {
+          pillTxt.innerText = d.new_count + ' postingan baru — ketuk untuk muat';
+          pill.style.display = 'block';
+        }
+      } catch (e) {}
+    }
+    pill.addEventListener('click', function () { window.location.reload(); });
+    setInterval(checkNew, 60000);
+  })();
+</script>
 
 {{-- Bottom sheet tambah cerita: kamera + galeri digabung --}}
 <div id="sheetAdd" style="display:none;position:fixed;inset:0;z-index:6500;">

@@ -216,6 +216,24 @@ class GlobalPortalTest extends TestCase
         $this->assertDatabaseHas('global_follows', ['follower_id' => $siswa->id, 'followed_id' => $pusat->id]);
     }
 
+    public function test_check_endpoint_reports_new_posts(): void
+    {
+        $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 's1-k', 'is_active' => true]);
+        $guru = $this->makeGuru($school, 'gk@t.id');
+        $p1 = GlobalPost::create(['user_id' => $guru->id, 'school_id' => $school->id, 'content' => 'lama']);
+        GlobalPost::create(['user_id' => $guru->id, 'school_id' => $school->id, 'content' => 'baru']);
+
+        $this->withSession($this->sessionFor($guru))
+            ->getJson(route('global.portal.check', ['after_id' => $p1->id]))
+            ->assertOk()
+            ->assertJsonPath('new_count', 1);
+
+        $this->withSession($this->sessionFor($guru))
+            ->getJson(route('global.portal.check', ['after_id' => 999999]))
+            ->assertOk()
+            ->assertJsonPath('new_count', 0);
+    }
+
     public function test_activity_page_renders_mobile_and_desktop(): void
     {
         $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 's1-a', 'is_active' => true]);

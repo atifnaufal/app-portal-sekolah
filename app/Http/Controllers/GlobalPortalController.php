@@ -292,6 +292,22 @@ class GlobalPortalController extends Controller
         return back();
     }
 
+    /** Polling ringan: jumlah postingan baru setelah ID tertentu (untuk pil "baru"). */
+    public function check(Request $request)
+    {
+        $me = UserContextHelper::user($request);
+        $isSuper = $me && $me->isSuperAdmin();
+        $after = (int) $request->query('after_id', 0);
+        $hasModeration = Schema::hasColumn('global_posts', 'is_hidden');
+
+        $q = GlobalPost::where('id', '>', $after);
+        if (! $isSuper && $hasModeration) {
+            $q->where('is_hidden', false);
+        }
+
+        return response()->json(['new_count' => $q->count()]);
+    }
+
     /** Halaman Aktivitas ala IG: like, follower baru, komentar terbaru. */
     public function activity(Request $request): View
     {

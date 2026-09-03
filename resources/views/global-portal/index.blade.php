@@ -114,7 +114,7 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
             </div>
             @forelse($posts as $p)
             @php $liked = $p->likes->contains('user_id', $myId); @endphp
-            <div class="gp-post {{ $p->is_hidden ? 'is-hidden-post' : '' }}">
+            <div class="gp-post {{ $p->is_hidden ? 'is-hidden-post' : '' }}" data-post-id="{{ $p->id }}">
                 @if($p->is_hidden)
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span class="badge rounded-pill bg-danger">Disembunyikan ({{ $p->reports_count }} laporan)</span>
@@ -166,8 +166,13 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
             <div class="text-center py-5 text-muted"><i class="bi bi-images" style="font-size:32px;"></i><div class="mt-2 fw-bold">Belum ada postingan</div><div class="small">Jadilah yang pertama membagikan kabar.</div></div>
             @endforelse
             @if($posts->hasPages())
-            <div class="p-3 border-top">{{ $posts->links() }}</div>
+            <div class="p-4 text-center" id="feedEnd">
+                <div id="feedLoader" style="display:none;" class="text-muted small"><span class="spinner-border spinner-border-sm me-1"></span>Memuat...</div>
+                <button id="feedMoreBtn" class="btn btn-outline-primary rounded-pill px-4 fw-bold" style="display:none;">Muat Lebih Banyak</button>
+                <div id="feedDone" class="text-muted small" style="display:none;">— Sudah paling bawah —</div>
+            </div>
             @endif
+            <button id="newPostsPill" class="btn btn-dark fw-bold shadow-lg" style="display:none;position:fixed;top:90px;left:50%;transform:translateX(-50%);z-index:1050;border-radius:99px;"><i class="bi bi-arrow-up-circle me-1"></i><span id="newPostsTxt">Postingan baru</span></button>
         </div>
     </div>
 
@@ -220,4 +225,66 @@ $mySchoolName = $me?->school?->name ?? ($isSuper ? 'Admin Pusat (Umum)' : 'Umum'
     </div>
 </div>
 @endforeach
+{{-- Infinite scroll + pil postingan baru --}}
+<script>
+(function () {
+    var nextUrl = @json($posts->nextPageUrl());
+    var endEl = document.getElementById('feedEnd');
+    if (!endEl) return;
+    var loading = false;
+    var loader = document.getElementById('feedLoader');
+    var moreBtn = document.getElementById('feedMoreBtn');
+    var doneEl = document.getElementById('feedDone');
+    function refreshState() {
+        if (nextUrl) { moreBtn.style.display = 'inline-block'; doneEl.style.display = 'none'; }
+        else { moreBtn.style.display = 'none'; if (loader) loader.style.display = 'none'; doneEl.style.display = 'block'; }
+    }
+    refreshState();
+    function loadMore() {
+        if (loading || !nextUrl) return;
+        loading = true; loader.style.display = 'block'; moreBtn.style.display = 'none';
+        fetch(nextUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.text(); })
+            .then(function (html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var cards = doc.querySelectorAll('.gp-post');
+                var feed = endEl.parentElement;
+                cards.forEach(function (c) { feed.insertBefore(c, endEl); });
+                if (cards.length >= 15) {
+                    try {
+                        var u = new URL(nextUrl);
+                        var p = parseInt(u.searchParams.get('page') || '1', 10);
+                        u.searchParams.set('page', p + 1);
+                        nextUrl = u.toString();
+                    } catch (e) { nextUrl = null; }
+                } else { nextUrl = null; }
+                loading = false; loader.style.display = 'none';
+                refreshState();
+            })
+            .catch(function () { loading = false; loader.style.display = 'none'; refreshState(); });
+    }
+    moreBtn.addEventListener('click', loadMore);
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) { if (es[0].isIntersecting) loadMore(); }, { rootMargin: '600px' }).observe(endEl);
+    }
+    var pill = document.getElementById('newPostsPill');
+    var pillTxt = document.getElementById('newPostsTxt');
+    function firstId() {
+        var c = document.querySelector('.gp-post');
+        return c ? parseInt(c.getAttribute('data-post-id') || '0', 10) : 0;
+    }
+    async function checkNew() {
+        try {
+            var r = await fetch("{{ route('global.portal.check') }}?after_id=" + firstId(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            var d = await r.json();
+            if (d.new_count > 0) {
+                pillTxt.innerText = d.new_count + ' postingan baru — ketuk untuk muat';
+                pill.style.display = 'block';
+            }
+        } catch (e) {}
+    }
+    pill.addEventListener('click', function () { window.location.reload(); });
+    setInterval(checkNew, 60000);
+})();
+</script>
 @endsection
