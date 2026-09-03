@@ -111,8 +111,8 @@
                     <div class="mini-stat"><div class="num text-success">{{ number_format($s->siswa_count) }}</div><div class="lb">Siswa</div></div>
                     <div class="mini-stat"><div class="num {{ $s->pending_count ? 'text-danger' : '' }}">{{ number_format($s->pending_count) }}</div><div class="lb">Pending</div></div>
                 </div>
-                <a href="{{ route('admin.users', ['school_id' => $s->id]) }}" class="btn btn-primary w-100 fw-bold" style="border-radius:12px;">
-                    <i class="bi bi-eye me-1"></i> Lihat Data Guru & Siswa
+                <a href="{{ route('admin.schools.detail', $s->id) }}" class="btn btn-primary w-100 fw-bold" style="border-radius:12px;">
+                    <i class="bi bi-eye me-1"></i> Detail Sekolah
                 </a>
             </div>
         </div>
