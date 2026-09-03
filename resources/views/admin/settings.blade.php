@@ -94,6 +94,32 @@
                 @endforelse
             </div>
         </div>
+
+        @if(!empty($insightSummary))
+        <div class="set-card mt-4">
+            <div class="set-card-head d-flex justify-content-between align-items-center">
+                <h2 class="set-card-title"><i class="bi bi-cpu-fill me-2 text-primary"></i>AI Analyst & Terminal</h2>
+                <a href="{{ route('admin.insights') }}" class="btn btn-sm btn-primary" style="border-radius:10px;">Buka <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+            <div class="p-4">
+                <p class="small text-secondary mb-3">Insight kesehatan sistem, terminal diagnostik allowlist, dan status GitHub — khusus Admin Pusat, tiap aksi diaudit.</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <div class="mini-stat flex-fill" style="background:#f8fafc;border-radius:12px;padding:12px;text-align:center;min-width:120px;">
+                        <div class="h5 fw-extrabold mb-0 {{ $insightSummary['pending'] ? 'text-danger' : '' }}">{{ number_format($insightSummary['pending']) }}</div>
+                        <div class="small text-muted fw-bold text-uppercase" style="font-size:10px;">Pending</div>
+                    </div>
+                    <div class="mini-stat flex-fill" style="background:#f8fafc;border-radius:12px;padding:12px;text-align:center;min-width:120px;">
+                        <div class="h5 fw-extrabold mb-0">{{ number_format($insightSummary['sekolah']) }}</div>
+                        <div class="small text-muted fw-bold text-uppercase" style="font-size:10px;">Sekolah</div>
+                    </div>
+                    <div class="mini-stat flex-fill" style="background:#f8fafc;border-radius:12px;padding:12px;text-align:center;min-width:120px;">
+                        <div class="h5 fw-extrabold mb-0">{{ number_format($insightSummary['login_hari_ini']) }}</div>
+                        <div class="small text-muted fw-bold text-uppercase" style="font-size:10px;">Login Hari Ini</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
     <div class="col-lg-4">
         <div class="set-card mb-4">

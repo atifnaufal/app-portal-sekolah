@@ -320,6 +320,11 @@ class AdminController extends Controller
             'schoolsReg' => ($isSuper && \Illuminate\Support\Facades\Schema::hasColumn('schools', 'reg_guru_open'))
                 ? School::orderBy('name')->get(['id', 'name', 'reg_guru_open', 'reg_siswa_open'])
                 : collect(),
+            'insightSummary' => $isSuper ? [
+                'pending' => User::where('aktif', false)->whereIn('role', ['guru', 'siswa'])->count(),
+                'sekolah' => School::count(),
+                'login_hari_ini' => UserHistory::ofType('login')->whereDate('created_at', today())->count(),
+            ] : null,
             'registrationGuruEnabled' => (bool) Setting::getValue('registration_guru_enabled', false),
             'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false),
             'attendanceActive' => (bool) Setting::getValue('attendance_active', false),
