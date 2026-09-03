@@ -60,9 +60,12 @@
     .bubble {
         padding: 10px 14px; border-radius: 20px; font-size: 14px; line-height: 1.5;
         box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative; cursor: pointer;
-        transition: background 0.15s;
+        transition: background 0.15s, transform 0.15s, filter 0.15s;
+        -webkit-user-select: none; user-select: none;
+        -webkit-touch-callout: none;
     }
     .bubble:active { filter: brightness(0.95); }
+    .bubble.bubble-highlight { filter: brightness(0.88); transform: scale(0.96); }
     .bubble.deleted-bubble { font-style: italic; opacity: 0.6; cursor: default; background: #f1f5f9 !important; color: #94a3b8 !important; border: 0 !important; }
     .mine .bubble { background: var(--blue); color: #fff; border-bottom-right-radius: 4px; }
     .other .bubble { background: #fff; color: var(--navy); border-bottom-left-radius: 4px; border: 1px solid #f1f5f9; }
@@ -226,7 +229,7 @@
                     @if(!$isMine && !$isPrivate)
                         <div class="sender-name">{{ $msg->user->name }}</div>
                     @endif
-                    <div class="bubble {{ $msg->isDeleted() ? 'deleted-bubble' : '' }}" @if(!$msg->isDeleted()) onclick="openCtx(event, {{ $msg->id }})" @endif>
+                    <div class="bubble {{ $msg->isDeleted() ? 'deleted-bubble' : '' }}" @if(!$msg->isDeleted()) data-msg-id="{{ $msg->id }}" @endif>
                         @if($msg->isDeleted())
                             <i class="bi bi-trash3"></i> Pesan ini telah dihapus
                         @else
@@ -426,7 +429,7 @@
         if (data.deleted) {
             html += '<div class="bubble deleted-bubble"><i class="bi bi-trash3"></i> Pesan ini telah dihapus</div>';
         } else {
-            html += '<div class="bubble" onclick="openCtx(event, '+data.id+')">';
+            html += '<div class="bubble" data-msg-id="'+data.id+'">';
             if (data.file_url) html += '<div class="mb-2"><img src="'+data.file_url+'" class="img-fluid rounded-3" style="max-height: 250px; width: 100%; object-fit: cover;"></div>';
             if (data.pesan) html += '<div class="msg-text">'+escapeHtml(data.pesan)+'</div>';
             html += '<div class="msg-info"><span>'+data.waktu+'</span>';
@@ -440,31 +443,45 @@
         msgList.scrollTop = msgList.scrollHeight;
     }
 
-    // Context menu
+    // Context menu + Long Press (WhatsApp-like)
     var ctxMenu = document.createElement('div');
     ctxMenu.className = 'msg-context-menu';
     ctxMenu.style.display = 'none';
     document.body.appendChild(ctxMenu);
 
-    window.openCtx = function(e, msgId) {
-        e.stopPropagation();
+    var longPressTimer = null;
+    var longPressTriggered = false;
+    var ctxMenuOpenedAt = 0;
+    var touchStartY = 0;
+    var touchStartX = 0;
+    var activeBubble = null;
+    var LONG_PRESS_MS = 500;
+    var MOVE_THRESHOLD = 10;
+
+    function hapticFeedback() {
+        if (navigator.vibrate) navigator.vibrate(30);
+    }
+
+    function showCtxMenu(msgId, anchorRect) {
         if (editingId) closeEdit();
         var item = document.querySelector('[data-msg-id="'+msgId+'"]');
         if (!item) return;
         var mine = item.classList.contains('mine');
         if (item.querySelector('.deleted-bubble')) return;
+        ctxMenuOpenedAt = Date.now();
         var html = '';
         if (mine) html += '<button type="button" class="ctx-item" id="ctxEdit"><i class="bi bi-pencil"></i> Edit</button>';
         if (mine || isAdmin) html += '<button type="button" class="ctx-item delete" id="ctxDelete"><i class="bi bi-trash3"></i> Hapus</button>';
+        html += '<button type="button" class="ctx-item" id="ctxInfo"><i class="bi bi-info-circle"></i> Info</button>';
         html += '<button type="button" class="ctx-item" id="ctxCancel"><i class="bi bi-x-lg"></i> Batal</button>';
         ctxMenu.innerHTML = html;
         ctxMenu.style.display = 'block';
-        var r = item.getBoundingClientRect();
+        var r = anchorRect || item.getBoundingClientRect();
         var mw = 190;
-        var itemCount = (mine ? 1 : 0) + (mine || isAdmin ? 1 : 0) + 1;
+        var itemCount = (mine ? 1 : 0) + (mine || isAdmin ? 1 : 0) + 2;
         var mh = itemCount * 48 + 16;
-        var x = Math.min(r.left, window.innerWidth - mw - 12);
-        var y = Math.min(r.bottom + 4, window.innerHeight - mh - 12);
+        var x = mine ? Math.max(12, r.right - mw) : Math.min(r.left, window.innerWidth - mw - 12);
+        var y = Math.min(r.bottom + 6, window.innerHeight - mh - 12);
         if (y < 60) y = Math.max(50, r.top - mh);
         ctxMenu.style.left = Math.max(12, x) + 'px';
         ctxMenu.style.top = y + 'px';
@@ -472,13 +489,101 @@
 
         var ed = ctxMenu.querySelector('#ctxEdit');
         if (ed) ed.onclick = function(){ startEdit(msgId); };
-        ctxMenu.querySelector('#ctxDelete').onclick = function(){ deleteMessage(msgId); };
+        var del = ctxMenu.querySelector('#ctxDelete');
+        if (del) del.onclick = function(){ deleteMessage(msgId); };
+        var info = ctxMenu.querySelector('#ctxInfo');
+        if (info) info.onclick = function(){
+            hideCtx();
+            var msg = item.querySelector('.msg-text');
+            var time = item.querySelector('.msg-info span');
+            var txt = msg ? msg.textContent : '';
+            var t = time ? time.textContent : '';
+            alert('Pesan: ' + (txt || '(gambar)') + '\nWaktu: ' + t + (mine ? '\nPengirim: Anda' : ''));
+        };
         ctxMenu.querySelector('#ctxCancel').onclick = function(){ hideCtx(); };
+    }
+
+    window.openCtx = function(e, msgId) {
+        e.preventDefault();
+        e.stopPropagation();
+        var item = document.querySelector('[data-msg-id="'+msgId+'"]');
+        if (!item || item.querySelector('.deleted-bubble')) return;
+        var r = item.getBoundingClientRect();
+        showCtxMenu(msgId, r);
     };
+
+    function highlightBubble(bubble, on) {
+        if (!bubble) return;
+        if (on) bubble.classList.add('bubble-highlight');
+        else bubble.classList.remove('bubble-highlight');
+    }
+
+    // Long press via touch events on message list
+    if (msgList) {
+        msgList.addEventListener('touchstart', function(e) {
+            var bubble = e.target.closest('.bubble:not(.deleted-bubble)');
+            if (!bubble) return;
+            var item = bubble.closest('.msg-item');
+            if (!item) return;
+            activeBubble = bubble;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            longPressTriggered = false;
+            highlightBubble(bubble, true);
+
+            longPressTimer = setTimeout(function() {
+                longPressTriggered = true;
+                hapticFeedback();
+                var msgId = parseInt(item.dataset.msgId);
+                showCtxMenu(msgId, bubble.getBoundingClientRect());
+            }, LONG_PRESS_MS);
+        }, { passive: true });
+
+        msgList.addEventListener('touchmove', function(e) {
+            if (!longPressTimer) return;
+            var dx = Math.abs(e.touches[0].clientX - touchStartX);
+            var dy = Math.abs(e.touches[0].clientY - touchStartY);
+            if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+                if (activeBubble) highlightBubble(activeBubble, false);
+            }
+        }, { passive: true });
+
+        msgList.addEventListener('touchend', function(e) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            if (activeBubble) highlightBubble(activeBubble, false);
+            if (longPressTriggered) {
+                e.preventDefault();
+                longPressTriggered = false;
+            }
+        }, { passive: false });
+
+        msgList.addEventListener('touchcancel', function() {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+            if (activeBubble) highlightBubble(activeBubble, false);
+        }, { passive: true });
+    }
 
     function hideCtx() { ctxMenu.style.display = 'none'; }
     window.hideCtx = hideCtx;
     document.addEventListener('click', function(e) { if (!ctxMenu.contains(e.target)) hideCtx(); });
+
+    // Click delegation for desktop (no touch events)
+    if (msgList) {
+        msgList.addEventListener('click', function(e) {
+            if (Date.now() - ctxMenuOpenedAt < 300) return;
+            var bubble = e.target.closest('.bubble:not(.deleted-bubble)');
+            if (!bubble) return;
+            var item = bubble.closest('.msg-item');
+            if (!item) return;
+            var msgId = parseInt(item.dataset.msgId);
+            if (!msgId) return;
+            showCtxMenu(msgId, bubble.getBoundingClientRect());
+        });
+    }
 
     function startEdit(msgId) {
         hideCtx();
@@ -511,8 +616,8 @@
                     if(item){
                         var b = item.querySelector('.bubble');
                         b.className = 'bubble deleted-bubble';
+                        b.removeAttribute('data-msg-id');
                         b.innerHTML = '<i class="bi bi-trash3"></i> Pesan ini telah dihapus';
-                        b.onclick = null;
                     }
                 }
             })
@@ -635,8 +740,8 @@
             if (item) {
                 var b = item.querySelector('.bubble');
                 b.className = 'bubble deleted-bubble';
+                b.removeAttribute('data-msg-id');
                 b.innerHTML = '<i class="bi bi-trash3"></i> Pesan ini telah dihapus';
-                b.onclick = null;
             }
         } else if (e.edited) {
             var item = document.querySelector('[data-msg-id="'+e.id+'"]');
