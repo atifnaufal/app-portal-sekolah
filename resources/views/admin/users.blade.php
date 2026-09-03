@@ -83,12 +83,65 @@
         <h1 class="h2 fw-extrabold mb-1" style="color: var(--navy); letter-spacing: -0.02em;">Guru & Siswa</h1>
         <p class="text-secondary mb-0">Manage user access, verify accounts, and organize class assignments.</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-outline-primary px-4 py-2 fw-bold" style="border-radius:14px;" data-bs-toggle="modal" data-bs-target="#addKelasModal">
+            <i class="bi bi-plus-circle me-2"></i> Tambah Kelas
+        </button>
         <a href="{{ route('register') }}" class="btn btn-primary px-4 py-2 fw-bold" style="border-radius:14px;">
             <i class="bi bi-person-plus-fill me-2"></i> Tambah Akun
         </a>
     </div>
 </div>
+
+@if($errors->any())
+<div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius:16px;">
+    <div class="fw-bold small mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Belum tersimpan:</div>
+    <ul class="mb-0 small">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+</div>
+@endif
+
+<div class="modal fade" id="addKelasModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius:20px;overflow:hidden;">
+        <div class="modal-header" style="background:#f8fafc;border-bottom:1px solid var(--border);">
+            <div>
+                <h6 class="fw-bold mb-0">Tambah Kelas Baru</h6>
+                <div class="small text-muted">{{ !empty($filterSchool->name ?? null) ? $filterSchool->name : 'Kelas otomatis masuk sekolah Anda' }}</div>
+            </div>
+            <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+        </div>
+        <form method="POST" action="{{ route('kelas.store') }}">
+            @csrf
+            @if(!empty($filterSchool->id ?? null) && !empty($isSuperAdmin))
+            <input type="hidden" name="school_id" value="{{ $filterSchool->id }}">
+            @endif
+            <div class="modal-body" style="padding:24px;">
+                <label class="small fw-bold mb-1">Nama Kelas / Rombel</label>
+                <input name="nama" value="{{ old('nama') }}" class="form-control mb-3" style="border-radius:12px;" placeholder="Contoh: XII RPL 1" required>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="small fw-bold mb-1">Tingkat (1–13)</label>
+                        <input name="tingkat" type="number" min="1" max="13" value="{{ old('tingkat') }}" class="form-control" style="border-radius:12px;" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="small fw-bold mb-1">Tahun Ajaran</label>
+                        <input name="tahun_ajaran" value="{{ old('tahun_ajaran', date('Y').'/'.(date('Y')+1)) }}" class="form-control" style="border-radius:12px;" placeholder="2026/2027" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid var(--border);">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:12px;">Batal</button>
+                <button class="btn btn-primary px-4" style="border-radius:12px;">Simpan Kelas</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        @if($errors->any() && old('nama'))
+            new bootstrap.Modal(document.getElementById('addKelasModal')).show();
+        @endif
+    });
+</script>
 
 {{-- Summary Cards --}}
 <div class="row g-4 mb-5">

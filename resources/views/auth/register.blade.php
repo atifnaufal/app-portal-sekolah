@@ -96,8 +96,17 @@
                     <button type="button" id="checkCodeBtn" class="btn btn-primary px-4" style="border-radius:14px;padding:12px 20px;white-space:nowrap;">Cek Kode</button>
                 </div>
                 <div id="codeMsg" class="small mt-2" style="display:none;"></div>
+                <div class="small text-muted mt-2">Format: <b>ID sekolah + kode kota</b> (contoh ID 18 + 51372 → <b>1851372</b>). Tidak punya kode? <a href="#" id="manualToggle">pilih sekolah manual</a>.</div>
+            </div>
 
-
+            <div id="manualBox" style="display:none;" class="mb-4 reveal">
+                <label class="form-label">Pilih Sekolah Manual</label>
+                <select id="schoolSelect" class="form-select">
+                    <option value="">Cari sekolah...</option>
+                    @foreach($schools as $s)
+                        <option value="{{ $s->id }}" data-guru="{{ $s->reg_guru_open ? 1 : 0 }}" data-siswa="{{ $s->reg_siswa_open ? 1 : 0 }}">[ID: {{ $s->id }}] {{ $s->name }} — {{ $s->city }}</option>
+                    @endforeach
+                </select>
             </div>
 
             <form method="POST" action="{{ route('register.store') }}" id="regForm" style="display:none;">
