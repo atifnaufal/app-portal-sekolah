@@ -199,6 +199,8 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::post('/admin/insights/terminal', [\App\Http\Controllers\AdminInsightController::class, 'terminal'])->name('admin.insights.terminal');
     Route::post('/admin/insights/github', [\App\Http\Controllers\AdminInsightController::class, 'github'])->name('admin.insights.github');
     Route::post('/admin/insights/analyze', [\App\Http\Controllers\AdminInsightController::class, 'analyze'])->name('admin.insights.analyze');
+    Route::get('/admin/insights/seed', [\App\Http\Controllers\AdminInsightController::class, 'seedAudit'])->name('admin.insights.seed');
+    Route::post('/admin/insights/seed', [\App\Http\Controllers\AdminInsightController::class, 'seedRun'])->name('admin.insights.seed.run');
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.user.update');
     Route::delete('/admin/users/{user}', [AdminController::class, 'destroyUser'])->name('admin.user.destroy');

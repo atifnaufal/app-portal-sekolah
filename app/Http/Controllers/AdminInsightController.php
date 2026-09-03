@@ -63,7 +63,43 @@ class AdminInsightController extends Controller
         ]);
     }
 
-    /** Simpan key integrasi (Gemini / GitHub) ke settings. */
+    /** Audit isi DB seed (read-only). */
+    public function seedAudit(): View
+    {
+        $this->ensureSuper();
+
+        return view('admin.seed', [
+            'seedAudit' => \Database\Seeders\PortalFullSeeder::audit(),
+            'seedResult' => session('seed_result'),
+        ]);
+    }
+
+    /** Jalankan PortalFullSeeder manual (idempotent). */
+    public function seedRun(Request $request): RedirectResponse
+    {
+        $me = $this->ensureSuper();
+        @set_time_limit(600);
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'Database\\Seeders\\PortalFullSeeder', '--force' => true,
+            ]);
+            $out = trim(\Illuminate\Support\Facades\Artisan::output());
+            $result = ['ok' => true, 'output' => mb_substr($out ?: 'Seeder selesai tanpa output.', 0, 3000)];
+        } catch (\Throwable $e) {
+            $result = ['ok' => false, 'output' => get_class($e).': '.$e->getMessage()];
+        }
+
+        UserHistory::create([
+            'user_id' => $me->id,
+            'activity_type' => 'terminal',
+            'description' => 'Seed portal manual ['.($result['ok'] ? 'OK' : 'GAGAL').']',
+            'ip_address' => $request->ip(),
+            'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
+        ]);
+
+        return redirect()->route('admin.insights.seed')->with('seed_result', $result);
+    }
     public function saveKeys(Request $request): RedirectResponse
     {
         $this->ensureSuper();

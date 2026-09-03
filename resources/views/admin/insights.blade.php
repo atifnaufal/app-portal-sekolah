@@ -57,6 +57,7 @@
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-terminal" type="button"><i class="bi bi-terminal me-1"></i>Terminal</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-github" type="button"><i class="bi bi-github me-1"></i>GitHub</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-server" type="button"><i class="bi bi-hdd-network me-1"></i>Server</button></li>
+            <li class="nav-item"><a class="nav-link" href="{{ route('admin.insights.seed') }}"><i class="bi bi-database-fill me-1"></i>Seed Data</a></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-keys" type="button"><i class="bi bi-key me-1"></i>Integrasi</button></li>
         </ul>
     </div>

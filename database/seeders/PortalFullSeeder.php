@@ -95,6 +95,51 @@ class PortalFullSeeder extends Seeder
         $eskulChunks = [array_slice(self::ESKUL, 0, 4), array_slice(self::ESKUL, 4, 3), array_slice(self::ESKUL, 7, 3)];
 
         foreach ($schools as $si => $school) {
+            try {
+                $this->seedSchool($school, $si, $eskulChunks[$si % count($eskulChunks)]);
+            } catch (\Throwable $e) {
+                $this->command->error("Sekolah {$school->slug} GAGAL: ".$e->getMessage());
+            }
+        }
+
+        $this->command->info('PortalFullSeeder selesai: 3 sekolah × (3 kelas, 8 guru, 10 siswa, 48 tugas, 120 jadwal) + 10 buku + 10 eskul + SPP Agu + portal.');
+    }
+
+    public static function expectedSlugs(): array
+    {
+        return ['portal-pusat', 'sman1-jkt', 'smk-telkom'];
+    }
+
+    /** Ringkasan isi DB per sekolah (read-only, untuk panel Cek Seed). */
+    public static function audit(): array
+    {
+        $rows = [];
+        foreach (self::expectedSlugs() as $slug) {
+            $school = School::where('slug', $slug)->first();
+            if (! $school) {
+                $rows[] = ['slug' => $slug, 'ada' => false];
+                continue;
+            }
+            $siswaIds = User::where('school_id', $school->id)->where('role', 'siswa')->pluck('id');
+            $rows[] = [
+                'slug' => $slug, 'ada' => true, 'id' => $school->id, 'name' => $school->name,
+                'kelas' => Kelas::where('school_id', $school->id)->count(),
+                'guru' => User::where('school_id', $school->id)->where('role', 'guru')->count(),
+                'siswa' => $siswaIds->count(),
+                'tugas' => Tugas::whereHas('kelas', fn ($q) => $q->where('school_id', $school->id))->count(),
+                'jadwal' => Jadwal::whereHas('kelas', fn ($q) => $q->where('school_id', $school->id))->count(),
+                'spp_agustus' => Spp::whereIn('siswa_id', $siswaIds)->where('bulan', 8)->where('tahun', 2026)->count(),
+                'posts' => GlobalPost::whereIn('user_id', $siswaIds)->count(),
+                'stories' => GlobalStory::whereIn('user_id', $siswaIds)->count(),
+            ];
+        }
+        $rows[] = ['slug' => '_global', 'buku' => Buku::count(), 'eskul' => Eskul::count()];
+
+        return $rows;
+    }
+
+    private function seedSchool(School $school, int $si, array $eskulNames): void
+    {
             $tag = preg_replace('/[^a-z0-9]/', '', strtolower($school->slug));
 
             // 3 kelas.
@@ -176,7 +221,7 @@ class PortalFullSeeder extends Seeder
 
             // Eskul jatah sekolah ini.
             $pembinaPool = $gurus;
-            foreach ($eskulChunks[$si % count($eskulChunks)] as $ei => $nama) {
+            foreach ($eskulNames as $ei => $nama) {
                 $pembina = $pembinaPool[($si + $ei) % count($pembinaPool)];
                 Eskul::firstOrCreate(
                     ['slug' => Str::slug($nama.'-'.$tag)],
@@ -214,9 +259,10 @@ class PortalFullSeeder extends Seeder
                     ]);
                 }
             }
-        }
 
-        $this->command->info('PortalFullSeeder selesai: 3 sekolah × (3 kelas, 8 guru, 10 siswa, 48 tugas, 120 jadwal) + 10 buku + 10 eskul + SPP Agu + portal.');
+            $guruCount = User::where('school_id', $school->id)->where('role', 'guru')->count();
+            $siswaCount = User::where('school_id', $school->id)->where('role', 'siswa')->count();
+            $this->command->info("  [{$school->slug}] guru={$guruCount} siswa={$siswaCount} — OK");
     }
 
     private function postText(int $n, string $name, string $school): string
