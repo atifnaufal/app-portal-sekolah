@@ -44,23 +44,33 @@
 </div>
 
 <div class="gp-card">
-    <div class="p-4 border-bottom"><h6 class="fw-bold mb-0"><i class="bi bi-grid me-2 text-primary"></i>Postingan {{ $profileUser->name }}</h6></div>
-    @forelse($posts as $p)
-    @php $liked = $p->likes->contains('user_id', $myId); @endphp
-    <div class="gp-post">
-        <div class="text-muted small mb-1">{{ $p->created_at->diffForHumans() }} &bull; {{ $p->school->name ?? '' }}</div>
-        <div style="font-size:14px;white-space:pre-wrap;">{{ $p->content }}</div>
-        @if($p->image)
-            <img src="{{ \App\Services\FirebaseStorageService::url($p->image) }}" class="img-fluid rounded-4 mt-3" style="max-height:380px;width:100%;object-fit:cover;" alt="">
-        @endif
-        <div class="d-flex gap-3 mt-2 small fw-bold text-muted">
-            <span><i class="bi bi-heart{{ $liked ? '-fill text-danger' : '' }}"></i> {{ $p->likes_count }}</span>
-            <span><i class="bi bi-chat"></i> {{ $p->comments_count }}</span>
+    <div class="p-4 border-bottom d-flex justify-content-between align-items-center"><h6 class="fw-bold mb-0"><i class="bi bi-grid me-2 text-primary"></i>Galeri Postingan</h6><span class="badge rounded-pill bg-primary-subtle text-primary">{{ $posts->total() }} post</span></div>
+    @if($posts->count())
+    <div class="p-3">
+        <div class="row g-2">
+            @foreach($posts as $p)
+            <div class="col-4">
+                <div class="position-relative rounded-4 overflow-hidden" style="aspect-ratio:1/1;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);">
+                    @if($p->image)
+                        <img src="{{ \App\Services\FirebaseStorageService::url($p->image) }}" style="width:100%;height:100%;object-fit:cover;" alt="">
+                    @else
+                        <div class="w-100 h-100 d-grid p-3" style="place-items:center;">
+                            <div class="small fw-semibold text-dark" style="line-height:1.5;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;">{{ \Illuminate\Support\Str::limit($p->content, 110) }}</div>
+                        </div>
+                    @endif
+                    <div class="position-absolute bottom-0 start-0 end-0 d-flex gap-3 px-3 py-2 text-white small fw-bold" style="background:linear-gradient(transparent,rgba(0,0,0,.6));">
+                        <span><i class="bi bi-heart-fill me-1"></i>{{ $p->likes_count }}</span>
+                        <span><i class="bi bi-chat-fill me-1"></i>{{ $p->comments_count }}</span>
+                        <span class="ms-auto" style="font-weight:400;opacity:.8;">{{ $p->created_at->diffForHumans() }}</span>
+                    </div>
+                </div>
+            </div>
+            @endforeach
         </div>
     </div>
-    @empty
+    @else
     <div class="text-center py-5 text-muted small">Belum ada postingan.</div>
-    @endforelse
+    @endif
     @if($posts->hasPages())
     <div class="p-3 border-top">{{ $posts->links() }}</div>
     @endif

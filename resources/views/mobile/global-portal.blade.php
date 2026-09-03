@@ -43,11 +43,11 @@
   <div class="ig-stories">
     <div class="ig-story">
       <form method="POST" action="{{ route('global.portal.story.store') }}" enctype="multipart/form-data" id="storyForm">@csrf
-        <label class="ig-ring add" style="cursor:pointer" title="Tambah cerita">
-          <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover">
-          <span class="ig-plus"><i class="bi bi-plus-lg"></i></span>
-          <input type="file" name="image" accept="image/*" hidden onchange="document.getElementById('storyForm').submit()">
-        </label>
+        <div class="ig-ring add" style="cursor:pointer" title="Tambah cerita" onclick="openStoryAdd(event)">
+          <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;pointer-events:none;">
+          <span class="ig-plus" style="pointer-events:none;"><i class="bi bi-plus-lg"></i></span>
+          <input type="file" name="image" id="storyFile" accept="image/*" hidden onchange="document.getElementById('storyForm').submit()">
+        </div>
       </form>
       <div class="ig-name">Cerita Anda</div>
     </div>
@@ -159,38 +159,64 @@
   <div style="padding:12px 14px">{{ $posts->links() }}</div>
 </div>
 
-{{-- Tombol kamera cerita (di bawah ring cerita) --}}
-<div style="max-width:640px;margin:0 auto;padding:0 14px 8px;display:flex;gap:8px;">
-  <button onclick="openCamera()" style="flex:1;background:#0f172a;color:#fff;border:0;border-radius:14px;padding:12px;font-weight:800;font-size:13px;"><i class="bi bi-camera-fill me-1"></i> Kamera Cerita</button>
-  <div style="flex:2;font-size:11px;color:#8e8e8e;align-self:center;">Foto langsung kamera depan/belakang + filter, tayang 24 jam.</div>
+{{-- Bottom sheet tambah cerita: kamera + galeri digabung --}}
+<div id="sheetAdd" style="display:none;position:fixed;inset:0;z-index:6500;" onclick="if(event.target===this)closeSheetAdd()">
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;padding:12px 16px calc(20px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto;box-shadow:0 -12px 40px rgba(0,0,0,.25);">
+    <div style="width:40px;height:4px;border-radius:99px;background:#e2e8f0;margin:0 auto 12px;"></div>
+    <div style="font-weight:800;font-size:15px;text-align:center;margin-bottom:12px;">Tambah Cerita</div>
+    <button onclick="galleryPick()" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #eef2f7;border-radius:16px;background:#f8fafc;font-weight:700;font-size:14px;margin-bottom:8px;"><span style="width:40px;height:40px;border-radius:12px;background:#eef2ff;color:#4f46e5;display:grid;place-items:center;font-size:18px;"><i class="bi bi-image"></i></span>Pilih dari Galeri</button>
+    <button onclick="openCamera()" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #eef2f7;border-radius:16px;background:#f8fafc;font-weight:700;font-size:14px;margin-bottom:8px;"><span style="width:40px;height:40px;border-radius:12px;background:#0f172a;color:#fff;display:grid;place-items:center;font-size:18px;"><i class="bi bi-camera-fill"></i></span>Ambil Foto <span style="margin-left:auto;font-size:11px;color:#8e8e8e;">depan/belakang + efek</span></button>
+    <button onclick="closeSheetAdd()" style="width:100%;padding:12px;border:0;background:none;color:#8e8e8e;font-weight:700;font-size:14px;">Batal</button>
+  </div>
 </div>
 
-{{-- Modal kamera: live preview, ganti depan/belakang, filter, jepret --}}
+{{-- Modal kamera premium: live stabil + pratinjau efek --}}
 <div id="camModal" style="display:none;position:fixed;inset:0;z-index:6000;background:#000;">
-  <div style="position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:center;gap:8px;z-index:2;">
+  <div style="position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;right:12px;display:flex;align-items:center;gap:8px;z-index:3;">
     <button onclick="closeCamera()" style="background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;"><i class="bi bi-x-lg"></i></button>
     <div style="flex:1;text-align:center;color:#fff;font-weight:800;font-size:14px;">Kamera Cerita</div>
-    <button onclick="switchCamera()" style="background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;" title="Ganti kamera"><i class="bi bi-arrow-repeat"></i></button>
+    <button onclick="switchCamera()" id="camSwitch" style="background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;" title="Ganti kamera depan/belakang"><i class="bi bi-arrow-repeat"></i></button>
   </div>
   <video id="camVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;"></video>
-  <div style="position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));left:0;right:0;z-index:2;">
+  <div id="camLiveUI" style="position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));left:0;right:0;z-index:2;">
     <div id="camFilters" style="display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none;">
-      <button data-f="none" class="cam-filter on" style="flex-shrink:0;border:2px solid #fff;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Normal</button>
+      <button data-f="none" class="cam-filter" style="flex-shrink:0;border:2px solid #fff;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Normal</button>
+      <button data-f="brightness(1.1) saturate(1.25) contrast(1.05)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Cerah</button>
+      <button data-f="saturate(1.8) contrast(1.1)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Vivid</button>
       <button data-f="grayscale(1)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Mono</button>
       <button data-f="sepia(.8)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Vintage</button>
-      <button data-f="saturate(1.8) contrast(1.1)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Vivid</button>
-      <button data-f="brightness(1.15) saturate(1.2)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Cerah</button>
-      <button data-f="contrast(1.2) brightness(.95)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Dramatis</button>
     </div>
     <div style="display:flex;justify-content:center;">
-      <button onclick="captureStory()" id="camShoot" style="width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.4);font-size:26px;color:#0f172a;"><i class="bi bi-camera-fill"></i></button>
+      <button onclick="captureStory()" style="width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.4);font-size:26px;color:#0f172a;"><i class="bi bi-camera-fill"></i></button>
     </div>
     <div id="camMsg" style="text-align:center;color:#fff;font-size:12px;margin-top:8px;min-height:18px;"></div>
+  </div>
+  <div id="camPreviewUI" style="display:none;position:absolute;inset:0;z-index:2;background:#000;flex-direction:column;">
+    <div style="flex:1;display:grid;place-items:center;padding:70px 12px 8px;min-height:0;"><img id="camPreview" src="" style="max-width:100%;max-height:100%;border-radius:16px;object-fit:contain;"></div>
+    <div id="camFxMsg" style="text-align:center;color:#fbbf24;font-size:12px;min-height:18px;padding:0 16px;"></div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding:8px 16px;scrollbar-width:none;" id="camFxRow">
+      <button data-fx="none" class="cam-fx" style="flex-shrink:0;border:2px solid #fff;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Normal</button>
+      <button data-fx="beauty" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Beauty</button>
+      <button data-fx="glasses" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Kacamata</button>
+      <button data-fx="crown" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Mahkota</button>
+      <button data-fx="hearts" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Hati</button>
+    </div>
+    <div style="display:flex;gap:10px;padding:4px 16px calc(20px + env(safe-area-inset-bottom));">
+      <button onclick="retakeStory()" style="flex:1;background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:14px;padding:13px;font-weight:800;font-size:14px;">Ambil Ulang</button>
+      <button onclick="sendStory()" id="camSend" style="flex:2;background:#fff;border:0;color:#0f172a;border-radius:14px;padding:13px;font-weight:800;font-size:14px;">Kirim Cerita</button>
+    </div>
   </div>
   <canvas id="camCanvas" style="display:none;"></canvas>
 </div>
 <script>
+  /* ===== Tambah cerita: bottom sheet ===== */
+  function openStoryAdd(e) { if (e) e.preventDefault(); document.getElementById('sheetAdd').style.display = 'block'; }
+  function closeSheetAdd() { document.getElementById('sheetAdd').style.display = 'none'; }
+  function galleryPick() { closeSheetAdd(); document.getElementById('storyFile').click(); }
+
+  /* ===== Kamera stabil: deviceId + mirror depan konsisten ===== */
   var camStream = null, camFacing = 'environment', camFilter = 'none';
+  var camPhoto = null; // dataURL foto mentah hasil jepret
   document.querySelectorAll('.cam-filter').forEach(function (b) {
     b.addEventListener('click', function () {
       document.querySelectorAll('.cam-filter').forEach(function (x) { x.style.borderColor = 'transparent'; });
@@ -199,26 +225,62 @@
       document.getElementById('camVideo').style.filter = camFilter;
     });
   });
+  function isFront() { return camFacing === 'user'; }
+  function applyMirror() {
+    // Kamera depan: preview di-mirror (natural selfie); hasil jepret dibuka mirror-nya.
+    document.getElementById('camVideo').style.transform = isFront() ? 'scaleX(-1)' : 'none';
+  }
   async function openCamera() {
+    closeSheetAdd();
     document.getElementById('camModal').style.display = 'block';
     document.body.style.overflow = 'hidden';
+    document.getElementById('camLiveUI').style.display = 'block';
+    document.getElementById('camPreviewUI').style.display = 'none';
     await startCam();
+  }
+  async function pickDeviceId(wantFront) {
+    try {
+      var devs = await navigator.mediaDevices.enumerateDevices();
+      var cams = devs.filter(function (d) { return d.kind === 'videoinput'; });
+      if (!cams.length) return null;
+      var labels = cams.map(function (c) { return (c.label || '').toLowerCase(); });
+      var idx = labels.findIndex(function (l) {
+        return wantFront ? /front|user|selfie|facetime/.test(l) : /back|rear|environment|utama/.test(l);
+      });
+      if (idx < 0) idx = wantFront ? 0 : cams.length - 1;
+      return cams[idx].deviceId || null;
+    } catch (e) { return null; }
   }
   async function startCam() {
     stopCam();
     var msg = document.getElementById('camMsg');
+    msg.innerText = 'Menyiapkan kamera...';
     try {
-      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: false });
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no-cam');
+      var deviceId = await pickDeviceId(isFront());
+      var constraints = deviceId
+        ? { video: { deviceId: { exact: deviceId } }, audio: false }
+        : { video: { facingMode: { ideal: camFacing } }, audio: false };
+      camStream = await navigator.mediaDevices.getUserMedia(constraints);
       var v = document.getElementById('camVideo');
       v.srcObject = camStream;
       v.style.filter = camFilter;
+      applyMirror();
+      await v.play().catch(function () {});
+      // Tunggu frame valid agar hasil konsisten.
+      var tries = 0;
+      while ((v.readyState < 2 || !v.videoWidth) && tries < 40) {
+        await new Promise(function (r) { setTimeout(r, 100); });
+        tries++;
+      }
+      if (!v.videoWidth) throw new Error('no-frame');
       msg.innerText = '';
     } catch (e) {
-      msg.innerText = 'Kamera tidak tersedia di browser ini — pakai tombol + galeri sebagai gantinya.';
+      msg.innerText = 'Kamera tidak tersedia — pakai galeri sebagai gantinya.';
     }
   }
   function switchCamera() {
-    camFacing = (camFacing === 'user') ? 'environment' : 'user';
+    camFacing = isFront() ? 'environment' : 'user';
     startCam();
   }
   function closeCamera() {
@@ -227,18 +289,162 @@
     document.body.style.overflow = '';
   }
   function stopCam() {
-    if (camStream) { camStream.getTracks().forEach(function (t) { t.stop(); }); camStream = null; }
+    if (camStream) { camStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); camStream = null; }
+    var v = document.getElementById('camVideo');
+    if (v) v.srcObject = null;
   }
   function captureStory() {
     var v = document.getElementById('camVideo');
     var msg = document.getElementById('camMsg');
-    if (!camStream || !v.videoWidth) { msg.innerText = 'Kamera belum siap.'; return; }
+    if (!camStream || !v.videoWidth || v.readyState < 2) { msg.innerText = 'Kamera belum siap, tunggu sebentar...'; return; }
     var c = document.getElementById('camCanvas');
     c.width = v.videoWidth; c.height = v.videoHeight;
     var ctx = c.getContext('2d');
-    if ('filter' in ctx) ctx.filter = camFilter;
-    ctx.drawImage(v, 0, 0);
-    msg.innerText = 'Mengunggah...';
+    ctx.save();
+    ctx.filter = (camFilter && camFilter !== 'none') ? camFilter : 'none';
+    if (isFront()) { ctx.translate(c.width, 0); ctx.scale(-1, 1); } // buka mirror agar tulisan tak terbalik
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    ctx.restore();
+    ctx.filter = 'none';
+    camPhoto = c.toDataURL('image/jpeg', 0.92);
+    document.getElementById('camPreview').src = camPhoto;
+    document.getElementById('camLiveUI').style.display = 'none';
+    document.getElementById('camPreviewUI').style.display = 'flex';
+    setFx('none');
+    document.getElementById('camFxMsg').innerText = '';
+    stopCam(); // hemat baterai saat pratinjau
+  }
+  function retakeStory() {
+    document.getElementById('camPreviewUI').style.display = 'none';
+    document.getElementById('camLiveUI').style.display = 'block';
+    startCam();
+  }
+
+  /* ===== Efek wajah: MediaPipe landmarks + gambar prosedural ===== */
+  var currentFx = 'none';
+  document.querySelectorAll('.cam-fx').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.cam-fx').forEach(function (x) { x.style.borderColor = 'transparent'; });
+      b.style.borderColor = '#fff';
+      setFx(b.dataset.fx);
+    });
+  });
+  function setFx(name) {
+    currentFx = name;
+    var c = document.getElementById('camCanvas');
+    var msg = document.getElementById('camFxMsg');
+    // Gambar ulang dari foto mentah agar efek tidak menumpuk.
+    if (camPhoto) {
+      var img = new Image();
+      img.onload = function () {
+        var ctx = c.getContext('2d');
+        ctx.filter = 'none';
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        applyFxOnCanvas(c, name, msg);
+      };
+      img.src = camPhoto;
+    } else {
+      applyFxOnCanvas(c, name, msg);
+    }
+  }
+  function drawHeart(ctx, x, y, s, color) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(s / 30, s / 30);
+    ctx.beginPath();
+    ctx.moveTo(0, 10);
+    ctx.bezierCurveTo(-18, -6, -8, -20, 0, -8);
+    ctx.bezierCurveTo(8, -20, 18, -6, 0, 10);
+    ctx.closePath(); ctx.fillStyle = color; ctx.fill(); ctx.restore();
+  }
+  function drawGlasses(ctx, lm, w, h) {
+    var L = { x: (lm[33].x + lm[133].x) / 2 * w, y: (lm[33].y + lm[133].y) / 2 * h };
+    var R = { x: (lm[362].x + lm[263].x) / 2 * w, y: (lm[362].y + lm[263].y) / 2 * h };
+    var dist = Math.hypot(R.x - L.x, R.y - L.y);
+    var ang = Math.atan2(R.y - L.y, R.x - L.x);
+    ctx.save(); ctx.translate((L.x + R.x) / 2, (L.y + R.y) / 2); ctx.rotate(ang);
+    ctx.fillStyle = 'rgba(15,23,42,.92)';
+    var lw = dist * 0.62, lh = dist * 0.42;
+    [[-dist * 0.5, 0], [dist * 0.5, 0]].forEach(function (p) {
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(p[0] - lw / 2, -lh / 2, lw, lh, lh * 0.35);
+      else ctx.rect(p[0] - lw / 2, -lh / 2, lw, lh);
+      ctx.fill();
+    });
+    ctx.fillRect(-dist * 0.5 + lw / 2 - 4, -3, dist - lw + 8, 6);
+    ctx.fillStyle = 'rgba(255,255,255,.25)';
+    ctx.fillRect(-dist * 0.5 - lw / 2 + 6, -lh / 2 + 5, lw * 0.5, 5);
+    ctx.fillRect(dist * 0.5 - lw / 2 + 6, -lh / 2 + 5, lw * 0.5, 5);
+    ctx.restore();
+  }
+  function drawCrown(ctx, lm, w, h) {
+    var top = { x: lm[10].x * w, y: lm[10].y * h };
+    var L = { x: lm[234].x * w, y: lm[234].y * h };
+    var R = { x: lm[454].x * w, y: lm[454].y * h };
+    var fw = Math.hypot(R.x - L.x, R.y - L.y) || w * 0.4;
+    var cw = fw * 0.75, ch = fw * 0.5;
+    var cx = top.x, cy = top.y - ch * 0.55;
+    ctx.save();
+    ctx.fillStyle = '#fbbf24'; ctx.strokeStyle = '#b45309'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx - cw / 2, cy + ch / 2);
+    ctx.lineTo(cx - cw / 2, cy - ch * 0.1);
+    ctx.lineTo(cx - cw * 0.25, cy + ch * 0.12);
+    ctx.lineTo(cx, cy - ch / 2);
+    ctx.lineTo(cx + cw * 0.25, cy + ch * 0.12);
+    ctx.lineTo(cx + cw / 2, cy - ch * 0.1);
+    ctx.lineTo(cx + cw / 2, cy + ch / 2);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    [[-0.5, -0.1], [-0.25, 0.12], [0, -0.5], [0.25, 0.12], [0.5, -0.1]].forEach(function (p) {
+      ctx.beginPath(); ctx.arc(cx + p[0] * cw, cy + p[1] * ch, fw * 0.035, 0, 7);
+      ctx.fillStyle = '#ef4444'; ctx.fill();
+    });
+    ctx.restore();
+  }
+  function drawHeartsFx(ctx, lm, w, h) {
+    var top = { x: lm[10].x * w, y: lm[10].y * h };
+    var s = Math.max(w, h) * 0.05;
+    drawHeart(ctx, top.x - s * 1.6, top.y - s * 1.2, s, '#f472b6');
+    drawHeart(ctx, top.x + s * 1.4, top.y - s * 2, s * 1.3, '#ef4444');
+    drawHeart(ctx, top.x + s * 0.2, top.y - s * 3.1, s * 0.9, '#fb7185');
+  }
+  function applyBeauty(ctx, w, h) {
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.filter = 'brightness(1.06) saturate(1.12)';
+    ctx.drawImage(ctx.canvas, 0, 0, w, h);
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = 0.10; ctx.fillStyle = '#fff7ed';
+    ctx.fillRect(0, 0, w, h); ctx.restore();
+    ctx.filter = 'none';
+  }
+  async function applyFxOnCanvas(c, name, msg) {
+    var ctx = c.getContext('2d');
+    document.getElementById('camPreview').src = c.toDataURL('image/jpeg', 0.9);
+    if (name === 'none') { if (msg) msg.innerText = ''; return; }
+    if (name === 'beauty') {
+      applyBeauty(ctx, c.width, c.height);
+      document.getElementById('camPreview').src = c.toDataURL('image/jpeg', 0.9);
+      if (msg) msg.innerText = '';
+      return;
+    }
+    if (msg) msg.innerText = 'Mendeteksi wajah...';
+    try {
+      if (!window.__mpDetect) throw new Error('model-belum-siap');
+      var lm = await window.__mpDetect(c);
+      if (!lm) throw new Error('no-face');
+      if (name === 'glasses') drawGlasses(ctx, lm, c.width, c.height);
+      if (name === 'crown') drawCrown(ctx, lm, c.width, c.height);
+      if (name === 'hearts') drawHeartsFx(ctx, lm, c.width, c.height);
+      document.getElementById('camPreview').src = c.toDataURL('image/jpeg', 0.9);
+      if (msg) msg.innerText = '';
+    } catch (e) {
+      if (msg) msg.innerText = 'Wajah tidak terdeteksi / model belum termuat — coba Beauty atau Normal.';
+    }
+  }
+  function sendStory() {
+    var c = document.getElementById('camCanvas');
+    var msg = document.getElementById('camFxMsg');
+    var btn = document.getElementById('camSend');
+    btn.disabled = true; btn.innerText = 'Mengunggah...';
     c.toBlob(function (blob) {
       var fd = new FormData();
       fd.append('image', blob, 'cerita.jpg');
@@ -247,8 +453,30 @@
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'X-Requested-With': 'XMLHttpRequest' },
         body: fd
       }).then(function () { closeCamera(); window.location.reload(); })
-        .catch(function () { msg.innerText = 'Gagal mengunggah. Coba lagi.'; });
+        .catch(function () { msg.innerText = 'Gagal mengunggah. Coba lagi.'; btn.disabled = false; btn.innerText = 'Kirim Cerita'; });
     }, 'image/jpeg', 0.85);
   }
+</script>
+<script type="module">
+  /* MediaPipe FaceLandmarker (lazy, gagal aman → efek wajah dinonaktifkan). */
+  window.__mpDetect = null;
+  try {
+    const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+    const fileset = await vision.FilesetResolver.forVisionTasks(
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
+    );
+    const landmarker = await vision.FaceLandmarker.createFromOptions(fileset, {
+      baseOptions: {
+        modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+        delegate: 'GPU'
+      },
+      runningMode: 'IMAGE',
+      numFaces: 1
+    });
+    window.__mpDetect = async (canvasEl) => {
+      const res = landmarker.detect(canvasEl);
+      return (res && res.faceLandmarks && res.faceLandmarks[0]) || null;
+    };
+  } catch (e) { window.__mpDetect = null; }
 </script>
 @endsection

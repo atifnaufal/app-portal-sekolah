@@ -23,15 +23,31 @@
     </div>
   </div>
   <div class="gp-card" style="padding:14px">
-    <div style="font-weight:800;font-size:13px;margin-bottom:10px">History Post</div>
-    @forelse($posts as $p)
-      <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9">
-        <img src="{{ \App\Services\FirebaseStorageService::url($p->image) ?? $p->user->avatar_url }}" style="width:48px;height:48px;border-radius:10px;object-fit:cover;background:#fafafa">
-        <div style="flex:1"><div style="font-size:12px;white-space:pre-wrap">{{ \Illuminate\Support\Str::limit($p->content,80) }}</div><div style="font-size:11px;color:#8e8e8e">{{ $p->created_at->diffForHumans() }} • ♥ {{ $p->likes_count }} 💬 {{ $p->comments_count }}</div></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="font-weight:800;font-size:13px;">Galeri Postingan</div>
+      <span style="font-size:10px;font-weight:800;color:#0095f6;background:#eef6ff;padding:3px 10px;border-radius:99px;">{{ $posts->total() }} post</span>
+    </div>
+    @if($posts->count())
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;">
+      @foreach($posts as $p)
+      <div style="position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);">
+        @if($p->image)
+        <img src="{{ \App\Services\FirebaseStorageService::url($p->image) }}" style="width:100%;height:100%;object-fit:cover;" alt="">
+        @else
+        <div style="width:100%;height:100%;display:grid;place-items:center;padding:8px;">
+          <div style="font-size:10px;font-weight:600;color:#475569;line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;">{{ \Illuminate\Support\Str::limit($p->content, 70) }}</div>
+        </div>
+        @endif
+        <div style="position:absolute;inset:auto 0 0 0;padding:10px 6px 6px;background:linear-gradient(transparent,rgba(0,0,0,.55));display:flex;gap:8px;align-items:center;color:#fff;font-size:10px;font-weight:800;">
+          <span><i class="bi bi-heart-fill"></i> {{ $p->likes_count }}</span>
+          <span><i class="bi bi-chat-fill"></i> {{ $p->comments_count }}</span>
+        </div>
       </div>
-    @empty
+      @endforeach
+    </div>
+    @else
       <div style="text-align:center;color:#8e8e8e;padding:20px">Belum ada post</div>
-    @endforelse
+    @endif
     <div style="margin-top:10px">{{ $posts->links() }}</div>
   </div>
 </div>
