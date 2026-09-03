@@ -1,9 +1,9 @@
 ---
 name: "portal-sekolah-railway-deploy"
-description: "Railway 500: start-web.sh artisan serve (bkn php-fpm), UserContextHelper utk Sanctum, DATABASE_URL parse_url"
+description: UserContextHelper di EskulController admin CRUD utk API mobile; Reverb/Email/FCM gap konfigurasi Railway
 type: project
-lastUpdated: 2026-09-02T23:48
-lastRecall: 2026-09-03T00:49
+lastUpdated: 2026-09-03T19:45
+lastRecall: 2026-09-03T19:33
 ---
 
 # app-portal-sekolah — deployment & 500 Railway
@@ -25,3 +25,10 @@ Railway supplies DB via DATABASE_URL. Parser memakai `parse_url` PHP (bukan rege
 
 ## Test
 Suite: 3 test pre-existing gagal (RegistrationTest ×2 + ExampleTest root redirect) — gagal juga di clean HEAD, TIDAK terkait fix ini (terkait APP_URL .env & setting registrasi). Ketika push via PowerShell `git push` menulis ke stderr → tampil sebagai "error" padahal sukses; cek baris "main -> main".
+
+## EskulController admin CRUD — session-based auth (fix 2026-09-03)
+6 method admin `EskulController` (adminIndex/store/update/destroy/toggle/setAdmin) memakai `abort_unless(session('user_role')==='admin')`. Route-nya ada juga di grup `api.role:admin,guru` (Bearer tanpa sesi) → mobile admin selalu dapat 403. Fix: ganti ke `abort_unless(UserContextHelper::role($request)==='admin')`; tambah param `Request $request` di adminIndex/destroy/toggle. Perlu `use App\Helpers\UserContextHelper;` (sudah ada). Juga bersihkan Log::info debug 'Export PDF/Excel Debug:' + variabel mati `$sessionUserId` di TugasController::exportPdf/exportExcel.
+## Gap konfigurasi runtime (bukan kode) — perlu diisi di Railway
+- Reverb: `REVERB_SERVER_PORT` di .env = 8080 bentrok dgn `php artisan serve` (web). Butuh service reverb terpisah port 6001 + VITE_REVERB_HOST=domain service reverb.
+- Email Brevo: MAIL_USERNAME/PASSWORD masih placeholder → reset password & email tugas belum jalan sampai kredensial + sender terverifikasi diisi.
+- FCM/Firebase: FIREBASE_ENABLED=false (fallback storage public aman); push notification mobile belum aktif.

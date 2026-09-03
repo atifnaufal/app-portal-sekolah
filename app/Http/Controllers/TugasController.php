@@ -268,21 +268,11 @@ class TugasController extends Controller
         $request = request();
 
         $authUserId = UserContextHelper::id($request);
-        $sessionUserId = $authUserId;
-
-        // Debug: Log the comparison
-        \Illuminate\Support\Facades\Log::info('Export PDF Debug:', [
-            'tugas_user_id' => $tugas->user_id,
-            'session_user_id' => $sessionUserId,
-            'auth_user_id' => $authUserId,
-            'user_matches' => (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId),
-            'user_role' => UserContextHelper::role($request),
-        ]);
 
         // Allow access if: admin OR creator matches
         $userRole = UserContextHelper::role($request);
         $isAdmin = $userRole === 'admin';
-        $isCreator = (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId);
+        $isCreator = (int) $tugas->user_id === (int) $authUserId;
 
         abort_unless($isAdmin || $isCreator, 403);
 
@@ -328,21 +318,11 @@ class TugasController extends Controller
         $request = request();
 
         $authUserId = UserContextHelper::id($request);
-        $sessionUserId = $authUserId;
-
-        // Debug: Log the comparison
-        \Illuminate\Support\Facades\Log::info('Export Excel Debug:', [
-            'tugas_user_id' => $tugas->user_id,
-            'session_user_id' => $sessionUserId,
-            'auth_user_id' => $authUserId,
-            'user_matches' => (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId),
-            'user_role' => UserContextHelper::role($request),
-        ]);
 
         // Allow access if: admin OR creator matches
         $userRole = UserContextHelper::role($request);
         $isAdmin = $userRole === 'admin';
-        $isCreator = (int) $tugas->user_id === (int) ($authUserId ?? $sessionUserId);
+        $isCreator = (int) $tugas->user_id === (int) $authUserId;
 
         abort_unless($isAdmin || $isCreator, 403);
 

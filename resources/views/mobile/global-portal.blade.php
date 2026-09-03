@@ -461,6 +461,7 @@
     ctx.fillStyle = 'rgba(146,64,14,.5)';
     drawHeart(ctx, g.cheekL.x, g.cheekL.y, Math.max(w, h) * 0.02, 'rgba(146,64,14,.45)');
   }
+  function drawHeart(ctx, x, y, s, color) {
     ctx.save(); ctx.translate(x, y); ctx.scale(s / 30, s / 30);
     ctx.beginPath();
     ctx.moveTo(0, 10);

@@ -158,9 +158,9 @@ class EskulController extends Controller
     }
 
     // Admin: List Eskul (Hanya Admin IT)
-    public function adminIndex()
+    public function adminIndex(Request $request)
     {
-        abort_unless(session('user_role') === 'admin', 403);
+        abort_unless(UserContextHelper::role($request) === 'admin', 403);
         $eskuls = Eskul::with(['pembina', 'members'])->withCount('members')->get();
         $gurus = User::where('role', 'guru')->get();
 
@@ -175,7 +175,7 @@ class EskulController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(session('user_role') === 'admin', 403);
+        abort_unless(UserContextHelper::role($request) === 'admin', 403);
         $request->validate([
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -226,7 +226,7 @@ class EskulController extends Controller
 
     public function update(Request $request, Eskul $eskul)
     {
-        abort_unless(session('user_role') === 'admin', 403);
+        abort_unless(UserContextHelper::role($request) === 'admin', 403);
         $request->validate([
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -269,9 +269,9 @@ class EskulController extends Controller
         return back()->with('success', 'Eskul berhasil diperbarui.');
     }
 
-    public function destroy(Eskul $eskul)
+    public function destroy(Request $request, Eskul $eskul)
     {
-        abort_unless(session('user_role') === 'admin', 403);
+        abort_unless(UserContextHelper::role($request) === 'admin', 403);
 
         if ($eskul->logo) {
             Storage::disk('public')->delete($eskul->logo);
@@ -289,9 +289,9 @@ class EskulController extends Controller
         return back()->with('success', 'Eskul berhasil dihapus.');
     }
 
-    public function toggle(Eskul $eskul)
+    public function toggle(Request $request, Eskul $eskul)
     {
-        abort_unless(session('user_role') === 'admin', 403);
+        abort_unless(UserContextHelper::role($request) === 'admin', 403);
         $eskul->aktif = ! $eskul->aktif;
         $eskul->save();
 
@@ -300,7 +300,7 @@ class EskulController extends Controller
 
     public function setAdmin(Request $request, Eskul $eskul)
     {
-        abort_unless(session('user_role') === 'admin', 403);
+        abort_unless(UserContextHelper::role($request) === 'admin', 403);
         $userId = $request->user_id;
 
         $member = EskulMember::where('eskul_id', $eskul->id)->where('user_id', $userId)->first();
