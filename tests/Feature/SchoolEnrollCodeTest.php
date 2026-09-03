@@ -70,4 +70,37 @@ class SchoolEnrollCodeTest extends TestCase
 
         $this->getJson(route('register.check', ['code' => $school->enroll_code]))->assertStatus(423);
     }
+
+    public function test_store_validation_errors_use_add_school_bag(): void
+    {
+        School::create(['name' => 'Ada', 'city' => 'C', 'slug' => 'duplikat', 'is_active' => true]);
+
+        $this->withSession($this->superSession())
+            ->post(route('admin.schools.store'), [
+                'name' => '', 'city_code' => '12', 'slug' => 'duplikat',
+            ])
+            ->assertSessionHasErrorsIn('addSchool', ['name', 'city_code', 'slug']);
+
+        $this->assertDatabaseMissing('schools', ['name' => '']);
+    }
+
+    public function test_store_still_works_when_enroll_columns_missing(): void
+    {
+        // Simulasi migrasi enroll belum jalan di server.
+        \Illuminate\Support\Facades\Schema::table('schools', function ($t) {
+            $t->dropUnique(['enroll_code']);
+        });
+        \Illuminate\Support\Facades\Schema::table('schools', function ($t) {
+            $t->dropColumn(['city_code', 'enroll_code']);
+        });
+
+        $this->withSession($this->superSession())
+            ->post(route('admin.schools.store'), [
+                'name' => 'SMA Darurat', 'city' => 'D', 'slug' => 'sma-darurat', 'is_active' => '1',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('schools', ['slug' => 'sma-darurat']);
+    }
 }

@@ -490,27 +490,45 @@ class AdminController extends Controller
     {
         $me = UserContextHelper::user();
         abort_unless(($me && $me->isSuperAdmin()) || UserContextHelper::role()==='admin',403);
-        $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'city_code'=>['required','digits_between:3,6'],'slug'=>['required','max:50','unique:schools,slug'],'is_active'=>['nullable','boolean']]);
+        $hasEnroll = \Illuminate\Support\Facades\Schema::hasColumn('schools', 'enroll_code');
+        $rules = ['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug'],'is_active'=>['nullable','boolean']];
+        if ($hasEnroll) {
+            $rules['city_code'] = ['required', 'digits_between:3,6'];
+        }
+        $data = $request->validateWithBag('addSchool', $rules);
         $data['is_active']=$request->boolean('is_active',true);
         $school = School::create($data);
-        // Auto-generate Kode Pendaftaran: {id}{city_code}.
-        $school->update(['enroll_code' => School::makeEnrollCode($school->id, $school->city_code)]);
-        return back()->with('success','Sekolah ditambahkan. Kode Pendaftaran: '.$school->fresh()->enroll_code);
+        if ($hasEnroll) {
+            // Auto-generate Kode Pendaftaran: {id}{city_code}.
+            $school->update(['enroll_code' => School::makeEnrollCode($school->id, $school->city_code)]);
+            return back()->with('success','Sekolah ditambahkan. Kode Pendaftaran: '.$school->fresh()->enroll_code);
+        }
+
+        return back()->with('success', 'Sekolah ditambahkan. (Kode Pendaftaran menyusul setelah deploy migrasi selesai.)');
     }
     public function schoolsUpdate(Request $request, School $school): RedirectResponse
     {
         $me = UserContextHelper::user();
         abort_unless(($me && $me->isSuperAdmin()) || UserContextHelper::role()==='admin',403);
-        $data=$request->validate(['name'=>['required','max:100'],'city'=>['nullable','max:50'],'city_code'=>['required','digits_between:3,6'],'slug'=>['required','max:50','unique:schools,slug,'.$school->id],'is_active'=>['nullable','boolean']]);
+        $hasEnroll = \Illuminate\Support\Facades\Schema::hasColumn('schools', 'enroll_code');
+        $rules = ['name'=>['required','max:100'],'city'=>['nullable','max:50'],'slug'=>['required','max:50','unique:schools,slug,'.$school->id],'is_active'=>['nullable','boolean']];
+        if ($hasEnroll) {
+            $rules['city_code'] = ['required', 'digits_between:3,6'];
+        }
+        $data = $request->validateWithBag('editSchool'.$school->id, $rules);
         $data['is_active']=$request->boolean('is_active');
         $school->update($data);
-        // Regenerasi bila kode kota berubah agar kode selalu sinkron.
-        $fresh = $school->fresh();
-        $expected = School::makeEnrollCode($fresh->id, $fresh->city_code);
-        if ($fresh->enroll_code !== $expected) {
-            $fresh->update(['enroll_code' => $expected]);
+        if ($hasEnroll) {
+            // Regenerasi bila kode kota berubah agar kode selalu sinkron.
+            $fresh = $school->fresh();
+            $expected = School::makeEnrollCode($fresh->id, $fresh->city_code);
+            if ($fresh->enroll_code !== $expected) {
+                $fresh->update(['enroll_code' => $expected]);
+            }
+            return back()->with('success','Sekolah diperbarui. Kode Pendaftaran: '.$fresh->fresh()->enroll_code);
         }
-        return back()->with('success','Sekolah diperbarui. Kode Pendaftaran: '.$fresh->fresh()->enroll_code);
+
+        return back()->with('success', 'Sekolah diperbarui.');
     }
     public function schoolsDestroy(School $school): RedirectResponse
     {

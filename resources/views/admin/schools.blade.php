@@ -35,6 +35,18 @@
     </div>
 </div>
 
+@if($errors->addSchool->any() || collect($schools)->contains(fn($s) => $errors->{'editSchool'.$s->id}->any()))
+<div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius:16px;">
+    <div class="fw-bold mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Form belum tersimpan:</div>
+    <ul class="mb-0 small">
+        @foreach($errors->addSchool->all() as $e)<li>{{ $e }}</li>@endforeach
+        @foreach($schools as $s)
+            @foreach($errors->{'editSchool'.$s->id}->all() as $e)<li>[{{ $s->name }}] {{ $e }}</li>@endforeach
+        @endforeach
+    </ul>
+</div>
+@endif
+
 <div class="row g-3">
 @foreach($schools as $s)
   <div class="col-md-6 col-lg-4">
@@ -61,11 +73,11 @@
       </div>
     </div>
   </div>
-  <div class="modal fade" id="edit{{ $s->id }}" tabindex="-1"><div class="modal-dialog"><form method="POST" action="{{ route('admin.schools.update',$s) }}" class="modal-content" style="border-radius:20px">@csrf @method('PUT')<div class="modal-header"><h6 class="fw-bold">Edit Sekolah #{{ $s->id }}</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input name="name" value="{{ $s->name }}" class="form-control mb-2" required><div class="row g-2 mb-2"><div class="col-7"><input name="city" value="{{ $s->city }}" class="form-control" placeholder="Kota"></div><div class="col-5"><input name="city_code" value="{{ $s->city_code }}" class="form-control" placeholder="Kode kota" required minlength="3" maxlength="6"></div></div><input name="slug" value="{{ $s->slug }}" class="form-control mb-2" required><div class="alert alert-light border small mb-2" style="border-radius:12px;">Kode Pendaftaran: <b>{{ $s->enroll_code ?? '-' }}</b> <span class="text-muted">(otomatis: ID + kode kota)</span></div><div class="form-check"><input type="checkbox" name="is_active" value="1" @checked($s->is_active) class="form-check-input" id="act{{ $s->id }}"><label class="form-check-label" for="act{{ $s->id }}">Aktif (bisa daftar)</label></div></div><div class="modal-footer"><button class="btn btn-primary" style="border-radius:12px">Simpan</button></div></form></div></div>
+  <div class="modal fade" id="edit{{ $s->id }}" tabindex="-1"><div class="modal-dialog"><form method="POST" action="{{ route('admin.schools.update',$s) }}" class="modal-content" style="border-radius:20px">@csrf @method('PUT')<div class="modal-header"><h6 class="fw-bold">Edit Sekolah #{{ $s->id }}</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input name="name" value="{{ old('name', $s->name) }}" class="form-control mb-2 @error('name', 'editSchool'.$s->id) is-invalid @enderror" required>@error('name', 'editSchool'.$s->id)<div class="invalid-feedback d-block mb-2">{{ $message }}</div>@enderror<div class="row g-2 mb-2"><div class="col-7"><input name="city" value="{{ old('city', $s->city) }}" class="form-control" placeholder="Kota"></div><div class="col-5"><input name="city_code" value="{{ old('city_code', $s->city_code) }}" class="form-control @error('city_code', 'editSchool'.$s->id) is-invalid @enderror" placeholder="Kode kota" required minlength="3" maxlength="6">@error('city_code', 'editSchool'.$s->id)<div class="invalid-feedback d-block">{{ $message }}</div>@enderror</div></div><input name="slug" value="{{ old('slug', $s->slug) }}" class="form-control mb-2 @error('slug', 'editSchool'.$s->id) is-invalid @enderror" required>@error('slug', 'editSchool'.$s->id)<div class="invalid-feedback d-block mb-2">{{ $message }}</div>@enderror<div class="alert alert-light border small mb-2" style="border-radius:12px;">Kode Pendaftaran: <b>{{ $s->enroll_code ?? '-' }}</b> <span class="text-muted">(otomatis: ID + kode kota)</span></div><div class="form-check"><input type="checkbox" name="is_active" value="1" @checked($s->is_active) class="form-check-input" id="act{{ $s->id }}"><label class="form-check-label" for="act{{ $s->id }}">Aktif (bisa daftar)</label></div></div><div class="modal-footer"><button class="btn btn-primary" style="border-radius:12px">Simpan</button></div></form></div></div>
 @endforeach
 </div>
 
-<div class="modal fade" id="addSchool" tabindex="-1"><div class="modal-dialog"><form method="POST" action="{{ route('admin.schools.store') }}" class="modal-content" style="border-radius:20px">@csrf<div class="modal-header"><h6 class="fw-bold">Tambah Sekolah Baru</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input name="name" placeholder="Nama Sekolah" class="form-control mb-2" required><div class="row g-2 mb-2"><div class="col-7"><input name="city" placeholder="Kota" class="form-control"></div><div class="col-5"><input name="city_code" placeholder="Kode kota (mis. 51372)" class="form-control" required minlength="3" maxlength="6"></div></div><input name="slug" placeholder="slug unik (tanpa spasi)" class="form-control mb-2" required><div class="alert alert-info border-0 small mb-2" style="border-radius:12px;background:#eef2ff;color:#4f46e5;"><i class="bi bi-magic"></i> Kode Pendaftaran digenerate otomatis: <b>ID + kode kota</b> (mis. ID 18 + 51372 → <b>1851372</b>).</div><div class="form-check"><input type="checkbox" name="is_active" value="1" checked class="form-check-input" id="addActive"><label class="form-check-label" for="addActive">Aktif (bisa daftar)</label></div></div><div class="modal-footer"><button class="btn btn-primary" style="border-radius:12px">Buat</button></div></form></div></div>
+<div class="modal fade" id="addSchool" tabindex="-1"><div class="modal-dialog"><form method="POST" action="{{ route('admin.schools.store') }}" class="modal-content" style="border-radius:20px">@csrf<div class="modal-header"><h6 class="fw-bold">Tambah Sekolah Baru</h6><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input name="name" value="{{ old('name') }}" placeholder="Nama Sekolah" class="form-control mb-2 @error('name', 'addSchool') is-invalid @enderror" required>@error('name', 'addSchool')<div class="invalid-feedback d-block mb-2">{{ $message }}</div>@enderror<div class="row g-2 mb-2"><div class="col-7"><input name="city" value="{{ old('city') }}" placeholder="Kota" class="form-control"></div><div class="col-5"><input name="city_code" value="{{ old('city_code') }}" placeholder="Kode kota (mis. 51372)" class="form-control @error('city_code', 'addSchool') is-invalid @enderror" required minlength="3" maxlength="6">@error('city_code', 'addSchool')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror</div></div><input name="slug" value="{{ old('slug') }}" placeholder="slug unik (tanpa spasi)" class="form-control mb-2 @error('slug', 'addSchool') is-invalid @enderror" required>@error('slug', 'addSchool')<div class="invalid-feedback d-block mb-2">{{ $message }}</div>@enderror<div class="alert alert-info border-0 small mb-2" style="border-radius:12px;background:#eef2ff;color:#4f46e5;"><i class="bi bi-magic"></i> Kode Pendaftaran digenerate otomatis: <b>ID + kode kota</b> (mis. ID 18 + 51372 → <b>1851372</b>).</div><div class="form-check"><input type="checkbox" name="is_active" value="1" checked class="form-check-input" id="addActive"><label class="form-check-label" for="addActive">Aktif (bisa daftar)</label></div></div><div class="modal-footer"><button class="btn btn-primary" style="border-radius:12px">Buat</button></div></form></div></div>
 
 <div class="card mt-4 border-0 shadow-sm" style="border-radius:20px">
   <div class="card-body p-4 d-flex align-items-center gap-3 flex-wrap">
@@ -81,4 +93,18 @@
 </div>{{-- /.cp-main --}}
 </div>{{-- /.cp-shell --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Buka kembali modal yang gagal validasi agar pesan error terlihat.
+    document.addEventListener('DOMContentLoaded', function () {
+        @if($errors->addSchool->any())
+            new bootstrap.Modal(document.getElementById('addSchool')).show();
+        @else
+            @foreach($schools as $s)
+                @if($errors->{'editSchool'.$s->id}->any())
+                    new bootstrap.Modal(document.getElementById('edit{{ $s->id }}')).show();
+                @endif
+            @endforeach
+        @endif
+    });
+</script>
 @endsection
