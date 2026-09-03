@@ -10,6 +10,29 @@ use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
+    /** Cek Kode Pendaftaran umum → detail sekolah (untuk alur kode-dulu). */
+    public function check(Request $request)
+    {
+        $code = trim((string) $request->query('code', ''));
+        abort_if($code === '', 400, 'Kode kosong.');
+
+        $school = \App\Models\School::where('enroll_code', $code)->where('is_active', true)->first(
+            ['id', 'name', 'city', 'slug', 'enroll_code', 'reg_guru_open', 'reg_siswa_open']
+        );
+        abort_if(! $school, 404, 'Kode tidak ditemukan / sekolah nonaktif.');
+        abort_unless($school->reg_guru_open || $school->reg_siswa_open, 423, 'Pendaftaran sekolah ini sedang ditutup.');
+
+        return response()->json([
+            'id' => $school->id,
+            'name' => $school->name,
+            'city' => $school->city,
+            'slug' => $school->slug,
+            'enroll_code' => $school->enroll_code,
+            'reg_guru_open' => (bool) $school->reg_guru_open,
+            'reg_siswa_open' => (bool) $school->reg_siswa_open,
+        ]);
+    }
+
     public function create()
     {
         // Pendaftaran dibuka PER SEKOLAH (kolom schools.reg_*_open, dikelola
@@ -60,11 +83,15 @@ class RegisterController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'kelas_id' => ['required', 'exists:kelas,id'],
             'school_id' => ['required', 'exists:schools,id'],
+            'enroll_code' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'min:8', 'confirmed'],
         ]);
         $school = \App\Models\School::find($data['school_id']);
         if (! $school || ! $school->is_active) {
             return back()->withErrors(['school_id' => 'Sekolah tidak aktif / ID tidak diberi akses. Hubungi Admin Pusat.'])->withInput();
+        }
+        if (! empty($data['enroll_code']) && $data['enroll_code'] !== $school->enroll_code) {
+            return back()->withErrors(['enroll_code' => 'Kode Pendaftaran tidak cocok dengan sekolah terpilih.'])->withInput();
         }
 
         if (! \App\Helpers\FeatureHelper::registrationOpen($school->id, $data['role'])) {

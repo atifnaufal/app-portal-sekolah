@@ -79,7 +79,7 @@
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
                 <h1 class="cp-page-title">{{ $school->name }}</h1>
-                <p class="cp-page-sub">{{ $school->city }} • ID: {{ $school->id }} • {{ $school->slug }}</p>
+                <p class="cp-page-sub">{{ $school->city }} • ID: {{ $school->id }} • {{ $school->slug }} • Kode Pendaftaran: <b style="color:#fff;">{{ $school->enroll_code ?? '-' }}</b></p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <a href="{{ route('admin.users', ['school_id' => $school->id]) }}" class="action-btn" style="border-color:#bfdbfe;color:#1d4ed8;background:#eff6ff;text-decoration:none;">

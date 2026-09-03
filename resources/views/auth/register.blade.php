@@ -14,15 +14,11 @@
             padding: 20px 0;
         }
         .register-card {
-            max-width: 560px; border: 0; border-radius: 32px;
+            max-width: 600px; border: 0; border-radius: 32px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
         }
-        .register-header {
-            background: #fff;
-            padding: 40px 40px 20px;
-            text-align: center;
-        }
+        .register-header { background: #fff; padding: 40px 40px 20px; text-align: center; }
         .register-body { padding: 0 40px 40px; background: #fff; }
         .form-control, .form-select {
             border-radius: 14px; padding: 12px 16px;
@@ -31,15 +27,34 @@
         }
         .form-control:focus { border-color: #246bfe; background: #fff; box-shadow: 0 0 0 3px rgba(36,107,254,0.1); }
         .form-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-
         .btn-primary {
             border-radius: 16px; padding: 16px; font-weight: 800;
             background: linear-gradient(135deg, #246bfe, #1e40af);
             border: none; box-shadow: 0 8px 20px rgba(36, 107, 254, 0.25);
         }
         .password-toggle { cursor: pointer; color: #94a3b8; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; }
-
         .warning-box { background: #eff6ff; border: 1px dashed #93c5fd; border-radius: 16px; padding: 16px; margin-bottom: 24px; }
+
+        .steps { display: flex; gap: 8px; margin-bottom: 24px; }
+        .step { flex: 1; text-align: center; }
+        .step-dot {
+            width: 34px; height: 34px; border-radius: 50%; margin: 0 auto 6px;
+            display: grid; place-items: center; font-weight: 800; font-size: 14px;
+            background: #f1f5f9; color: #94a3b8; transition: all .3s;
+        }
+        .step.active .step-dot { background: linear-gradient(135deg, #246bfe, #1e40af); color: #fff; box-shadow: 0 6px 16px rgba(36,107,254,.35); }
+        .step.done .step-dot { background: #dcfce7; color: #166534; }
+        .step-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; }
+        .step.active .step-lbl { color: #1d4ed8; }
+
+        .school-card {
+            border-radius: 20px; overflow: hidden; border: 1.5px solid #e0e7ff;
+            animation: slideUp .4s ease both;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        .school-card-top { background: linear-gradient(135deg, #4f46e5, #2563eb); color: #fff; padding: 18px 20px; }
+        .reveal { animation: slideUp .4s ease both; }
+        .code-input { font-size: 20px !important; font-weight: 800; letter-spacing: .15em; text-align: center; }
     </style>
 </head>
 <body class="d-flex align-items-center">
@@ -48,15 +63,21 @@
         <div class="register-header">
             <div class="text-primary fw-bold small mb-2" style="letter-spacing: 0.1em;">AKUN AKADEMIK</div>
             <h1 class="h3 fw-bold mb-1" style="color: #0f172a;">Daftar Akun Baru</h1>
-            <p class="text-muted small mb-0">Lengkapi data diri Anda untuk bergabung.</p>
+            <p class="text-muted small mb-0">Masukkan Kode Pendaftaran sekolah, lalu lengkapi data diri.</p>
         </div>
 
         <div class="register-body">
+            <div class="steps">
+                <div class="step active" id="st1"><div class="step-dot">1</div><div class="step-lbl">Kode Sekolah</div></div>
+                <div class="step" id="st2"><div class="step-dot">2</div><div class="step-lbl">Sekolah & Peran</div></div>
+                <div class="step" id="st3"><div class="step-dot">3</div><div class="step-lbl">Data Diri</div></div>
+            </div>
+
             <div class="warning-box">
                 <div class="d-flex gap-3">
                     <i class="bi bi-shield-check text-primary h4 mb-0"></i>
                     <div class="small fw-bold text-dark" style="line-height: 1.5;">
-                        Akun akan aktif setelah <strong>disetujui Admin</strong>. Pastikan email Anda aktif untuk menerima informasi.
+                        Akun akan aktif setelah <strong>disetujui Admin</strong>. Tanyakan <strong>Kode Pendaftaran</strong> ke admin sekolahmu.
                     </div>
                 </div>
             </div>
@@ -67,22 +88,49 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('register.store') }}" id="regForm">
+            {{-- LANGKAH 1: Kode Pendaftaran --}}
+            <div class="mb-4">
+                <label class="form-label"><i class="bi bi-upc-scan me-1"></i> Kode Pendaftaran Sekolah <span class="text-danger">*</span></label>
+                <div class="d-flex gap-2">
+                    <input id="enrollCode" class="form-control code-input" placeholder="cth. 1851372" inputmode="numeric" autocomplete="off">
+                    <button type="button" id="checkCodeBtn" class="btn btn-primary px-4" style="border-radius:14px;padding:12px 20px;white-space:nowrap;">Cek Kode</button>
+                </div>
+                <div id="codeMsg" class="small mt-2" style="display:none;"></div>
+                <div class="small text-muted mt-2">Format: <b>ID sekolah + kode kota</b> (contoh ID 18 + 51372 → <b>1851372</b>). Tidak punya? <a href="#" id="manualToggle">pilih manual</a>.</div>
+            </div>
+
+            <div id="manualBox" style="display:none;" class="mb-4">
+                <label class="form-label">Pilih Sekolah Manual</label>
+                <select id="schoolSelect" class="form-select">
+                    <option value="">Cari sekolah...</option>
+                    @foreach($schools as $s)
+                        <option value="{{ $s->id }}" data-guru="{{ $s->reg_guru_open ? 1 : 0 }}" data-siswa="{{ $s->reg_siswa_open ? 1 : 0 }}">[ID: {{ $s->id }}] {{ $s->name }} — {{ $s->city }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <form method="POST" action="{{ route('register.store') }}" id="regForm" style="display:none;">
                 @csrf
-                <div class="mb-4">
+                <input type="hidden" name="school_id" id="schoolId">
+                <input type="hidden" name="enroll_code" id="enrollCodeHidden">
+
+                {{-- LANGKAH 2: kartu detail sekolah + peran --}}
+                <div id="schoolCard" class="school-card mb-4"></div>
+
+                <div class="mb-4 reveal">
                     <label class="form-label">Daftar sebagai</label>
                     <select name="role" class="form-select" required id="roleSelect">
                         <option value="">Pilih peran...</option>
-                        @if($guruEnabled) <option value="guru" @selected(old('role')==='guru')>Guru / Tenaga Pengajar</option> @endif
-                        @if($siswaEnabled) <option value="siswa" @selected(old('role')==='siswa')>Siswa / Mahasiswa</option> @endif
+                        <option value="guru" id="optGuru">Guru / Tenaga Pengajar</option>
+                        <option value="siswa" id="optSiswa">Siswa / Mahasiswa</option>
                     </select>
-                    <div class="small text-muted mt-1" id="roleHint">Pilih sekolah dulu — opsi peran menyesuaikan pendaftaran yang dibuka sekolah tersebut.</div>
                 </div>
 
-                <div class="row g-3">
+                {{-- LANGKAH 3: data diri --}}
+                <div class="row g-3 reveal">
                     <div class="col-md-6">
                         <label class="form-label">Nomor Induk / NIK</label>
-                        <input name="nik" value="{{ old('nik') }}" class="form-control" placeholder="16 digit..." required>
+                        <input name="nik" value="{{ old('nik') }}" class="form-control" placeholder="8–30 digit" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">WhatsApp Aktif</label>
@@ -105,18 +153,6 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label"><i class="bi bi-building me-1"></i> Pilih Sekolah (ID + Nama) <span class="text-danger">*</span></label>
-                        <select name="school_id" class="form-select" required id="schoolSelect">
-                            <option value="">Cari sekolah — ketik ID atau nama...</option>
-                            @foreach($schools as $s)
-                                <option value="{{ $s->id }}" data-city="{{ $s->city }}" data-guru="{{ $s->reg_guru_open ? 1 : 0 }}" data-siswa="{{ $s->reg_siswa_open ? 1 : 0 }}" @selected(old('school_id')==$s->id)>[ID: {{ $s->id }}] {{ $s->name }} — {{ $s->city }}</option>
-                            @endforeach
-                        </select>
-                        <div class="small text-muted mt-1" id="schoolHint" style="display:none"></div>
-                        <div class="alert alert-info border-0 rounded-3 small mt-2" style="background:#eef2ff;color:#4f46e5"><i class="bi bi-info-circle"></i> Wajib tahu <b>ID Sekolahan</b>. Jika data murid/guru sudah ada di database sekolah tersebut, pendaftaran otomatis bisa. Hanya <b>Admin</b> yang bisa menambah sekolah baru (premium).</div>
-                    </div>
-
                     <div class="col-md-6">
                         <label class="form-label">Buat Kata Sandi</label>
                         <div class="position-relative">
@@ -147,38 +183,98 @@
 </div>
 
 <script>
-    function togglePass(id, el) {
-        const input = document.getElementById(id);
-        if (input.type === 'password') {
-            input.type = 'text';
-            el.classList.replace('bi-eye', 'bi-eye-slash');
-        } else {
-            input.type = 'password';
-            el.classList.replace('bi-eye-slash', 'bi-eye');
+    const CHECK_URL = "{{ route('register.check') }}";
+    const codeInput = document.getElementById('enrollCode');
+    const checkBtn = document.getElementById('checkCodeBtn');
+    const codeMsg = document.getElementById('codeMsg');
+    const regForm = document.getElementById('regForm');
+
+    function setStep(n) {
+        [1, 2, 3].forEach(i => {
+            const el = document.getElementById('st' + i);
+            el.classList.toggle('active', i === n);
+            el.classList.toggle('done', i < n);
+            if (i < n) el.querySelector('.step-dot').innerHTML = '<i class="bi bi-check-lg"></i>';
+            else el.querySelector('.step-dot').innerText = i;
+        });
+    }
+
+    function showMsg(ok, text) {
+        codeMsg.style.display = 'block';
+        codeMsg.innerHTML = (ok ? '<i class="bi bi-check-circle-fill text-success"></i> ' : '<i class="bi bi-x-circle-fill text-danger"></i> ') + text;
+        codeMsg.className = 'small mt-2 ' + (ok ? 'text-success' : 'text-danger');
+    }
+
+    function applySchool(s) {
+        document.getElementById('schoolId').value = s.id;
+        document.getElementById('enrollCodeHidden').value = s.enroll_code || '';
+        document.getElementById('schoolCard').innerHTML =
+            '<div class="school-card-top"><div class="d-flex gap-3 align-items-center">' +
+            '<div style="width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-weight:800;font-size:22px;">' + s.name.charAt(0).toUpperCase() + '</div>' +
+            '<div><div class="small" style="opacity:.75;">ID: ' + s.id + ' • ' + (s.city || '-') + '</div>' +
+            '<div class="fw-bold" style="font-size:17px;">' + s.name + '</div>' +
+            '<div><span class="badge rounded-pill bg-light text-dark" style="font-size:10px;">' + s.slug + '</span> ' +
+            (s.reg_guru_open ? '<span class="badge rounded-pill bg-success" style="font-size:10px;">Guru: Buka</span>' : '') + ' ' +
+            (s.reg_siswa_open ? '<span class="badge rounded-pill bg-success" style="font-size:10px;">Siswa: Buka</span>' : '') + '</div></div>' +
+            '<i class="bi bi-patch-check-fill ms-auto" style="font-size:28px;opacity:.85;"></i></div></div>' +
+            '<div class="p-3 small text-muted" style="background:#fff;">Kode <b>' + (s.enroll_code || '-') + '</b> terverifikasi. Data sekolah masuk otomatis ke formulir.</div>';
+        document.getElementById('optGuru').hidden = !s.reg_guru_open;
+        document.getElementById('optSiswa').hidden = !s.reg_siswa_open;
+        document.getElementById('roleSelect').value = '';
+        regForm.style.display = 'block';
+        regForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setStep(2);
+        setTimeout(() => setStep(3), 2500);
+    }
+
+    async function checkCode(code) {
+        checkBtn.disabled = true;
+        checkBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        try {
+            const res = await fetch(CHECK_URL + '?code=' + encodeURIComponent(code), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || 'Kode tidak ditemukan / sekolah nonaktif.');
+            showMsg(true, 'Sekolah ditemukan: <b>' + data.name + '</b>');
+            applySchool(data);
+        } catch (e) {
+            showMsg(false, e.message);
+            regForm.style.display = 'none';
+            setStep(1);
+        } finally {
+            checkBtn.disabled = false;
+            checkBtn.innerText = 'Cek Kode';
         }
     }
-    document.getElementById('schoolSelect')?.addEventListener('change', function(){
-        const opt=this.options[this.selectedIndex];
-        const hint=document.getElementById('schoolHint');
-        const roleSel=document.getElementById('roleSelect');
-        const roleHint=document.getElementById('roleHint');
-        const perSchool = @json($perSchoolReg ?? true);
-        if(this.value){
-            hint.style.display='block';
-            hint.innerHTML='<i class="bi bi-check-circle-fill text-success"></i> Terpilih: <b>'+opt.text+'</b> — Kota: '+(opt.dataset.city||'-');
-            if(!perSchool) return; // mode fallback global: opsi peran tidak difilter
-            // Sesuaikan opsi peran dengan pendaftaran yang dibuka sekolah ini.
-            const gOpen = opt.dataset.guru === '1', sOpen = opt.dataset.siswa === '1';
-            [...roleSel.options].forEach(o => {
-                if(o.value==='guru') o.hidden = !gOpen;
-                if(o.value==='siswa') o.hidden = !sOpen;
-            });
-            if(roleSel.value==='guru' && !gOpen) roleSel.value='';
-            if(roleSel.value==='siswa' && !sOpen) roleSel.value='';
-            const open = [gOpen?'Guru':null, sOpen?'Siswa':null].filter(Boolean).join(' & ');
-            roleHint.innerHTML='Sekolah ini membuka pendaftaran: <b>'+(open||'-')+'</b>';
-        } else { hint.style.display='none'; }
+
+    checkBtn.addEventListener('click', () => {
+        const code = codeInput.value.trim();
+        if (!code) { showMsg(false, 'Masukkan Kode Pendaftaran dulu.'); return; }
+        checkCode(code);
     });
+    codeInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); checkBtn.click(); } });
+
+    document.getElementById('manualToggle').addEventListener('click', e => {
+        e.preventDefault();
+        const box = document.getElementById('manualBox');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    });
+    document.getElementById('schoolSelect').addEventListener('change', function () {
+        const opt = this.options[this.selectedIndex];
+        if (!this.value) return;
+        showMsg(true, 'Sekolah dipilih manual: <b>' + opt.text + '</b>');
+        applySchool({
+            id: this.value, name: opt.text.replace(/^\[ID: \d+\] /, '').split(' — ')[0],
+            city: '', slug: '', enroll_code: '',
+            reg_guru_open: opt.dataset.guru === '1', reg_siswa_open: opt.dataset.siswa === '1'
+        });
+        document.getElementById('enrollCodeHidden').value = '';
+    });
+
+    function togglePass(id, el) {
+        const input = document.getElementById(id);
+        if (input.type === 'password') { input.type = 'text'; el.classList.replace('bi-eye', 'bi-eye-slash'); }
+        else { input.type = 'password'; el.classList.replace('bi-eye-slash', 'bi-eye'); }
+    }
 </script>
 </body>
 </html>
