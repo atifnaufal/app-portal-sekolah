@@ -24,10 +24,18 @@ echo "Running database migrations..."
 php artisan migrate --force || true
 
 echo "Seeding feature flags (idempotent, hanya isi key yang belum ada)..."
-php artisan db:seed --class="Database\Seeders\FeatureFlagsSeeder" --force --no-interaction || true
+if php artisan db:seed --class="Database\Seeders\FeatureFlagsSeeder" --force --no-interaction; then
+  echo "FeatureFlagsSeeder OK"
+else
+  echo "!!! FeatureFlagsSeeder GAGAL — periksa storage/logs/laravel.log"
+fi
 
 echo "Seeding data portal (idempotent via firstOrCreate)..."
-php artisan db:seed --class="Database\Seeders\PortalFullSeeder" --force --no-interaction || true
+if php artisan db:seed --class="Database\Seeders\PortalFullSeeder" --force --no-interaction; then
+  echo "PortalFullSeeder OK"
+else
+  echo "!!! PortalFullSeeder GAGAL — data test TIDAK terbuat. Periksa storage/logs/laravel.log dan jalankan manual via console Railway."
+fi
 
 echo "Caching config and routes..."
 php artisan config:cache --no-interaction

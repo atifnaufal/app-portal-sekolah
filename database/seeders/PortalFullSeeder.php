@@ -70,10 +70,27 @@ class PortalFullSeeder extends Seeder
 
     public function run(): void
     {
-        $schools = School::whereIn('slug', ['portal-pusat', 'sman1-jkt', 'smk-telkom'])->get();
-        abort_if($schools->count() !== 3, 500, 'Seeder butuh 3 sekolah bawaan (portal-pusat, sman1-jkt, smk-telkom). Buat dulu via Admin Pusat.');
+        $schoolSlugs = ['portal-pusat', 'sman1-jkt', 'smk-telkom'];
+        $schools = School::whereIn('slug', $schoolSlugs)->get();
 
-        $this->seedBuku();
+        // Jangan abort keras: jika salah satu sekolah bawaan belum ada (mis. migrasi
+        // belum jalan di DB baru), tetap seed sekolah yang tersedia dan beri peringatan.
+        foreach ($schoolSlugs as $slug) {
+            if (! $schools->contains('slug', $slug)) {
+                $this->command->warn("Sekolah bawaan '{$slug}' belum ada — lewati. Pastikan migrasi create_schools_and_global_portal sudah jalan.");
+            }
+        }
+        if ($schools->isEmpty()) {
+            $this->command->error('Tidak ada sekolah bawaan sama sekali — seeding tidak dilanjutkan. Jalankan migrasi dulu.');
+
+            return;
+        }
+
+        try {
+            $this->seedBuku();
+        } catch (\Throwable $e) {
+            $this->command->warn('Perpustakaan seed dilewati karena error: '.$e->getMessage());
+        }
         // 10 eskul dibagi 4 + 3 + 3 per sekolah.
         $eskulChunks = [array_slice(self::ESKUL, 0, 4), array_slice(self::ESKUL, 4, 3), array_slice(self::ESKUL, 7, 3)];
 
