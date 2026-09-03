@@ -42,6 +42,10 @@ class FeatureFlagsSeeder extends Seeder
 
         // Backfill baris school_features (default AKTIF) untuk semua sekolah —
         // idempotent via firstOrCreate, tidak menimpa pilihan per-sekolah.
+        // Dilewati bila migrasi belum jalan (mis. seeder kepanggil duluan).
+        if (! \Illuminate\Support\Facades\Schema::hasTable('school_features')) {
+            return;
+        }
         $featureKeys = \App\Helpers\FeatureHelper::keys();
         foreach (\App\Models\School::pluck('id') as $schoolId) {
             foreach ($featureKeys as $key) {

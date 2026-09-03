@@ -14,6 +14,24 @@ class RegisterController extends Controller
     {
         // Pendaftaran dibuka PER SEKOLAH (kolom schools.reg_*_open, dikelola
         // Admin Pusat & admin sekolah). Halaman ada jika min. satu sekolah buka.
+        // Fallback global bila migrasi belum jalan (anti-500 saat deploy).
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('schools', 'reg_guru_open')) {
+            $guruEnabled = (bool) \App\Models\Setting::getValue('registration_guru_enabled', false);
+            $siswaEnabled = (bool) \App\Models\Setting::getValue('registration_siswa_enabled', false);
+
+            if (! $guruEnabled && ! $siswaEnabled) {
+                return redirect()->route('feature.locked', ['msg' => 'Pendaftaran akun sedang ditutup. Hubungi admin sekolah atau Admin Pusat.']);
+            }
+
+            return view('auth.register', [
+                'kelases' => Kelas::orderBy('tingkat')->orderBy('nama')->get(),
+                'schools' => \App\Models\School::where('is_active', true)->orderBy('name')->get(),
+                'guruEnabled' => $guruEnabled,
+                'siswaEnabled' => $siswaEnabled,
+                'perSchoolReg' => false,
+            ]);
+        }
+
         $schools = \App\Models\School::where('is_active', true)
             ->where(fn ($q) => $q->where('reg_guru_open', true)->orWhere('reg_siswa_open', true))
             ->orderBy('name')
@@ -28,6 +46,7 @@ class RegisterController extends Controller
             'schools' => $schools,
             'guruEnabled' => $schools->contains(fn ($s) => $s->reg_guru_open),
             'siswaEnabled' => $schools->contains(fn ($s) => $s->reg_siswa_open),
+            'perSchoolReg' => true,
         ]);
     }
 

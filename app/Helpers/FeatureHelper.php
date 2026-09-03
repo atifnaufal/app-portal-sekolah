@@ -46,17 +46,22 @@ class FeatureHelper
         }
 
         $result = $default;
-        if ($schoolId) {
-            $row = SchoolFeature::where('school_id', $schoolId)->where('feature_key', $key)->first(['is_enabled']);
-            if ($row) {
-                $result = (bool) $row->is_enabled;
+        try {
+            if ($schoolId && Schema::hasTable('school_features')) {
+                $row = SchoolFeature::where('school_id', $schoolId)->where('feature_key', $key)->first(['is_enabled']);
+                if ($row) {
+                    $result = (bool) $row->is_enabled;
+                } else {
+                    $global = Setting::getValue($key, null);
+                    $result = $global === null ? $default : (bool) $global;
+                }
             } else {
                 $global = Setting::getValue($key, null);
                 $result = $global === null ? $default : (bool) $global;
             }
-        } else {
-            $global = Setting::getValue($key, null);
-            $result = $global === null ? $default : (bool) $global;
+        } catch (\Throwable $e) {
+            // Migrasi belum jalan / DB gangguan: jangan 500, pakai default aman.
+            $result = $default;
         }
 
         return self::$memo[$memoKey] = $result;
@@ -65,6 +70,7 @@ class FeatureHelper
     public static function setForSchool(int $schoolId, string $key): bool
     {
         abort_unless(in_array($key, self::keys(), true), 400);
+        abort_unless(Schema::hasTable('school_features'), 503, 'Migrasi school_features belum jalan. Tunggu deploy selesai.');
 
         $row = SchoolFeature::firstOrNew(['school_id' => $schoolId, 'feature_key' => $key]);
         $row->is_enabled = ! (bool) ($row->exists ? $row->is_enabled : self::forSchool($schoolId, $key));

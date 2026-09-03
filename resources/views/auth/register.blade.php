@@ -162,9 +162,11 @@
         const hint=document.getElementById('schoolHint');
         const roleSel=document.getElementById('roleSelect');
         const roleHint=document.getElementById('roleHint');
+        const perSchool = @json($perSchoolReg ?? true);
         if(this.value){
             hint.style.display='block';
             hint.innerHTML='<i class="bi bi-check-circle-fill text-success"></i> Terpilih: <b>'+opt.text+'</b> — Kota: '+(opt.dataset.city||'-');
+            if(!perSchool) return; // mode fallback global: opsi peran tidak difilter
             // Sesuaikan opsi peran dengan pendaftaran yang dibuka sekolah ini.
             const gOpen = opt.dataset.guru === '1', sOpen = opt.dataset.siswa === '1';
             [...roleSel.options].forEach(o => {

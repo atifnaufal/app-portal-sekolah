@@ -317,7 +317,9 @@ class AdminController extends Controller
             'school' => $school,
             'schoolRegGuru' => (bool) ($school?->reg_guru_open ?? false),
             'schoolRegSiswa' => (bool) ($school?->reg_siswa_open ?? false),
-            'schoolsReg' => $isSuper ? School::orderBy('name')->get(['id', 'name', 'reg_guru_open', 'reg_siswa_open']) : collect(),
+            'schoolsReg' => ($isSuper && \Illuminate\Support\Facades\Schema::hasColumn('schools', 'reg_guru_open'))
+                ? School::orderBy('name')->get(['id', 'name', 'reg_guru_open', 'reg_siswa_open'])
+                : collect(),
             'registrationGuruEnabled' => (bool) Setting::getValue('registration_guru_enabled', false),
             'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false),
             'attendanceActive' => (bool) Setting::getValue('attendance_active', false),
@@ -573,6 +575,7 @@ class AdminController extends Controller
     {
         $me = UserContextHelper::user();
         abort_unless($me && $me->isSuperAdmin(), 403);
+        abort_unless(\Illuminate\Support\Facades\Schema::hasColumn('schools', 'reg_guru_open'), 503, 'Migrasi pendaftaran per-sekolah belum jalan. Tunggu deploy selesai.');
 
         $role = $request->input('role');
         abort_unless(in_array($role, ['guru', 'siswa'], true), 400);
