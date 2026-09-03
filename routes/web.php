@@ -28,7 +28,21 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (session('user_id') || \Illuminate\Support\Facades\Auth::check()) return redirect()->route('dashboard');
-    return view('welcome');
+    // Onboarding "Mulai" mengarah ke register bila ada sekolah buka, else login.
+    $registrationOpen = false;
+    try {
+        if (\Illuminate\Support\Facades\Schema::hasColumn('schools', 'reg_guru_open')) {
+            $registrationOpen = \App\Models\School::where('is_active', true)
+                ->where(fn ($q) => $q->where('reg_guru_open', true)->orWhere('reg_siswa_open', true))
+                ->exists();
+        } else {
+            $registrationOpen = (bool) \App\Models\Setting::getValue('registration_guru_enabled', false)
+                || (bool) \App\Models\Setting::getValue('registration_siswa_enabled', false);
+        }
+    } catch (\Throwable $e) {
+    }
+
+    return view('welcome', ['registrationOpen' => $registrationOpen]);
 })->name('welcome');
 Route::view('/offline', 'errors.offline')->name('offline');
 

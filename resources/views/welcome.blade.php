@@ -118,23 +118,16 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
 </div>
 
 <div class="section" style="background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-top:16px">
-  <div class="eyebrow" style="color:#059669">Panduan Lengkap</div>
-  <div class="h2">Cara Daftar — Kode Pendaftaran Sekolah</div>
-  <div style="font-size:13px;color:#64748b;line-height:1.7;margin-top:6px">1. Minta <b>Kode Pendaftaran</b> dari admin sekolahmu (format: ID + kode kota, mis. <b>1851372</b>).<br>2. Buka <b>Daftar</b> → masukkan kode → kartu sekolah muncul otomatis → pilih <b>Guru/Siswa</b> sesuai yang dibuka.<br>3. Lengkapi NIK, nama, WA, email, kelas & password → akun <b>menunggu persetujuan admin</b>.<br>4. Jika sekolah <b>nonaktif atau pendaftaran ditutup</b>, kode ditolak — hubungi admin sekolah atau adminpusat@pusat.com.<br>5. Setelah disetujui, login → jelajahi Cerita, Global Portal & Chat.</div>
-  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span style="padding:6px 10px;background:#dcfce7;color:#166534;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-check-circle"></i> Kode Valid = Bisa Daftar</span><span style="padding:6px 10px;background:#fee2e2;color:#991b1b;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-x-circle"></i> Kode Salah/Tutup = Ditolak</span></div>
-</div>
-
-<div class="section" style="background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 12px 30px rgba(15,23,42,.06);margin-top:8px">
-  <div class="eyebrow" style="color:#6366f1">Cara Memulai</div>
-  <div class="h2">4 Langkah Jadi Warga Digital</div>
-  <div class="steps">
-    <div class="step"><div class="num">1</div><div style="font-weight:800">Minta Kode</div><div style="font-size:12px;color:#64748b;margin-top:4px">Tanyakan Kode Pendaftaran ke admin sekolah.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Kode → Cek</div></div>
-    <div class="step"><div class="num">2</div><div style="font-weight:800">Daftar Akun</div><div style="font-size:12px;color:#64748b;margin-top:4px">Pilih peran, isi NIK & data diri.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Daftar → Tunggu</div></div>
-    <div class="step"><div class="num">3</div><div style="font-weight:800">Verifikasi Admin</div><div style="font-size:12px;color:#64748b;margin-top:4px">Admin setujui akunmu.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Disetujui → Login</div></div>
-    <div class="step"><div class="num">4</div><div style="font-weight:800">Jelajahi</div><div style="font-size:12px;color:#64748b;margin-top:4px">Absen, Cerita, Portal, Chat, Tugas.</div><div style="margin-top:8px;font-size:11px;color:#4f46e5;font-weight:700">Explore → Produktif</div></div>
+  <div class="eyebrow" style="color:#059669">Mulai Cepat</div>
+  <div class="h2">3 Langkah Jadi Warga Digital</div>
+  <div class="steps" style="grid-template-columns:repeat(3,1fr);">
+    <div class="step"><div class="num">1</div><div style="font-weight:800">Minta Kode</div><div style="font-size:12px;color:#64748b;margin-top:4px">Tanyakan <b>Kode Pendaftaran</b> (ID + kode kota) ke admin sekolahmu, lalu cek di halaman daftar.</div></div>
+    <div class="step"><div class="num">2</div><div style="font-weight:800">Daftar Akun</div><div style="font-size:12px;color:#64748b;margin-top:4px">Pilih Guru/Siswa yang dibuka, isi NIK & data diri. Kartu sekolah terisi otomatis.</div></div>
+    <div class="step"><div class="num">3</div><div style="font-weight:800">Disetujui & Jelajahi</div><div style="font-size:12px;color:#64748b;margin-top:4px">Admin verifikasi akunmu → login → absen, cerita, portal, chat, tugas.</div></div>
   </div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span style="padding:6px 10px;background:#dcfce7;color:#166534;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-check-circle"></i> Kode Valid = Bisa Daftar</span><span style="padding:6px 10px;background:#fee2e2;color:#991b1b;border-radius:999px;font-size:11px;font-weight:800"><i class="bi bi-x-circle"></i> Kode Salah/Tutup = Ditolak</span></div>
   <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-    <a href="{{ route('login') }}" class="btn" style="background:#0f172a;color:#fff;border-radius:12px">Saya Sudah Punya Akun</a>
+    <a href="{{ ($registrationOpen ?? true) ? route('register') : route('login') }}" class="btn" style="background:#0f172a;color:#fff;border-radius:12px">{{ ($registrationOpen ?? true) ? 'Daftar Sekarang' : 'Masuk ke Portal' }}</a>
     <a href="{{ route('help.faq') }}" class="btn" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0;border-radius:12px">Lihat FAQ</a>
   </div>
 </div>
@@ -162,7 +155,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f6f7fb;c
             ? 'Mulai Sekarang <i class="bi bi-arrow-right"></i>'
             : 'Lanjut <i class="bi bi-arrow-right"></i>';
     }
-    function finish() { window.location.href = "{{ route('register') }}"; }
+    function finish() { window.location.href = @json(($registrationOpen ?? true) ? route('register') : route('login')); }
     nextBtn.addEventListener('click', function () { idx === total - 1 ? finish() : go(idx + 1); });
     document.getElementById('obSkip').addEventListener('click', finish);
     // Swipe
