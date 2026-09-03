@@ -71,11 +71,12 @@
                 @csrf
                 <div class="mb-4">
                     <label class="form-label">Daftar sebagai</label>
-                    <select name="role" class="form-select" required>
+                    <select name="role" class="form-select" required id="roleSelect">
                         <option value="">Pilih peran...</option>
                         @if($guruEnabled) <option value="guru" @selected(old('role')==='guru')>Guru / Tenaga Pengajar</option> @endif
                         @if($siswaEnabled) <option value="siswa" @selected(old('role')==='siswa')>Siswa / Mahasiswa</option> @endif
                     </select>
+                    <div class="small text-muted mt-1" id="roleHint">Pilih sekolah dulu — opsi peran menyesuaikan pendaftaran yang dibuka sekolah tersebut.</div>
                 </div>
 
                 <div class="row g-3">
@@ -109,7 +110,7 @@
                         <select name="school_id" class="form-select" required id="schoolSelect">
                             <option value="">Cari sekolah — ketik ID atau nama...</option>
                             @foreach($schools as $s)
-                                <option value="{{ $s->id }}" data-city="{{ $s->city }}" @selected(old('school_id')==$s->id)>[ID: {{ $s->id }}] {{ $s->name }} — {{ $s->city }}</option>
+                                <option value="{{ $s->id }}" data-city="{{ $s->city }}" data-guru="{{ $s->reg_guru_open ? 1 : 0 }}" data-siswa="{{ $s->reg_siswa_open ? 1 : 0 }}" @selected(old('school_id')==$s->id)>[ID: {{ $s->id }}] {{ $s->name }} — {{ $s->city }}</option>
                             @endforeach
                         </select>
                         <div class="small text-muted mt-1" id="schoolHint" style="display:none"></div>
@@ -159,7 +160,22 @@
     document.getElementById('schoolSelect')?.addEventListener('change', function(){
         const opt=this.options[this.selectedIndex];
         const hint=document.getElementById('schoolHint');
-        if(this.value){ hint.style.display='block'; hint.innerHTML='<i class="bi bi-check-circle-fill text-success"></i> Terpilih: <b>'+opt.text+'</b> — Kota: '+(opt.dataset.city||'-'); } else hint.style.display='none';
+        const roleSel=document.getElementById('roleSelect');
+        const roleHint=document.getElementById('roleHint');
+        if(this.value){
+            hint.style.display='block';
+            hint.innerHTML='<i class="bi bi-check-circle-fill text-success"></i> Terpilih: <b>'+opt.text+'</b> — Kota: '+(opt.dataset.city||'-');
+            // Sesuaikan opsi peran dengan pendaftaran yang dibuka sekolah ini.
+            const gOpen = opt.dataset.guru === '1', sOpen = opt.dataset.siswa === '1';
+            [...roleSel.options].forEach(o => {
+                if(o.value==='guru') o.hidden = !gOpen;
+                if(o.value==='siswa') o.hidden = !sOpen;
+            });
+            if(roleSel.value==='guru' && !gOpen) roleSel.value='';
+            if(roleSel.value==='siswa' && !sOpen) roleSel.value='';
+            const open = [gOpen?'Guru':null, sOpen?'Siswa':null].filter(Boolean).join(' & ');
+            roleHint.innerHTML='Sekolah ini membuka pendaftaran: <b>'+(open||'-')+'</b>';
+        } else { hint.style.display='none'; }
     });
 </script>
 </body>

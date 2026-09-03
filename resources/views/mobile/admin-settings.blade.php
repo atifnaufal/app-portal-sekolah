@@ -6,6 +6,19 @@
     <div class="spacer"></div>
 </div>
 <main class="mobile-content px-3">
+    @if(empty($isSuperAdmin) && !empty($school))
+    <div class="pui-card p-4" style="padding:20px;">
+        <h3 style="font-size:15px;font-weight:800;">Pendaftaran {{ $school->name }}</h3>
+        <p class="small" style="color:var(--mist);">Buka/tutup pendaftaran sekolah Anda.</p>
+        @foreach([['role' => 'guru', 'label' => 'Guru', 'open' => $schoolRegGuru], ['role' => 'siswa', 'label' => 'Siswa', 'open' => $schoolRegSiswa]] as $reg)
+        <form method="POST" action="{{ route('admin.registration.toggle') }}" class="pui-card d-flex justify-content-between align-items-center mb-2" style="padding:14px 16px; background:#f8fafc;">
+            @csrf @method('PATCH') <input type="hidden" name="role" value="{{ $reg['role'] }}">
+            <span class="small fw-bold">Pendaftaran {{ $reg['label'] }} — {{ $reg['open'] ? 'DIBUKA' : 'DITUTUP' }}</span>
+            <button class="pui-btn {{ $reg['open'] ? 'pui-btn-ghost' : 'pui-btn-primary' }} pui-btn-sm">{{ $reg['open'] ? 'Tutup' : 'Buka' }}</button>
+        </form>
+        @endforeach
+    </div>
+    @else
     <div class="pui-card p-4" style="padding:20px;">
         <form action="{{ route('admin.settings.update') }}" method="POST">
             @csrf
@@ -50,5 +63,6 @@
             <button type="submit" class="pui-btn pui-btn-primary pui-btn-block">Simpan Perubahan</button>
         </form>
     </div>
+    @endif
 </main>
 @endsection

@@ -102,13 +102,22 @@
                         <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
                         <a class="nav-link {{ request()->routeIs('global.portal*') ? 'active' : '' }}" href="{{ route('global.portal') }}">Global Portal</a>
                     @else
+                    @php $navSchoolId = (int) session('school_id'); @endphp
                     <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
                     <a class="nav-link {{ request()->routeIs('pengumuman.*') ? 'active' : '' }}" href="{{ route('pengumuman.index') }}">Pengumuman</a>
+                    @if(\App\Helpers\FeatureHelper::forSchool($navSchoolId, 'feature_spp_enabled'))
                     <a class="nav-link {{ request()->routeIs('spp.*') ? 'active' : '' }}" href="{{ route('spp.index') }}">SPP</a>
+                    @endif
                     <a class="nav-link {{ request()->routeIs('kelas.*') ? 'active' : '' }}" href="{{ route('kelas.index') }}">Kelas</a>
+                    @if(\App\Helpers\FeatureHelper::forSchool($navSchoolId, 'feature_jadwal_enabled'))
                     <a class="nav-link {{ request()->routeIs('admin.jadwal.*') ? 'active' : '' }}" href="{{ route('admin.jadwal.index') }}"><i class="bi bi-calendar3 me-1"></i>Jadwal</a>
+                    @endif
+                    @if(\App\Helpers\FeatureHelper::forSchool($navSchoolId, 'feature_perpustakaan_enabled'))
                     <a class="nav-link {{ request()->routeIs('admin.perpustakaan.*') ? 'active' : '' }}" href="{{ route('admin.perpustakaan.index') }}">Perpustakaan</a>
+                    @endif
+                    @if(\App\Helpers\FeatureHelper::forSchool($navSchoolId, 'feature_eskul_enabled'))
                     <a class="nav-link {{ request()->routeIs('admin.eskul.*') ? 'active' : '' }}" href="{{ route('admin.eskul.index') }}">Eskul</a>
+                    @endif
                     <a class="nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}">Akun</a>
                      <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}">Pengaturan</a>
                      <a class="nav-link {{ request()->routeIs('admin.history') ? 'active' : '' }}" href="{{ route('admin.history') }}"><i class="bi bi-clock-history me-1"></i>Riwayat</a>

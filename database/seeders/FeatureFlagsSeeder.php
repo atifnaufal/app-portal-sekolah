@@ -39,5 +39,17 @@ class FeatureFlagsSeeder extends Seeder
                 Setting::create(['key' => $key, 'value' => $value]);
             }
         }
+
+        // Backfill baris school_features (default AKTIF) untuk semua sekolah —
+        // idempotent via firstOrCreate, tidak menimpa pilihan per-sekolah.
+        $featureKeys = \App\Helpers\FeatureHelper::keys();
+        foreach (\App\Models\School::pluck('id') as $schoolId) {
+            foreach ($featureKeys as $key) {
+                \App\Models\SchoolFeature::firstOrCreate(
+                    ['school_id' => $schoolId, 'feature_key' => $key],
+                    ['is_enabled' => true]
+                );
+            }
+        }
     }
 }

@@ -32,6 +32,15 @@ Route::get('/', function () {
 })->name('welcome');
 Route::view('/offline', 'errors.offline')->name('offline');
 
+// Halaman "Fitur Terkunci" premium — mobile vs desktop otomatis.
+Route::get('/fitur-terkunci', function () {
+    $msg = request('msg', session('locked_msg', 'Fitur ini sedang dinonaktifkan oleh admin.'));
+    $isMobile = (bool) preg_match('/(android|iphone|ipad|mobile)/i', (string) request()->userAgent());
+    $view = $isMobile ? 'mobile.locked' : 'errors.locked';
+
+    return response()->view(view()->exists($view) ? $view : 'errors.locked', ['msg' => $msg], 403);
+})->name('feature.locked');
+
 Route::get('/download/apk', function () {
     $apk = public_path('downloads/app-portal-sekolah.apk');
 
@@ -180,6 +189,12 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::patch('/admin/schools/{school}/toggle', [AdminController::class, 'schoolsToggle'])->name('admin.schools.toggle');
     Route::delete('/admin/schools/{school}', [AdminController::class, 'schoolsDestroy'])->name('admin.schools.destroy');
     Route::post('/admin/schools/admin', [AdminController::class, 'createSchoolAdmin'])->name('admin.schools.admin.create');
+    Route::get('/admin/school-admins', [AdminController::class, 'schoolAdmins'])->name('admin.school-admins.index');
+    Route::put('/admin/school-admins/{user}', [AdminController::class, 'updateSchoolAdmin'])->name('admin.school-admins.update');
+    Route::patch('/admin/school-admins/{user}/toggle', [AdminController::class, 'toggleSchoolAdmin'])->name('admin.school-admins.toggle');
+    Route::delete('/admin/school-admins/{user}', [AdminController::class, 'destroySchoolAdmin'])->name('admin.school-admins.destroy');
+    Route::patch('/admin/schools/{school}/registration', [AdminController::class, 'schoolsRegistration'])->name('admin.schools.registration');
+    Route::patch('/admin/schools/{school}/feature', [AdminController::class, 'schoolsFeatureToggle'])->name('admin.schools.feature.toggle');
 
     Route::get('/admin/perpustakaan', [AdminPerpustakaanController::class, 'index'])->name('admin.perpustakaan.index');
     Route::get('/admin/perpustakaan/create', [AdminPerpustakaanController::class, 'create'])->name('admin.perpustakaan.create');

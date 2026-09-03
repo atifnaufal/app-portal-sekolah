@@ -40,6 +40,7 @@
 @php
 $adminName = (string) (session('admin_name') ?? 'Admin');
 $isSuper = ($isSuperAdmin ?? null) ?? (bool) session('is_super_admin', false);
+$sideSchoolId = (int) session('school_id');
 @endphp
 <aside class="admin-cp-sidebar" id="adminSidebar">
     <div class="admin-cp-sidebar-brand" onclick="document.getElementById('adminSidebar').classList.toggle('collapsed')">
@@ -64,6 +65,11 @@ $isSuper = ($isSuperAdmin ?? null) ?? (bool) session('is_super_admin', false);
         <a href="{{ route('admin.schools.index') }}" class="{{ request()->routeIs('admin.schools.*') ? 'active' : '' }}">
             <i class="bi bi-buildings-fill"></i><span>Sekolah</span>
         </a>
+        @if($isSuper)
+        <a href="{{ route('admin.school-admins.index') }}" class="{{ request()->routeIs('admin.school-admins.*') ? 'active' : '' }}">
+            <i class="bi bi-shield-check"></i><span>Admin Sekolah</span>
+        </a>
+        @endif
 
         <div class="sidebar-section-title">SYSTEM</div>
         <a href="{{ route('admin.features') }}" class="{{ request()->routeIs('admin.features*') ? 'active' : '' }}">
@@ -83,15 +89,21 @@ $isSuper = ($isSuperAdmin ?? null) ?? (bool) session('is_super_admin', false);
                 <i class="bi bi-globe"></i><span>Global Portal</span>
             </a>
         @else
+        @if($isSuper || \App\Helpers\FeatureHelper::forSchool($sideSchoolId, 'feature_perpustakaan_enabled'))
         <a href="{{ route('admin.perpustakaan.index') }}" class="{{ request()->routeIs('admin.perpustakaan.*') ? 'active' : '' }}">
             <i class="bi bi-book-fill"></i><span>Perpustakaan</span>
         </a>
+        @endif
+        @if($isSuper || \App\Helpers\FeatureHelper::forSchool($sideSchoolId, 'feature_eskul_enabled'))
         <a href="{{ route('admin.eskul.index') }}" class="{{ request()->routeIs('admin.eskul.*') ? 'active' : '' }}">
             <i class="bi bi-people"></i><span>Ekstrakurikuler</span>
         </a>
+        @endif
+        @if($isSuper || \App\Helpers\FeatureHelper::forSchool($sideSchoolId, 'feature_jadwal_enabled'))
         <a href="{{ route('admin.jadwal.index') }}" class="{{ request()->routeIs('admin.jadwal.*') ? 'active' : '' }}">
             <i class="bi bi-calendar-event"></i><span>Jadwal</span>
         </a>
+        @endif
         <a href="{{ route('pengumuman.index') }}" class="{{ request()->routeIs('pengumuman.*') ? 'active' : '' }}">
             <i class="bi bi-megaphone-fill"></i><span>Pengumuman</span>
         </a>

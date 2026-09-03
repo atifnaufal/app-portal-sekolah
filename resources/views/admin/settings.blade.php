@@ -1,5 +1,37 @@
 @extends('layouts.app', ['title' => 'Pengaturan Portal'])
 @section('content')
+<div class="cp-shell">
+@include('admin.partials.sidebar')
+<div class="cp-main">
+
+@if(empty($isSuperAdmin) && !empty($school))
+{{-- Admin sekolah: hanya pendaftaran sekolahnya sendiri --}}
+<div class="row">
+    <div class="col-md-8">
+        <div class="form-card card p-4 mb-4">
+            <h5 class="fw-bold mb-1">Pendaftaran {{ $school->name }}</h5>
+            <p class="small text-secondary mb-4">Buka/tutup pendaftaran akun baru untuk sekolah Anda. Pendaftar baru masuk sebagai <b>menunggu persetujuan</b> dan harus disetujui admin.</p>
+            @foreach([['role' => 'guru', 'label' => 'Guru', 'open' => $schoolRegGuru], ['role' => 'siswa', 'label' => 'Siswa', 'open' => $schoolRegSiswa]] as $reg)
+            <form method="POST" action="{{ route('admin.registration.toggle') }}" class="mb-3 p-3 rounded-3 border d-flex justify-content-between align-items-center" style="background:#f8fafc;">
+                @csrf @method('PATCH') <input type="hidden" name="role" value="{{ $reg['role'] }}">
+                <div>
+                    <div class="fw-bold">Pendaftaran {{ $reg['label'] }}</div>
+                    <span class="badge rounded-pill {{ $reg['open'] ? 'bg-success' : 'bg-secondary' }}">{{ $reg['open'] ? 'DIBUKA' : 'DITUTUP' }}</span>
+                </div>
+                <button class="btn {{ $reg['open'] ? 'btn-outline-danger' : 'btn-success' }}" style="border-radius:12px;">{{ $reg['open'] ? 'Tutup' : 'Buka' }}</button>
+            </form>
+            @endforeach
+            <a href="{{ route('admin.users') }}" class="btn btn-primary px-4 mt-2"><i class="bi bi-people me-2"></i>Kelola Persetujuan Akun</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card p-4">
+            <h6 class="fw-bold">Info</h6>
+            <p class="small text-secondary mb-0">Pengaturan absensi & sistem global dikelola Admin Pusat. Akun pendaftar baru berstatus nonaktif sampai Anda setujui di menu Akun.</p>
+        </div>
+    </div>
+</div>
+@else
 <div class="row">
     <div class="col-md-8">
         <div class="form-card card p-4 mb-4">
@@ -74,4 +106,8 @@
         </div>
     </div>
 </div>
+@endif
+
+</div>{{-- /.cp-main --}}
+</div>{{-- /.cp-shell --}}
 @endsection

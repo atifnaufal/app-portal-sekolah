@@ -281,19 +281,42 @@ class AdminController extends Controller
     public function toggleRegistration(Request $request): RedirectResponse
     {
         $role = $request->input('role', 'siswa'); // Default ke siswa jika tidak ada input
+        abort_unless(in_array($role, ['guru', 'siswa'], true), 400);
+        $roleName = ucfirst($role);
+        $me = UserContextHelper::user();
+
+        // Admin sekolah: buka/tutup pendaftaran SEKOLAHNYA SENDIRI.
+        // (Aktif setelah Admin Pusat membuatkan akun admin sekolah.)
+        if ($me && ! $me->isSuperAdmin() && $me->role === 'admin' && $me->school_id) {
+            $school = School::findOrFail($me->school_id);
+            $column = $role === 'guru' ? 'reg_guru_open' : 'reg_siswa_open';
+            $school->update([$column => ! $school->{$column}]);
+
+            return back()->with('success', $school->{$column}
+                ? "Pendaftaran {$roleName} untuk {$school->name} DIBUKA."
+                : "Pendaftaran {$roleName} untuk {$school->name} DITUTUP.");
+        }
+
+        // Admin pusat: toggle global (default untuk kompatibilitas).
         $key = "registration_{$role}_enabled";
 
         $enabled = ! (bool) Setting::getValue($key, false);
         Setting::setValue($key, $enabled ? '1' : '0');
-
-        $roleName = ucfirst($role);
 
         return back()->with('success', $enabled ? "Registrasi {$roleName} diaktifkan." : "Registrasi {$roleName} dinonaktifkan.");
     }
 
     public function settings(): View
     {
+        $me = UserContextHelper::user();
+        $isSuper = $me && $me->isSuperAdmin();
+        $school = (! $isSuper && $me && $me->school_id) ? School::find($me->school_id) : null;
+
         $data = [
+            'isSuperAdmin' => $isSuper,
+            'school' => $school,
+            'schoolRegGuru' => (bool) ($school?->reg_guru_open ?? false),
+            'schoolRegSiswa' => (bool) ($school?->reg_siswa_open ?? false),
             'registrationGuruEnabled' => (bool) Setting::getValue('registration_guru_enabled', false),
             'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false),
             'attendanceActive' => (bool) Setting::getValue('attendance_active', false),
@@ -307,6 +330,10 @@ class AdminController extends Controller
 
     public function updateSettings(Request $request): RedirectResponse
     {
+        // Pengaturan global hanya Admin Pusat. Admin sekolah pakai toggle per-sekolah.
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin(), 403);
+
         $data = $request->validate([
             'attendance_active' => 'required|boolean',
             'attendance_start_time' => 'required',
@@ -329,20 +356,7 @@ class AdminController extends Controller
         $me = UserContextHelper::user();
         abort_unless($me && $me->isSuperAdmin(), 403);
 
-        $featureFlags = [
-            ['key' => 'feature_spp_enabled', 'label' => 'Manajemen SPP', 'description' => 'Sistem pembayaran dan tagihan siswa', 'icon' => 'bi-cash-stack', 'category' => 'Keuangan'],
-            ['key' => 'feature_lms_enabled', 'label' => 'Learning Management System', 'description' => 'Mata pelajaran, materi, tugas, dan nilai', 'icon' => 'bi-mortarboard', 'category' => 'Academy'],
-            ['key' => 'feature_eskul_enabled', 'label' => 'Ekstrakurikuler', 'description' => 'Manajemen eskul dan anggota', 'icon' => 'bi-people', 'category' => 'Academy'],
-            ['key' => 'feature_perpustakaan_enabled', 'label' => 'Perpustakaan Digital', 'description' => 'Katalog buku dan kategori', 'icon' => 'bi-book', 'category' => 'Academy'],
-            ['key' => 'feature_jadwal_enabled', 'label' => 'Jadwal Pelajaran', 'description' => 'Penjadwalan guru dan kelas', 'icon' => 'bi-calendar3', 'category' => 'Academy'],
-            ['key' => 'feature_nilai_enabled', 'label' => 'Manajemen Nilai', 'description' => 'Input dan export nilai siswa', 'icon' => 'bi-graph-up', 'category' => 'Academy'],
-            ['key' => 'feature_absensi_enabled', 'label' => 'Absensi', 'description' => 'Rekap kehadiran siswa', 'icon' => 'bi-person-check', 'category' => 'Academy'],
-            ['key' => 'feature_berita_enabled', 'label' => 'Portal Berita', 'description' => 'Pengumuman dan portal berita global', 'icon' => 'bi-megaphone', 'category' => 'Konten'],
-            ['key' => 'feature_registration_guru_enabled', 'label' => 'Registrasi Guru', 'description' => 'Pendaftaran akun guru baru', 'icon' => 'bi-person-badge', 'category' => 'Registrasi'],
-            ['key' => 'feature_registration_siswa_enabled', 'label' => 'Registrasi Siswa', 'description' => 'Pendaftaran akun siswa baru', 'icon' => 'bi-person-avatar', 'category' => 'Registrasi'],
-            ['key' => 'feature_raport_enabled', 'label' => 'Raport & Rapor', 'description' => 'Pembuatan raport semester', 'icon' => 'bi-file-earmark-text', 'category' => 'Academy'],
-            ['key' => 'feature_communication_enabled', 'label' => 'Komunikasi', 'description' => 'Chat dan notifikasi real-time', 'icon' => 'bi-chat-dots', 'category' => 'Komunikasi'],
-        ];
+        $featureFlags = \App\Helpers\FeatureHelper::KEYS;
 
         foreach ($featureFlags as &$flag) {
             $flag['value'] = (bool) Setting::getValue($flag['key'], true);
@@ -401,6 +415,14 @@ class AdminController extends Controller
             ->take(10)
             ->get();
 
+        // Fitur per-sekolah (efektif: baris school_features > flag global).
+        $featureFlags = \App\Helpers\FeatureHelper::KEYS;
+        foreach ($featureFlags as &$flag) {
+            $flag['value'] = \App\Helpers\FeatureHelper::forSchool($school->id, $flag['key']);
+            $flag['currentStatus'] = $flag['value'] ? 'Aktif' : 'Nonaktif';
+        }
+        unset($flag);
+
         return view('admin.schools.detail', compact(
             'school',
             'guruCount',
@@ -412,7 +434,8 @@ class AdminController extends Controller
             'totalAbsensi',
             'totalNilai',
             'totalTugas',
-            'recentActivity'
+            'recentActivity',
+            'featureFlags'
         ));
     }
 
@@ -457,6 +480,93 @@ class AdminController extends Controller
         $school->update(['is_active'=>!$school->is_active]);
         return back()->with('success',$school->is_active?'Sekolah diaktifkan — pendaftaran dibuka':'Sekolah dinonaktifkan — pendaftaran ditutup');
     }
+    // === CRUD Akun Admin Sekolah — khusus Admin Pusat ===
+    public function schoolAdmins(): View
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin(), 403);
+
+        $admins = User::with('school')->where('role', 'admin')->whereNotNull('school_id')
+            ->orderBy('name')->get();
+        $schools = School::orderBy('name')->get();
+
+        return view('admin.school-admins', compact('admins', 'schools'));
+    }
+
+    public function updateSchoolAdmin(Request $request, User $user): RedirectResponse
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin() && $user->role === 'admin' && $user->school_id, 403);
+
+        $data = $request->validate([
+            'name' => ['required', 'max:100'],
+            'email' => ['required', 'email', 'unique:users,email,'.$user->id],
+            'school_id' => ['required', 'exists:schools,id'],
+            'password' => ['nullable', 'min:8', 'confirmed'],
+        ]);
+        if (blank($data['password'] ?? null)) {
+            unset($data['password']);
+        } else {
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($data['password']);
+        }
+        $user->update($data);
+
+        return back()->with('success', 'Admin sekolah diperbarui.');
+    }
+
+    public function toggleSchoolAdmin(User $user): RedirectResponse
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin() && $user->role === 'admin' && $user->school_id, 403);
+        abort_if($me->id === $user->id, 403, 'Tidak bisa menonaktifkan akun sendiri.');
+
+        $user->update(['aktif' => ! $user->aktif]);
+
+        return back()->with('success', $user->aktif ? 'Admin sekolah diaktifkan.' : 'Admin sekolah dinonaktifkan.');
+    }
+
+    public function destroySchoolAdmin(User $user): RedirectResponse
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin() && $user->role === 'admin' && $user->school_id, 403);
+        abort_if($me->id === $user->id, 403, 'Tidak bisa menghapus akun sendiri.');
+
+        $user->delete();
+
+        return back()->with('success', 'Admin sekolah dihapus.');
+    }
+
+    // Admin pusat: buka/tutup pendaftaran guru & siswa per sekolah.
+    public function schoolsRegistration(Request $request, School $school): RedirectResponse
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin(), 403);
+
+        $role = $request->input('role');
+        abort_unless(in_array($role, ['guru', 'siswa'], true), 400);
+
+        $column = $role === 'guru' ? 'reg_guru_open' : 'reg_siswa_open';
+        $school->update([$column => ! $school->{$column}]);
+
+        $label = $role === 'guru' ? 'Guru' : 'Siswa';
+
+        return back()->with('success', $school->{$column}
+            ? "Pendaftaran {$label} untuk {$school->name} DIBUKA."
+            : "Pendaftaran {$label} untuk {$school->name} DITUTUP.");
+    }
+
+    // Admin pusat: toggle satu fitur untuk satu sekolah.
+    public function schoolsFeatureToggle(Request $request, School $school): RedirectResponse
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin(), 403);
+
+        $key = $request->input('key');
+        $enabled = \App\Helpers\FeatureHelper::setForSchool($school->id, $key);
+
+        return back()->with('success', 'Fitur '.($enabled ? 'DIAKTIFKAN' : 'DINONAKTIFKAN')." untuk {$school->name}.");
+    }
+
     // Admin pusat bisa buat akun admin sekolah
     public function createSchoolAdmin(Request $request): RedirectResponse
     {

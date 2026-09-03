@@ -61,7 +61,11 @@ class ProfileController extends Controller
         }
 
         $user->update($data);
-        $request->session()->put('admin_name', $user->name);
+        $request->session()->put([
+            'admin_name' => $user->name,
+            'school_id' => $user->school_id,
+            'is_super_admin' => $user->isSuperAdmin(),
+        ]);
 
         UserHistoryHelper::logProfileUpdate($user->id, array_keys($data), $request);
 

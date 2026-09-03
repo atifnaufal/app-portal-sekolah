@@ -182,6 +182,52 @@
     </div>
 </div>
 
+<div class="row g-4 mb-5">
+    <div class="col-lg-6">
+        <div class="section-card h-100">
+            <div class="section-card-head">
+                <h2 class="section-card-title"><i class="bi bi-person-plus me-2" style="color:var(--blue);"></i>Pendaftaran Sekolah Ini</h2>
+            </div>
+            <div class="section-card-body">
+                <p class="small text-muted mb-3">Buka/tutup pendaftaran untuk sekolah ini. Setelah dibuka, admin sekolah juga bisa mengaturnya dari Pengaturan.</p>
+                @foreach([['role' => 'guru', 'label' => 'Pendaftaran Guru', 'open' => $school->reg_guru_open], ['role' => 'siswa', 'label' => 'Pendaftaran Siswa', 'open' => $school->reg_siswa_open]] as $reg)
+                <form method="POST" action="{{ route('admin.schools.registration', $school) }}" class="d-flex align-items-center gap-3 py-3 {{ !$loop->first ? 'border-top' : '' }}">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="role" value="{{ $reg['role'] }}">
+                    <div class="flex-fill">
+                        <div class="fw-bold" style="font-size:14px;">{{ $reg['label'] }}</div>
+                        <span class="badge rounded-pill {{ $reg['open'] ? 'bg-success' : 'bg-secondary' }}">{{ $reg['open'] ? 'DIBUKA' : 'DITUTUP' }}</span>
+                    </div>
+                    <button class="btn btn-sm {{ $reg['open'] ? 'btn-outline-danger' : 'btn-success' }}" style="border-radius:10px;">{{ $reg['open'] ? 'Tutup' : 'Buka' }}</button>
+                </form>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="section-card h-100">
+            <div class="section-card-head d-flex justify-content-between align-items-center">
+                <h2 class="section-card-title"><i class="bi bi-sliders me-2" style="color:var(--blue);"></i>Fitur Sekolah Ini</h2>
+                <a href="{{ route('admin.features') }}" class="btn btn-sm btn-outline-primary" style="border-radius:10px;">Default Global</a>
+            </div>
+            <div class="section-card-body" style="max-height:420px;overflow-y:auto;">
+                @foreach($featureFlags as $flag)
+                <form method="POST" action="{{ route('admin.schools.feature.toggle', $school) }}" class="d-flex align-items-center gap-3 py-2 {{ !$loop->first ? 'border-top' : '' }}">
+                    @csrf @method('PATCH')
+                    <input type="hidden" name="key" value="{{ $flag['key'] }}">
+                    <div class="flex-fill">
+                        <div class="fw-bold" style="font-size:13.5px;">{{ $flag['label'] }}</div>
+                        <div class="text-muted" style="font-size:11.5px;">{{ $flag['category'] }}</div>
+                    </div>
+                    <span class="badge rounded-pill {{ $flag['value'] ? 'bg-success' : 'bg-danger' }}">{{ $flag['currentStatus'] }}</span>
+                    <button class="btn btn-sm {{ $flag['value'] ? 'btn-outline-danger' : 'btn-outline-success' }}" style="border-radius:10px;">{{ $flag['value'] ? 'Off' : 'On' }}</button>
+                </form>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4">
     <div class="col-12">
         <div class="section-card">
