@@ -71,7 +71,7 @@
     <div id="storyCaption" style="position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));left:16px;right:16px;color:#fff;font-size:14px;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.6);"></div>
   </div>
   <script>
-    var storyData = @json(($storiesGrouped ?? collect())->map(fn($st) => ['id' => $st->id, 'img' => \App\Services\FirebaseStorageService::url($st->image), 'user' => $st->user->name, 'avatar' => $st->user->avatar_url, 'time' => $st->created_at->diffForHumans(), 'caption' => $st->caption])->values());
+    var storyData = {!! $storiesJson ?? '[]' !!};
     var storyTimer = null, storyList = [], storyIdx = 0;
     function openStory(id) {
       storyList = storyData; storyIdx = Math.max(0, storyList.findIndex(s => s.id === id));

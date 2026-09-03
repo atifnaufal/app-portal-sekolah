@@ -11,6 +11,7 @@ use App\Services\FirebaseStorageService;
 use App\Services\ImageSafetyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class GlobalPortalController extends Controller
@@ -19,22 +20,25 @@ class GlobalPortalController extends Controller
     {
         $me = UserContextHelper::user($request);
         $isSuper = $me && $me->isSuperAdmin();
+        $hasStories = Schema::hasTable('global_stories');
+        $hasModeration = Schema::hasColumn('global_posts', 'is_hidden');
 
         // Postingan tersembunyi (laporan) hanya terlihat Admin Pusat + badge.
         $posts = GlobalPost::with(['user.school', 'user.followers', 'school', 'likes.user', 'comments.user'])
-            ->when(! $isSuper, fn ($q) => $q->where('is_hidden', false))
+            ->when(! $isSuper && $hasModeration, fn ($q) => $q->where('is_hidden', false))
             ->latest()->paginate(15);
 
         // Cerita aktif (24 jam), grup per user — versi terbaru tiap user.
-        $storiesGrouped = GlobalStory::with('user')
-            ->active()->latest()
-            ->get()->groupBy('user_id')
-            ->map(fn ($g) => $g->first());
-        $myStory = $me ? $storiesGrouped->get($me->id) : null;
+        $storiesGrouped = $hasStories
+            ? GlobalStory::with('user')->active()->latest()->get()->groupBy('user_id')->map(fn ($g) => $g->first())
+            : collect();
+        $myStory = ($me && $hasStories) ? $storiesGrouped->get($me->id) : null;
 
         // Bersih-bersih oportunistik: hapus cerita kedaluwarsa (max 20).
         try {
-            GlobalStory::where('expires_at', '<=', now())->limit(20)->delete();
+            if ($hasStories) {
+                GlobalStory::where('expires_at', '<=', now())->limit(20)->delete();
+            }
         } catch (\Throwable $e) {
         }
 
@@ -51,6 +55,15 @@ class GlobalPortalController extends Controller
             'isSuper' => $isSuper,
             'storiesGrouped' => $storiesGrouped,
             'myStory' => $myStory,
+            // JSON viewer disiapkan di controller (ekspresi kompleks di @json merusak kompilasi Blade).
+            'storiesJson' => $storiesGrouped->map(fn ($st) => [
+                'id' => $st->id,
+                'img' => FirebaseStorageService::url($st->image),
+                'user' => $st->user->name,
+                'avatar' => $st->user->avatar_url,
+                'time' => $st->created_at->diffForHumans(),
+                'caption' => $st->caption,
+            ])->values()->toJson(),
         ]);
     }
 
@@ -103,6 +116,7 @@ class GlobalPortalController extends Controller
         if (! $user) {
             UserContextHelper::abortUnauthorized($request);
         }
+        abort_unless(Schema::hasTable('global_stories'), 503, 'Fitur Cerita belum siap (migrasi berjalan). Coba lagi sebentar.');
         $data = $request->validate([
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'caption' => ['nullable', 'string', 'max:200'],
@@ -145,6 +159,7 @@ class GlobalPortalController extends Controller
             UserContextHelper::abortUnauthorized($request);
         }
         abort_if($post->user_id === $uid, 400, 'Tidak bisa melaporkan postingan sendiri.');
+        abort_unless(Schema::hasColumn('global_posts', 'reports_count'), 503, 'Fitur Laporan belum siap (migrasi berjalan). Coba lagi sebentar.');
 
         $post->increment('reports_count');
         $post->refresh();

@@ -113,4 +113,76 @@ class GlobalPortalTest extends TestCase
             ->assertOk()
             ->assertDontSee('name="school_id"', false);
     }
+
+    public function test_mobile_portal_renders_for_guru(): void
+    {
+        $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 's1-m', 'is_active' => true]);
+        $guru = $this->makeGuru($school, 'gm@t.id');
+        GlobalPost::create(['user_id' => $guru->id, 'school_id' => $school->id, 'content' => 'halo mobile']);
+
+        $this->withServerVariables(['HTTP_USER_AGENT' => 'Mozilla/5.0 (Linux; Android 13; Mobile)'])
+            ->withSession($this->sessionFor($guru))
+            ->get(route('global.portal'))
+            ->assertOk()
+            ->assertSee('halo mobile');
+    }
+
+    public function test_super_admin_sees_hidden_posts_with_badge(): void
+    {
+        $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 's1-h', 'is_active' => true]);
+        $guru = $this->makeGuru($school, 'gh@t.id');
+        $post = GlobalPost::create(['user_id' => $guru->id, 'school_id' => $school->id,
+            'content' => 'rahasia', 'is_hidden' => true, 'reports_count' => 5]);
+        $super = User::create([
+            'name' => 'Pusat', 'email' => 'pusat@gp.id', 'password' => Hash::make('secret123'),
+            'role' => 'admin', 'aktif' => true, 'nik' => 'ADMGPH', 'no_hp' => '081', 'school_id' => null,
+        ]);
+
+        // Guru tidak melihat postingan tersembunyi.
+        $this->withServerVariables(['HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'])
+            ->withSession($this->sessionFor($guru))
+            ->get(route('global.portal'))
+            ->assertOk()
+            ->assertDontSee('rahasia');
+
+        // Super admin melihat + badge + bisa unhide.
+        $this->withServerVariables(['HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'])
+            ->withSession(['user_id' => $super->id, 'user_role' => 'admin', 'admin_name' => 'Pusat',
+                'is_super_admin' => true, 'school_id' => null])
+            ->get(route('global.portal'))
+            ->assertOk()
+            ->assertSee('rahasia');
+
+        $this->withSession(['user_id' => $super->id, 'user_role' => 'admin', 'admin_name' => 'Pusat',
+                'is_super_admin' => true, 'school_id' => null])
+            ->patch(route('admin.portal.unhide', $post))
+            ->assertRedirect();
+
+        $this->assertFalse($post->fresh()->is_hidden);
+    }
+
+    public function test_portal_renders_when_new_tables_missing(): void
+    {
+        // Simulasi migrasi cerita/moderasi belum jalan di server.
+        \Illuminate\Support\Facades\Schema::dropIfExists('global_stories');
+        \Illuminate\Support\Facades\Schema::table('global_posts', function ($t) {
+            $t->dropIndex(['is_hidden']);
+        });
+        \Illuminate\Support\Facades\Schema::table('global_posts', function ($t) {
+            $t->dropColumn(['reports_count', 'is_hidden']);
+        });
+
+        $school = School::create(['name' => 'S1', 'city' => 'C', 'slug' => 's1-n', 'is_active' => true]);
+        $guru = $this->makeGuru($school, 'gn@t.id');
+
+        $this->withServerVariables(['HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'])
+            ->withSession($this->sessionFor($guru))
+            ->get(route('global.portal'))
+            ->assertOk();
+
+        $this->withServerVariables(['HTTP_USER_AGENT' => 'Mozilla/5.0 (Linux; Android 13; Mobile)'])
+            ->withSession($this->sessionFor($guru))
+            ->get(route('global.portal'))
+            ->assertOk();
+    }
 }
