@@ -174,6 +174,7 @@ Route::middleware(['role:admin', 'admin.desktop'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/admin/features', [AdminController::class, 'features'])->name('admin.features');
     Route::patch('/admin/features/toggle', [AdminController::class, 'featureToggle'])->name('admin.features.toggle');
+    Route::patch('/admin/features/reset', [AdminController::class, 'featureReset'])->name('admin.features.reset');
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::put('/admin/users/{user}', [AdminController::class, 'updateUser'])->name('admin.user.update');
     Route::delete('/admin/users/{user}', [AdminController::class, 'destroyUser'])->name('admin.user.destroy');

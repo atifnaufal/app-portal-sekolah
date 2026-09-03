@@ -352,22 +352,48 @@ class AdminController extends Controller
         return back()->with('success', 'Pengaturan berhasil diperbarui.');
     }
 
-    // Admin pusat — fitur management
+    // Admin pusat — fitur management PER SEKOLAH (pilih ID sekolah dulu).
     public function features(): View
     {
         $me = UserContextHelper::user();
         abort_unless($me && $me->isSuperAdmin(), 403);
 
-        $featureFlags = \App\Helpers\FeatureHelper::KEYS;
+        $schools = School::orderBy('name')->get(['id', 'name', 'city', 'is_active']);
+        $schoolId = request('school_id') ? (int) request('school_id') : ($schools->first()?->id);
+        $school = $schoolId ? School::find($schoolId) : null;
 
+        $overrides = $school
+            ? \App\Models\SchoolFeature::where('school_id', $school->id)->pluck('is_enabled', 'feature_key')
+            : collect();
+
+        $featureFlags = \App\Helpers\FeatureHelper::KEYS;
         foreach ($featureFlags as &$flag) {
-            $flag['value'] = (bool) Setting::getValue($flag['key'], true);
+            $flag['value'] = $school
+                ? \App\Helpers\FeatureHelper::forSchool($school->id, $flag['key'])
+                : (bool) Setting::getValue($flag['key'], true);
             $flag['currentStatus'] = $flag['value'] ? 'Aktif' : 'Nonaktif';
             $flag['statusColor'] = $flag['value'] ? 'success' : 'danger';
+            $flag['isOverride'] = $overrides->has($flag['key']);
+            $flag['globalValue'] = (bool) Setting::getValue($flag['key'], true);
         }
         unset($flag);
 
-        return view('admin.features', compact('featureFlags'));
+        return view('admin.features', compact('featureFlags', 'schools', 'school'));
+    }
+
+    // Hapus override per-sekolah → kembali ikut default global.
+    public function featureReset(Request $request): RedirectResponse
+    {
+        $me = UserContextHelper::user();
+        abort_unless($me && $me->isSuperAdmin(), 403);
+
+        $key = $request->input('key');
+        $schoolId = (int) $request->input('school_id');
+        abort_unless(in_array($key, \App\Helpers\FeatureHelper::keys(), true) && $schoolId, 400);
+
+        \App\Models\SchoolFeature::where('school_id', $schoolId)->where('feature_key', $key)->delete();
+
+        return back()->with('success', 'Fitur dikembalikan ke default global.');
     }
 
     public function featureToggle(Request $request): RedirectResponse
