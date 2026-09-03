@@ -24,3 +24,14 @@ Broadcast::channel('portal-chat.{kelasId}', function ($user, $kelasId) {
 
     return true;
 });
+
+// Channel private per-GRUP chat untuk pesan realtime. Hanya member approved
+// yang boleh subscribe (pending/undangan-belum-approve tidak boleh masuk).
+Broadcast::channel('portal-chat-group.{groupId}', function ($user, $groupId) {
+    $group = \App\Models\ChatGroup::find($groupId);
+    if (! $group) {
+        return false;
+    }
+
+    return $group->isApprovedMember((int) $user->id);
+});

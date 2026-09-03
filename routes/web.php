@@ -24,7 +24,13 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SppController;
 use App\Http\Controllers\TugasController;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
+
+// Rute otorisasi kanal WebSocket (dipanggil Echo.js saat subscribe private channel,
+// mis. portal-chat-group.{id}). Dipanggil dengan ajax + sesi web (auth scol prop melalui
+// session; mobile/Capacitor mengirim token lewat header & dibawa $request->user()).
+Broadcast::routes();
 
 Route::get('/', function () {
     if (session('user_id') || \Illuminate\Support\Facades\Auth::check()) return redirect()->route('dashboard');
