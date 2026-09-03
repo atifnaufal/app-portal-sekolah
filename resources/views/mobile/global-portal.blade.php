@@ -181,10 +181,13 @@
   <div id="camLiveUI" style="position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));left:0;right:0;z-index:2;">
     <div id="camFilters" style="display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none;">
       <button data-f="none" class="cam-filter" style="flex-shrink:0;border:2px solid #fff;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Normal</button>
-      <button data-f="brightness(1.1) saturate(1.25) contrast(1.05)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Cerah</button>
-      <button data-f="saturate(1.8) contrast(1.1)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Vivid</button>
-      <button data-f="grayscale(1)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Mono</button>
-      <button data-f="sepia(.8)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Vintage</button>
+      <button data-f="contrast(1.2) saturate(1.35)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Clarendon</button>
+      <button data-f="sepia(.35) contrast(1.05) brightness(1.05) saturate(1.4)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Juno</button>
+      <button data-f="saturate(.85) brightness(1.08) contrast(.95)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Lark</button>
+      <button data-f="sepia(.5) contrast(.9) brightness(1.05) saturate(.9)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Gingham</button>
+      <button data-f="grayscale(1) contrast(1.15) brightness(1.05)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Moon</button>
+      <button data-f="sepia(.4) saturate(.7) brightness(1.02)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Slumber</button>
+      <button data-f="saturate(1.1) contrast(1.05) brightness(1.08)" class="cam-filter" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Crema</button>
     </div>
     <div style="display:flex;justify-content:center;">
       <button onclick="captureStory()" style="width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.4);font-size:26px;color:#0f172a;"><i class="bi bi-camera-fill"></i></button>
@@ -198,6 +201,9 @@
       <button data-fx="none" class="cam-fx" style="flex-shrink:0;border:2px solid #fff;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Normal</button>
       <button data-fx="beauty" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Beauty</button>
       <button data-fx="glasses" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Kacamata</button>
+      <button data-fx="starglasses" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Bintang</button>
+      <button data-fx="cat" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Kucing</button>
+      <button data-fx="dog" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Anjing</button>
       <button data-fx="crown" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Mahkota</button>
       <button data-fx="hearts" class="cam-fx" style="flex-shrink:0;border:2px solid transparent;background:rgba(255,255,255,.15);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;">Hati</button>
     </div>
@@ -347,7 +353,103 @@
       applyFxOnCanvas(c, name, msg);
     }
   }
-  function drawHeart(ctx, x, y, s, color) {
+  function faceGeom(lm, w, h) {
+    var L = { x: (lm[33].x + lm[133].x) / 2 * w, y: (lm[33].y + lm[133].y) / 2 * h };
+    var R = { x: (lm[362].x + lm[263].x) / 2 * w, y: (lm[362].y + lm[263].y) / 2 * h };
+    var dist = Math.hypot(R.x - L.x, R.y - L.y) || w * 0.2;
+    return {
+      L: L, R: R, dist: dist,
+      ang: Math.atan2(R.y - L.y, R.x - L.x),
+      cx: (L.x + R.x) / 2, cy: (L.y + R.y) / 2,
+      nose: { x: lm[1].x * w, y: lm[1].y * h },
+      top: { x: lm[10].x * w, y: lm[10].y * h },
+      cheekL: { x: lm[234].x * w, y: lm[234].y * h },
+      cheekR: { x: lm[454].x * w, y: lm[454].y * h }
+    };
+  }
+  function drawStar(ctx, x, y, r, color) {
+    ctx.save(); ctx.translate(x, y); ctx.beginPath();
+    for (var i = 0; i < 10; i++) {
+      var rr = (i % 2 === 0) ? r : r * 0.45;
+      var a = -Math.PI / 2 + i * Math.PI / 5;
+      ctx[i === 0 ? 'moveTo' : 'lineTo'](Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.stroke(); ctx.restore();
+  }
+  function drawStarGlasses(ctx, lm, w, h) {
+    var g = faceGeom(lm, w, h);
+    ctx.save(); ctx.translate(g.cx, g.cy); ctx.rotate(g.ang);
+    var r = g.dist * 0.34;
+    [[-g.dist * 0.5, 0], [g.dist * 0.5, 0]].forEach(function (p) { drawStar(ctx, p[0], p[1], r, '#fbbf24'); });
+    ctx.strokeStyle = '#b45309'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(-g.dist * 0.5 + r * 0.6, 0); ctx.lineTo(g.dist * 0.5 - r * 0.6, 0); ctx.stroke();
+    ctx.restore();
+  }
+  function drawCat(ctx, lm, w, h) {
+    var g = faceGeom(lm, w, h);
+    var fw = Math.hypot(g.cheekR.x - g.cheekL.x, g.cheekR.y - g.cheekL.y) || w * 0.4;
+    var ear = fw * 0.30;
+    ctx.save(); ctx.translate(g.top.x, g.top.y); ctx.rotate(g.ang);
+    ctx.fillStyle = '#1f2937';
+    [[-1, 0], [1, 0]].forEach(function (s) {
+      var ex = s[0] * fw * 0.30, ey = -fw * 0.12;
+      ctx.beginPath();
+      ctx.moveTo(ex - ear * 0.55, ey + ear * 0.5);
+      ctx.lineTo(ex - ear * 0.15, ey - ear * 0.75);
+      ctx.lineTo(ex + ear * 0.45, ey + ear * 0.15);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#f9a8d4';
+      ctx.beginPath();
+      ctx.moveTo(ex - ear * 0.28, ey + ear * 0.28);
+      ctx.lineTo(ex - ear * 0.12, ey - ear * 0.32);
+      ctx.lineTo(ex + ear * 0.22, ey + ear * 0.10);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#1f2937';
+    });
+    // Kumis + hidung kucing.
+    ctx.strokeStyle = 'rgba(31,41,55,.85)'; ctx.lineWidth = 2;
+    [-1, 1].forEach(function (s) {
+      for (var i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(s * fw * 0.10, g.dist * 0.55 + i * 7 - (g.top.y - g.cy) * 0);
+        ctx.lineTo(s * (fw * 0.10 + fw * 0.22), g.dist * 0.55 + i * 7 + (i - 1) * 4);
+        ctx.stroke();
+      }
+    });
+    var nx = 0, ny = (g.nose.y - g.top.y);
+    ctx.fillStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.moveTo(nx - 7, ny - 4); ctx.lineTo(nx + 7, ny - 4); ctx.lineTo(nx, ny + 5);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawDog(ctx, lm, w, h) {
+    var g = faceGeom(lm, w, h);
+    var fw = Math.hypot(g.cheekR.x - g.cheekL.x, g.cheekR.y - g.cheekL.y) || w * 0.4;
+    ctx.save(); ctx.translate(g.top.x, g.top.y); ctx.rotate(g.ang);
+    ctx.fillStyle = '#92400e';
+    [[-1, 0], [1, 0]].forEach(function (s) {
+      ctx.save();
+      ctx.translate(s * fw * 0.42, fw * 0.02);
+      ctx.rotate(s * 0.35);
+      ctx.beginPath(); ctx.ellipse(0, 0, fw * 0.13, fw * 0.26, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath(); ctx.ellipse(0, fw * 0.05, fw * 0.07, fw * 0.16, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#92400e';
+      ctx.restore();
+    });
+    // Hidung + lidah anjing.
+    var ny = (g.nose.y - g.top.y);
+    ctx.fillStyle = '#111827';
+    ctx.beginPath(); ctx.ellipse(0, ny, fw * 0.09, fw * 0.07, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#f87171';
+    ctx.beginPath(); ctx.ellipse(0, ny + fw * 0.16, fw * 0.06, fw * 0.10, 0, 0, 7); ctx.fill();
+    ctx.restore();
+    // Bintik di pipi.
+    ctx.fillStyle = 'rgba(146,64,14,.5)';
+    drawHeart(ctx, g.cheekL.x, g.cheekL.y, Math.max(w, h) * 0.02, 'rgba(146,64,14,.45)');
+  }
     ctx.save(); ctx.translate(x, y); ctx.scale(s / 30, s / 30);
     ctx.beginPath();
     ctx.moveTo(0, 10);
@@ -432,6 +534,9 @@
       var lm = await window.__mpDetect(c);
       if (!lm) throw new Error('no-face');
       if (name === 'glasses') drawGlasses(ctx, lm, c.width, c.height);
+      if (name === 'starglasses') drawStarGlasses(ctx, lm, c.width, c.height);
+      if (name === 'cat') drawCat(ctx, lm, c.width, c.height);
+      if (name === 'dog') drawDog(ctx, lm, c.width, c.height);
       if (name === 'crown') drawCrown(ctx, lm, c.width, c.height);
       if (name === 'hearts') drawHeartsFx(ctx, lm, c.width, c.height);
       document.getElementById('camPreview').src = c.toDataURL('image/jpeg', 0.9);
