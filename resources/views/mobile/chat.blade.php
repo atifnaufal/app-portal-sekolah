@@ -41,13 +41,6 @@
         background: radial-gradient(circle, rgba(99,102,241,.3) 0%, transparent 70%);
     }
 
-    .header-title {
-        padding: 24px 20px 12px; display: flex; align-items: center; gap: 10px;
-        font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
-        color: #94a3b8;
-    }
-    .header-title i { font-size: 16px; }
-
     .section-label {
         padding: 24px 20px 12px; display: flex; align-items: center; gap: 10px;
         font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
@@ -73,10 +66,10 @@
     .chat-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }
 
     .chat-info { flex: 1; min-width: 0; }
-    .chat-name { font-weight: 800; font-size: 16px; color: var(--navy); margin-bottom: 2px; }
-    .chat-msg { font-size: 13px; color: #64748b; font-weight: 500; }
+    .chat-name { font-weight: 800; font-size: 16px; color: var(--navy); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chat-msg { font-size: 13px; color: #64748b; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .chat-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .chat-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
     .chat-time { font-size: 11px; color: #94a3b8; font-weight: 700; }
     .unread-badge {
         min-width: 20px; height: 20px; border-radius: 10px; background: var(--blue);
@@ -110,6 +103,21 @@
     }
     .ic-btn.accept { background: #22c55e; }
     .ic-btn.reject { background: #cbd5e1; color: #475569; }
+
+    .empty-search {
+        text-align: center; padding: 40px 20px; color: #94a3b8; display: none;
+    }
+    .empty-search i { font-size: 40px; margin-bottom: 12px; display: block; }
+    .empty-search .es-text { font-size: 14px; font-weight: 700; }
+
+    .ptr-indicator {
+        position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+        background: #fff; border-radius: 20px; padding: 8px 18px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12); font-size: 12px; font-weight: 700;
+        color: var(--blue); display: none; z-index: 999;
+        animation: ptrPulse 1s ease infinite;
+    }
+    @keyframes ptrPulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
 </style>
 
 <div class="chat-app">
@@ -121,7 +129,9 @@
         <a href="{{ route('chat.create') }}" class="cg-fab" title="Buat grup baru"><i class="bi bi-person-plus-fill"></i></a>
     </div>
 
-    <div class="page-container">
+    <div class="ptr-indicator" id="ptrIndicator"><i class="bi bi-arrow-clockwise me-1"></i> Memuat ulang...</div>
+
+    <div class="page-container" id="pageContainer">
         <header class="header-block">
             <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.6); text-transform: uppercase;">Message Center</div>
             <h1 class="mt-2 text-white" style="font-size: 24px; font-weight: 900; letter-spacing: -0.02em;">Percakapan</h1>
@@ -136,24 +146,29 @@
             </div>
         </div>
 
-        <main>
+        <div class="empty-search" id="emptySearch">
+            <i class="bi bi-search"></i>
+            <div class="es-text">Tidak ditemukan</div>
+        </div>
+
+        <main id="chatListMain">
             {{-- Undangan grup pending --}}
             @if(isset($pendingInvites) && $pendingInvites->count() > 0)
-                <div class="section-label animate-up" style="animation-delay: 0.05s;">
+                <div class="section-label animate-up invite-section" style="animation-delay: 0.05s;">
                     <i class="bi bi-envelope-plus-fill" style="color: #6366f1;"></i> Undangan Masuk
                 </div>
                 @foreach($pendingInvites as $pinv)
-                    <div class="invite-card animate-up">
+                    <div class="invite-card animate-up invite-item" data-search="{{ strtolower($pinv->name) }}">
                         <div class="ic-icon"><i class="bi bi-people-fill"></i></div>
                         <div style="flex:1; min-width:0;">
-                            <div style="font-weight:800; font-size:14px; color:var(--navy);">{{ $pinv->name }}</div>
+                            <div class="chat-name" style="font-size:14px;">{{ $pinv->name }}</div>
                             <div style="font-size:11px; color:#64748b; font-weight:600;">
                                 {{ $pinv->approvedMembers->count() }} anggota · diundang {{ $pinv->owner?->name ?? 'seseorang' }}
                             </div>
                         </div>
                         <div class="ic-actions">
-                            <button class="ic-btn accept" onclick="acceptInvite({{ $pinv->id }}, this)"><i class="bi bi-check-lg"></i> Terima</button>
-                            <button class="ic-btn reject" onclick="rejectInvite({{ $pinv->id }}, this)"><i class="bi bi-x-lg"></i></button>
+                            <button type="button" class="ic-btn accept" onclick="acceptInvite({{ $pinv->id }}, this)"><i class="bi bi-check-lg"></i> Terima</button>
+                            <button type="button" class="ic-btn reject" onclick="rejectInvite({{ $pinv->id }}, this)"><i class="bi bi-x-lg"></i></button>
                         </div>
                     </div>
                 @endforeach
@@ -161,7 +176,7 @@
 
             {{-- Section Chat Pribadi --}}
             @if($privateGroups->count() > 0)
-                <div class="section-label animate-up" style="animation-delay: 0.1s;">
+                <div class="section-label animate-up private-section" style="animation-delay: 0.1s;">
                     <i class="bi bi-chat-heart-fill" style="color: #ef4444;"></i> Chat Pribadi
                 </div>
                 @foreach($privateGroups as $g)
@@ -178,11 +193,18 @@
                             @endif
                         </div>
                         <div class="chat-info">
-                            <div class="chat-name text-truncate" style="display:flex;gap:6px;align-items:center">{{ $name }} @if($other && $other->isOnline())<span style="font-size:9px;padding:2px 6px;border-radius:999px;background:#dcfce7;color:#166534;font-weight:800">ONLINE</span>@endif</div>
-                            <div class="chat-msg text-truncate" style="font-size:11px;color:{{ ($other && $other->isOnline())?'#22c55e':'#94a3b8' }};font-weight:600">{{ $other ? $other->last_seen : '' }}</div>
-                            <div class="chat-msg text-truncate">
+                            <div class="chat-name" style="display:flex;gap:6px;align-items:center">
+                                {{ $name }}
+                                @if($other && $other->isOnline())<span style="font-size:9px;padding:2px 6px;border-radius:999px;background:#dcfce7;color:#166534;font-weight:800">ONLINE</span>@endif
+                            </div>
+                            <div class="chat-msg" style="font-size:11px;color:{{ ($other && $other->isOnline())?'#22c55e':'#94a3b8' }};font-weight:600">{{ $other ? $other->last_seen : '' }}</div>
+                            <div class="chat-msg">
                                 @if($g->lastMessage)
-                                    {{ $g->lastMessage->user_id === $user->id ? 'Anda: ' : '' }}{{ $g->lastMessage->pesan }}
+                                    @if($g->lastMessage->deleted_at)
+                                        <span style="font-style:italic;opacity:0.7;">Pesan dihapus</span>
+                                    @else
+                                        {{ $g->lastMessage->user_id === $user->id ? 'Anda: ' : '' }}{{ $g->lastMessage->pesan }}
+                                    @endif
                                 @else
                                     <span style="opacity: 0.5; font-style: italic;">Mulai chat pribadi...</span>
                                 @endif
@@ -199,7 +221,7 @@
             @endif
 
             {{-- Section Grup Kelas --}}
-            <div class="section-label animate-up" style="animation-delay: 0.2s;">
+            <div class="section-label animate-up class-section" style="animation-delay: 0.2s;">
                 <i class="bi bi-mortarboard-fill" style="color: #10b981;"></i> Lingkup Kelas
             </div>
             @forelse($classGroups as $g)
@@ -212,29 +234,33 @@
                         @endif
                     </div>
                     <div class="chat-info">
-                        <div class="chat-name text-truncate">{{ $g->name }}</div>
-                        <div class="chat-msg text-truncate">
+                        <div class="chat-name">{{ $g->name }}</div>
+                        <div class="chat-msg">
                             @if($g->lastMessage)
-                                <span style="font-weight: 700; color: var(--navy);">{{ $g->lastMessage->user_id === $user->id ? 'Anda: ' : explode(' ', $g->lastMessage->user->name)[0].': ' }}</span>{{ $g->lastMessage->pesan }}
+                                @if($g->lastMessage->deleted_at)
+                                    <span style="font-style:italic;opacity:0.7;">Pesan dihapus</span>
+                                @else
+                                    <span style="font-weight: 700; color: var(--navy);">{{ $g->lastMessage->user_id === $user->id ? 'Anda: ' : explode(' ', $g->lastMessage->user->name)[0].': ' }}</span>{{ $g->lastMessage->pesan }}
+                                @endif
                             @else
                                 <span style="opacity: 0.5; font-style: italic;">Grup baru dibuat</span>
                             @endif
                         </div>
                     </div>
-                        <div class="chat-meta">
-                            <div class="chat-time">{{ $g->lastMessage ? $g->lastMessage->created_at->format('H:i') : '' }}</div>
-                            @if(isset($unreadMap[$g->id]) && $unreadMap[$g->id] > 0)
-                                <div class="unread-badge">{{ $unreadMap[$g->id] }}</div>
-                            @endif
-                        </div>
-                    </a>
+                    <div class="chat-meta">
+                        <div class="chat-time">{{ $g->lastMessage ? $g->lastMessage->created_at->format('H:i') : '' }}</div>
+                        @if(isset($unreadMap[$g->id]) && $unreadMap[$g->id] > 0)
+                            <div class="unread-badge">{{ $unreadMap[$g->id] }}</div>
+                        @endif
+                    </div>
+                </a>
             @empty
                 <div class="text-center py-4 text-muted small">Belum ada grup kelas.</div>
             @endforelse
 
             {{-- Section Grup Eskul --}}
             @if($eskulGroups->count() > 0)
-                <div class="section-label animate-up" style="animation-delay: 0.3s;">
+                <div class="section-label animate-up eskul-section" style="animation-delay: 0.3s;">
                     <i class="bi bi-trophy-fill" style="color: #8b5cf6;"></i> Ekstrakurikuler
                 </div>
                 @foreach($eskulGroups as $g)
@@ -247,10 +273,14 @@
                             @endif
                         </div>
                         <div class="chat-info">
-                            <div class="chat-name text-truncate">{{ $g->name }}</div>
-                            <div class="chat-msg text-truncate">
+                            <div class="chat-name">{{ $g->name }}</div>
+                            <div class="chat-msg">
                                 @if($g->lastMessage)
-                                    <span style="font-weight: 700; color: var(--navy);">{{ $g->lastMessage->user_id === $user->id ? 'Anda: ' : explode(' ', $g->lastMessage->user->name)[0].': ' }}</span>{{ $g->lastMessage->pesan }}
+                                    @if($g->lastMessage->deleted_at)
+                                        <span style="font-style:italic;opacity:0.7;">Pesan dihapus</span>
+                                    @else
+                                        <span style="font-weight: 700; color: var(--navy);">{{ $g->lastMessage->user_id === $user->id ? 'Anda: ' : explode(' ', $g->lastMessage->user->name)[0].': ' }}</span>{{ $g->lastMessage->pesan }}
+                                    @endif
                                 @else
                                     <span style="opacity: 0.5; font-style: italic;">Belum ada aktifitas</span>
                                 @endif
@@ -265,9 +295,10 @@
                     </a>
                 @endforeach
             @endif
-            {{-- Section Grup Custom (fitur WhatsApp-like) --}}
+
+            {{-- Section Grup Custom --}}
             @if(isset($customGroups) && $customGroups->count() > 0)
-                <div class="section-label animate-up" style="animation-delay: 0.32s;">
+                <div class="section-label animate-up custom-section" style="animation-delay: 0.32s;">
                     <i class="bi bi-people-fill" style="color: #6366f1;"></i> Grup Saya
                 </div>
                 @foreach($customGroups as $g)
@@ -280,12 +311,14 @@
                             @endif
                         </div>
                         <div class="chat-info">
-                            <div class="chat-name text-truncate">{{ $g->name }}</div>
-                            <div class="chat-msg text-truncate">
-                                @if($g->lastMessage && $g->lastMessage->user_id === $user->id)
-                                    <span style="font-weight: 700; color: var(--navy);">Anda: </span>@if($g->lastMessage->deleted_at) Pesan dihapus @else{{ $g->lastMessage->pesan }}@endif
-                                @elseif($g->lastMessage)
-                                    <span style="font-weight: 700; color: var(--navy);">{{ explode(' ', $g->lastMessage->user->name)[0].': ' }}</span>@if($g->lastMessage->deleted_at) Pesan dihapus @else{{ $g->lastMessage->pesan }}@endif
+                            <div class="chat-name">{{ $g->name }}</div>
+                            <div class="chat-msg">
+                                @if($g->lastMessage)
+                                    @if($g->lastMessage->deleted_at)
+                                        <span style="font-style:italic;opacity:0.7;">Pesan dihapus</span>
+                                    @else
+                                        <span style="font-weight: 700; color: var(--navy);">{{ $g->lastMessage->user_id === $user->id ? 'Anda: ' : explode(' ', $g->lastMessage->user->name)[0].': ' }}</span>{{ $g->lastMessage->pesan }}
+                                    @endif
                                 @else
                                     <span style="opacity: 0.5; font-style: italic;">Grup dibuat</span>
                                 @endif
@@ -305,32 +338,103 @@
 </div>
 
 <script>
-    (function(){
-        var searchInput = document.getElementById('searchChat');
-        var rows = document.querySelectorAll('.chat-row');
-        if(!searchInput) return;
-        searchInput.addEventListener('input', function () {
-            var q = (this.value || '').toLowerCase().trim();
-            rows.forEach(function(r){
-                var n=(r.dataset.name||'').toLowerCase();
-                r.style.display = n.includes(q) ? 'flex' : 'none';
-            });
-        });
-    })();
+(function(){
+    var searchInput = document.getElementById('searchChat');
+    var chatRows = document.querySelectorAll('.chat-row');
+    var sectionLabels = document.querySelectorAll('.section-label');
+    var inviteItems = document.querySelectorAll('.invite-item');
+    var inviteSections = document.querySelectorAll('.invite-section');
+    var emptySearch = document.getElementById('emptySearch');
+    if(!searchInput) return;
 
-    function acceptInvite(groupId, btn) {
-        if (btn) { btn.disabled = true; }
-        fetch('/chat/' + groupId + '/accept', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content } })
-            .then(r => r.json())
-            .then(d => { if (d.ok) { window.location = '/chat/' + groupId; } else { alert('Gagal menerima undangan'); btn.disabled = false; } })
-            .catch(() => { alert('Terjadi kesalahan'); btn.disabled = false; });
+    searchInput.addEventListener('input', function () {
+        var q = (this.value || '').toLowerCase().trim();
+        var visibleCount = 0;
+
+        chatRows.forEach(function(r){
+            var n = (r.dataset.name || '').toLowerCase();
+            var show = q === '' || n.includes(q);
+            r.style.display = show ? 'flex' : 'none';
+            if(show) visibleCount++;
+        });
+
+        inviteItems.forEach(function(r){
+            var n = (r.dataset.search || '').toLowerCase();
+            var show = q === '' || n.includes(q);
+            r.style.display = show ? 'flex' : 'none';
+            if(show) visibleCount++;
+        });
+
+        sectionLabels.forEach(function(s){
+            if(q === '') { s.style.display = ''; return; }
+            var next = s.nextElementSibling;
+            var hasVisible = false;
+            while(next && !next.classList.contains('section-label')){
+                if(next.style.display !== 'none') hasVisible = true;
+                next = next.nextElementSibling;
+            }
+            s.style.display = hasVisible ? '' : 'none';
+        });
+
+        inviteSections.forEach(function(s){
+            if(q === '') { s.style.display = ''; return; }
+            var next = s.nextElementSibling;
+            var hasVisible = false;
+            while(next && !next.classList.contains('section-label')){
+                if(next.style.display !== 'none') hasVisible = true;
+                next = next.nextElementSibling;
+            }
+            s.style.display = hasVisible ? '' : 'none';
+        });
+
+        if(emptySearch) emptySearch.style.display = (q !== '' && visibleCount === 0) ? 'block' : 'none';
+    });
+
+    // Pull-to-refresh
+    var ptrIndicator = document.getElementById('ptrIndicator');
+    var pageContainer = document.getElementById('pageContainer');
+    var startY = 0;
+    var pulling = false;
+    if(pageContainer) {
+        pageContainer.addEventListener('touchstart', function(e){
+            if(window.scrollY === 0 && e.touches.length === 1) {
+                startY = e.touches[0].clientY;
+                pulling = true;
+            }
+        }, {passive:true});
+        pageContainer.addEventListener('touchmove', function(e){
+            if(!pulling) return;
+            var diff = e.touches[0].clientY - startY;
+            if(diff > 60 && window.scrollY === 0) {
+                if(ptrIndicator) ptrIndicator.style.display = 'block';
+            }
+        }, {passive:true});
+        pageContainer.addEventListener('touchend', function(){
+            if(ptrIndicator && ptrIndicator.style.display === 'block') {
+                setTimeout(function(){ window.location.reload(); }, 600);
+            }
+            pulling = false;
+        }, {passive:true});
     }
-    function rejectInvite(groupId, btn) {
-        if (btn) { btn.disabled = true; }
-        fetch('/chat/' + groupId + '/reject', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content } })
-            .then(r => r.json())
-            .then(d => { if (d.ok) { const card = btn.closest('.invite-card'); if (card) card.style.display = 'none'; } else { btn.disabled = false; } })
-            .catch(() => { btn.disabled = false; });
-    }
+})();
+
+function acceptInvite(groupId, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>'; }
+    fetch('/chat/' + groupId + '/accept', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content } })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if (d.ok) { window.location = '/chat/' + groupId; } else { alert('Gagal menerima undangan'); if(btn){ btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Terima'; } } })
+        .catch(function(){ alert('Terjadi kesalahan'); if(btn){ btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Terima'; } });
+}
+function rejectInvite(groupId, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat"></i>'; }
+    fetch('/chat/' + groupId + '/reject', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content } })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if (d.ok) { var card = btn.closest('.invite-card'); if (card) { card.style.transition = 'all 0.3s'; card.style.opacity = '0'; card.style.transform = 'translateX(40px)'; setTimeout(function(){ card.style.display = 'none'; }, 300); } } else { btn.disabled = false; btn.innerHTML = '<i class="bi bi-x-lg"></i>'; } })
+        .catch(function(){ btn.disabled = false; btn.innerHTML = '<i class="bi bi-x-lg"></i>'; });
+}
 </script>
+<style>
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.spin { animation: spin 0.8s linear infinite; }
+</style>
 @endsection

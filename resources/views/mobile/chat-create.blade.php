@@ -26,27 +26,68 @@
     .cg-field {
         background: #fff; border-radius: 18px; border: 1px solid var(--line);
         padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+        transition: border-color 0.2s;
     }
+    .cg-field:focus-within { border-color: var(--blue); }
     .cg-field input { flex: 1; border: 0; outline: 0; font-size: 15px; font-weight: 600; color: var(--ink); background: transparent; }
-    .cg-member {
-        display: flex; align-items: center; gap: 14px; padding: 12px 6px;
-        border-bottom: 1px solid #f1f5f9; cursor: pointer;
+
+    .cg-search-wrap {
+        background: #fff; border-radius: 16px; border: 1px solid var(--line);
+        padding: 4px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
     }
+    .cg-search-wrap input { flex: 1; border: 0; outline: 0; font-size: 14px; color: var(--ink); background: transparent; padding: 8px 0; }
+    .cg-search-wrap input::placeholder { color: #94a3b8; }
+
+    /* Selected members preview */
+    .selected-preview {
+        display: flex; gap: 8px; padding: 12px 0; overflow-x: auto; margin-bottom: 8px;
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .selected-preview::-webkit-scrollbar { display: none; }
+    .sp-item {
+        display: flex; align-items: center; gap: 6px; background: var(--blue);
+        color: #fff; border-radius: 20px; padding: 5px 12px 5px 5px;
+        font-size: 12px; font-weight: 700; white-space: nowrap; flex-shrink: 0;
+        animation: spIn 0.2s ease;
+    }
+    @keyframes spIn { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+    .sp-item img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+    .sp-item .sp-remove {
+        width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.3);
+        display: flex; align-items: center; justify-content: center; font-size: 10px;
+        cursor: pointer; margin-left: 2px;
+    }
+
+    .cg-member {
+        display: flex; align-items: center; gap: 14px; padding: 12px 8px;
+        border-bottom: 1px solid #f1f5f9; cursor: pointer;
+        border-radius: 14px; transition: all 0.2s;
+    }
+    .cg-member.selected { background: #f0f4ff; }
     .cg-member:active { opacity: 0.7; }
-    .cg-member img { width: 46px; height: 46px; border-radius: 15px; object-fit: cover; background: #f1f5f9; }
+    .cg-member img { width: 46px; height: 46px; border-radius: 15px; object-fit: cover; background: #f1f5f9; flex-shrink: 0; }
+    .cg-member .cm-info { flex: 1; min-width: 0; }
+    .cg-member .cm-name { font-weight: 700; font-size: 14px; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cg-member .cm-role { font-size: 11px; color: #94a3b8; font-weight: 600; }
     .cg-check {
         width: 26px; height: 26px; border-radius: 50%; border: 2px solid #cbd5e1;
         display: flex; align-items: center; justify-content: center; color: #fff;
         transition: all 0.2s; flex-shrink: 0;
     }
     .cg-check.on { background: var(--blue); border-color: var(--blue); }
+
+    .cg-empty-search { text-align: center; padding: 30px; color: #94a3b8; font-size: 13px; display: none; }
+
     .cg-create {
         position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 20px; right: 20px; z-index: 1000;
         background: linear-gradient(135deg, var(--blue), #2563eb); color: #fff; border: 0;
         border-radius: 18px; padding: 16px; font-weight: 900; font-size: 15px;
         box-shadow: 0 16px 32px rgba(37,99,235,.35);
+        transition: all 0.2s;
     }
     .cg-create:disabled { opacity: 0.5; }
+    .cg-create:active { transform: scale(0.97); }
+    .cg-create .spinner-border { width: 16px; height: 16px; }
 </style>
 
 <div class="cg-app">
@@ -68,13 +109,22 @@
             <span id="selCount" style="margin-left:auto; color:var(--blue); font-size:12px;">0 dipilih</span>
         </div>
 
+        {{-- Selected members preview --}}
+        <div class="selected-preview" id="selectedPreview"></div>
+
+        {{-- Search --}}
+        <div class="cg-search-wrap">
+            <i class="bi bi-search" style="color: #94a3b8;"></i>
+            <input type="text" id="memberSearch" placeholder="Cari nama atau peran...">
+        </div>
+
         <div id="memberList">
             @forelse($candidates as $c)
-                <div class="cg-member" data-id="{{ $c->id }}" onclick="toggleSel(this)">
+                <div class="cg-member" data-id="{{ $c->id }}" data-search="{{ strtolower($c->name.' '.$c->role.' '.($c->kelas->nama ?? '')) }}" onclick="toggleSel(this)">
                     <img src="{{ $c->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($c->name).'&background=random' }}">
-                    <div style="flex:1; min-width:0;">
-                        <div style="font-weight:700; font-size:14px; color:var(--navy);">{{ $c->name }}</div>
-                        <div style="font-size:11px; color:#94a3b8; font-weight:600;">{{ ucfirst($c->role) }}{{ $c->kelas ? ' · '.$c->kelas->nama : '' }}</div>
+                    <div class="cm-info">
+                        <div class="cm-name">{{ $c->name }}</div>
+                        <div class="cm-role">{{ ucfirst($c->role) }}{{ $c->kelas ? ' · '.$c->kelas->nama : '' }}</div>
                     </div>
                     <div class="cg-check"><i class="bi bi-check-lg"></i></div>
                 </div>
@@ -82,37 +132,121 @@
                 <div style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">Tidak ada calon anggota ditemukan.</div>
             @endforelse
         </div>
+        <div class="cg-empty-search" id="emptySearch"><i class="bi bi-search" style="font-size:32px;display:block;margin-bottom:8px;"></i>Tidak ditemukan</div>
     </div>
 
-    <button class="cg-create" id="btnCreate" onclick="createGroup()">Buat Grup</button>
+    <button type="button" class="cg-create" id="btnCreate" onclick="createGroup()">Buat Grup</button>
 </div>
 
 <script>
-    let selected = [];
-    const selCount = document.getElementById('selCount');
-    const btnCreate = document.getElementById('btnCreate');
-    const groupName = document.getElementById('groupName');
+(function(){
+    var selected = [];
+    var memberMap = {};
+    var selCount = document.getElementById('selCount');
+    var btnCreate = document.getElementById('btnCreate');
+    var groupName = document.getElementById('groupName');
+    var memberSearch = document.getElementById('memberSearch');
+    var memberList = document.getElementById('memberList');
+    var selectedPreview = document.getElementById('selectedPreview');
+    var emptySearch = document.getElementById('emptySearch');
 
-    function toggleSel(el) {
-        const id = parseInt(el.dataset.id);
-        const idx = selected.indexOf(id);
-        if (idx >= 0) { selected.splice(idx, 1); el.classList.remove('on-checked'); el.querySelector('.cg-check').classList.remove('on'); }
-        else { selected.push(id); el.querySelector('.cg-check').classList.add('on'); }
+    // Build member map for quick lookup
+    document.querySelectorAll('#memberList .cg-member').forEach(function(el){
+        memberMap[el.dataset.id] = {
+            id: parseInt(el.dataset.id),
+            name: el.querySelector('.cm-name').textContent,
+            img: el.querySelector('img').src
+        };
+    });
+
+    window.toggleSel = function(el) {
+        var id = parseInt(el.dataset.id);
+        var idx = selected.indexOf(id);
+        var check = el.querySelector('.cg-check');
+        if (idx >= 0) {
+            selected.splice(idx, 1);
+            el.classList.remove('selected');
+            check.classList.remove('on');
+        } else {
+            selected.push(id);
+            el.classList.add('selected');
+            check.classList.add('on');
+        }
+        updateUI();
+    };
+
+    window.removeSelected = function(id) {
+        var idx = selected.indexOf(id);
+        if (idx >= 0) selected.splice(idx, 1);
+        var memberEl = document.querySelector('#memberList .cg-member[data-id="'+id+'"]');
+        if (memberEl) {
+            memberEl.classList.remove('selected');
+            memberEl.querySelector('.cg-check').classList.remove('on');
+        }
+        updateUI();
+    };
+
+    function updateUI() {
         selCount.textContent = selected.length + ' dipilih';
+        renderPreview();
     }
 
-    function createGroup() {
-        const name = groupName.value.trim();
-        if (!name) { groupName.focus(); groupName.style.borderColor = '#ef4444'; setTimeout(()=>groupName.style.borderColor='',1500); return; }
-        btnCreate.disabled = true; btnCreate.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Membuat...';
-        const fd = new FormData();
+    function renderPreview() {
+        selectedPreview.innerHTML = '';
+        selected.forEach(function(id){
+            var m = memberMap[id];
+            if(!m) return;
+            var div = document.createElement('div');
+            div.className = 'sp-item';
+            div.innerHTML = '<img src="'+m.img+'">'+m.name+'<span class="sp-remove" onclick="removeSelected('+id+')"><i class="bi bi-x"></i></span>';
+            selectedPreview.appendChild(div);
+        });
+    }
+
+    // Search filter
+    if(memberSearch) {
+        memberSearch.addEventListener('input', function(){
+            var q = this.value.toLowerCase().trim();
+            var visible = 0;
+            document.querySelectorAll('#memberList .cg-member').forEach(function(el){
+                var s = el.dataset.search || '';
+                var show = q === '' || s.includes(q);
+                el.style.display = show ? 'flex' : 'none';
+                if(show) visible++;
+            });
+            if(emptySearch) emptySearch.style.display = (q !== '' && visible === 0) ? 'block' : 'none';
+        });
+    }
+
+    // Enter to create
+    if(groupName) {
+        groupName.addEventListener('keydown', function(e){
+            if(e.key === 'Enter') { e.preventDefault(); createGroup(); }
+        });
+    }
+
+    window.createGroup = function() {
+        var name = groupName.value.trim();
+        if (!name) {
+            groupName.focus();
+            groupName.parentElement.style.borderColor = '#ef4444';
+            setTimeout(function(){ groupName.parentElement.style.borderColor = ''; }, 1500);
+            return;
+        }
+        btnCreate.disabled = true;
+        btnCreate.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Membuat...';
+        var fd = new FormData();
         fd.append('_token', document.querySelector('meta[name=csrf-token]').content);
         fd.append('name', name);
-        selected.forEach(id => fd.append('member_ids[]', id));
+        selected.forEach(function(id){ fd.append('member_ids[]', id); });
         fetch("{{ route('chat.storeGroup') }}", { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}, body: fd })
-            .then(r => r.json())
-            .then(d => { if(d.ok){ window.location.href = "/chat/" + d.id; } else { alert('Gagal membuat grup'); btnCreate.disabled=false; btnCreate.textContent='Buat Grup'; } })
-            .catch(() => { alert('Gagal membuat grup'); btnCreate.disabled=false; btnCreate.textContent='Buat Grup'; });
-    }
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                if(d.ok){ window.location.href = "/chat/" + d.id; }
+                else { alert(d.message || 'Gagal membuat grup'); btnCreate.disabled = false; btnCreate.textContent = 'Buat Grup'; }
+            })
+            .catch(function(){ alert('Gagal membuat grup'); btnCreate.disabled = false; btnCreate.textContent = 'Buat Grup'; });
+    };
+})();
 </script>
 @endsection
