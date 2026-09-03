@@ -171,8 +171,8 @@ class AdminController extends Controller
         $data['globalPostsHariIni'] = $gpQ(GlobalPost::whereDate('created_at', today()))->count();
         if ($filterSchoolId) {
             $postIds = GlobalPost::where('school_id', $filterSchoolId)->pluck('id');
-            $data['totalGlobalLikes'] = \DB::table('global_likes')->whereIn('post_id', $postIds)->count();
-            $data['totalGlobalComments'] = \DB::table('global_comments')->whereIn('post_id', $postIds)->count();
+            $data['totalGlobalLikes'] = \DB::table('global_likes')->whereIn('global_post_id', $postIds)->count();
+            $data['totalGlobalComments'] = \DB::table('global_comments')->whereIn('global_post_id', $postIds)->count();
         } else {
             $data['totalGlobalLikes'] = \DB::table('global_likes')->count();
             $data['totalGlobalComments'] = \DB::table('global_comments')->count();
