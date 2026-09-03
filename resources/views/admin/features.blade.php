@@ -94,6 +94,23 @@
     </div>
 </div>
 
+@if($schools->isEmpty())
+{{-- Belum ada data sekolah: fitur disembunyikan, tampil noted + CTA --}}
+<div class="card border-0 text-center py-5 px-4" style="border-radius:24px;box-shadow:var(--shadow);">
+    <div class="mx-auto mb-3" style="width:88px;height:88px;border-radius:28px;background:linear-gradient(135deg,#eef2ff,#f5f3ff);display:grid;place-items:center;">
+        <i class="bi bi-buildings-fill" style="font-size:38px;color:#6366f1;"></i>
+    </div>
+    <h4 class="fw-bold" style="letter-spacing:-.02em;">Belum Ada Data Sekolah</h4>
+    <p class="text-muted small mx-auto" style="max-width:420px;line-height:1.7;">
+        Fitur management diatur <b>per ID sekolah</b>, jadi daftar fitur disembunyikan sampai ada sekolah terdaftar.
+        Tambahkan sekolah dulu, akun & fitur tiap sekolah akan muncul di sini.
+    </p>
+    <div class="d-flex gap-2 justify-content-center flex-wrap mt-2">
+        <a href="{{ route('admin.schools.index') }}" class="btn btn-primary fw-bold px-4" style="border-radius:12px;"><i class="bi bi-plus-lg me-1"></i> Tambah Sekolah</a>
+        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary fw-bold px-4" style="border-radius:12px;">Kembali ke Dashboard</a>
+    </div>
+</div>
+@else
 <div class="school-picker">
     <div class="d-flex align-items-center gap-2">
         <i class="bi bi-buildings-fill text-primary" style="font-size:20px;"></i>
@@ -160,6 +177,7 @@
 @else
 <div class="card border-0 shadow-sm text-center py-5 text-muted" style="border-radius:20px;">Belum ada sekolah. Tambahkan dulu di menu Sekolah.</div>
 @endif
+@endif{{-- /ada data sekolah --}}
 
 </div>{{-- /.cp-main --}}
 </div>{{-- /.cp-shell --}}
