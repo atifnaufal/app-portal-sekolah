@@ -317,6 +317,7 @@ class AdminController extends Controller
             'school' => $school,
             'schoolRegGuru' => (bool) ($school?->reg_guru_open ?? false),
             'schoolRegSiswa' => (bool) ($school?->reg_siswa_open ?? false),
+            'schoolsReg' => $isSuper ? School::orderBy('name')->get(['id', 'name', 'reg_guru_open', 'reg_siswa_open']) : collect(),
             'registrationGuruEnabled' => (bool) Setting::getValue('registration_guru_enabled', false),
             'registrationSiswaEnabled' => (bool) Setting::getValue('registration_siswa_enabled', false),
             'attendanceActive' => (bool) Setting::getValue('attendance_active', false),
@@ -339,9 +340,10 @@ class AdminController extends Controller
             'attendance_start_time' => 'required',
             'attendance_end_time' => 'required',
             'attendance_late_time' => 'required',
-            'registration_guru_enabled' => 'required|boolean',
-            'registration_siswa_enabled' => 'required|boolean',
+            'registration_guru_enabled' => 'nullable|boolean',
+            'registration_siswa_enabled' => 'nullable|boolean',
         ]);
+        $data = array_filter($data, fn ($v) => $v !== null);
 
         foreach ($data as $key => $value) {
             Setting::setValue($key, $value);
@@ -583,11 +585,21 @@ class AdminController extends Controller
         $typeFilter = $request->type;
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
+        $me = UserContextHelper::user();
+        $isSuper = $me && $me->isSuperAdmin();
+        // Admin sekolah: default filter sekolahnya sendiri. Pusat: opsional via ?school_id=
+        $schoolFilter = $isSuper
+            ? ($request->school_id ? (int) $request->school_id : null)
+            : ($me?->school_id);
 
         // Ringan: whereHas langsung + select minimal, hindari pluck besar
-        $query = UserHistory::with(['user:id,name,email,role,foto'])
+        $query = UserHistory::with(['user:id,name,email,role,foto,school_id', 'user.school:id,name'])
             ->whereHas('user', fn($q) => $q->whereIn('role', ['guru','siswa']))
             ->latest('user_histories.created_at');
+
+        if ($schoolFilter) {
+            $query->whereHas('user', fn($q) => $q->where('school_id', $schoolFilter));
+        }
 
         if ($search !== '') {
             $query->whereHas('user', function ($q) use ($search) {
@@ -630,6 +642,9 @@ class AdminController extends Controller
             'activityTypes' => $activityTypes,
             'stats' => $stats,
             'dailyActivity' => $dailyActivity,
+            'isSuperAdmin' => $isSuper,
+            'schools' => $isSuper ? School::orderBy('name')->get(['id', 'name']) : collect(),
+            'schoolFilter' => $schoolFilter,
         ]);
     }
 }

@@ -68,22 +68,17 @@
                 </div>
 
                 <div class="mb-4">
-                    <h6 class="fw-bold mb-3">Registrasi Mandiri</h6>
-
-                    <div class="form-check mb-3">
-                        <input type="hidden" name="registration_guru_enabled" value="0">
-                        <input class="form-check-input" type="checkbox" name="registration_guru_enabled" value="1" {{ $registrationGuruEnabled ? 'checked' : '' }} id="regGuruCheck">
-                        <label class="form-check-label small" for="regGuruCheck">
-                            Izinkan <strong>Guru</strong> mendaftar akun baru dari halaman login.
-                        </label>
-                    </div>
-
-                    <div class="form-check">
-                        <input type="hidden" name="registration_siswa_enabled" value="0">
-                        <input class="form-check-input" type="checkbox" name="registration_siswa_enabled" value="1" {{ $registrationSiswaEnabled ? 'checked' : '' }} id="regSiswaCheck">
-                        <label class="form-check-label small" for="regSiswaCheck">
-                            Izinkan <strong>Siswa</strong> mendaftar akun baru dari halaman login.
-                        </label>
+                    <h6 class="fw-bold mb-2">Pendaftaran per Sekolah</h6>
+                    <p class="small text-secondary mb-3">Pendaftaran kini diatur <b>per sekolah</b> (bukan global). Atur buka/tutup dari halaman Detail tiap sekolah.</p>
+                    <div class="rounded-3 border overflow-hidden">
+                        @foreach($schoolsReg as $sr)
+                        <div class="d-flex align-items-center gap-2 px-3 py-2 {{ !$loop->last ? 'border-bottom' : '' }}" style="background:#f8fafc;">
+                            <span class="small fw-bold flex-fill text-truncate">[{{ $sr->id }}] {{ $sr->name }}</span>
+                            <span class="badge rounded-pill {{ $sr->reg_guru_open ? 'bg-success' : 'bg-secondary' }}" style="font-size:10px;">Guru: {{ $sr->reg_guru_open ? 'Buka' : 'Tutup' }}</span>
+                            <span class="badge rounded-pill {{ $sr->reg_siswa_open ? 'bg-success' : 'bg-secondary' }}" style="font-size:10px;">Siswa: {{ $sr->reg_siswa_open ? 'Buka' : 'Tutup' }}</span>
+                            <a href="{{ route('admin.schools.detail', $sr->id) }}" class="btn btn-sm btn-outline-primary" style="border-radius:8px;font-size:11px;">Atur</a>
+                        </div>
+                        @endforeach
                     </div>
                 </div>
 
