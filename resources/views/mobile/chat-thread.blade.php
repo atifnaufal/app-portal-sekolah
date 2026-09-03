@@ -102,15 +102,17 @@
     .ctx-item:active { background: #f8fafc; }
     .ctx-item.delete { color: #ef4444; }
 
-    /* Edit bar di atas footer */
+    /* Edit bar di ATAS footer */
     .edit-bar {
-        position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001;
-        background: #fff; padding: 10px 16px; padding-bottom: calc(0px);
-        border-top: 1px solid #e2e8f0; transform: translateY(100%); transition: transform .25s;
+        position: fixed; left: 0; right: 0; z-index: 2001;
+        bottom: calc(72px + env(safe-area-inset-bottom));
+        background: #fff; padding: 10px 16px;
+        border-top: 1px solid #e2e8f0; transform: translateY(200%); transition: transform .25s;
+        box-shadow: 0 -6px 24px rgba(0,0,0,0.06);
     }
     .edit-bar.open { transform: translateY(0); }
     .edit-bar-inner { display: flex; align-items: center; gap: 12px; }
-    .edit-bar-label { font-size: 12px; font-weight: 800; color: var(--blue); white-space: nowrap; }
+    .edit-bar-label { font-size: 12px; font-weight: 800; color: var(--blue); white-space: nowrap; flex: 1; }
 
     .chat-footer {
         position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
@@ -168,7 +170,7 @@
         @forelse($messages as $msg)
             @php $isMine = $msg->user_id === $user->id; @endphp
             <div class="msg-group animate-up">
-                <div class="msg-item {{ $isMine ? 'mine' : 'other' }}" data-msg-id="{{ $msg->id }}">
+            <div class="msg-item {{ $isMine ? 'mine' : 'other' }}" data-msg-id="{{ $msg->id }}" data-msg-text="{{ e($msg->pesan) }}">
                     @if(!$isMine && !$isPrivate)
                         <div class="sender-name">{{ $msg->user->name }}</div>
                     @endif
@@ -182,7 +184,7 @@
                                 </div>
                             @endif
                             @if($msg->pesan)
-                                <div>{{ $msg->pesan }}</div>
+                                <div class="msg-text">{{ $msg->pesan }}</div>
                             @endif
                             <div class="msg-info">
                                 <span>{{ $msg->created_at->format('H:i') }}</span>
@@ -308,6 +310,7 @@
         const item = document.createElement('div');
         item.className = 'msg-item ' + (mine ? 'mine' : 'other');
         if (data.id) item.setAttribute('data-msg-id', data.id);
+        if (data.pesan) item.setAttribute('data-msg-text', data.pesan);
         let html = '';
         @if(!$isPrivate)
             if (!mine) html += '<div class="sender-name">'+escapeHtml(data.nama)+'</div>';
@@ -317,7 +320,7 @@
         } else {
             html += '<div class="bubble" onclick="openCtx(event, '+data.id+')">';
             if (data.file_url) html += '<div class="mb-2"><img src="'+data.file_url+'" class="img-fluid rounded-3" style="max-height: 250px; width: 100%; object-fit: cover;"></div>';
-            if (data.pesan) html += '<div>'+escapeHtml(data.pesan)+'</div>';
+            if (data.pesan) html += '<div class="msg-text">'+escapeHtml(data.pesan)+'</div>';
             html += '<div class="msg-info"><span>'+data.waktu+'</span>';
             if (data.edited) html += '<span class="edit-tag">diedit</span>';
             if (mine) html += ' <i class="bi bi-check2-all text-white-50"></i>';
@@ -357,10 +360,10 @@
         ctxMenu.style.top = Math.max(50, y) + 'px';
         ctxMenu._msgId = msgId;
 
-        const ed = document.getElementById('ctxEdit');
-        if (ed) ed.onclick = () => { let t = this; startEdit(msgId); };
-        document.getElementById('ctxDelete').onclick = () => { let t = this; deleteMessage(msgId); };
-        document.getElementById('ctxCancel').onclick = () => hideCtx();
+        const ed = ctxMenu.querySelector('#ctxEdit');
+        if (ed) ed.onclick = () => startEdit(msgId);
+        ctxMenu.querySelector('#ctxDelete').onclick = () => deleteMessage(msgId);
+        ctxMenu.querySelector('#ctxCancel').onclick = () => hideCtx();
     }
     function hideCtx() { ctxMenu.style.display = 'none'; }
     document.addEventListener('click', function(e) { if (!ctxMenu.contains(e.target)) hideCtx(); });
@@ -369,15 +372,13 @@
         hideCtx();
         const item = document.querySelector(`[data-msg-id="${msgId}"]`);
         if(!item) return;
-        const txt = item.querySelector('.bubble div')?.textContent || '';
+        const txt = (item.dataset.msgText ?? item.querySelector('.msg-text')?.textContent ?? '').trim();
         editingId = msgId;
         editBar.classList.add('open');
         chatInput.value = txt;
         chatInput.focus();
         const btn = editBar.querySelector('.back-btn');
         btn.onclick = closeEdit;
-        // Sai: footer pindah atas edit bar
-        document.querySelector('.chat-footer').style.paddingBottom = 'calc(60px + env(safe-area-inset-bottom))';
         editLabel.textContent = 'Edit pesan';
     }
     function closeEdit() {
@@ -385,7 +386,6 @@
         editBar.classList.remove('open');
         chatInput.value = '';
         chatInput.style.height = '';
-        document.querySelector('.chat-footer').style.paddingBottom = 'calc(24px + env(safe-area-inset-bottom))';
     }
 
     function deleteMessage(msgId) {
@@ -405,7 +405,7 @@
             if (!pesan) return;
             fetch('/pesan/' + editingId, { method:'PUT', headers:{ 'X-Requested-With':'XMLHttpRequest','X-CSRF-TOKEN':csrf, 'Content-Type':'application/x-www-form-urlencoded' }, body: 'pesan='+encodeURIComponent(pesan) })
                 .then(r=>r.json())
-                .then(d=>{ if(d.ok){ const item=document.querySelector(`[data-msg-id="${editingId}"]`); if(item){ const b=item.querySelector('.bubble'); b.innerHTML='<div>'+escapeHtml(d.pesan)+'</div><div class="msg-info"><span>'+d.waktu+'</span><span class="edit-tag">diedit</span></div>'; } closeEdit(); } })
+                .then(d=>{ if(d.ok){ const item=document.querySelector(`[data-msg-id="${editingId}"]`); if(item){ item.dataset.msgText = d.pesan; const b=item.querySelector('.bubble'); b.innerHTML=(item.querySelector('img') ? '<div class="mb-2">'+item.querySelector('img').outerHTML+'</div>' : '') + '<div class="msg-text">'+escapeHtml(d.pesan)+'</div><div class="msg-info"><span>'+d.waktu+'</span><span class="edit-tag">diedit</span><i class="bi bi-check2-all text-white-50"></i></div>'; } closeEdit(); } })
                 .catch(()=>alert('Gagal mengedit'));
             return;
         }
@@ -451,9 +451,15 @@
         if (e.deleted) {
             const item = document.querySelector(`[data-msg-id="${e.id}"]`);
             if (item) { item.querySelector('.bubble').classList.add('deleted-bubble'); item.querySelector('.bubble').innerHTML='<i class="bi bi-trash3"></i> Pesan ini telah dihapus'; item.querySelector('.bubble').onclick=null; }
-        } else if (e.edited && e.action === 'updated') {
+        } else if (e.edited) {
             const item = document.querySelector(`[data-msg-id="${e.id}"]`);
-            if (item) { const b=item.querySelector('.bubble'); b.innerHTML='<div>'+escapeHtml(e.pesan)+'</div><div class="msg-info"><span>'+e.waktu+'</span><span class="edit-tag">diedit</span></div>'; }
+            if (item) {
+                item.dataset.msgText = e.pesan;
+                const b=item.querySelector('.bubble');
+                const isMine = item.classList.contains('mine');
+                const imgHtml = b.querySelector('img') ? '<div class="mb-2">'+b.querySelector('img').outerHTML+'</div>' : '';
+                b.innerHTML = imgHtml + '<div class="msg-text">'+escapeHtml(e.pesan)+'</div><div class="msg-info"><span>'+e.waktu+'</span><span class="edit-tag">diedit</span>'+(isMine ? '<i class="bi bi-check2-all text-white-50"></i>':'')+'</div>';
+            }
         }
     }
 

@@ -41,7 +41,42 @@
 .pui-btn-loading{opacity:.7;pointer-events:none;position:relative;color:transparent!important}
 .pui-btn-loading::after{content:"";position:absolute;width:18px;height:18px;top:calc(50% - 9px);left:calc(50% - 9px);border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:pui-spin .6s linear infinite}
 @keyframes pui-spin{to{transform:rotate(360deg)}}
+
+/* Premium Comment Sheet */
+#cmt-sheet-overlay{position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s;display:flex;align-items:flex-end}
+#cmt-sheet-overlay.open{opacity:1;pointer-events:auto}
+#cmt-sheet{background:#fff;width:100%;max-width:640px;margin:0 auto;border-radius:24px 24px 0 0;height:75vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,.35,1)}
+#cmt-sheet-overlay.open #cmt-sheet{transform:translateY(0)}
+.cmt-h{padding:12px;text-align:center;border-bottom:1px solid #efefef;position:relative}
+.cmt-h-handle{width:36px;height:4px;background:#e2e8f0;border-radius:99px;margin:0 auto 8px}
+.cmt-h-title{font-size:14px;font-weight:800;color:var(--navy)}
+.cmt-body{flex:1;overflow-y:auto;padding:16px}
+.cmt-f{padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #efefef;background:#fff;display:flex;gap:10px;align-items:center}
+.cmt-input{flex:1;background:#f6f7fb;border:1px solid #e2e8f0;border-radius:20px;padding:8px 16px;font-size:13px;outline:0}
+.cmt-send{color:#0095f6;font-weight:800;font-size:13px;border:0;background:none}
+.cmt-item{display:flex;gap:12px;margin-bottom:18px}
+.cmt-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.cmt-content{flex:1;font-size:13px}
+.cmt-user{font-weight:800;margin-right:4px}
+.cmt-meta{font-size:11px;color:#8e8e8e;margin-top:2px;display:flex;gap:10px}
 </style>
+
+<div id="cmt-sheet-overlay" onclick="if(event.target===this)closeCmtSheet()">
+    <div id="cmt-sheet">
+        <div class="cmt-h">
+            <div class="cmt-h-handle"></div>
+            <div class="cmt-h-title">Komentar</div>
+        </div>
+        <div class="cmt-body" id="cmt-list-container">
+            <!-- Komentar akan dimuat di sini -->
+        </div>
+        <form class="cmt-f" id="cmt-sheet-form">
+            <img src="{{ $me?->avatar_url ?? asset('logo_sekolah.png') }}" class="cmt-avatar">
+            <input type="text" name="body" class="cmt-input" placeholder="Tambahkan komentar..." required maxlength="500">
+            <button type="submit" class="cmt-send">Kirim</button>
+        </form>
+    </div>
+</div>
 
 <div id="pui-toast"></div>
 <div id="pui-loading-overlay" class="pui-loading-overlay">
@@ -180,7 +215,7 @@
     <div class="ig-actions" style="gap:16px">
       @php $liked = $p->likes->contains('user_id', session('user_id')); @endphp
       <form method="POST" action="{{ route('global.portal.like',$p) }}" class="like-form" style="display:flex;align-items:center;gap:4px">@csrf<button style="background:none;border:0;display:flex;align-items:center;gap:4px"><i class="bi {{ $liked?'bi-heart-fill ig-like':'bi-heart' }}"></i><span class="like-count" style="font-size:12px;font-weight:700">{{ $p->likes_count }}</span></button></form>
-      <button onclick="document.querySelector('#cmt-{{ $p->id }} input').focus()" style="background:none;border:0;color:#262626;display:flex;align-items:center;gap:4px;padding:0"><i class="bi bi-chat"></i><span class="cmt-count" style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></button>
+      <button onclick="openCmtSheet({{ $p->id }}, {{ json_encode($p->comments->map(fn($c)=>['user'=>$c->user->name,'avatar'=>$c->user->avatar_url,'body'=>$c->body,'time'=>$c->created_at->diffForHumans()])) }})" style="background:none;border:0;color:#262626;display:flex;align-items:center;gap:4px;padding:0"><i class="bi bi-chat"></i><span class="cmt-count" style="font-size:12px;font-weight:700">{{ $p->comments_count }}</span></button>
       @if(session('user_role')!=='admin')
       <a href="{{ route('chat.startPrivate',$p->user) }}" style="color:#262626;display:flex;align-items:center;gap:4px;text-decoration:none"><i class="bi bi-send"></i></a>
       @endif
@@ -189,14 +224,14 @@
       @endif
       <span style="margin-left:auto;cursor:pointer" onclick="navigator.share?navigator.share({text:@json($p->content)}):alert('Link disalin')"><i class="bi bi-share"></i></span>
     </div>
-    <div style="padding:0 14px;display:flex;gap:12px;font-size:11px;color:#8e8e8e"><a href="#" onclick="event.preventDefault();document.getElementById('likes-{{ $p->id }}').style.display='block'" style="color:#262626;text-decoration:none"><b>{{ $p->likes_count }} suka</b></a> • <a href="#" onclick="event.preventDefault();document.querySelector('#cmt-{{ $p->id }} input').focus()" style="color:#262626;text-decoration:none">{{ $p->comments_count }} komentar</a></div>
+    <div style="padding:0 14px;display:flex;gap:12px;font-size:11px;color:#8e8e8e"><a href="#" onclick="event.preventDefault();document.getElementById('likes-{{ $p->id }}').style.display='block'" style="color:#262626;text-decoration:none"><b>{{ $p->likes_count }} suka</b></a> • <a href="#" onclick="event.preventDefault();openCmtSheet({{ $p->id }}, {{ json_encode($p->comments->map(fn($c)=>['user'=>$c->user->name,'avatar'=>$c->user->avatar_url,'body'=>$c->body,'time'=>$c->created_at->diffForHumans()])) }})" style="color:#262626;text-decoration:none">{{ $p->comments_count }} komentar</a></div>
     <div id="likes-{{ $p->id }}" style="display:none;padding:8px 14px;background:#fafafa;border-top:1px solid #efefef">
       <div style="font-size:11px;font-weight:700">Disukai oleh</div>
       @foreach($p->likes->take(5) as $l)<div style="font-size:12px">{{ $l->user_id }} • user</div>@endforeach
       <div style="font-size:11px;color:#0095f6;cursor:pointer" onclick="this.parentElement.style.display='none'">Tutup</div>
     </div>
     <div class="ig-caption"><b>{{ $p->user->name }}</b> {{ \Illuminate\Support\Str::limit($p->content,80) }}</div>
-    <div class="ig-comments" id="cmt-{{ $p->id }}">
+    <div class="ig-comments" id="cmt-{{ $p->id }}" style="display:none">
       @foreach($p->comments->take(2) as $c)<div class="ig-cmt"><b>{{ $c->user->name }}</b> {{ $c->body }}</div>@endforeach
       <form method="POST" action="{{ route('global.portal.comment',$p) }}" class="comment-form" style="display:flex;gap:8px;margin-top:8px">@csrf<input name="body" placeholder="Tulis komentar..." required maxlength="500" style="flex:1;border:0;font-size:13px;outline:0"><button style="background:none;border:0;color:#0095f6;font-weight:700;font-size:13px">Kirim</button></form>
     </div>
@@ -226,6 +261,77 @@
     if (lt) lt.innerText = text;
     l.style.display = show ? 'flex' : 'none';
   }
+
+  /* Premium Comment Sheet Logic */
+  let currentActivePostId = null;
+  function openCmtSheet(postId, initialComments = []) {
+    currentActivePostId = postId;
+    const container = document.getElementById('cmt-list-container');
+    container.innerHTML = initialComments.length ? '' : '<div class="text-center py-5 text-muted small">Belum ada komentar.</div>';
+
+    initialComments.forEach(c => {
+        container.innerHTML += `<div class="cmt-item">
+            <img src="${c.avatar}" class="cmt-avatar">
+            <div class="cmt-content">
+                <div><span class="cmt-user">${c.user}</span>${c.body}</div>
+                <div class="cmt-meta"><span>${c.time}</span></div>
+            </div>
+        </div>`;
+    });
+
+    document.getElementById('cmt-sheet-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.querySelector('#cmt-sheet-form input').focus();
+  }
+
+  function closeCmtSheet() {
+    document.getElementById('cmt-sheet-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('cmt-sheet-form')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!currentActivePostId) return;
+    const input = this.querySelector('input');
+    const body = input.value.trim();
+    if (!body) return;
+
+    const btn = this.querySelector('button');
+    btn.disabled = true;
+
+    const fd = new FormData();
+    fd.append('body', body);
+    fd.append('_token', document.querySelector('meta[name=csrf-token]').content);
+
+    fetch(`/global-portal/${currentActivePostId}/comment`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+        body: fd
+    }).then(r => r.json()).then(res => {
+        if (res.ok) {
+            const container = document.getElementById('cmt-list-container');
+            const emptyMsg = container.querySelector('.text-muted');
+            if (emptyMsg) emptyMsg.remove();
+
+            const div = document.createElement('div');
+            div.className = 'cmt-item animate__animated animate__fadeInUp';
+            div.innerHTML = `<img src="{{ $me?->avatar_url }}" class="cmt-avatar">
+                <div class="cmt-content">
+                    <div><span class="cmt-user">${res.comment.user}</span>${res.comment.body}</div>
+                    <div class="cmt-meta"><span>${res.comment.time}</span></div>
+                </div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            input.value = '';
+
+            // Update count on card
+            const card = document.querySelector(`[data-post-id="${currentActivePostId}"]`);
+            if (card) card.querySelectorAll('.cmt-count').forEach(el => el.innerText = res.comments_count);
+        } else {
+            puiToast(res.message || 'Gagal mengirim komentar');
+        }
+    }).finally(() => btn.disabled = false);
+  });
 
   /* Like AJAX */
   document.addEventListener('submit', function (e) {
