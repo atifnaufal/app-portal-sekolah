@@ -1,6 +1,6 @@
-// Naik ke v3 supaya semua klien lama membuang cache v2 yang berisi HTML
-// dashboard basi (v2 me-precache '/' yang ternyata redirect ke /dashboard).
-const CACHE_NAME = 'portal-sekolah-v3';
+ // Naik ke v4: perbaiki cache.put yang meledak untuk respons parsial 206
+// (audio/video range request) + buang cache lama.
+const CACHE_NAME = 'portal-sekolah-v4';
 
 // HANYA aset statis milik pihak ketiga.
 // JANGAN pernah me-precache '/' atau halaman HTML lain: responsnya bergantung
@@ -49,9 +49,11 @@ self.addEventListener('fetch', event => {
   }
 
   // Aset statis: cache dulu, baru jaringan.
+  // LEWATI request range & respons non-200: cache.put() melempar untuk 206 Partial.
+  if (req.headers.has('range')) return;
   event.respondWith(
     caches.match(req).then(cached => cached || fetch(req).then(res => {
-      if (res.ok && (url.origin === location.origin || url.hostname.endsWith('cdn.jsdelivr.net') || url.hostname.endsWith('cdnjs.cloudflare.com'))) {
+      if (res && res.status === 200 && (url.origin === location.origin || url.hostname.endsWith('cdn.jsdelivr.net') || url.hostname.endsWith('cdnjs.cloudflare.com'))) {
         const copy = res.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
       }
