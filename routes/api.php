@@ -100,6 +100,14 @@ Route::middleware(['auth:sanctum', 'api.role:admin,guru'])->group(function () {
     Route::patch('/profil/foto-posisi', [\App\Http\Controllers\ProfileController::class, 'updateFotoPosisi']);
     Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index']);
     Route::post('/chat', [\App\Http\Controllers\ChatController::class, 'store']);
+    Route::get('/chat/create', [\App\Http\Controllers\ChatController::class, 'create']);
+    Route::post('/chat/create', [\App\Http\Controllers\ChatController::class, 'storeGroup']);
+    Route::post('/chat/{group}/invite', [\App\Http\Controllers\ChatController::class, 'invite']);
+    Route::post('/chat/{group}/accept', [\App\Http\Controllers\ChatController::class, 'acceptInvite']);
+    Route::post('/chat/{group}/reject', [\App\Http\Controllers\ChatController::class, 'rejectInvite']);
+    Route::post('/chat/{group}/leave', [\App\Http\Controllers\ChatController::class, 'leave']);
+    Route::put('/pesan/{message}', [\App\Http\Controllers\ChatController::class, 'updateMessage']);
+    Route::delete('/pesan/{message}', [\App\Http\Controllers\ChatController::class, 'destroyMessage']);
     Route::get('/chat/poll', [\App\Http\Controllers\ChatController::class, 'poll']);
     Route::get('/chat/private/{recipient}', [\App\Http\Controllers\ChatController::class, 'startPrivate']);
     Route::get('/chat/{group}', [\App\Http\Controllers\ChatController::class, 'show']);

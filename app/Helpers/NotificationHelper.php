@@ -65,11 +65,41 @@ class NotificationHelper
         $title = $group->type === 'private' ? $actorName : $group->name;
         $url = '/chat/' . $chatGroupId;
 
-        $memberIds = $group->members()->pluck('users.id')->toArray();
+        // Hanya kirim ke member yang sudah disetujui (approved), bukan yang masih pending.
+        $memberIds = $group->approvedMembers()->pluck('users.id')->toArray();
         $recipients = array_filter($memberIds, fn($id) => $id != $senderUserId);
 
         foreach ($recipients as $userId) {
             self::send($userId, $title, $preview, $url, 'chat', $actorName, $actorPhoto);
+        }
+    }
+
+    /**
+     * Kirim notifikasi undangan bergabung ke grup (kepada anggota yang diundang).
+     *
+     * @param ChatGroup $group
+     * @param User      $inviter
+     * @param User|null $specificUser  Bila diberikan, hanya kirim ke user ini (undangan tunggal).
+     */
+    public static function sendToChatInvite(ChatGroup $group, User $inviter, ?User $specificUser = null)
+    {
+        $group->loadMissing(['members']);
+
+        // Hanya member berstatus pending (belum accept) yang menerima undangan.
+        $invitees = $group->members
+            ->filter(fn ($m) => $m->pivot->status === 'pending');
+        if ($specificUser) {
+            $invitees = $invitees->filter(fn ($m) => $m->id === $specificUser->id);
+        }
+
+        $title = 'Undangan grup '.$group->name;
+        $message = $inviter->name.' mengundang Anda bergabung ke grup "'.$group->name.'".';
+        $url = '/chat?invite=' . $group->id;
+        $actorName = $inviter->name ?? 'Seseorang';
+        $actorPhoto = $inviter->foto ?? null;
+
+        foreach ($invitees as $m) {
+            self::send((int) $m->id, $title, $message, $url, 'chat_invite', $actorName, $actorPhoto);
         }
     }
 

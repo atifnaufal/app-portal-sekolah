@@ -14,10 +14,12 @@ class ChatMessageEvent implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
+    public $action;
 
-    public function __construct(ChatMessage $message)
+    public function __construct(ChatMessage $message, string $action = 'created')
     {
         $this->message = $message;
+        $this->action = $action;
     }
 
     public function broadcastOn(): array
@@ -35,16 +37,21 @@ class ChatMessageEvent implements ShouldBroadcast
     public function broadcastWith(): array
     {
         $sender = $this->message->user;
+        $isDeleted = $this->message->isDeleted();
 
         return [
+            'action' => $this->action,
             'id' => $this->message->id,
             'user_id' => $this->message->user_id,
             'chat_group_id' => $this->message->chat_group_id,
-            'pesan' => $this->message->pesan,
-            'file_url' => $this->message->file ? asset('storage/'.$this->message->file) : null,
+            'pesan' => $isDeleted ? '' : $this->message->pesan,
+            'file_url' => $isDeleted ? null : ($this->message->file ? asset('storage/'.$this->message->file) : null),
             'nama' => $sender?->name,
             'foto' => $sender?->foto ? asset('storage/'.$sender->foto) : null,
             'waktu' => $this->message->created_at?->format('H:i'),
+            'edited' => $this->message->isEdited(),
+            'deleted' => $isDeleted,
+            'deleted_by' => $this->message->deleted_by,
         ];
     }
 }

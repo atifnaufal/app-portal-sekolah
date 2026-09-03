@@ -66,7 +66,9 @@ class User extends Authenticatable
 
     public function chatGroups(): BelongsToMany
     {
-        return $this->belongsToMany(ChatGroup::class, 'chat_group_members');
+        return $this->belongsToMany(ChatGroup::class, 'chat_group_members')
+            ->withPivot(['status', 'role'])
+            ->wherePivot('status', 'approved');
     }
 
     public function mataPelajarans(): HasMany

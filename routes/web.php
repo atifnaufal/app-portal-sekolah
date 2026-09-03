@@ -151,6 +151,14 @@ Route::middleware('role:guru,siswa')->group(function () {
     Route::patch('/profil/foto-posisi', [ProfileController::class, 'updateFotoPosisi'])->name('profile.foto.posisi');
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');
+    Route::get('/chat/create', [ChatController::class, 'create'])->name('chat.create');
+    Route::post('/chat/create', [ChatController::class, 'storeGroup'])->name('chat.storeGroup');
+    Route::post('/chat/{group}/invite', [ChatController::class, 'invite'])->name('chat.invite');
+    Route::post('/chat/{group}/accept', [ChatController::class, 'acceptInvite'])->name('chat.accept');
+    Route::post('/chat/{group}/reject', [ChatController::class, 'rejectInvite'])->name('chat.reject');
+    Route::post('/chat/{group}/leave', [ChatController::class, 'leave'])->name('chat.leave');
+    Route::put('/pesan/{message}', [ChatController::class, 'updateMessage'])->name('chat.message.update');
+    Route::delete('/pesan/{message}', [ChatController::class, 'destroyMessage'])->name('chat.message.destroy');
     Route::get('/chat/poll', [ChatController::class, 'poll'])->name('chat.poll');
     Route::get('/chat/private/{recipient}', [ChatController::class, 'startPrivate'])->name('chat.startPrivate');
     Route::get('/chat/{group}', [ChatController::class, 'show'])->name('chat.show');

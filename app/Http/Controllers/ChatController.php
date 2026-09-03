@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\ChatMessageEvent;
 use App\Helpers\UserContextHelper;
 use App\Models\ChatGroup;
+use App\Models\ChatGroupMember;
 use App\Models\ChatMessage;
 use App\Models\Notifikasi;
 use App\Models\User;
@@ -55,6 +56,7 @@ class ChatController extends Controller
         $classGroups = $groups->filter(fn ($g) => in_array($g->type, ['school', 'class']));
         $eskulGroups = $groups->filter(fn ($g) => $g->type === 'eskul');
         $privateGroups = $groups->filter(fn ($g) => $g->type === 'private');
+        $customGroups = $groups->filter(fn ($g) => $g->type === 'custom');
 
         // Hitung unread per group dari tabel notifikasi
         $unreadMap = [];
@@ -77,12 +79,19 @@ class ChatController extends Controller
             }
         }
 
+        // Ambil daftar undangan grup pending (belum disetujui) untuk user ini.
+        $pendingInvites = ChatGroup::whereHas('members', function ($q) use ($userId) {
+            $q->where('user_id', $userId)->where('chat_group_members.status', 'pending');
+        })->with(['owner', 'approvedMembers'])->get();
+
         return view('mobile.chat', [
             'user' => $user,
             'classGroups' => $classGroups,
+            'customGroups' => $customGroups,
             'eskulGroups' => $eskulGroups,
             'privateGroups' => $privateGroups,
             'unreadMap' => $unreadMap,
+            'pendingInvites' => $pendingInvites,
         ]);
     }
 
@@ -124,10 +133,10 @@ class ChatController extends Controller
         }
         $userId = $user->id;
 
-        // Hanya member grup yang boleh membuka percakapan
-        abort_unless($group->members()->where('user_id', $userId)->exists(), 403);
+        // Hanya member yang sudah disetujui (approved) yang boleh membuka percakapan.
+        abort_unless($group->isApprovedMember($userId), 403);
 
-        $group->load(['members', 'lastMessage']);
+        $group->load(['members', 'lastMessage', 'owner']);
 
         // IF Private, set name to the other member
         if ($group->type === 'private') {
@@ -136,6 +145,22 @@ class ChatController extends Controller
             $group->avatar = $other ? $other->foto : null;
             // Also add a custom property for the avatar logic in the view
             $group->other_user = $other;
+        }
+
+        // Info keanggotaan untuk UI premium.
+        $group->is_admin = $group->isAdmin($userId);
+        $group->is_owner = (int) $group->created_by === $userId;
+        $group->approved_count = $group->approvedMembers()->count();
+        $candidates = [];
+        if ($group->type === 'custom') {
+            $groupId = $group->id;
+            $memberIds = $group->members()->pluck('users.id')->toArray();
+            $candidates = User::where('school_id', $user->school_id)
+                ->where('id', '!=', $userId)
+                ->where('role', '!=', 'admin')
+                ->whereNotIn('id', $memberIds)
+                ->orderBy('name')
+                ->get(['id', 'name', 'foto']);
         }
 
         $messages = ChatMessage::with('user')
@@ -147,6 +172,7 @@ class ChatController extends Controller
             'user' => $user,
             'group' => $group,
             'messages' => $messages,
+            'candidates' => $candidates,
         ]);
     }
 
@@ -192,9 +218,9 @@ class ChatController extends Controller
             return response()->json(['error' => 'Pesan atau gambar harus diisi'], 422);
         }
 
-        // Check if user is member of the group
+        // Check if user is an APPROVED member of the group
         $group = ChatGroup::findOrFail($data['chat_group_id']);
-        abort_unless($group->members()->where('user_id', $userId)->exists(), 403);
+        abort_unless($group->members()->where('users.id', $userId)->wherePivot('status', 'approved')->exists(), 403);
 
         $filePath = null;
         if ($request->hasFile('file')) {
@@ -266,11 +292,306 @@ class ChatController extends Controller
             'id' => $msg->id,
             'user_id' => $msg->user_id,
             'nama' => $msg->user?->name ?? 'Unknown',
-            'pesan' => $msg->pesan,
-            'file_url' => \App\Services\FirebaseStorageService::url($msg->file),
+            'pesan' => $msg->isDeleted() ? '' : $msg->pesan,
+            'file_url' => $msg->isDeleted() ? null : \App\Services\FirebaseStorageService::url($msg->file),
             'waktu' => $msg->created_at->format('H:i'),
+            'edited' => $msg->isEdited(),
+            'deleted' => $msg->isDeleted(),
         ]);
 
         return response()->json($data);
+    }
+
+    // ================== FITUR CHAT PREMIUM (WhatsApp-like) ==================
+
+    /**
+     * Form buat grup custom (mobile).
+     */
+    public function create(Request $request): View
+    {
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+
+        // Usulan anggota: sesama sekolah, kecuali admin.
+        $candidates = User::where('school_id', $user->school_id)
+            ->where('id', '!=', $user->id)
+            ->where('role', '!=', 'admin')
+            ->orderBy('name')
+            ->get(['id', 'name', 'role', 'foto', 'kelas_id']);
+
+        return view('mobile.chat-create', [
+            'user' => $user,
+            'candidates' => $candidates,
+        ]);
+    }
+
+    /**
+     * Simpan grup custom baru. Pembuat otomatis jadi admin + approved.
+     * Anggota yang dipilih dimasukkan sebagai pending (undangan menunggu accept).
+     */
+    public function storeGroup(Request $request): RedirectResponse|JsonResponse
+    {
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'member_ids' => ['nullable', 'array', 'max:50'],
+            'member_ids.*' => ['integer', 'exists:users,id'],
+        ]);
+
+        $group = ChatGroup::create([
+            'name' => trim($data['name']),
+            'type' => 'custom',
+            'created_by' => $userId,
+        ]);
+
+        // Pembuat = admin, langsung approved.
+        ChatGroupMember::create([
+            'chat_group_id' => $group->id,
+            'user_id' => $userId,
+            'status' => 'approved',
+            'role' => 'admin',
+        ]);
+
+        // Anggota yang diundang = pending (harus accept dulu).
+        $memberIds = array_slice(array_map('intval', $data['member_ids'] ?? []), 0, 50);
+        foreach ($memberIds as $mid) {
+            if ($mid === $userId) {
+                continue;
+            }
+            ChatGroupMember::firstOrCreate(
+                ['chat_group_id' => $group->id, 'user_id' => $mid],
+                ['status' => 'pending', 'role' => 'member', 'invited_by' => $userId]
+            );
+        }
+
+        // Notifikasi undangan ke anggota yang diundang.
+        try {
+            \App\Helpers\NotificationHelper::sendToChatInvite($group, $user);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json(['ok' => true, 'id' => $group->id]);
+        }
+
+        return redirect()->route('chat.show', $group->id)
+            ->with('success', 'Grup berhasil dibuat. Anggota perlu menyetujui undangan.');
+    }
+
+    /**
+     * Undang user ke grup (oleh admin/owner).
+     */
+    public function invite(Request $request, ChatGroup $group): RedirectResponse|JsonResponse
+    {
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        abort_unless($group->isAdmin($user->id), 403);
+
+        $data = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        if ((int) $data['user_id'] === $user->id) {
+            return $this->chatRespond($request, ['error' => 'Tidak bisa mengundang diri sendiri'], 422);
+        }
+
+        ChatGroupMember::firstOrCreate(
+            ['chat_group_id' => $group->id, 'user_id' => $data['user_id']],
+            ['status' => 'pending', 'role' => 'member', 'invited_by' => $user->id]
+        );
+
+        $invited = User::find($data['user_id']);
+        try {
+            \App\Helpers\NotificationHelper::sendToChatInvite($group, $user, $invited);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return $this->chatRespond($request, ['ok' => true, 'group_id' => $group->id]);
+    }
+
+    /**
+     * User menyetujui undangan dan masuk ke grup.
+     */
+    public function acceptInvite(Request $request, ChatGroup $group): RedirectResponse|JsonResponse
+    {
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+
+        $row = ChatGroupMember::where('chat_group_id', $group->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        abort_unless($row, 403, 'Anda tidak diundang ke grup ini.');
+        abort_unless($row->status === 'pending', 422, 'Undangan sudah diproses.');
+
+        $row->update(['status' => 'approved']);
+
+        return $this->chatRespond($request, ['ok' => true, 'group_id' => $group->id]);
+    }
+
+    /**
+     * User menolak undangan.
+     */
+    public function rejectInvite(Request $request, ChatGroup $group): RedirectResponse|JsonResponse
+    {
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+
+        ChatGroupMember::where('chat_group_id', $group->id)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return $this->chatRespond($request, ['ok' => true]);
+    }
+
+    /**
+     * User keluar dari grup. Jika owner keluar, suksesor admin diambil dari approved member.
+     */
+    public function leave(Request $request, ChatGroup $group): RedirectResponse|JsonResponse
+    {
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
+
+        abort_unless($group->isApprovedMember($userId), 403);
+
+        // Jika owner keluar dari grup custom: transfer kepemilikan ke admin lain,
+        // atau hapus grup bila tidak ada anggota tersisa.
+        if ($group->type === 'custom' && (int) $group->created_by === $userId) {
+            $otherAdmin = ChatGroupMember::where('chat_group_id', $group->id)
+                ->where('user_id', '!=', $userId)
+                ->where('status', 'approved')
+                ->where('role', 'admin')
+                ->first();
+            $otherMember = ChatGroupMember::where('chat_group_id', $group->id)
+                ->where('user_id', '!=', $userId)
+                ->where('status', 'approved')
+                ->first();
+            $successor = $otherAdmin ?? $otherMember;
+
+            if ($successor) {
+                ChatGroupMember::where('chat_group_id', $group->id)->where('user_id', $userId)->delete();
+                $group->update(['created_by' => $successor->user_id]);
+                ChatGroupMember::where('chat_group_id', $group->id)
+                    ->where('user_id', $successor->user_id)
+                    ->update(['role' => 'admin']);
+            } else {
+                // Tidak ada anggota tersisa — hapus grup beserta membernya.
+                ChatGroupMember::where('chat_group_id', $group->id)->delete();
+                $group->delete();
+
+                return $this->chatRespond($request, ['ok' => true, 'deleted_group' => true]);
+            }
+        } else {
+            ChatGroupMember::where('chat_group_id', $group->id)->where('user_id', $userId)->delete();
+        }
+
+        return $this->chatRespond($request, ['ok' => true]);
+    }
+
+    /**
+     * Edit isi pesan sendiri.
+     */
+    public function updateMessage(Request $request, ChatMessage $message): RedirectResponse|JsonResponse
+    {
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+
+        abort_unless((int) $message->user_id === $user->id, 403, 'Hanya pengirim yang bisa mengedit.');
+        abort_if($message->isDeleted(), 422, 'Pesan sudah dihapus, tidak bisa diedit.');
+
+        $data = $request->validate([
+            'pesan' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $message->update([
+            'pesan' => $data['pesan'],
+            'edited' => true,
+            'edited_at' => now(),
+        ]);
+
+        try {
+            broadcast(new ChatMessageEvent($message, 'updated'));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return $this->chatRespond($request, [
+            'ok' => true,
+            'id' => $message->id,
+            'pesan' => $message->pesan,
+            'edited' => true,
+            'waktu' => $message->created_at?->format('H:i'),
+        ]);
+    }
+
+    /**
+     * Hapus pesan secara permanen (untuk semua). UI menampilkan placeholder "Pesan dihapus".
+     */
+    public function destroyMessage(Request $request, ChatMessage $message): RedirectResponse|JsonResponse
+    {
+        $user = UserContextHelper::user($request);
+        if (! $user) {
+            UserContextHelper::abortUnauthorized($request);
+        }
+        $userId = $user->id;
+
+        // Hanya pengirim atau admin grup yang boleh menghapus.
+        $group = $message->chatGroup;
+        $canDelete = (int) $message->user_id === $userId || ($group && $group->isAdmin($userId));
+        abort_unless($canDelete, 403);
+
+        $message->update([
+            'pesan' => '',
+            'file' => null,
+            'deleted_at' => now(),
+            'deleted_by' => $userId,
+        ]);
+
+        try {
+            broadcast(new ChatMessageEvent($message, 'deleted'));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return $this->chatRespond($request, ['ok' => true, 'id' => $message->id, 'deleted' => true]);
+    }
+
+    /**
+     * Merapikan respons JSON vs redirect (web vs mobile API).
+     */
+    private function chatRespond(Request $request, array $payload, int $status = 200)
+    {
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json($payload, $status);
+        }
+
+        if (($payload['ok'] ?? false) && isset($payload['group_id'])) {
+            return redirect()->route('chat.show', $payload['group_id'])->with('success', 'Berhasil.');
+        }
+        if (($payload['error'] ?? false) && $status >= 400) {
+            return back()->with('error', $payload['error']);
+        }
+
+        return back()->with('success', 'Berhasil.');
     }
 }

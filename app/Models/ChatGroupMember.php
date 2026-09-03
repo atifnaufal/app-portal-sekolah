@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class ChatGroupMember extends Model
 {
-    protected $fillable = ['chat_group_id', 'user_id'];
+    protected $fillable = ['chat_group_id', 'user_id', 'status', 'role', 'invited_by'];
 }
